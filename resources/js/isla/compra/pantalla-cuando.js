@@ -80,7 +80,8 @@ export function preguntaCalcetines(calcetin, n, { textos = {}, locale = 'es' } =
  *   `maximo` (lo que cabe a esa hora, o `null`) · `minimo` · `umbral` (el «casi llena» del panel) ·
  *   `calcetin` (el complemento por cantidad de la fila, o `null`) · `complementos` (las filas de los demás, hechas:
  *   `complementos.js`) · `ficha` (la de la fila: su tope y lo que pide al reservar) · `linea` (la que resolvió el
- *   servidor) · `textos` · `locale` · `hoy`.
+ *   servidor) · `otra` (lo de la OTRA ZONA, hecho: `otra-zona.js::otraDeLaPantalla`, K2 de `otra-zona.md`) ·
+ *   `cotizacion` (el presupuesto de TODAS las líneas, con la otra zona; sin ella, `null`) · `textos` · `locale` · `hoy`.
  */
 export function pantallaCuando(e) {
     const { borrador: b, textos, locale } = e;
@@ -98,7 +99,11 @@ export function pantallaCuando(e) {
         ? { uno: t('compra.cuando.persona'), varios: t('compra.cuando.personas') }
         : { uno: t('compra.cuando.entrada'), varios: t('compra.cuando.entradas') };
     const datos = esPack ? datosDeReserva(e.ficha, b.evento) : [];
-    const listo = Boolean(fila && b.dia && b.hora) && datosCompletos(datos);
+    // La otra zona (K2): sin ella, nada; con ella, su tarjeta, si se vende ese día y en qué horas cabe.
+    const otra = e.otra ?? { enlace: '', tarjeta: null, bloquea: false, resumen: null, noCabe: () => false, notaHora: '', zona: '' };
+    const listo = Boolean(fila && b.dia && b.hora) && datosCompletos(datos) && ! otra.bloquea;
+    // Con la otra zona, el dinero es el del presupuesto de TODAS las líneas (`PAY-12`): hasta que llega, sin total.
+    const dinero = b.otra ? (e.cotizacion ?? null) : null;
 
     const props = {
         // Sin entradas, la zona no está en «¿Qué zona?»: su nombre, tal cual (el de una excursión no es «Entrada …»).
@@ -117,7 +122,9 @@ export function pantallaCuando(e) {
         dias: fila ? tiraDias(e.precios?.[fila.id], { hoy: e.hoy, locale, textos, elegido: b.dia }) : [],
         calendario: fila ? calendarioDeTira(e.precios?.[fila.id], { dia: b.dia, hoy: e.hoy, locale }) : null,
         dia: b.dia,
-        horas: horasDelSelector(e.horas, { gente: b.n, textos }),
+        // Las horas en las que caben TODAS las líneas, cada una en su zona (D1-A): donde la otra no cabe, apagada y con su porqué.
+        horas: horasDelSelector(e.horas, { gente: b.n, textos })
+            .map((h) => (h.disabled || ! otra.noCabe(h.time) ? h : { ...h, disabled: true, note: otra.notaHora })),
         hora: horaCorta(b.hora),
         cargando: Boolean(e.cargandoHoras),
         filas: filas.map((p) => {
@@ -147,32 +154,41 @@ export function pantallaCuando(e) {
         // Los demás complementos que se venden al reservar (`#880`; la hora extra, en el hueco que el diseño le dejó):
         // llegan hechos de `complementos.js`.
         complementos: e.complementos ?? [],
-        otra: null,
+        // La OTRA ZONA (K2, `otra-zona.md`): su tarjeta o, sin ella, el enlace que la nombra (D3-B; `''`, ninguno).
+        otra: otra.tarjeta ? { ...otra.tarjeta, bloquea: otra.bloquea } : null,
         umbral: e.umbral || 6,
-        otraZona: false,
+        otraZona: otra.enlace,
     };
 
     const resumen = fila && b.dia
         ? [fila.name, `${diaCorto(b.dia, locale)}${b.hora ? `, ${horaCorta(b.hora)}` : ''}`, `${b.n} ${b.n === 1 ? unidad.uno : unidad.varios}`].join(' · ')
+            + (otra.resumen ? ` + ${otra.resumen}` : '')
         : null;
     const sinContestar = datos.find((d) => d.required && d.valor.trim() === '');
+    const total = b.otra ? dinero?.total_cents : e.linea?.total_cents;
+    // Lo que se paga hoy, si no es todo (la señal de un pack): del presupuesto del servidor, de la línea o de todas.
+    const hoy = b.otra
+        ? (dinero && dinero.online_amount_cents < dinero.total_cents ? dinero.online_amount_cents : null)
+        : (e.linea?.has_deposit ? e.linea.deposit_cents : null);
 
     return {
         props,
         listo,
         // Lo PRIMERO que falta para continuar, por su `id` en la pantalla: a donde la capa lleva la vista (`ir-a.js`, el owner
-        // 28-09) al llegar con la selección hecha y al pulsar «Continuar» sin estar lista. De un dato, su CAMPO.
+        // 28-09) al llegar con la selección hecha y al pulsar «Continuar» sin estar lista. De un dato, su CAMPO. La otra zona
+        // que no se vende ese día, su tarjeta (`pjc-q-otra`), con el nombre de su zona (`faltaZona`).
         falta: listo ? null : (b.elegirZona && ! b.zona ? 'pjc-q-zona' : ! fila ? null : ! b.dia ? 'pjc-q-dia' : ! b.hora ? 'pjc-q-hora'
-            : (sinContestar ? `pjc-dato-${sinContestar.key}` : null)),
+            : (sinContestar ? `pjc-dato-${sinContestar.key}` : (otra.bloquea ? 'pjc-q-otra' : null))),
+        faltaZona: otra.zona ?? '',
         ck: {
             key: 'cuando',
             stepStrong: '',
             step: t('compra.cuando.banda'),
             progress: null,
             summary: resumen,
-            total: listo && e.linea ? euros(e.linea.total_cents, locale) : null,
+            total: listo && Number.isInteger(total) ? euros(total, locale) : null,
             // Con señal (un pack), lo que se paga hoy, como la fiesta: del presupuesto del servidor.
-            today: listo && e.linea?.has_deposit ? textoCon(textos, 'compra.pagar.hoy_pagas', { importe: euros(e.linea.deposit_cents, locale) }) : null,
+            today: listo && hoy !== null ? textoCon(textos, 'compra.pagar.hoy_pagas', { importe: euros(hoy, locale) }) : null,
             note: null,
             action: { label: t('compra.cuando.continuar'), disabled: ! listo },
         },

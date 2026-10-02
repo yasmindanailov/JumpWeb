@@ -3,19 +3,21 @@
  * **Los complementos que se venden al reservar**, en la pantalla 0 de la compra (M1 de `specs/isla-y-landing-nueva.md`
  * §4.29, `DECISIONES #880`: «los que sean»). Cada fila, con la forma que dicen sus datos (`complementos.js`): un sí o un no
  * con la fila de la mejora del diseño (`UpgradeRow`, `ui/FilaMejora.vue`: la hora extra), lo que se suma con su − / + y lo
- * incluido, a la vista. Apagada, dice por qué; nunca viene marcada. Pinta y avisa (`cambiar(id, n)`): qué se ofrece y a
- * qué precio lo dice el servidor.
+ * incluido, a la vista. Apagada, dice por qué; nunca viene marcada. Y los GRUPOS de elección que no tienen su pregunta
+ * («esto o aquello», `#881`), con las tarjetas de opción del sistema. Pinta y avisa (`cambiar(id, n)`, `elegir(grupo,
+ * producto)`): qué se ofrece y a qué precio lo dice el servidor.
  */
 import { useTextos } from '../piezas/textos.js';
 import PreguntaCompra from './PreguntaCompra.vue';
 import CantidadCompra from './CantidadCompra.vue';
 import DatoFijo from './DatoFijo.vue';
 import FilaMejora from '../ui/FilaMejora.vue';
+import TarjetasOpcion from '../ui/TarjetasOpcion.vue';
 
 defineProps({
     items: { type: Array, required: true },
 });
-const emit = defineEmits(['cambiar']);
+const emit = defineEmits(['cambiar', 'elegir']);
 const { t } = useTextos();
 </script>
 
@@ -49,6 +51,20 @@ const { t } = useTextos();
                 :uno="t('compra.cuando.unidad')"
                 :varios="t('compra.cuando.unidades')"
                 @update:model-value="emit('cambiar', c.id, $event)"
+            />
+        </PreguntaCompra>
+        <!-- Un grupo de elección («esto o aquello», `#881`): una pregunta con sus opciones; la elegida, la del servidor de serie. -->
+        <PreguntaCompra
+            v-else-if="c.forma === 'grupo'"
+            :id="`pjc-q-${c.id}`"
+            :titulo="c.titulo"
+        >
+            <TarjetasOpcion
+                :name="`pjc-${c.id}`"
+                columns="1"
+                :model-value="c.valor"
+                :items="c.items"
+                @update:model-value="emit('elegir', c.grupo, $event)"
             />
         </PreguntaCompra>
         <DatoFijo

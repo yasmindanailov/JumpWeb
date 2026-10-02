@@ -17,8 +17,9 @@ export const FALTA = Symbol('falta');
 /** La pregunta de la hora llena (`PantallaPerdida`): no es una `PreguntaCompra`, pero se marca igual. */
 export const PERDIDA = 'pjc-perdida';
 
-// De la pregunta de la pantalla 0 (`pantalla-cuando.js` y `fiesta.js::falta`) a su frase.
-const FRASES = { 'pjc-q-zona': 'zona', 'pjc-q-dia': 'dia', 'pjc-q-hora': 'hora', 'pjc-q-edad': 'edad' };
+// De la pregunta de la pantalla 0 (`pantalla-cuando.js` y `fiesta.js::falta`) a su frase. `pjc-q-otra`: la tarjeta de la
+// OTRA ZONA cuando su zona no se vende ese día (K2 de `otra-zona.md`; su frase lleva `:zona`).
+const FRASES = { 'pjc-q-zona': 'zona', 'pjc-q-dia': 'dia', 'pjc-q-hora': 'hora', 'pjc-q-edad': 'edad', 'pjc-q-otra': 'otra' };
 
 /**
  * Lo que se MARCA por lo que falta: un dato de la reserva de un pack (`pjc-dato-<clave>`, `#839`) marca su bloque
@@ -26,16 +27,19 @@ const FRASES = { 'pjc-q-zona': 'zona', 'pjc-q-dia': 'dia', 'pjc-q-hora': 'hora',
  */
 export const preguntaDeFalta = (falta) => (typeof falta === 'string' && falta.startsWith('pjc-dato-') ? 'pjc-q-datos' : falta ?? null);
 
-/** La frase de lo que falta en la pantalla 0, o `''` si no se sabe decir (y entonces el pie no dice nada). */
-export function textoDeFalta(falta, textos = {}) {
+/**
+ * La frase de lo que falta en la pantalla 0, o `''` si no se sabe decir (y entonces el pie no dice nada). `params`, lo que
+ * nombra su frase (la de la otra zona, `:zona`).
+ */
+export function textoDeFalta(falta, textos = {}, params = {}) {
     const clave = preguntaDeFalta(falta) === 'pjc-q-datos' ? 'datos' : FRASES[falta];
 
-    return clave ? texto(textos, `compra.falta.${clave}`) : '';
+    return clave ? textoCon(textos, `compra.falta.${clave}`, params) : '';
 }
 
 /** La marca de lo que falta en la pantalla 0, o `null`. */
-export function marcaDe(falta, textos = {}) {
-    const frase = textoDeFalta(falta, textos);
+export function marcaDe(falta, textos = {}, params = {}) {
+    const frase = textoDeFalta(falta, textos, params);
 
     return frase ? { id: preguntaDeFalta(falta), texto: frase } : null;
 }

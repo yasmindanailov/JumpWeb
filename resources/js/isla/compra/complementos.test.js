@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { cargarSinHora, complementosDe, conExtra, deLaFicha, eleccionesDelBorrador, elegido, formaDe, quedanEn } from './complementos.js';
+import { cargarSinHora, complementosDe, conExtra, deLaFicha, eleccionesDelBorrador, elegido, formaDe, gruposComoFilas, quedanEn } from './complementos.js';
 
 /**
  * Los complementos de la pantalla 0 de la isla (M1 de `specs/isla-y-landing-nueva.md` §4.29, `#880`): todos los que se
@@ -116,6 +116,26 @@ describe('los grupos de elección, TODOS (`#881`)', () => {
         assert.deepEqual(eleccionesDelBorrador(grupos, { menu: '108', elecciones: { pulsera: '201' }, conMenu: true }), [
             { group: 'menu', product_id: 108 }, { group: 'pulsera', product_id: 201 },
         ]);
+    });
+
+    test('como preguntas de la lista: sus opciones con la nota del servidor y la elegida —la suya o la que el servidor deja—', () => {
+        const pulsera = {
+            key: 'pulsera', label: 'Color de la pulsera',
+            options: [
+                { product_id: 201, product_name: 'Azul', note: 'Incluido', selected: true, features: ['La de siempre'] },
+                { product_id: 202, product_name: 'Roja', note: '+1,00 €', selected: false, available: false },
+            ],
+        };
+        const [fila] = gruposComoFilas([pulsera]);
+
+        assert.deepEqual([fila.id, fila.forma, fila.grupo, fila.titulo, fila.valor], ['grupo-pulsera', 'grupo', 'pulsera', 'Color de la pulsera', '201']);
+        assert.deepEqual(fila.items, [
+            { value: '201', title: 'Azul', description: 'La de siempre.', price: 'Incluido', disabled: false },
+            { value: '202', title: 'Roja', description: '', price: '+1,00 €', disabled: true },
+        ]);
+        assert.equal(gruposComoFilas([pulsera], { elecciones: { pulsera: 202 } })[0].valor, '202', 'la del borrador manda');
+        assert.deepEqual(gruposComoFilas([{ key: 'menu', options: [{ product_id: 107 }] }, pulsera], { desde: 1 }).map((g) => g.grupo), ['pulsera'], 'en una fiesta, el menú tiene su pregunta');
+        assert.deepEqual(gruposComoFilas([{ key: 'vacio', options: [] }]), [], 'sin opciones, no se pregunta');
     });
 
     test('en una entrada, todos por su clave; lo no elegido no viaja (el servidor deja el de por defecto)', () => {

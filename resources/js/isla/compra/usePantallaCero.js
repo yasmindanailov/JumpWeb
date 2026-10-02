@@ -12,14 +12,16 @@
  */
 import { computed } from 'vue';
 import { api } from '../../sidebar/api.js';
-import { todayIso } from '../../sidebar/cart.js';
+import { toApiItems, todayIso } from '../../sidebar/cart.js';
 import { calcetinDe, cargarDiasDeFilas, cargarFichas, horaDelMotor, horaQueCabe, primerDia } from './oferta.js';
 import { informarDemanda } from './demanda.js';
 import { borradorDeIntencion, borradorVacio } from './intencion.js';
 import { horaCorta } from './vista.js';
 import { datosDeReserva, filasDeZona, pantallaCuando, preguntaCalcetines, respuestasDe } from './pantalla-cuando.js';
 import { campoDeEdad, menuElegido, packPorEdad, packsDeFiesta, pantallaCuandoFiesta } from './fiesta.js';
-import { cargarSinHora, complementosDe, conExtra, eleccionesDelBorrador, quedanEn } from './complementos.js';
+import { cargarSinHora, complementosDe, conExtra, eleccionesDelBorrador, gruposComoFilas, quedanEn } from './complementos.js';
+import { cargarHorasDe, horasQueNoCaben, otraDeLaPantalla, otraNueva, otrasZonas } from './otra-zona.js';
+import { lineasDe, pedidoDe, resolverOtras } from './linea.js';
 
 export function usePantallaCero({ flow, compra, enCola, textos }) {
     const { catalogStore, timeStore, selectionStore, cartStore } = flow;
@@ -29,6 +31,58 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
 
     /** La ficha del producto del borrador: la de la fila o, en una fiesta, la de su pack. */
     const ficha = () => (compra.borrador.fiesta ? (compra.fichas[compra.borrador.fila] ?? null) : catalogStore.product);
+
+    /** ¿Es una compra de ENTRADAS? La otra zona es solo suya (`otra-zona.md` §2: ni fiestas ni excursiones, el mockup). */
+    const deEntradas = () => ! compra.borrador.fiesta && catalogStore.products.find((p) => p.id === compra.borrador.fila)?.type === 'entry';
+
+    /** La línea de la otra zona como la pide el pedido (`linea.js::pedidoDe`): su fila, su gente y su justificante. */
+    const otraDelPedido = () => {
+        const o = compra.borrador.otra;
+
+        return o ? [{ fila: o.fila, n: o.n, guardian: compra.fichaOtra?.guardian_authorization ?? 'none' }] : [];
+    };
+
+    /**
+     * **Con la otra zona, el presupuesto de TODAS las líneas** (`POST /orders/quote`, sin tocar la cesta: K2 de
+     * `otra-zona.md`): el total de la pantalla 0 es el suyo (`PAY-12`), nunca una suma. Sin ella, o sin hora, ninguno.
+     */
+    async function cotizar() {
+        const b = compra.borrador;
+
+        if (! b.otra || ! b.hora || ! selectionStore.line) { compra.cotizacion = null; return; }
+        const pedido = pedidoDe(b, { otras: otraDelPedido() });
+        const resueltosOtras = await resolverOtras({ api, pedido });
+        const r = resueltosOtras === null ? null
+            : await api.post('/orders/quote', { items: toApiItems(lineasDe(pedido, selectionStore.resolved, resueltosOtras)) });
+
+        compra.cotizacion = r?.ok ? r.data : null;
+    }
+
+    /**
+     * ¿Caben TODOS a la hora elegida? La otra línea, en su zona y con su gente (D1-A): si no, la hora se vacía —el selector
+     * dice por qué—, como cuando no cabe la del pedido.
+     */
+    function caben() {
+        const b = compra.borrador;
+
+        if (b.otra && b.hora && horasQueNoCaben(compra.horasOtra, b.otra.n)(horaCorta(b.hora))) b.hora = null;
+    }
+
+    /** La fila de la otra zona: su ficha (su justificante) y sus horas ese día, con la cesta de contexto (`AFORO-02`). */
+    async function cargarOtra() {
+        const b = compra.borrador;
+
+        if (! b.otra) return;
+        const [fichaOtra, horas] = await Promise.all([
+            api.get(`/catalog/products/${b.otra.fila}`),
+            b.dia ? cargarHorasDe({ api, fila: b.otra.fila, dia: b.dia, lineas: cartStore.lines }) : null,
+        ]);
+
+        compra.fichaOtra = fichaOtra?.ok ? fichaOtra.data : null;
+        compra.horasOtra = horas;
+        caben();
+        await resolverLinea();
+    }
 
     /**
      * Los complementos que se PIDEN (`#880`): los pares de calcetines —de una entrada y, desde la M1, también de una
@@ -46,11 +100,14 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
         ];
     }
 
-    /** La línea que resuelve el SERVIDOR con la selección de ahora (el dinero, con los complementos y el menú dentro). */
+    /**
+     * La línea que resuelve el SERVIDOR con la selección de ahora (el dinero, con los complementos y el menú dentro) y, con
+     * la otra zona, el presupuesto de todas (`cotizar`).
+     */
     async function resolverLinea() {
         const b = compra.borrador;
 
-        if (! b.hora) { selectionStore.setLine(null); return; }
+        if (! b.hora) { selectionStore.setLine(null); compra.cotizacion = null; return; }
         timeStore.select(b.hora);
         selectionStore.setQuantity(b.n);
         selectionStore.setQuantities(pedidos());
@@ -58,6 +115,7 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
         await selectionStore.loadAddons({ api, productId: b.fila, date: b.dia, time: b.hora });
         // Con hora, los grupos de elección (el menú, o los de una entrada) vuelven RESUELTOS para esa gente: son los que se pintan.
         if (selectionStore.addons?.groups?.length) compra.grupos = selectionStore.addons.groups;
+        await cotizar();
     }
 
     /** Lo elegido de cada grupo de elección (`#881`): el menú de una fiesta y lo de los demás grupos. */
@@ -67,15 +125,24 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
         return eleccionesDelBorrador(compra.grupos, { menu: b.menu, elecciones: b.elecciones, conMenu: Boolean(b.fiesta) });
     };
 
-    /** Las horas de la fila y el día, con la cesta (`AFORO-02`). Una hora que ya no cabe se vacía. */
+    /**
+     * Las horas de la fila y el día, con la cesta (`AFORO-02`) y, con la otra zona, también las suyas (en paralelo). Una hora
+     * que ya no cabe —la del pedido o la otra— se vacía.
+     */
     async function cargarHoras() {
         const b = compra.borrador;
 
         if (! b.fila || ! b.dia) { compra.cargandoHoras = false; return; }
         compra.cargandoHoras = true;
-        await timeStore.loadOffer({ api, productId: b.fila, date: b.dia, cartLines: cartStore.lines });
+        const [, horasOtra] = await Promise.all([
+            timeStore.loadOffer({ api, productId: b.fila, date: b.dia, cartLines: cartStore.lines }),
+            b.otra ? cargarHorasDe({ api, fila: b.otra.fila, dia: b.dia, lineas: cartStore.lines }) : null,
+        ]);
+
+        compra.horasOtra = horasOtra;
         compra.cargandoHoras = false;
         if (b.hora && ! horaQueCabe(timeStore.offered, b.hora, b.n)) b.hora = null;
+        caben();
         await resolverLinea();
     }
 
@@ -163,13 +230,15 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
     async function situar(borrador, cargados = null) {
         if (borrador.fiesta) return situarFiesta(borrador);
         compra.borrador = borrador;
-        Object.assign(compra, { precios: {}, llegaron: [] });
+        Object.assign(compra, { precios: {}, llegaron: [], horasOtra: null, fichaOtra: null, cotizacion: null });
         if (! borrador.zona) return;
         const filas = filasDeZona(catalogStore.products, borrador.zona);
+        // Y la primera fila de cada OTRA zona de entradas (K2 de `otra-zona.md`): sus días dicen si se ofrece ese día.
+        const otras = filas[0]?.type === 'entry' ? otrasZonas(catalogStore.products, borrador.zona).map((z) => z.fila.id) : [];
 
         // Mientras llegan los días, las horas enseñan su hueco (el esqueleto del diseño): nada salta después.
         compra.cargandoHoras = true;
-        const oferta = cargados ?? await cargarDiasDeFilas({ api, ids: filas.map((p) => p.id) });
+        const oferta = cargados ?? await cargarDiasDeFilas({ api, ids: [...filas.map((p) => p.id), ...otras] });
 
         Object.assign(compra, { precios: oferta.dias, llegaron: oferta.llegaron });
         const dias = compra.precios[borrador.fila] ?? [];
@@ -227,6 +296,15 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
         if (campo === 'eleccion') { b.elecciones = { ...(b.elecciones ?? {}), [valor.grupo]: valor.valor }; return enCola(resolverLinea); }
         // Un dato de la reserva de un pack (`#839`): se escribe en el borrador y viaja al continuar; no cambia la oferta.
         if (campo === 'evento') { b.evento = { ...(b.evento ?? {}), [valor.key]: valor.valor }; return null; }
+        // La OTRA ZONA (K2 de `otra-zona.md`): añadirla —su primera fila, para una persona—, cambiar su gente o quitarla.
+        if (campo === 'otra') { b.otra = otraNueva(otrasZonas(catalogStore.products, b.zona), compra.precios, b.dia); return b.otra ? enCola(cargarOtra) : null; }
+        if (campo === 'otraN' && b.otra) { b.otra = { ...b.otra, n: valor }; caben(); return enCola(resolverLinea); }
+        if (campo === 'quitarOtra') {
+            b.otra = null;
+            Object.assign(compra, { horasOtra: null, fichaOtra: null, cotizacion: null });
+
+            return null;
+        }
 
         return null;
     }
@@ -240,8 +318,11 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
         const calcetin = calcetinDe(ficha());
         const extras = (b.extras ?? []).filter((x) => x.product_id !== calcetin?.id);
 
-        // De un pack sin edad, lo que pide al reservar (`#839`): solo sus campos y contestados, como los valida el servidor.
-        if (! b.fiesta) return { calcetin, evento: respuestasDe(datosDeReserva(catalogStore.product, b.evento)), elecciones: elecciones(), extras };
+        // De un pack sin edad, lo que pide al reservar (`#839`): solo sus campos y contestados, como los valida el servidor. Y
+        // de unas entradas, la línea de la otra zona (K2 de `otra-zona.md`).
+        if (! b.fiesta) {
+            return { calcetin, evento: respuestasDe(datosDeReserva(catalogStore.product, b.evento)), elecciones: elecciones(), extras, otras: otraDelPedido() };
+        }
         const campo = campoDeEdad(compra.fichas[b.fila]);
 
         return { calcetin, evento: campo ? { [campo.key]: b.edad } : {}, elecciones: elecciones(), extras };
@@ -251,11 +332,15 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
         const b = compra.borrador;
         const deLaFila = ficha();
         const calcetin = calcetinDe(deLaFila);
-        // La lista de complementos (`#880`): con hora, lo que el servidor resolvió para ESA hora; sin ella, `null`.
-        const complementos = complementosDe({
-            ficha: deLaFila, excluir: calcetin ? [calcetin.id] : [], extras: b.extras, sinHora: compra.sueltos,
-            conHora: b.hora && selectionStore.line ? (selectionStore.addons?.singles ?? []) : null, hora: horaCorta(b.hora), textos,
-        });
+        // La lista de complementos (`#880`): con hora, lo que el servidor resolvió para ESA hora; sin ella, `null`. Delante, los
+        // grupos de elección que no tienen su pregunta (`#881`: en una fiesta, todos menos el menú).
+        const complementos = [
+            ...gruposComoFilas(compra.grupos, { elecciones: b.elecciones, desde: b.fiesta ? 1 : 0 }),
+            ...complementosDe({
+                ficha: deLaFila, excluir: calcetin ? [calcetin.id] : [], extras: b.extras, sinHora: compra.sueltos,
+                conHora: b.hora && selectionStore.line ? (selectionStore.addons?.singles ?? []) : null, hora: horaCorta(b.hora), textos,
+            }),
+        ];
         const comun = {
             borrador: b, precios: compra.precios, horas: timeStore.offered, cargandoHoras: compra.cargandoHoras,
             maximo: b.hora ? timeStore.maxQuantity : null, linea: selectionStore.line, textos, locale: flow.locale, hoy: todayIso(),
@@ -267,7 +352,12 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
                 ...comun, packs: packs.value, grupos: compra.grupos, corte: flow.configuracion.value?.guest_count_cutoff_hours,
                 calcetines: preguntaCalcetines(calcetin, b.cal, { textos, locale: flow.locale }),
             })
-            : pantallaCuando({ ...comun, productos: catalogStore.products, minimo: catalogStore.minQuantity, umbral: timeStore.lowMax, calcetin, ficha: deLaFila });
+            : pantallaCuando({
+                ...comun, productos: catalogStore.products, minimo: catalogStore.minQuantity, umbral: timeStore.lowMax, calcetin, ficha: deLaFila,
+                // La otra zona, solo en ENTRADAS (K2 de `otra-zona.md`), y el presupuesto de todas las líneas si la hay.
+                otra: deEntradas() ? otraDeLaPantalla({ borrador: b, productos: catalogStore.products, precios: compra.precios, horasOtra: compra.horasOtra, textos, locale: flow.locale }) : null,
+                cotizacion: compra.cotizacion,
+            });
     });
 
     return { vista, situar, cambiar, cargarHoras, extrasDelPedido };

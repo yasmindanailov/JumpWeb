@@ -52,11 +52,13 @@ defineProps({
     // Con el motor (T3e·2), de los DATOS: `cuantos.min`/`max`, `calcetines.max`, el umbral de «quedan» (el aviso de
     // «casi llena» del panel) y si hay otra zona que ofrecer. Sin ellos, los valores del diseño (el banco).
     umbral: { type: Number, default: 6 },
-    otraZona: { type: Boolean, default: true },
+    // El enlace de la OTRA ZONA, ya escrito (K2 de `otra-zona.md`: la nombra con una sola, D3-B); `''`, ninguno.
+    otraZona: { type: String, default: '' },
     // El «no» del servidor al continuar (T3e·3): la línea no cabe, las reservas en pausa… Arriba, como el de «Tus datos».
     aviso: { type: String, default: '' },
 });
-const emit = defineEmits(['cambiar', 'otra', 'quitarOtra']);
+// La otra zona avisa como lo demás (`cambiar('otra')`, `cambiar('quitarOtra')`): la compra solo escucha `cambiar`.
+const emit = defineEmits(['cambiar']);
 const { t } = useTextos();
 </script>
 
@@ -184,6 +186,7 @@ const { t } = useTextos();
                 v-if="!otraEntrada && complementos.length"
                 :items="complementos"
                 @cambiar="(id, n) => emit('cambiar', 'extra', { id, n })"
+                @elegir="(grupo, valor) => emit('cambiar', 'eleccion', { grupo, valor })"
             />
             <!-- Lo que un PACK pide al reservar (`#839`: el centro y su responsable de una excursión), con las etiquetas del
                  panel: `preguntas.datos` trae su título y sus campos. El diseño no dibuja este paso: es el campo del sistema. -->
@@ -198,16 +201,19 @@ const { t } = useTextos();
                 />
             </PreguntaCompra>
             <template v-if="!otraEntrada">
+                <!-- La tarjeta de la OTRA ZONA (K2 de `otra-zona.md`): su id es a donde lleva «lo que falta» (M2) si su zona
+                     no se vende ese día, y entonces su precio lo dice en rojo. -->
                 <section
                     v-if="otra"
+                    id="pjc-q-otra"
                     :style="{ display: 'grid', gap: '12px', padding: '14px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', background: 'var(--surface-card)' }"
                 >
                     <div :style="{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }">
                         <div :style="{ display: 'grid', gap: '2px' }">
                             <h2 :style="PASO.pregunta">{{ otra.titulo }}</h2>
-                            <p :style="PASO.pista">{{ otra.precio }}</p>
+                            <p :style="otra.bloquea ? PASO.falta : PASO.pista">{{ otra.precio }}</p>
                         </div>
-                        <EnlaceSistema @click="emit('quitarOtra')">{{ t('compra.cuando.quitar') }}</EnlaceSistema>
+                        <EnlaceSistema @click="emit('cambiar', 'quitarOtra')">{{ t('compra.cuando.quitar') }}</EnlaceSistema>
                     </div>
                     <CantidadCompra
                         :model-value="otra.n"
@@ -221,12 +227,12 @@ const { t } = useTextos();
                 <EnlaceSistema
                     v-else-if="otraZona"
                     :style="{ justifySelf: 'start' }"
-                    @click="emit('otra')"
+                    @click="emit('cambiar', 'otra')"
                 >
                     <template #icono><IconoLucide
                         name="plus"
                         :size="18"
-                    /></template>{{ t('compra.cuando.otra_zona') }}
+                    /></template>{{ otraZona }}
                 </EnlaceSistema>
             </template>
         </template>

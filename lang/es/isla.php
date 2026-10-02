@@ -213,6 +213,12 @@ return [
             'titulo_hoy' => 'Para hoy',
             'zona' => '¿Qué zona?',
             'otra_zona' => '¿Alguien va a la otra zona? Añádelo a la misma reserva',
+            // La otra zona (K2 de `otra-zona.md`, `#878`): con una sola, se nombra (D3-B); su tarjeta y sus «no».
+            'otra_zona_de' => '¿Alguien va a :zona? Añádelo a la misma reserva',
+            'otra_no_vende' => ':zona no se vende este día',
+            'otra_no_cabe' => 'En :zona no caben a esta hora',
+            'otra_llena' => 'En :zona ya no queda sitio a esa hora. Elige otra hora o quítala.',
+            'aviso_otra' => ':zona: :aviso',
             // Bajo la tira de días, el calendario de meses para lo que ella no enseña (`#830`).
             'mas_fechas' => 'Más fechas',
             'menos_fechas' => 'Cerrar el calendario',
@@ -280,6 +286,7 @@ return [
             'correo' => 'Escribe tu correo para continuar',
             'codigo' => 'Escribe las :n cifras del código',
             'hora_libre' => 'Elige una de estas horas para continuar',
+            'otra' => ':zona no se vende ese día: quítala o elige otro día',
         ],
         'datos' => [
             'banda' => 'Tus datos',

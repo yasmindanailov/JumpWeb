@@ -106,6 +106,29 @@ export function complementosDe(e) {
 }
 
 /**
+ * **Los GRUPOS DE ELECCIÓN como preguntas de la lista** («esto o aquello»; `#881`, con la K2 de `otra-zona.md`): cada uno
+ * con sus opciones —su nombre, sus ventajas y la nota de su precio, del servidor— y la elegida: la del borrador o, sin
+ * elegir, la que el servidor deja (`selected`). En una fiesta, desde el SEGUNDO (`desde`: el primero es el menú, que tiene
+ * su pregunta). Un grupo sin opciones no se pregunta.
+ */
+export function gruposComoFilas(grupos, { elecciones = {}, desde = 0 } = {}) {
+    return (Array.isArray(grupos) ? grupos : []).slice(desde).filter((g) => g?.key && (g.options ?? []).length > 0).map((g) => {
+        const elegida = elecciones?.[g.key] ?? g.options.find((o) => o.selected)?.product_id ?? null;
+
+        return {
+            id: `grupo-${g.key}`,
+            forma: 'grupo',
+            grupo: g.key,
+            titulo: String(g.label ?? ''),
+            items: g.options.map((o) => ({
+                value: String(o.product_id), title: o.product_name, description: frases(o.features), price: o.note ?? '', disabled: o.available === false,
+            })),
+            valor: elegida === null ? null : String(elegida),
+        };
+    });
+}
+
+/**
  * **Lo elegido de CADA grupo de elección** («esto o aquello»; `#881`, con la L2): en una fiesta, el MENÚ en el primero
  * (`menu`, como siempre); en los demás —y en TODOS, en una entrada— lo que el borrador guarda por grupo (`elecciones`,
  * `{ [clave del grupo]: producto }`). Lo que no se eligió no viaja: el servidor deja el de por defecto (`selected_by_default`).

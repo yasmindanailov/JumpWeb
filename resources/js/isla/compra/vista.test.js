@@ -300,3 +300,49 @@ describe('la pantalla 0 de un pack sin edad (una excursión)', () => {
         assert.deepEqual(datosDeReserva(fiesta).map((d) => [d.key, d.numero]), [['adults', true]]);
     });
 });
+
+/**
+ * La OTRA ZONA en la pantalla 0 (K2 de `specs/otra-zona.md`, `#878`): llega hecha de `otra-zona.js` y aquí se aplica —el
+ * enlace, la tarjeta, las horas para todas las líneas, el resumen con « + », lo que falta y el dinero del presupuesto—.
+ */
+describe('la otra zona, aplicada', () => {
+    const sinOtra = { enlace: '', tarjeta: null, bloquea: false, resumen: null, noCabe: () => false, notaHora: '', zona: '' };
+    const tarjeta = { titulo: 'Jump · 1 hora', precio: '8 € por entrada', n: 1, uno: 'entrada', varios: 'entradas' };
+    const conOtra = (cambios = {}) => ({ ...sinOtra, tarjeta, resumen: 'Jump · 1 hora · 1 entrada', zona: 'JUMP', notaHora: 'En JUMP no caben a esta hora', ...cambios });
+
+    test('sin la otra: el enlace que la nombra (o ninguno) y la pantalla de siempre', () => {
+        const v = pantallaCuando(estado({ otra: { ...sinOtra, enlace: '¿Alguien va a JUMP? Añádelo a la misma reserva' } }));
+
+        assert.equal(v.props.otraZona, '¿Alguien va a JUMP? Añádelo a la misma reserva');
+        assert.equal(v.props.otra, null);
+        assert.equal(pantallaCuando(estado()).props.otraZona, '', 'sin lo de la otra zona (una fiesta, una excursión), ningún enlace');
+    });
+
+    test('las horas: donde la otra NO cabe, apagada con su porqué; las ya apagadas, como estaban', () => {
+        const v = pantallaCuando(estado({ borrador: borrador({ otra: { fila: 103, n: 1 } }), otra: conOtra({ noCabe: (h) => h === '17:00' }) }));
+
+        assert.deepEqual(v.props.horas.map((h) => [h.time, Boolean(h.disabled), h.note ?? '']), [
+            ['17:00', true, 'En JUMP no caben a esta hora'], ['18:00', true, 'Quedan 1'], ['19:00', true, ''],
+        ]);
+    });
+
+    test('con la otra: su tarjeta, el resumen con « + » y el total del PRESUPUESTO de todas (nunca una suma)', () => {
+        const b = borrador({ hora: '17:00:00', otra: { fila: 103, n: 1 } });
+        const listo = pantallaCuando(estado({ borrador: b, otra: conOtra(), linea: { total_cents: 1600 }, cotizacion: { total_cents: 2400, online_amount_cents: 2400 } }));
+
+        assert.deepEqual(listo.props.otra, { ...tarjeta, bloquea: false });
+        assert.equal(listo.ck.summary, 'Kids · 1 hora · vie 25, 17:00 · 2 entradas + Jump · 1 hora · 1 entrada');
+        assert.equal(listo.ck.total.replace(/\s/g, ' '), '24 €', 'el del presupuesto de las dos, no el de la suya (16 €)');
+        assert.equal(listo.ck.today, null, 'sin señal, nada que pagar hoy aparte');
+        assert.equal(pantallaCuando(estado({ borrador: b, otra: conOtra(), linea: { total_cents: 1600 }, cotizacion: null })).ck.total, null, 'mientras llega el presupuesto, sin total');
+    });
+
+    test('si su zona no se vende ese día, no se sigue: lo que falta es su tarjeta, nombrando la zona', () => {
+        const v = pantallaCuando(estado({ borrador: borrador({ hora: '17:00:00', otra: { fila: 103, n: 1 } }), otra: conOtra({ bloquea: true }), linea: { total_cents: 1600 } }));
+
+        assert.equal(v.listo, false);
+        assert.equal(v.falta, 'pjc-q-otra');
+        assert.equal(v.faltaZona, 'JUMP');
+        assert.equal(v.props.otra.bloquea, true);
+    });
+});

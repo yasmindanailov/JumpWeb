@@ -14,10 +14,11 @@
 - **Trampas**: (1) la cesta de la isla SUSTITUYE su línea porque el recibo no tenía «quitar» (`#692`, T3e·3): una
   línea más exige poder quitarla en «Pagar», y el mockup no lo trae (D2). (2) Cada línea se valida con las anteriores
   en `items` y la candidata FUERA (`cart.js::validateLine`), o compite consigo misma. (3) Los pesos, a ras de su techo:
-  la compra 190,66 de 191 y los pasos 55,15 de 56 (`SidebarBundleBudgetTest`, tras la M1 de `#880`, 02-10). (4) La hora
+  la compra 199,61 de 201 y los pasos 56,01 de 57 (`SidebarBundleBudgetTest`, tras la K2, 02-10). (4) La hora
   llena (`#822`) y la vuelta del banco, con dos líneas.
-- **Estado**: ✅ aprobada (`#878`). **K1 ✅** (02-10 noche, §4.6: el modelo y la cesta); sigue K2. ➕ `#881`: con ella, los
-  grupos de elección que la isla no pinta —uno en una ENTRADA o un segundo en un pack—: su modelo, en la K1; su pregunta, K2.
+- **Estado**: ✅ aprobada (`#878`). **K1 ✅ · K2 ✅** (02-10 noche, §4.6: el modelo y la cesta; la pantalla 0); sigue K3.
+  ➕ `#881`: con ella, los grupos de elección que la isla no pinta —uno en una ENTRADA o un segundo en un pack—: su modelo,
+  en la K1; su pregunta, K2.
 - **Invariantes**: `PAY-12`, `PAY-20`, `AFORO-01`, `AFORO-02`, sin tocar el servidor ni el `CRITICAL_RE`; la compra
   entera con la pasarela de pruebas y la BD, sí (§6).
 
@@ -140,6 +141,24 @@ entrada, todos— por su clave), `cambiar('eleccion')`, y se limpian al cambiar 
 (17) y `complementos.test.js` (1.749 de JS); dos mutaciones vistas morder —sin devolver la cesta (cae el todo o nada) y con la
 cesta vacía de contexto (caen el orden y la fusión)—; `SidebarBundleBudgetTest` (la compra 193,11 → 195,08, a 196);
 `sonda-conversion` 22/22 y la sonda desechable de la M1, 12/12, de punta a punta (una línea, como antes).
+
+**K2, hecha (02-10 noche; vista por el owner).** `otra-zona.js` (puro): las otras zonas de entradas con su primera fila,
+las que se venden ese día, la línea nueva (su primera fila, una persona: el mockup), sus horas con la cesta (`AFORO-02`) y
+lo que pinta la pantalla —el enlace que la NOMBRA con una sola zona (D3-B; con varias, el genérico; sin ninguna, nada), la
+tarjeta (su fila, su precio de ese día por persona, su gente y «Quitar»), si no se vende ese día (`bloquea`: la tarjeta lo
+dice en rojo y lo que falta es ella, M2, `pjc-q-otra`), su parte del resumen con « + » y las horas en las que NO cabe
+(apagadas con su porqué; cada línea en su zona, no la gente sumada del mockup)—. `usePantallaCero`: sus días con los de la
+zona, su ficha (el justificante) y sus horas al añadirla, la hora que deja de caber se vacía, y el PRESUPUESTO de todas las
+líneas (`POST /orders/quote`, sin tocar la cesta: el total de la pantalla 0 es el suyo, `PAY-12`; mientras llega, sin total).
+Solo en ENTRADAS. Al continuar, la que no cabe se dice con el nombre de su zona; la pantalla de la hora llena sigue siendo de
+la del pedido (las cercanas para todas, K4). Los grupos de `#881`: `gruposComoFilas` y su pregunta en la lista
+(`ComplementosCompra`, forma `grupo`, con `TarjetasOpcion`); ningún producto local los tiene: solo por sus pruebas. ⚠️ Un
+defecto que la sonda cazó al primer toque: la pantalla emitía `otra`/`quitarOtra` y la compra solo escucha `cambiar`.
+**Medido**: `otra-zona.test.js` (11), `vista.test.js`, `complementos.test.js` y `falta.test.js` (1.766 de JS); las guardas
+(la compra 195,08 → 199,61, a 201; los pasos 55,15 → 56,01, a 57); una sonda desechable a 390 y 1280, 9/9: el enlace que
+nombra a JUMP un sábado, su tarjeta (11,20 € por entrada), el resumen con « + », el total = el presupuesto del servidor pedido
+aparte (19,20 €), más gente → 30,40 €, «Continuar» con las DOS líneas en la cesta a la misma hora, y «Quitar»; las sondas de la
+M1, M2 y M3 y `sonda-conversion` 22/22, sin cambios.
 
 ## 5. Impacto en invariantes
 - `PAY-12` y `PAY-20`: el recibo pinta el presupuesto del servidor y no suma nada.

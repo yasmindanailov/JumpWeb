@@ -1024,7 +1024,11 @@ class SidebarBundleBudgetTest extends TestCase
     // `meterLineas`, `conLaCesta`)— y lo elegido de cada grupo (`complementos.js::eleccionesDelBorrador`). Medido 193,11 →
     // 195,08 (base: la medida de la M3, `55abbb0b`). El techo, a 196. ⚠️ Pasar código al trozo de los pasos no ahorra
     // descarga —la isla de cada página pide los dos al montarse—: el ahorro es CARGAR la compra al abrirla (la M4).
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 196;
+    // K2 de la L2 (`otra-zona.md` §4.2): la OTRA ZONA en la pantalla 0 —el enlace que la nombra, su tarjeta, sus horas con la
+    // cesta y el presupuesto de todas las líneas (`otra-zona.js`, `usePantallaCero`)— y la pregunta de los grupos de elección
+    // (`#881`, `complementos.js::gruposComoFilas`). Medido 195,08 → 199,61 (base: la medida de la K1, `adb6e0e5`). El techo, a
+    // 201 (con 0,39 de holgura, un cable trampa). ⚠️⚠️ En UNA noche, de 187,17 a 199,61 (+12,44): la M4 empieza por aquí.
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 201;
 
     // T4d·4 (`specs/isla-y-landing-nueva.md` §4.12): la CALCULADORA de una página, entrada propia que la página pide
     // (`scripts` de `<x-pagina>`) y se monta al acercarse su pieza. Su DESCARGA entera, como la mide el navegador que
@@ -1135,7 +1139,9 @@ class SidebarBundleBudgetTest extends TestCase
     // (`ComplementosCompra.vue`) con la fila de la mejora de la calculadora de la fiesta (`ui/FilaMejora.vue`, la hora
     // extra), diferidas aquí como «Datos de la reserva». Medido 50,79 → 55,15 (base: el `HEAD` `351870b9`, construido en
     // este árbol con mis ficheros devueltos a `HEAD`, el mismo cálculo). El techo, a 56.
-    private const ISLA_PASOS_CHUNK_MAX_KB = 56;
+    // K2 de la L2 (`otra-zona.md`): la forma `grupo` de la lista de complementos (`ComplementosCompra`: los grupos de elección
+    // de `#881`, con las tarjetas de opción). Medido 55,15 → 56,01 (base: la de la M1). El techo, a 57.
+    private const ISLA_PASOS_CHUNK_MAX_KB = 57;
 
     // T5b (`#775`): MI CUENTA de la isla, trozo diferido del motor que se pide a la primera apertura de la cuenta. Su
     // descarga, sobre lo que ya tiene quien la abre (el motor y la compra, que la isla monta con el motor). Medido el

@@ -151,6 +151,7 @@ const emit = defineEmits(['cambiar']);
             v-if="complementos.length"
             :items="complementos"
             @cambiar="(id, n) => emit('cambiar', 'extra', { id, n })"
+            @elegir="(grupo, valor) => emit('cambiar', 'eleccion', { grupo, valor })"
         />
         <p
             v-if="despues"

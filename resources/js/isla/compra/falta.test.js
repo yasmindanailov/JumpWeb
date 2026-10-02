@@ -17,6 +17,7 @@ const textos = {
             correo: 'Escribe tu correo para continuar',
             codigo: 'Escribe las :n cifras del código',
             hora_libre: 'Elige una de estas horas para continuar',
+            otra: ':zona no se vende ese día: quítala o elige otro día',
         },
     },
 };
@@ -32,6 +33,10 @@ describe('la pantalla 0', () => {
     test('un dato de la reserva de un pack marca su BLOQUE (la caja va al campo)', () => {
         assert.equal(preguntaDeFalta('pjc-dato-centro'), 'pjc-q-datos');
         assert.deepEqual(marcaDe('pjc-dato-centro', textos), { id: 'pjc-q-datos', texto: 'Rellena los datos de la reserva para continuar' });
+    });
+
+    test('la otra zona que no se vende ese día (K2 de `otra-zona.md`): su tarjeta, nombrando la zona', () => {
+        assert.deepEqual(marcaDe('pjc-q-otra', textos, { zona: 'JUMP' }), { id: 'pjc-q-otra', texto: 'JUMP no se vende ese día: quítala o elige otro día' });
     });
 
     test('lo que no se sabe decir no se dice: ni nota ni marca', () => {

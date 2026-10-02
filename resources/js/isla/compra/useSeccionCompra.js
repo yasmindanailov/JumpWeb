@@ -64,9 +64,12 @@ export function useSeccionCompra(props) {
      * primera visita»), y la flecha de la pantalla 0 vuelve a ella; o el SELECTOR de planes (`#831`), y la flecha lo
      * reabre —`desdeHoy`: tal como se abrió, desde «Reservar para hoy» o no—.
      */
-    // `sueltos`: los complementos del producto resueltos SIN día ni hora, con su nota (`complementos.js`, `#880`).
+    // `sueltos`: los complementos del producto resueltos SIN día ni hora, con su nota (`complementos.js`, `#880`). La OTRA
+    // ZONA (K2 de `otra-zona.md`): `horasOtra` (lo que su fila ofrece ese día), `fichaOtra` (su justificante) y `cotizacion`
+    // (el presupuesto de TODAS las líneas, del servidor).
     const compra = reactive({
         borrador: borradorDeIntencion(null, []), precios: {}, llegaron: [], fichas: {}, grupos: [], sueltos: [], cargandoHoras: false, intencion: null,
+        horasOtra: null, fichaOtra: null, cotizacion: null,
         paso: 'cuando', aviso: '', ocupado: null, pedido: null, pagado: null, dir: null, cercanas: [], horaNueva: null,
         preparando: false, sinDatos: false, alEntrar: false, desde: null, desdeHoy: false,
     });
@@ -123,9 +126,9 @@ export function useSeccionCompra(props) {
     watch(paso, () => { marca.value = null; });
     watch(() => compra.horaNueva, (hora) => { if (hora && marca.value?.id === PERDIDA) marca.value = null; });
 
-    /** Pulsar sin estar listo: la caja va a lo que falta (`ir-a.js`) y lo marca. */
+    /** Pulsar sin estar listo: la caja va a lo que falta (`ir-a.js`) y lo marca (con lo que su frase nombra: la otra zona). */
     function aLoQueFalta(falta) {
-        marca.value = marcaDe(falta, textos);
+        marca.value = marcaDe(falta, textos, { zona: vista.value.faltaZona ?? '' });
         irA(falta);
     }
 
@@ -249,6 +252,17 @@ export function useSeccionCompra(props) {
 
     // ── Los pasos ────────────────────────────────────────────────────────────────────────────────────
 
+    /**
+     * El «no» del servidor a una línea del pedido: el suyo, tal cual; el de una línea de la OTRA ZONA, con su nombre —«En JUMP
+     * ya no queda sitio a esa hora…» si es la hora, o el aviso del motor detrás de su zona— (K2 de `otra-zona.md`).
+     */
+    function avisoDeLinea(r, pedido) {
+        if (! r.fila || r.fila === pedido.fila) return r.aviso;
+        const zona = catalogStore.products.find((p) => p.id === r.fila)?.zone?.name ?? '';
+
+        return r.horaLlena ? tp(textos, 'compra.cuando.otra_llena', { zona }) : tp(textos, 'compra.cuando.aviso_otra', { zona, aviso: r.aviso });
+    }
+
     /** «Continuar» de la pantalla 0: la línea a la cesta (la sustituye, `linea.js`) y la admisión del motor. */
     async function continuar() {
         if (compra.ocupado) return;
@@ -273,15 +287,17 @@ export function useSeccionCompra(props) {
             const r = await meterLinea({ api, pedido, resueltos: selectionStore.resolved, resueltosOtras, cartStore, messages: props.messages });
 
             // La hora se llenó ENTRE elegirla y continuar (`#822`, §4.16): el aviso del diseño con las cercanas y «Elegir
-            // esta hora», no un texto en la pantalla 0. El pedido intentado queda como el perdido, para rehacerlo.
-            if (! r.ok && r.horaLlena) {
+            // esta hora», no un texto en la pantalla 0. El pedido intentado queda como el perdido, para rehacerlo. ⚠️ Solo si
+            // la llena es la SUYA: la de la otra zona se dice en la pantalla 0, con su nombre (las cercanas para TODAS, K4).
+            if (! r.ok && r.horaLlena && r.fila === pedido.fila) {
                 Object.assign(compra, { pedido, alEntrar: true });
                 await alLlenarse(r.aviso);
 
                 return;
             }
-            // El «no» del servidor se pinta ARRIBA de la pantalla 0: la capa sube a él (se continúa desde abajo).
-            if (! r.ok) { compra.aviso = r.aviso; alPrincipio(); return; }
+            // El «no» del servidor se pinta ARRIBA de la pantalla 0: la capa sube a él (se continúa desde abajo). El de una
+            // línea de la otra zona, nombrándola (K2 de `otra-zona.md`).
+            if (! r.ok) { compra.aviso = avisoDeLinea(r, pedido); alPrincipio(); return; }
             compra.pedido = conLaCesta(pedido, cartStore.lines);
             await admitir();
         } finally {
@@ -535,7 +551,7 @@ export function useSeccionCompra(props) {
                 },
             };
 
-            return vista.value.listo ? pantalla : conFalta(pantalla, marcaDe(falta, textos), () => aLoQueFalta(falta));
+            return vista.value.listo ? pantalla : conFalta(pantalla, marcaDe(falta, textos, { zona: vista.value.faltaZona ?? '' }), () => aLoQueFalta(falta));
         }
 
         return {
