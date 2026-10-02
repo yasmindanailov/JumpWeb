@@ -14,7 +14,7 @@
   dos limitadores por empleado, auditoría con hash, escanear y buscar acreditan la visita (`#741`, `#756`), sin apellidos
   de menores (el DTO no tiene campo) y un libro que no cuadra nunca dice «nada pendiente» (D-T3·8). Viven en
   `ValidarRegistro` y `GateProfile`, y 13 pruebas las guardan (§6).
-- **Empieza por §4.1** (el censo HAY · FALTA · CHOCA, medido el 02-10) y **§4.2** (lo que decidió el owner y D1–D6).
+- **Empieza por §4.1** (el censo HAY · FALTA · CHOCA, medido el 02-10) y **§4.2** (lo que decidió el owner y D1–D8).
 - **Lo de PlayJump es DATO del panel** (§4.3): la rueda de colores de las pulseras y qué complemento se entrega en la
   puerta. El producto no nombra colores ni calcetines (`PaletaNeutraTest` vale también aquí).
 - **El owner ya contestó** (`#817`): «Nueva búsqueda» se queda en el pie, los invitados en una línea sin nombres, la
@@ -129,6 +129,9 @@ HAY = el producto ya lo sabe (dónde) · FALTA = hay que construirlo · CHOCA = 
   de Livewire, y enmascararlo en el navegador lo dejaría entero en el DOM.
 - **D6 · Fuera, como el mockup**: lo que se cobra en un cumpleaños y su suplemento de fiesta mixta («se cobran al final,
   fuera de la Puerta»), «Cobrado», el «−» de las pulseras, las tareas de altura y edad y los grupos.
+- **D7 · El aviso del anonimato de la encuesta se QUEDA** (`#754`; el owner lo vio y lo aprobó en la puerta, `#757`): el
+  mockup no lo dibuja; va en su voz, sobre la pregunta.
+- **D8 · Los menores invitados fuera de un cumpleaños se quedan con su nombre** (§4.4, la P1 al detalle, punto b).
 
 ### 4.3 Los mecanismos nuevos (lo de PlayJump, como DATO)
 
@@ -181,6 +184,87 @@ Cada una con su «al detalle» medido aquí antes del código, en `wip/…`, con
 sonda (`sonda-puerta.mjs`, futuro) a 1080 × 810, 1194 × 834, 1366 × 1024 y 390 de ancho, y las fichas de `datos.js`
 montadas en la BD local (`ojo-puerta.php`, con `OJO=desmontar`).
 
+#### La P1 al detalle (medido el 02-10; los puntos de «Abierto» se miden al empezar, antes del código)
+
+**1 · Lo que NO cambia.** En `ValidarRegistro`: `search()`, `searchByCard()`, `openProfile()`, `ensureFresh()`, `clear()`,
+los dos limitadores, la auditoría, la visita acreditada al escanear y al buscar, `declareWaiver()` (`#336`) y la oferta y
+el «no» de la encuesta. `GateProfile` y su DTO solo GANAN campos. La ruta y `layouts.puerta`, salvo el modo oscuro (D3).
+
+**2 · El servidor gana** (cada pieza con su prueba y su mutación):
+- En cada reserva del DTO, la **zona** (nombre y `slug`, de `ticketType->zone`) y la **duración** (`duration_min`; `null` =
+  ilimitada). Un pack lleva su zona (`cumpleanos` en la local) hasta la P2 (§4.3·3).
+- **`GateVerdict`** (futuro), en lugar de `GateSemaphore`: de los nueve estados de hoy, `{tono, texto, sub}`. Con ficha:
+  verde «Listos para saltar» si el descargo está apagado (`#216`) o si el titular y TODOS sus menores a cargo tienen
+  descargo (el de una versión anterior deja pasar y lo dice la tarea, como hoy); si no, ámbar «Falta firmar el
+  descargo». Sin ficha (sin `puerta.profile`), el mismo veredicto grande y sin nombre. Sin cliente: rojo «No
+  encontrado», ámbar «QR caducado», gris «QR no reconocido», con su línea; y los tres avisos de la búsqueda en gris. Total
+  sobre las constantes, como hoy lo vigila `GateSemaphoreTest` por reflexión.
+- **El enmascarado** (D5), al guardar el eco en `$result['query']`: correo `an•••@dominio`, teléfono `••• ••• 678`; tras
+  un escaneo, sin «Resultado para». Lo tecleado mal se queda en el CAMPO para corregirlo (`#234`), no en el eco.
+- **Las líneas del dinero** por clase (en la puerta solo entran pedidos cobrados, así que salen cinco de las siete):
+  `pay_at_park` «Falta pagar 12 €: avisa al encargado.» · `refund_at_park` y `refund_pending` «Hay que devolverle 12 €:
+  avisa al encargado.» · `under_review` «El dinero de esta reserva no cuadra: avisa al encargado.» (D2) · `settled`
+  «Pagado 32 € (web)» o «(mostrador)», en verde.
+- **La encuesta pregunta a pregunta** (`#817`): cada toque escribe su respuesta y pasa a la siguiente; «Ahora no» sin
+  ninguna contestada es el «no preguntar» de hoy (`declineInPerson()`), y con alguna, cierra con lo contestado. Hoy
+  `closeInPerson()` escribe de una vez la participación y la respuesta ANÓNIMA (`#754`), y `answerSurvey()` valida las
+  obligatorias: las dos cambian (Abierto a).
+
+**3 · La vista.** `validar.blade.php` se reescribe; el bloque `gate-*` de `resources/css/filament/admin/theme.css` pasa a
+`ppu-*` (el mismo `@vite` del panel), escrito con los TOKENS DEL PANEL, que ya siguen la marca de la instalación
+(`theme.brand`, `@filamentStyles`): los colores del mockup son roles (verde → `--success-*`, ámbar → `--warning-*`, rojo
+→ `--danger-*`, neutro y gris → `--gray-*`, el acento → `--primary-*`), y la letra, la del panel. Ni un valor de
+PlayJump (el `rgba(11,46,74,…)` del mockup es su tinta: va como `color-mix` del gris del panel).
+- **Arriba**: el logotipo de la instalación (`filament.admin.brand`, el del panel) y «Puerta»; el campo de 58 px con el
+  cursor dentro y «Buscar» / «Buscando…»; «Resultado para», enmascarado.
+- **Izquierda**: el veredicto (banda de color con su palabra y, dentro, el nombre grande y «Abierta por QR / por búsqueda ·
+  Visita registrada») y la tarjeta de tareas: «Sin reserva a su nombre hoy» con «otro día»; una fila por zona y hora de
+  inicio con la cifra en su loseta (neutra hasta la P2) y, debajo, cada reserva con su línea, quién, la hora («empieza en
+  5 min», «empezó hace 12 min», «cuando llegue» la ilimitada), el pago, los complementos y el Nº; la línea del dinero en
+  ámbar bajo su fila; y firmar en sus cuatro textos, con «Dar por firmado» y su confirmación DENTRO de la ficha (fuera
+  el `wire:confirm`, que es una ventana del navegador y tapa el lector).
+- **Derecha**: «Sus hijos» (solo la excepción, D1; quien cumple el primero, «su cumple»); en un cumpleaños, «8 de 10 con
+  autorización» (`guest_minors_count`, `#817`); la encuesta, con el aviso del anonimato de `#754` que el owner aprobó
+  (D7: el mockup no lo dibuja y se queda, en su voz).
+- **Abajo, solo con ficha**: «La ficha se cierra sola a los 5 min.» y «Nueva búsqueda» (`#817`). El velo de los 60 s,
+  opaco, con «Ficha oculta por inactividad. Toca para seguir.» (la reseña llega en la P3).
+- **Lo del navegador** (Alpine, en el componente): el sonido (Web Audio; el primer toque lo desbloquea), la doble
+  lectura (el mismo código en menos de 3 s vacía el campo y no busca), la ficha apagada mientras busca (`wire:loading`) y
+  el bote con el pulso al abrir otra.
+
+**4 · Las pruebas** (censo del 02-10): 15 ficheros, 141 pruebas. Miran el HTML `ValidarRegistroProfileTest` (51 líneas),
+`GateSurveyTest` (19), `ValidarRegistroTest` (12) y, con 3 o menos, `GateProfileTest`, `WaiverGateTest`, `GateHonoreeTest`
+y `MixedPartyParkSurfacesTest`; `GateKioskTest` lee la HOJA. Las de dominio no se tocan. Las marcas `data-gate-*` se
+conservan donde la pieza sigue; las que cambian, con su porqué en el commit. `GateKioskTest` se rehace con las reglas del
+mockup y CONSERVA la de «Nueva búsqueda» nunca escondida (`#817`) y las del foco.
+
+**5 · El arnés y la sonda.** `mutar-puerta-p1.sh` (futuro): un mutante por estado de `GateVerdict`, por forma del
+enmascarado, por clase de dinero, por la agrupación, por los menores en el veredicto, por el `wire:confirm` y por «Nueva
+búsqueda». `sonda-puerta.mjs` y `ojo-puerta.php` (futuros): las fichas de `datos.js` montadas en la local, fotos en los
+cuatro tamaños y, en cada una, el veredicto y las tareas sin desplazar (el caso común, a 1080 × 810), ≥ 44 px, el foco
+tras buscar, tocar y volver, y ningún correo ni teléfono enteros en el HTML.
+
+**Los cinco puntos que quedaban abiertos, medidos el 02-10:**
+- **a · La encuesta a medias.** La respuesta (`survey_responses`) no tiene clave común con la participación, lleva un UUID
+  al azar y no tiene hora (`encuestas.md` §4.7, `#754`). Lo que el empleado marca YA viaja hoy en el estado de Livewire junto
+  a la ficha (`$surveyAnswers`). ▶ El primer toque escribe, como hoy y en la misma transacción, la participación y la
+  respuesta (con su sello), con lo contestado; su UUID queda en una propiedad `#[Locked]` mientras dure la ficha (no expone
+  nada que no esté ya ahí), y cada toque siguiente añade su respuesta a ESA fila, con la guarda de que es interna, de hoy,
+  de esta encuesta y de este empleado. En la puerta una obligatoria no frena: el empleado puede parar con «Ahora no»; el
+  correo de la externa sigue igual.
+- **b · Los menores invitados fuera de un cumpleaños** (el justificante de `#337`, en una entrada normal): el mockup no los
+  contempla y suelen ser uno o dos, delante del empleado. ▶ **D8**: se quedan como hoy, con su nombre y solo la excepción,
+  bajo «Sus hijos» como «Menores invitados»; la línea sin nombres de `#817` es para la fiesta.
+- **c · «Que añada y firme por sus hijos».** La regla ya existe en «Antes de venir» (`AntesDeVenir::hijos()`, `#777`,
+  `#825`): con el descargo interno y su texto publicado, es tarea si el producto es solo de menores
+  (`TicketType::onlyGuestsUnder`) y se da por hecha con algún menor declarado. ▶ La puerta usa esa misma regla, más un
+  menor a cargo sin descargo vigente.
+- **d · «Quién» de una fila.** La reserva sabe los nombres de los menores asignados (`minors`); de los adultos, nada
+  (`OrderItem` no tiene ocupantes con nombre, medido). ▶ «Quién» son los menores asignados; una fila de adultos dice
+  «2 personas» y no nombres (el «Rocío · Andrés» del mockup no tiene dato).
+- **e · La palabra «pulseras»** es de PlayJump. ▶ En la P1 la fila dice la cifra y la zona («2 KIDS»); el rótulo de la
+  pulsera («pulseras lilas») llega en la P2 con la rueda, y lo escribe el parque.
+
 ## 5. Impacto en invariantes
 
 - **RGPD** (`INVARIANTES.md` §3, lo que ve la cola): más estricto, con «Resultado para» enmascarado; sin apellidos de menores
@@ -205,3 +289,5 @@ montadas en la BD local (`ojo-puerta.php`, con `OJO=desmontar`).
 - 2026-10-02 · borrador medido (agente SPA).
 - 2026-10-02 · el owner contesta Q1–Q4 (`#817`): las recomendadas en Q1 y Q2; en Q3, pregunta a pregunta; en Q4, por
   palabras, «profesional y robusto». D1–D6 quedan como los decidió el agente. Sigue el «al detalle» de la P1.
+- 2026-10-02 · el «al detalle» de la P1, escrito y MEDIDO (§4.4), con D7 (el aviso del anonimato se queda) y D8 (los
+  menores invitados fuera de una fiesta, con su nombre). Sigue el código de la P1, en `wip/puerta-p1`.
