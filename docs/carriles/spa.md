@@ -59,7 +59,7 @@ filas 4 y 8), ANTES que la R1c («tus puntos primero»).
   no tiene ni la analítica ni `#mi-cuenta`: un QR impreso hoy abre la portada y no cuenta nada hasta la v2.0.0.
 
 - ▶ **Después, del owner (02-10 noche, `#912`/`#913`; `fiesta-sistema-nuevo.md` §4.20)**: P1 UN plazo para toda la lista (24 h;
-  fuera el de cada complemento; `CRITICAL_RE`) → P2 la impar a lo ancho → P3 la merienda «hay que elegir uno» (`CRITICAL_RE`) →
+  fuera el de cada complemento; `CRITICAL_RE`) → 🟦 P2 la impar a lo ancho (hecha) → P3 la merienda «hay que elegir uno» →
   P4 el correo «Falta elegir…» el día antes del plazo.
 
 0. ✅ Los complementos de la fiesta (K1–K3, `#806`→`#808`): su punto, mudado verbatim a `CARRIL-SPA.md` §9 (02-10). ▶ **Antes de

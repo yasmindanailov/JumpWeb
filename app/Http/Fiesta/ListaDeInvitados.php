@@ -636,12 +636,27 @@ final class ListaDeInvitados
             $carta = $tarjeta($a, $a->serves === null ? '' : trans_choice('fiesta.lista.ninos.para', $a->serves, ['count' => $a->serves]));
             if ($a->family === '') {
                 // «Uno para cada niño» (el `Tag` de los calcetines de la calculadora): un suelto «para 1» y abierto.
-                $grupos[] = ['titulo' => '', 'tarjetas' => [$carta], 'uno' => $a->serves === 1 && ! $carta['cerrado']];
+                $grupos[] = ['titulo' => '', 'tarjetas' => [$carta], 'uno' => $a->serves === 1 && ! $carta['cerrado'], 'ancha' => false];
 
                 continue;
             }
-            $deFamilia[$a->family] ??= array_push($grupos, ['titulo' => $a->family, 'tarjetas' => [], 'uno' => false]) - 1;
+            $deFamilia[$a->family] ??= array_push($grupos, ['titulo' => $a->family, 'tarjetas' => [], 'uno' => false, 'ancha' => false]) - 1;
             $grupos[$deFamilia[$a->family]]['tarjetas'][] = $carta;
+        }
+        // P2 de §4.20 (`[DECIDIDO owner]` `#913`): en la rejilla de dos, los sueltos van de dos en dos entre los grupos con título
+        // (que ocupan la fila entera), así que una RACHA impar deja el último solo y un hueco al lado: ése, a lo ancho. Las
+        // tarjetas DENTRO de un grupo, por su hoja (`.pli-grid2`, la última impar); aquí, lo que la hoja no sabe contar.
+        $racha = [];
+        foreach ([...array_keys($grupos), null] as $i) {
+            if ($i !== null && $grupos[$i]['titulo'] === '') {
+                $racha[] = $i;
+
+                continue;
+            }
+            if (count($racha) % 2 === 1) {
+                $grupos[(int) end($racha)]['ancha'] = true;
+            }
+            $racha = [];
         }
 
         return [

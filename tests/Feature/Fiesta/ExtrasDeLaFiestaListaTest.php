@@ -296,6 +296,39 @@ class ExtrasDeLaFiestaListaTest extends TestCase
         $this->assertSame(1, substr_count($this->zona4($this->pagina($r, $host)), 'data-uno hidden'));
     }
 
+    /**
+     * P2 de §4.20 (`[DECIDIDO owner]` `#913`): en la rejilla de dos, los sueltos van de dos en dos entre los grupos con título, y
+     * el que se queda SOLO en su fila va a lo ancho (`pli-fam--ancha`), sin hueco al lado. Calcetines y cono hacen pareja; la
+     * familia ocupa su fila; la piñata, sola detrás, a lo ancho. De CONTROL, una pareja sola no lleva la marca.
+     */
+    public function test_a_loose_extra_left_alone_in_its_row_takes_the_whole_width(): void
+    {
+        ['reservation' => $r, 'host' => $host] = $this->mountParty();
+        $this->extra($this->tipo($r), 'Calcetines', 200, ['max_qty' => 20], ['serves' => 1]);
+        $this->extra($this->tipo($r), 'Cono de chuches', 150, ['max_qty' => 20], ['serves' => 1]);
+        $this->extra($this->tipo($r), 'Bolsa pequeña', 100, [], ['serves' => 1, 'family' => ['es' => 'Bolsas']]);
+        $this->extra($this->tipo($r), 'Piñata', 1500, [], ['serves' => 4]);
+
+        $z4 = $this->zona4($this->pagina($r, $host));
+        $this->assertSame(1, substr_count($z4, 'pli-fam--ancha'), 'solo la que se queda sola en su fila');
+        $this->assertStringContainsString('data-nombre="Piñata"', (string) substr($z4, (int) strpos($z4, 'pli-fam--ancha')), 'y es la piñata, detrás de la familia');
+
+        // Tres sueltos seguidos: la pareja, y el TERCERO a lo ancho (no el primero).
+        ['reservation' => $tres, 'host' => $h3] = $this->mountParty();
+        $this->extra($this->tipo($tres), 'Calcetines', 200, ['max_qty' => 20], ['serves' => 1]);
+        $this->extra($this->tipo($tres), 'Cono de chuches', 150, ['max_qty' => 20], ['serves' => 1]);
+        $this->extra($this->tipo($tres), 'Piñata', 1500, [], ['serves' => 4]);
+        $z4 = $this->zona4($this->pagina($tres, $h3));
+        $this->assertSame(1, substr_count($z4, 'pli-fam--ancha'));
+        $this->assertStringNotContainsString('data-nombre="Calcetines"', (string) substr($z4, (int) strpos($z4, 'pli-fam--ancha')), 'el último de la racha, no el primero');
+
+        // CONTROL: calcetines y cono, una pareja, sin la marca.
+        ['reservation' => $pareja, 'host' => $h2] = $this->mountParty();
+        $this->extra($this->tipo($pareja), 'Calcetines', 200, ['max_qty' => 20], ['serves' => 1]);
+        $this->extra($this->tipo($pareja), 'Cono de chuches', 150, ['max_qty' => 20], ['serves' => 1]);
+        $this->assertStringNotContainsString('pli-fam--ancha', $this->zona4($this->pagina($pareja, $h2)));
+    }
+
     // ── Montaje ─────────────────────────────────────────────────────────────────────────────────────
 
     private function tipo(OrderItem $r): TicketType

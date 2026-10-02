@@ -2,7 +2,7 @@
      Es la misma pieza para los padres y para los niños; lo que cambia es con QUÉ cuenta `lista.js` la sugerencia (los adultos
      que se quedan o los niños de la fiesta), y eso lo dice la sección que la contiene. El estado va DEBAJO de las tarjetas:
      si cambia, nada de lo que se toca se mueve bajo el dedo. --}}
-<div @class(['pli-fam', 'pli-fam--titulo' => $g['titulo'] !== '']) data-familia>
+<div @class(['pli-fam', 'pli-fam--titulo' => $g['titulo'] !== '', 'pli-fam--ancha' => $g['ancha'] ?? false]) data-familia>
     @if ($g['titulo'] !== '')<h4 class="pli-h4">{{ $g['titulo'] }}</h4>@endif
     <div class="pli-grid2">
         @foreach ($g['tarjetas'] as $e)

@@ -1196,7 +1196,13 @@ con tarjetas impares, la última a lo ancho (la A, elegida con la B y la C rende
 - **P1 · un plazo** (`CRITICAL_RE`: `PostFormAddons`, `ProductAddon`; `VERIFY_CONC=1` con sus verificadores): el plazo de cada
   complemento ES el de la lista (`GuestCountPolicy::deadlineFor()`); fuera `missing_cutoff` y el campo del panel (la columna se
   queda sin uso hasta una migración propia); la lista dice el plazo UNA vez, junto al número de invitados; la API, igual de forma.
-- **P2 · la impar a lo ancho**: una regla de la hoja de la lista, con su sonda a 390 y 1280.
+- 🟦 **P2 · la impar a lo ancho — HECHA (02-10 noche, en `wip/`; falta el ojo del owner)**: en la hoja (`fiesta.css`), la última
+  tarjeta impar de un grupo (`.pli-grid2`), a lo ancho; y el suelto que se queda solo en su fila entre dos grupos con título lo
+  marca el servidor (`ListaDeInvitados::extras()`, `ancha` → `pli-fam--ancha`), porque la hoja no sabe contar rachas. Con una
+  columna no hace nada. Verificación: `ExtrasDeLaFiestaListaTest::test_a_loose_extra_left_alone_in_its_row_takes_the_whole_width`
+  (rojo sin el servidor; la racha de tres marca el ÚLTIMO; de control, la pareja sin marca); arnés `scripts/mutar-lista-huecos.sh`
+  **5/5** con su control; `scripts/sonda-lista-huecos.mjs` sin huecos en el KIDS y el JUMP a 1280 y 390, y su `--control` (la regla
+  anulada en la página) ve los 4 huecos de antes.
 - **P3 · «hay que elegir uno»** (`CRITICAL_RE`): el grupo excluyente de venta posterior SIN marcado de serie, con su marca en el
   panel (distinta de `is_mandatory`); en la lista, una pregunta de UNA respuesta y «Falta elegir…»; «sin elegir» en el panel y
   en la hoja del día; la API lo publica. Cambiar de opción es neutro en dinero (todas a 0 €).

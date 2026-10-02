@@ -675,6 +675,9 @@ body.fiesta-lista { margin: 0; background: var(--bg-subtle); font-family: var(--
 .pli-aviso-ic{background:var(--fiesta-sol-100, var(--notice-warn-bg));color:var(--fiesta-tinta-900)}
 .pli-aviso-tarta>span:nth-child(2),.pli-padres>span:nth-child(2){flex:1 1 180px;min-width:0}
 .pli-grid2{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
+/* P2 de `fiesta-sistema-nuevo.md` §4.20 (`[DECIDIDO owner]` `#913`): en un grupo con tarjetas impares, la última a lo ancho, sin
+   hueco al lado; y el suelto que se queda solo en su fila (`pli-fam--ancha`, lo cuenta el servidor). Con una columna, no hace nada. */
+.pli-grid2>article.fi-complemento:last-of-type:nth-of-type(odd),.pli-grupos>.pli-fam--ancha{grid-column:1/-1}
 .pli-z5{display:grid;gap:14px;position:relative;z-index:2}
 /* La LÍNEA de lo guardado, al pie (L2 de la isla de enlace, `#814`): el Guardar vive en la isla; aquí, cuándo se guardó. */
 .pli-guardado{margin:0;display:flex;align-items:center;gap:7px;padding:0 4px;font:600 var(--fs-body-sm)/1.4 var(--font-ui);color:var(--text-muted)}
