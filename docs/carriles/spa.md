@@ -57,8 +57,8 @@ filas 4 y 8), ANTES que la R1c («tus puntos primero»).
   no tiene ni la analítica ni `#mi-cuenta`: un QR impreso hoy abre la portada y no cuenta nada hasta la v2.0.0.
 
 - ▶ **Del owner (02-10 noche, `#912`/`#913`; `fiesta-sistema-nuevo.md` §4.20)**: 🟦 P1 UN plazo para toda la lista y 🟦 P2 la
-  impar a lo ancho, HECHAS en `wip/ta-altas-por-origen` (falta su OJO; la verificación, en la spec) → P3 la merienda «hay que
-  elegir uno» (`CRITICAL_RE`) → P4 el correo «Falta elegir…» el día antes del plazo.
+  impar a lo ancho, HECHAS en `wip/ta-altas-por-origen` (falta su OJO; la verificación, en la spec) → P1·b fuera el aviso de la
+  tarta (decidido) → P3 la merienda «elige una», incluida y por niño (`CRITICAL_RE`) → P4 el correo «Falta elegir…».
 
 0. ✅ Los complementos de la fiesta (K1–K3, `#806`→`#808`): su punto, mudado verbatim a `CARRIL-SPA.md` §9 (02-10). ▶ **Antes de
    proponer código, medir si el panel ya lo configura**; si algo ya existía, parar y decírselo al owner (`#808`).

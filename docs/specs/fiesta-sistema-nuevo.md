@@ -1210,9 +1210,27 @@ con tarjetas impares, la última a lo ancho (la A, elegida con la B y la C rende
   (rojo sin el servidor; la racha de tres marca el ÚLTIMO; de control, la pareja sin marca); arnés `scripts/mutar-lista-huecos.sh`
   **5/5** con su control; `scripts/sonda-lista-huecos.mjs` sin huecos en el KIDS y el JUMP a 1280 y 390, y su `--control` (la regla
   anulada en la página) ve los 4 huecos de antes.
-- **P3 · «hay que elegir uno»** (`CRITICAL_RE`): el grupo excluyente de venta posterior SIN marcado de serie, con su marca en el
-  panel (distinta de `is_mandatory`); en la lista, una pregunta de UNA respuesta y «Falta elegir…»; «sin elegir» en el panel y
-  en la hoja del día; la API lo publica. Cambiar de opción es neutro en dinero (todas a 0 €).
+- **P1·b · el aviso de la tarta, fuera** (`[DECIDIDO owner]` 02-10, ~20:15: «2 · Quitarlo… sí, correcto, lo quitamos»): se van
+  «¿La tarta? Se elige hasta…» (`aviso-tarta`, el `PliAvisoTarta` del diseño) y el «La tarta se guarda hasta…» de la barra: la
+  hora, SOLO en la cabecera, siempre. Medido (13 ficheros): la pieza y su `@include` (`lista.blade.php`), `zona-4`
+  (`data-guardar-texto`, `data-pronto`), `ListaDeInvitados` (`cuando`, `pronto`, `urgente` de la tarta), `lista.js` (6),
+  `fiesta.css` (4), cinco claves ×3 idiomas, el banco (`modelos.php`),
+  `ExtrasDeLaFiestaListaTest::test_the_cake_notice_shows_only_while_undecided_and_closing_soon` (re-apuntado: nunca hay aviso)
+  y 5 mutaciones de `mutar-extras-fiesta.sh` y `mutar-complementos-k2.sh`, retiradas con su sujeto (§3.quater). En esta rama,
+  antes de fusionar.
+- **P3 · la merienda: «hay que elegir uno», INCLUIDA y POR NIÑO** (`CRITICAL_RE`; el owner, 02-10: «la merienda incluida por
+  niño… seleccionable y obligatoria, 1 solo»): una sola opción para la fiesta, la misma para todos los niños. El grupo excluyente
+  de venta posterior SIN marcado de serie, con su marca en el panel (distinta de `is_mandatory`); en la lista, una pregunta de
+  UNA respuesta, «Incluida · una para cada niño» y «Falta elegir…»; «sin elegir» en el panel, la ficha de la reserva
+  (`ReservationSlipController`) y el resumen del día (`DailySummaryController`); la API lo publica (versión menor del
+  contrato). Cambiar de opción es neutro en dinero. **Medido para su «al detalle»** (02-10, ~20:20): (a) hoy (K3, `#808`) son tres
+  complementos a 0 € con tope 1: se pueden pedir dos o ninguno, dicen «0,00 €» y cuentan UNO para toda la fiesta; (b) «incluida
+  por niño» es lo que ya era el Menú 1 al reservar (`ProductionSeeder`: grupo `menu`, `per_guest` e incluido, y
+  `AddonResolver::freeUnitsForUnit()` da gratis TODAS sus unidades: sin dinero por construcción, sea cual sea el precio), y el
+  número ya arrastra lo «por invitado» (`GuestCountAdjuster::rescalePerGuestChildren()`, `#449`, por el sello de la línea): P3
+  abre en venta posterior las reglas 2, 3 y 4 de `ProductAddon::postFormProblem()` SOLO para un grupo «hay que elegir uno»;
+  (c) ⚠️ una fiesta vendida con el Menú al reservar (producción hasta la v2.0.0) ya eligió: no puede ver «falta elegir» ni
+  recibir el correo de P4 (la regla, a medir en su «al detalle»).
 - **P4 · el correo** «Falta elegir…», el día antes del plazo (cada hora con su marca, como la víspera), editable (R1·T) y en
   `EmailUtm`.
 
