@@ -245,7 +245,7 @@ class MeReservationBeforeVisitTest extends ApiTestCase
         $this->assertSame('0 of 6 confirmed', $en[1]['note']);
     }
 
-    // ─── Una entrada: «Añade a tus hijos» (T5d) ──────────────────────────────────────
+    // ─── Una entrada: «Añade a los menores» (T5d; por grupos desde la Z6g·2) ─────────────
 
     public function test_an_entry_asks_to_add_the_children_when_the_park_signs_inside(): void
     {
@@ -253,8 +253,8 @@ class MeReservationBeforeVisitTest extends ApiTestCase
 
         $this->assertSame([
             'kind' => 'dependents', 'type' => 'task', 'done' => false,
-            'title' => 'Añade a tus hijos', 'note' => 'Un minuto',
-            'text' => 'Añade a tus hijos: nombre y fecha de nacimiento, y firmas por ellos. Un minuto, y en la puerta solo enseñas el QR.',
+            'title' => 'Añade a los menores', 'note' => 'Un minuto',
+            'text' => 'Añade a los menores a tu cargo: nombre y fecha de nacimiento, y firmas por ellos. Un minuto, y en la puerta solo enseñas el QR.',
             'due' => 'Para el '.DisplayTime::dayInSentence($r->slot?->date),
             'action' => ['label' => 'Añadir', 'url' => route('account.dependents'), 'via' => 'account'],
         ], $this->tareas($titular, $r)[0]);
@@ -295,7 +295,7 @@ class MeReservationBeforeVisitTest extends ApiTestCase
         $r->order?->forceFill(['status' => Order::STATUS_PENDING, 'paid_at' => null])->save();
         $this->assertSame([], $this->tareas($titular, $r), 'sin pagar, no hay visita que preparar');
 
-        // Un pack sin fichas no es una entrada: «Añade a tus hijos» es de las entradas.
+        // Un pack sin fichas no es una entrada: «Añade a los menores» es de las entradas.
         ['reservation' => $fiesta, 'host' => $host] = $this->mountParty();
         TicketType::query()->whereKey($fiesta->ticket_type_id)->update(['guest_fields' => json_encode([])]);
         $this->assertSame([], $this->tareas($host, $fiesta->fresh()));
@@ -311,7 +311,7 @@ class MeReservationBeforeVisitTest extends ApiTestCase
             'title' => null, 'note' => null,
             'text' => '¿Vienen menores? Firma por ellos antes y en la puerta solo enseñas el QR.',
             'due' => null,
-            'action' => ['label' => 'Añadir a mis hijos', 'url' => route('account.dependents'), 'via' => 'account'],
+            'action' => ['label' => 'Añadir menores', 'url' => route('account.dependents'), 'via' => 'account'],
         ]], $this->tareas($titular, $r));
         $this->assertSame(['pending' => false, 'pendingText' => null, 'task' => null, 'bookingToday' => null], app(AntesDeVenir::class)->paraLaIsla($titular));
     }
@@ -347,11 +347,11 @@ class MeReservationBeforeVisitTest extends ApiTestCase
 
         $isla = app(AntesDeVenir::class)->paraLaIsla($titular);
 
-        $this->assertSame('Siguiente: Añade a tus hijos', $isla['pendingText']);
+        $this->assertSame('Siguiente: Añade a los menores', $isla['pendingText']);
         $this->assertSame([
-            'text' => 'Añade a tus hijos y firma por ellos: en la puerta solo enseñas el QR.',
+            'text' => 'Añade a los menores a tu cargo y firma por ellos: en la puerta solo enseñas el QR.',
             'product' => 'kids',
-            'action' => ['label' => 'Añadir a mis hijos', 'href' => route('account.dependents'), 'zone' => 'dependents'],
+            'action' => ['label' => 'Añadir menores', 'href' => route('account.dependents'), 'zone' => 'dependents'],
         ], $isla['task']);
     }
 

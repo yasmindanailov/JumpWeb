@@ -188,19 +188,26 @@ export function destinoDeTarea(linea, boton, textos = {}) {
  * «Listo» (`PjcListo`): la línea, el QR del carné, a dónde se envió y las tareas de «Antes de venir».
  *
  * ⚠️ De las tareas del diseño, aquí van las que salen de los DATOS del motor: la de la FIESTA (arriba) y, en las
- * entradas, añadir a los hijos y firmar por ellos si la instalación firma el descargo dentro (modo `interno`) y alguna
- * entrada es SOLO de menores (`minors_only`, `#825`: donde puede entrar un adulto no se da por hecho que vienen niños).
- * Los adultos que vienen y los calcetines dependen de qué zona es cada entrada y del texto del parque: son de la página.
+ * entradas, QUIÉN FIRMA el descargo si la instalación lo firma dentro (modo `interno`; el zip (6), Z6g·2): una sola
+ * tarjeta, por grupos —los menores a tu cargo, los demás adultos—, con «Añadir menores». No da por hecho para quién es
+ * cada entrada, así que ya no mira `minors_only` (`#825`: la de antes prometía hijos; ésta no promete a nadie). Los
+ * calcetines dependen del texto del parque: son de la página.
  */
 export function pantallaListo({ linea, confirmacion, correo, qrSrc = '', cuentaNueva = false, firmaDentro = false, textos = {}, locale = 'es' }) {
     const t = (clave) => texto(textos, clave);
     const lineas = confirmacion?.lines ?? [];
     const pack = lineas.find((l) => l.is_pack) ?? null;
     const fiesta = tareaDeFiesta(pack, { textos, locale });
-    // Con un pack, la tarea es la de la fiesta (abajo): aquí solo cuenta si alguna entrada es de menores. El booleano ya
-    // llega estricto de `confirmationLine`, que es quien transporta la línea del pedido.
-    const deMenores = lineas.some((l) => l.minors_only);
-    const menores = firmaDentro && deMenores ? { id: 'menores', icon: 'user-round-plus', texto: t('compra.listo.menores'), botones: [t('compra.listo.menores_boton')] } : null;
+    const firmas = firmaDentro && lineas.length > 0 && ! pack ? {
+        id: 'firmas',
+        icon: 'users',
+        title: t('compra.listo.firmas.titulo'),
+        lineas: [
+            { rotulo: t('compra.listo.firmas.menores'), texto: t('compra.listo.firmas.menores_texto') },
+            { rotulo: t('compra.listo.firmas.adultos'), texto: t('compra.listo.firmas.adultos_texto') },
+        ],
+        botones: [t('compra.listo.firmas.boton')],
+    } : null;
 
     return {
         // «¡Fiesta reservada!» es de un pack con LISTA DE INVITADOS (su formulario, `guest_form_url`): una excursión es un
@@ -211,7 +218,7 @@ export function pantallaListo({ linea, confirmacion, correo, qrSrc = '', cuentaN
         qrSrc,
         correo: correo ?? '',
         whatsapp: false,
-        tareas: [pack ? fiesta : menores].filter(Boolean),
+        tareas: [pack ? fiesta : firmas].filter(Boolean),
         cuentaNueva,
     };
 }

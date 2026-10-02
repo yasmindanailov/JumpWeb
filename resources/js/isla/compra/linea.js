@@ -10,7 +10,8 @@
  *
  * ⚠️ Es el `addToCart()` del motor (`usePurchaseFlow`) sin lo que la isla no pregunta ANTES de pagar: las demás
  * respuestas del pack —van al formulario de invitados, `#692`—, menores asignados y el justificante opcional (el diseño
- * los deja para después: `compra.datos.linea`). La EDAD de quien cumple sí viaja (elige el pack), y el justificante
+ * los deja para después: la pista de la casilla y «Listo», `compra.datos.pista_quien` y `compra.listo.firmas`). La EDAD
+ * de quien cumple sí viaja (elige el pack), y el justificante
  * OBLIGATORIO, como en el cajón. Y no mueve la máquina: quien llama sabe si es la primera vez
  * («Continuar», `→ CART`) o un cambio en «Pagar», que se queda donde está.
  */

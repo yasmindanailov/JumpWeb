@@ -29,6 +29,21 @@ export function nacimientoDeAlta(valor) {
 }
 
 /**
+ * **La pista de la casilla del descargo** (el zip (6), Z6g·2, «Quién firma el descargo»): qué es y quién lo firma, en un
+ * solo sitio y sin dar nada por hecho —la compra no sabe para quién es cada entrada—. En ENTRADAS con la firma dentro
+ * (`quienFirma`), también lo de los menores a tu cargo y los demás adultos; en una fiesta (los invitados firman con la
+ * invitación) o en «Crea tu cuenta», solo la primera frase. `t`, el traductor de la isla.
+ *
+ * @param {boolean} quienFirma
+ * @param {(clave: string) => string} t
+ */
+export function pistaDelDescargo(quienFirma, t) {
+    const primera = t('compra.datos.pista_descargo');
+
+    return quienFirma ? `${primera} ${t('compra.datos.pista_quien')}` : primera;
+}
+
+/**
  * «Entra» en blanco (`PjcEntrar`, T3e·4): `paso` `id` (el correo) o `codigo` (el que le acaba de llegar), la puerta del
  * acceso con código (A3, `#849`): el correo decide —con cuenta, el código; nuevo, «Tus datos»—. `recordar`, la casilla
  * «Mantener la sesión iniciada en este dispositivo» del código (`#858`, `[DECIDIDO owner]`): SIN marcar de serie —una

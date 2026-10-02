@@ -42,8 +42,9 @@ use Illuminate\Support\Str;
  *   · **Autorizaciones** (estado, si el producto las pide): las firmadas; con invitación, sobre los que han dicho que sí.
  *     Nunca un denominador inventado (`waiver-por-reserva.md` §4.10): sin respuestas, solo las firmadas.
  *
- *   · **Añade a tus hijos** (de una ENTRADA, T5d, `#777`): si la instalación firma el descargo dentro. Tarea si el
- *     producto es de menores, hecha con algún menor declarado; si puede entrar un adulto, opcional (`#825`).
+ *   · **Añade a los menores** (de una ENTRADA, T5d, `#777`; «a tu cargo», no «tus hijos», desde la Z6g·2): si la
+ *     instalación firma el descargo dentro. Tarea si el producto es de menores, hecha con algún menor declarado; si
+ *     puede entrar un adulto, opcional (`#825`).
  *
  * ⚠️ Una reserva sin pagar, cancelada o ya celebrada no tiene nada pendiente (la guarda de `PendingBeforeVisit`).
  */
@@ -141,14 +142,14 @@ final class AntesDeVenir
             return $this->deLaFiesta($reserva, $tipo);
         }
 
-        // Una ENTRADA: «Añade a tus hijos» (T5d). Un pack sin formulario no tiene nada que pedir.
+        // Una ENTRADA: «Añade a los menores» (T5d). Un pack sin formulario no tiene nada que pedir.
         $hijos = $tipo->isPack() ? null : $this->hijos($reserva, $tipo);
 
         return $hijos === null ? [] : [$hijos];
     }
 
     /**
-     * **«Añade a tus hijos»** (T5d, `#777`): en una entrada, si la instalación firma el descargo DENTRO y tiene texto
+     * **«Añade a los menores»** (T5d, `#777`): en una entrada, si la instalación firma el descargo DENTRO y tiene texto
      * publicado —la condición del alta de un menor (`#441`) y la de «Listo» de la compra, que la ofrece igual—. Hecha
      * cuando la cuenta tiene algún menor declarado (el mockup: «la de los hijos se da por hecha en cuanto hay hijos»).
      * Su acción abre la pantalla de alta: en Mi cuenta, en el sitio (`via: account`); fuera, su puerta.

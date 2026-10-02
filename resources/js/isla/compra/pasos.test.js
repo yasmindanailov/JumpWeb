@@ -17,7 +17,10 @@ const textos = {
         pagar: { banda: 'Pagar', tarjeta: 'Pagar :importe con tarjeta', saliendo_boton: 'Continuar al pago' },
         fallido: { tarjeta: 'Volver a intentar con tarjeta' },
         perdida: { boton: 'Elegir esta hora' },
-        listo: { mi_qr: 'Ir a Mi QR', menores: 'Añade a tus hijos…', menores_boton: 'Añadir a mis hijos' },
+        listo: {
+            mi_qr: 'Ir a Mi QR',
+            firmas: { titulo: 'Todos los que saltan…', menores: 'Menores a tu cargo:', menores_texto: 'si aún no están…', adultos: 'Otros adultos:', adultos_texto: 'cada uno el suyo…', boton: 'Añadir menores' },
+        },
     },
 };
 const acciones = { volver: () => 'volver', continuar: () => 'continuar', entrar: () => 'entrar', pagar: () => 'pagar', salir: () => 'salir', reintentar: () => 'reintentar', elegirHora: () => 'elegirHora', miQr: () => 'miQr', cerrar: () => 'cerrar' };
@@ -208,7 +211,7 @@ describe('«¡Fiesta reservada!» (T3e·5)', () => {
         assert.equal(destinoDeTarea(null, 'Rellenar el formulario', textosFiesta), null);
     });
 
-    test('«Listo» de una fiesta: su titular, su tarea y nada de «añade a tus hijos»', () => {
+    test('«Listo» de una fiesta: su titular, su tarea y nada de quién firma (los invitados firman con la invitación)', () => {
         const listo = pantallaListo({ linea: 'x', confirmacion: { code: 'R-1', lines: [pack] }, correo: 'a@b.es', firmaDentro: true, textos: textosFiesta });
 
         assert.equal(listo.fiesta, true);
@@ -230,24 +233,29 @@ describe('«¡Fiesta reservada!» (T3e·5)', () => {
     });
 });
 
-test('«Listo»: la tarea de los hijos solo si la instalación firma dentro y la entrada es de menores; el QR es el del carné', () => {
+test('«Listo»: quién firma el descargo, solo si la instalación firma dentro; una tarjeta por grupos con «Añadir menores»; el QR es el del carné', () => {
     const kids = { is_pack: false, minors_only: true };
     const base = { linea: 'Sábado 26 · 17:00', confirmacion: { code: 'R-7K2P4', lines: [kids] }, correo: 'ana@correo.es', qrSrc: '/api/v1/me/card/png?v=1', textos };
 
-    assert.deepEqual(pantallaListo(base).tareas, []);
-    assert.deepEqual(pantallaListo({ ...base, firmaDentro: true }).tareas.map((x) => x.id), ['menores']);
+    assert.deepEqual(pantallaListo(base).tareas, [], 'sin la firma dentro, nada que añadir');
+    assert.deepEqual(pantallaListo({ ...base, firmaDentro: true }).tareas, [{
+        id: 'firmas',
+        icon: 'users',
+        title: 'Todos los que saltan…',
+        lineas: [{ rotulo: 'Menores a tu cargo:', texto: 'si aún no están…' }, { rotulo: 'Otros adultos:', texto: 'cada uno el suyo…' }],
+        botones: ['Añadir menores'],
+    }]);
     assert.equal(pantallaListo(base).codigo, 'R-7K2P4');
     assert.equal(pantallaListo(base).whatsapp, false, 'el producto no manda WhatsApp');
 });
 
-test('`#825` «Listo»: donde puede entrar un adulto (Jump, desde 8), no se da por hecho que vienen niños', () => {
+test('Z6g·2 «Listo»: la tarjeta de quién firma no da por hecho para quién es cada entrada (`#825`): con o sin menores, la misma; sin entradas, ninguna', () => {
     const conLineas = (lines) => pantallaListo({ linea: 'x', confirmacion: { code: 'R-1', lines }, correo: 'a@b.es', firmaDentro: true, textos }).tareas.map((x) => x.id);
 
-    assert.deepEqual(conLineas([{ is_pack: false, minors_only: false }]), []);
-    assert.deepEqual(conLineas([{ is_pack: false }]), [], 'sin el dato, no se supone');
-    assert.deepEqual(conLineas([]), []);
-    // Jump y Kids en la misma reserva: con una entrada de menores, sí.
-    assert.deepEqual(conLineas([{ is_pack: false, minors_only: false }, { is_pack: false, minors_only: true }]), ['menores']);
+    assert.deepEqual(conLineas([{ is_pack: false, minors_only: false }]), ['firmas'], 'Jump, desde 8: también (puede ser un menor)');
+    assert.deepEqual(conLineas([{ is_pack: false }]), ['firmas'], 'sin el dato, la misma');
+    assert.deepEqual(conLineas([{ is_pack: false, minors_only: false }, { is_pack: false, minors_only: true }]), ['firmas'], 'una sola tarjeta, nunca dos');
+    assert.deepEqual(conLineas([]), [], 'sin entradas no hay nada que explicar');
 });
 
 test('la flecha de la pantalla 0 (`#831`): al selector si nació de él, a Mi cuenta si nació allí; de una página, ninguna', () => {

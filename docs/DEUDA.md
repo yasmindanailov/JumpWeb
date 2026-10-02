@@ -1002,3 +1002,9 @@ Tres mutantes A MANO, 3/3 y restaurados por copia (el árbol, igual por `sha256s
 (caen `ReviewsFactsTest` y `CopiedReviewImportTest`), el importador sin la marca (`CopiedReviewImportTest`) y el listado del
 panel sin el estado «traducida» (`TestimonialResourceTest`). No hay guion que lo repita. **Qué hacer**: un
 `scripts/mutar-resenas-traducidas.sh` con esos tres, la próxima vez que se toquen las opiniones.
+
+## ▶ Baja · «Quién firma el descargo» de la isla (Z6g·2, `#875`) muerde, pero sin arnés versionado (02-10, modo ligero)
+
+Dos mutantes A MANO, 2/2 y restaurados por copia (`sha256sum`): la tarjeta de «¡Reservado!» sin la condición de la firma
+dentro (`pasos.test.js`) y la pista de la casilla sin su segunda frase (`datos.test.js`). **Qué hacer**: llevarlos a
+`scripts/mutar-isla-z6b.sh` (o a uno propio de la compra) con los de arriba, la próxima vez que se toque «Listo».

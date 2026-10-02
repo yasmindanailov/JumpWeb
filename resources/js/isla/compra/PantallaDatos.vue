@@ -46,7 +46,9 @@ const props = defineProps({
     firmado: { type: Boolean, default: false },
     pedirTelefono: { type: Boolean, default: false },
     errores: { type: Object, default: () => ({}) },
-    lineaMenores: { type: Boolean, default: false },
+    // La pista de la casilla, ya compuesta por quien lleva la compra (`datos.js::pistaDelDescargo`, el zip (6), Z6g·2:
+    // quién firma el descargo); sin ella —«Crea tu cuenta» de Mi cuenta—, su primera frase.
+    pistaDescargo: { type: String, default: '' },
     llena: { type: Boolean, default: false },
     cercanas: { type: Array, default: () => [] },
     horaNueva: { type: String, default: null },
@@ -242,19 +244,9 @@ const cambiar = (campo) => (valor) => emit('cambiar', campo, valor);
                 :style="{ justifySelf: 'start' }"
                 @click="emit('descargo')"
             >{{ t('compra.datos.leer') }}</EnlaceSistema>
-            <p :style="PASO.pista">{{ t('compra.datos.pista_descargo') }}</p>
+            <p :style="PASO.pista">{{ pistaDescargo || t('compra.datos.pista_descargo') }}</p>
         </CasillaSistema>
         <slot name="antibot" />
-        <AvisoDestacado
-            v-if="lineaMenores"
-            tone="neutral"
-            size="sm"
-        >
-            <template #icono><IconoLucide
-                name="users"
-                :size="18"
-            /></template>{{ t('compra.datos.linea') }}
-        </AvisoDestacado>
         <AvisoDestacado
             v-if="llena"
             id="pjc-llena"

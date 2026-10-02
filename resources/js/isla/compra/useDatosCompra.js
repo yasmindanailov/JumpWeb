@@ -162,7 +162,7 @@ export function useDatosCompra({ flow, props, textos, esFiesta = () => false }) 
 
     /**
      * Ya hay sesión: la compra sigue en `PAY`. ⚠️ Con menores asignables el motor vuelve a la cesta a asignarlos
-     * (puerta 2, `DECISIONES #202`); la isla los deja para DESPUÉS de pagar (`compra.datos.linea`), así que sigue.
+     * (puerta 2, `DECISIONES #202`); la isla los deja para DESPUÉS de pagar (`compra.listo.firmas`), así que sigue.
      * Y si a esa cuenta le falta el teléfono o nunca firmó, se queda aquí a pedirlo (`entrarCon` del diseño).
      */
     async function trasIdentificarse() {

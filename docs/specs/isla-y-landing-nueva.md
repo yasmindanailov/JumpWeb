@@ -2338,7 +2338,7 @@ fuente de cada punto es su `readme.md` (la sección entre comillas) y su compone
 | Z6d ✅ `#872` | **La firma** de la cabecera (logo y nota de Google juntos, `--scrim-firma`), las garantías del móvil en lista, `Sticker` y `ProofChip`, el filo del gris (`--edge-subtle`) | «La cabecera · la firma», «Las garantías en el móvil», «Las pegatinas», «La prueba de los cuidados» | `VideoHero`, `ReassuranceBand`, `ProofList` |
 | Z6e ✅ `#873` | Cumpleaños **«Todo resuelto» (6a)** y **las dos horas repartidas** (90 min saltando y 30 de merienda: la cabecera, la pieza 3, el selector, las dudas, la hora extra) | «Rehecha el 29-09», «Las dos horas, repartidas (28-09)» | `IncludedList`, `AfterBookingPanel` |
 | Z6f ✅ | **El pie** rehecho: dos zonas y un filete, claro y en tarjeta | «Rehecho el 29-09: dos zonas y un solo filete» | `SiteFooter.jsx` (318) |
-| Z6g (·1 ✅ `#871`) | La compra y Mi cuenta: **`CodeInput`** (6 casillas, se comprueba con la sexta, «Reenviar» a los 30 s; ·1, abajo), **«Quién firma el descargo»** (Tus datos, Listo con «Añadir menores», Mi cuenta), el acceso en Ajustes; y lo que cambia en Normas, Visítanos, Colegios y Entradas | «La cuenta sin contraseña (30-09)», «Quién firma el descargo (30-09)» | `compra/entrar.jsx`, `compra.jsx` |
+| Z6g (·1 ✅ `#871` · ·2 🟦 `#875`) | La compra y Mi cuenta: **`CodeInput`** (6 casillas, se comprueba con la sexta, «Reenviar» a los 30 s; ·1, abajo), **«Quién firma el descargo»** (Tus datos, Listo con «Añadir menores», Mi cuenta), el acceso en Ajustes; y lo que cambia en Normas, Visítanos, Colegios y Entradas | «La cuenta sin contraseña (30-09)», «Quién firma el descargo (30-09)» | `compra/entrar.jsx`, `compra.jsx` |
 
 **Del otro carril (SPA), por buzón:** la **Puerta** (el mostrador, `paginas/puerta/` y su brief), **`LinkIsland`** en la
 invitación, la lista y la autorización (fuera `RsvpBar` y `SaveBar`), los **correos** (el 8, «482-913 es tu código para
@@ -2747,6 +2747,48 @@ selector de planes (portada y Visítanos), en es/en/fr; en el producto, en el `p
 con un pack de 30 min); además, los regalos llevan también su icono por palabra (en local, calcetines y cono son REGALOS del
 pack, no «lo que incluye»: salen en su caja lima). `sonda-entradas` mira ya «90 minutos saltando» (la merienda, tecleada).
 **✅ Con el visto bueno del owner en vivo (02-10).**
+
+#### La Z6g·2 al detalle: «Quién firma el descargo» y el acceso en Ajustes (medido el 02-10, antes de codificar, contra el `git diff` del zip (6), `3b0956d`)
+Fuente: el readme, «Quién firma el descargo: una regla, sin dar nada por hecho (30-09)» y «La cuenta sin contraseña» (Mi
+cuenta · Ajustes · Acceso); `compra/datos.js` (`firmas`, `pistaDescargo`), `compra/pasos-1-2.jsx`, `compra/listo.jsx`,
+`compra/ui.jsx` (`PjcFirmas`), `mi-cuenta/datos.js` y `mi-cuenta/bloques-2.jsx`. **La regla**: la compra no sabe para quién
+es cada entrada, así que no da nada por hecho: «todos los que saltan, con el descargo firmado», dicho por grupos (menores
+a tu cargo · otros adultos), nunca «tus hijos» ni «Vienen 2 adultos más».
+**Lo medido (producto, la isla)**: (1) Tus datos pinta la pista de la casilla («Es la hoja que firma todo el que entra…»)
+y, aparte, un aviso «Después de pagar añades a tus hijos…» con firma dentro y más de una persona (`lineaMenores`). (2) Listo
+tiene UNA tarea, «Añade a tus hijos…» con «Añadir a mis hijos», solo con firma dentro y alguna entrada SOLO de menores
+(`minors_only`, `#825`); el botón abre los menores de la cuenta. (3) Mi cuenta dice «Tus hijos», «Los adultos se registran
+ellos…», «Añade a tus hijos», «Añadir otro hijo», «Hijo :n», «…de alguno de tus hijos», «Ver a tus hijos» y, al borrar,
+«tus hijos salen de la cuenta». (4) Ajustes · Acceso: Google y «Cerrar sesión en otros dispositivos»; nada dice cómo se
+entra. (5) La instancia: lo de Normas, Visítanos, Colegios y Entradas del zip ya entró con la Z6a–Z6e; queda la nota de
+Google en el cierre de Normas («El cierre también lleva la nota»).
+**Lo que se hace** (una tanda; el owner la mira en vivo):
+- **Tus datos**: una sola pista junto a la casilla: «Lo firma todo el que salta, una vez y para siempre.» y, en ENTRADAS
+  con firma dentro (también con una sola), «A los menores a tu cargo los añades a tu cuenta después de pagar, y firmas por
+  ellos; los demás adultos, cada uno el suyo.». Fuera el aviso aparte. En una fiesta, solo la primera (los invitados firman
+  con la invitación); con el descargo ya firmado no hay casilla ni pista (lo dice Listo); en «Crea tu cuenta», la primera.
+- **Listo**: en entradas con firma dentro, UNA tarjeta «Todos los que saltan, con el descargo firmado» con dos líneas
+  —«**Menores a tu cargo:** si aún no están en tu cuenta…» y «**Otros adultos:** cada uno firma el suyo…»— y «Añadir
+  menores». Sustituye a la de antes y ya no depende de `minors_only`: la frase no da por hecho que vienen menores.
+- **Mi cuenta y la tarea**: «Menores a tu cargo», «Otros adultos: cada uno firma el suyo…», «Añade a los menores (a tu
+  cargo)», «Añadir otro menor», «Menor :n», «Añadir menores» y lo mismo en los pendientes y al borrar.
+- **Ajustes · Acceso**: la primera fila dice cómo se entra: «Entras con un código a tu correo», con el correo y «Sin
+  contraseña» (el icono `mail-check`, en positivo, sin acción). Siguen Google y «Cerrar sesión en otros dispositivos».
+- **Normas (instancia)**: la nota de Google en su cierre, como Cumpleaños.
+**Fuera**: los correos 1 y 3 y el cajón (del SPA; aviso en el buzón). Sigue «por decidir» del readme: si vuelve «sin
+contraseña» a las notas de venta. **Verificación**: `node --test` (Listo, la pista), `IslaTextosTest` (las tres lenguas),
+el peso con su base y el ojo del owner en vivo.
+**En el árbol (02-10)**, falta el ojo del owner: `datos.js::pistaDelDescargo` (la pista: la compone `useSeccionCompra.js`
+con entradas y firma dentro, y `PantallaDatos.vue` solo la pinta —su techo de 40 líneas de código, `SidebarComponentBudgetTest`,
+cazó el `import` en el componente—), la tarjeta `firmas` de `pasos.js::pantallaListo` con sus `lineas` (`PantallaListo.vue`; `#875`: en toda
+compra de entradas) y su botón a los menores de la cuenta (`usePagoCompra.js`), la fila «Entras con un código a tu correo»
+de `BloqueAjustes.vue` (`mail-check`, en `iconos-ajustes.js`), los textos en es/en/fr (`compra.datos.pista_quien`,
+`compra.listo.firmas.*`, `mi_cuenta.ajustes.acceso_*` y «menores a tu cargo» donde decía «tus hijos») y, en la instancia, la
+nota del cierre de Normas. **Medido**: `node --test` de la isla 470/470, con dos mutantes a mano (la tarjeta sin la firma
+dentro, la pista sin la segunda frase), 2/2; `IslaTextosTest`, `MeReservationBeforeVisitTest` (los textos, tecleados),
+`SidebarBundleBudgetTest`, `SidebarComponentBudgetTest` y `SidebarBootTest`; ESLint ✓. El peso, con la base `2d2f75b1`
+construida antes: la compra 186,70 → 186,98 (techo 188), los pasos 50,66 → 50,79 (52), Mi cuenta 124,57 → 124,42 (126) y
+los Ajustes 29,10 → 29,82 (30, el icono): sin subir ningún techo.
 
 ## 5. Impacto en invariantes
 

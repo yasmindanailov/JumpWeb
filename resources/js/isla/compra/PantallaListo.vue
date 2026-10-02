@@ -4,8 +4,9 @@
  * grande, con «Guardar en el móvil» y a dónde se ha enviado; «Antes de venir», una tarjeta por tarea, todas
  * opcionales; y, solo tras la primera compra, que la cuenta ya está creada. Lo de debajo sube escalonado.
  *
- * `tareas` llegan hechas: `{ id, icon, title, steps, texto, botones }` —menores, adultos, lo de la instalación
- * (sus calcetines) y la fiesta—. El QR real es el carné (`qrSrc`); `codigo`, lo que se lee debajo.
+ * `tareas` llegan hechas: `{ id, icon, title, steps, texto, lineas, botones }` —quién firma el descargo (sus `lineas`,
+ * cada una con su rótulo en negrita: `PjcFirmas` del diseño, Z6g·2) o la fiesta—. El QR real es el carné (`qrSrc`);
+ * `codigo`, lo que se lee debajo.
  */
 import { useTextos } from '../piezas/textos.js';
 import { PASO, subir } from './estilos.js';
@@ -86,10 +87,19 @@ const { t, tp } = useTextos();
                     </BotonSistema>
                 </template>
                 <template
-                    v-if="tarea.texto"
+                    v-if="tarea.lineas || tarea.texto"
                     #default
                 >
-                    {{ tarea.texto }}
+                    <span
+                        v-if="tarea.lineas"
+                        :style="{ display: 'grid', gap: '6px' }"
+                    >
+                        <span
+                            v-for="l in tarea.lineas"
+                            :key="l.rotulo"
+                        ><b :style="{ color: 'var(--text-strong)', fontWeight: 'var(--fw-bold)' }">{{ l.rotulo }}</b> {{ l.texto }}</span>
+                    </span>
+                    <template v-else>{{ tarea.texto }}</template>
                 </template>
             </TarjetaTarea>
         </section>

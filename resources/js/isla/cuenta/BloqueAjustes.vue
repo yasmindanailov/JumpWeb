@@ -41,6 +41,8 @@ const correoSub = computed(() => {
 
     return c?.pendiente ? tp('mi_cuenta.ajustes.correo_pendiente', { correo: c.pendiente.correo }) : (c?.actual ?? '');
 });
+// Cómo se entra: con el correo de AHORA (un cambio pendiente aún no entra) y sin contraseña.
+const accesoSub = computed(() => [props.ajustes.correo?.actual, t('mi_cuenta.ajustes.acceso_sin')].filter(Boolean).join(' · '));
 </script>
 
 <template>
@@ -144,9 +146,20 @@ const correoSub = computed(() => {
                 </div>
             </template>
 
-            <!-- Sin «Cambiar la contraseña» (A3b del acceso con código, `#857`): en la isla se entra con un código al correo. -->
+            <!-- Sin «Cambiar la contraseña» (A3b del acceso con código, `#857`): en la isla se entra con un código al correo. Y
+                 la primera fila lo dice, una vez y sin nada que cambiar (el zip (6), Z6g·2): con qué correo y sin contraseña. -->
             <template #acceso>
                 <div :style="{ display: 'grid', paddingTop: '4px' }">
+                    <FilaAjuste
+                        :label="t('mi_cuenta.ajustes.acceso_codigo')"
+                        :sub="accesoSub"
+                    >
+                        <IconoLucide
+                            name="mail-check"
+                            :size="18"
+                            color="var(--text-positive)"
+                        />
+                    </FilaAjuste>
                     <FilaAjuste
                         v-if="ajustes.google"
                         :label="ajustes.google.vinculada ? t('mi_cuenta.ajustes.google_vinculado') : t('mi_cuenta.ajustes.google_vincular')"

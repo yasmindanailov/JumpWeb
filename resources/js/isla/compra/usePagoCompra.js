@@ -159,15 +159,16 @@ export function usePagoCompra({ flow, props, textos = {}, compra, enCola, alPaga
     /** «Ir a Mi QR»: la cuenta, en su lateral (hasta la T5), en el carné. */
     const miQr = () => cajonHost()?.openAccount?.({ preventDefault() {} }, 'card');
 
-    /** «Añadir a mis hijos», en la cuenta: sus menores a cargo. */
+    /** «Añadir menores» (quién firma el descargo, Z6g·2), en la cuenta: sus menores a cargo. */
     const menores = () => cajonHost()?.openAccount?.({ preventDefault() {} }, 'dependents');
 
     /**
-     * Un botón de «Antes de venir»: el de los hijos, a la cuenta; los de la FIESTA (T3e·5), a su formulario de invitados
-     * o a su invitación, con la URL que compone el servidor (`pasos.js::destinoDeTarea`). La compra ya terminó: se sale.
+     * Un botón de «Antes de venir»: el de quién firma, a los menores de la cuenta; los de la FIESTA (T3e·5), a su
+     * formulario de invitados o a su invitación, con la URL que compone el servidor (`pasos.js::destinoDeTarea`). La
+     * compra ya terminó: se sale.
      */
     function tarea(id, boton) {
-        if (id === 'menores') return menores();
+        if (id === 'firmas') return menores();
         const destino = destinoDeTarea((outcomeStore.confirmation?.lines ?? []).find((l) => l.is_pack), boton, textos);
 
         if (destino) window.location.assign(destino);

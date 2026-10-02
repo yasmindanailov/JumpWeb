@@ -31,6 +31,7 @@ import { meterLinea, pedidoDe } from './linea.js';
 import { alPrincipio, irA } from './ir-a.js';
 import { lineaListo, marcasDe, reciboDe, resumenDeLaCesta, resumenDelPedido } from './recibo.js';
 import { ckDelPaso, direccion, empiezaOtra, pantallaListo, pasoDelMotor, rango, volverDeLaPantallaCero } from './pasos.js';
+import { pistaDelDescargo } from './datos.js';
 import {
     almacenDeLaPestana, conVuelta, esVuelta, marcarSalida, sinVuelta, tomarMarca, vueltaDe, vuelveAqui,
 } from '../../sidebar/reanudar.js';
@@ -535,8 +536,13 @@ export function useSeccionCompra(props) {
         aviso: datos.estado.aviso,
         // El correo de «Entra» que aún no tiene cuenta (A3, `#849`; la frase del zip (6), Z6g·1): «No hay ninguna cuenta con…».
         nueva: datos.estado.nueva,
-        // Lo de después de pagar (los hijos, los adultos) solo tiene sentido si la instalación firma dentro y viene más gente.
-        lineaMenores: (datos.contexto.context?.waiver?.mode ?? datos.waiverStore.legal?.mode) === 'interno' && (compra.pedido?.n ?? 0) > 1,
+        // La pista de la casilla: quién firma (el zip (6), Z6g·2). En ENTRADAS, si la instalación firma dentro, también con una
+        // sola —puede ser la de un menor—: la compra no sabe para quién es cada entrada. En una fiesta, solo la primera frase:
+        // los invitados firman con la invitación.
+        pistaDescargo: pistaDelDescargo(
+            (datos.contexto.context?.waiver?.mode ?? datos.waiverStore.legal?.mode) === 'interno' && ! esPack(),
+            (clave) => t(textos, clave),
+        ),
         // El alta que vuelve de Google (`#785`): su correo, a la vista.
         correoGoogle: datos.estado.google?.email ?? '',
         ...social.value,

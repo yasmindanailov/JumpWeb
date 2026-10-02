@@ -289,8 +289,10 @@ return [
             'recordar' => 'Mantener la sesión iniciada en este dispositivo',
             'casilla' => 'He leído y acepto el descargo de responsabilidad.',
             'leer' => 'Leer el descargo de responsabilidad',
-            'pista_descargo' => 'Es la hoja que firma todo el que entra a saltar: normas y responsabilidad. La firmas una vez y vale siempre.',
-            'linea' => 'Después de pagar añades a tus hijos y firmas por ellos, en un minuto. Los adultos que vengan contigo se registran ellos, desde casa o en el mostrador.',
+            // Quién firma el descargo (el zip (6), Z6g·2): una sola pista junto a la casilla, sin dar nada por hecho —la compra
+            // no sabe para quién es cada entrada—. La segunda frase, solo en entradas con la firma dentro.
+            'pista_descargo' => 'Lo firma todo el que salta, una vez y para siempre.',
+            'pista_quien' => 'A los menores a tu cargo los añades a tu cuenta después de pagar, y firmas por ellos; los demás adultos, cada uno el suyo.',
             'revisa_uno' => 'Revisa 1 campo',
             'revisa' => 'Revisa :n campos',
             'llena' => 'Esa hora ya no está libre. Estas sí:',
@@ -367,10 +369,15 @@ return [
             'enviado' => 'Te lo hemos enviado a :correo.',
             'whatsapp' => 'Y por WhatsApp.',
             'antes' => 'Antes de venir',
-            'menores' => 'Añade a tus hijos y firma por ellos: nombre y fecha de nacimiento, un minuto. En la puerta solo enseñas el QR. Si no, lo hacéis allí.',
-            'menores_boton' => 'Añadir a mis hijos',
-            'adulto' => 'Viene 1 adulto más: se registra una vez, desde casa o en el mostrador, y enseña su QR.',
-            'adultos' => 'Vienen :n adultos más: cada uno se registra una vez, desde casa o en el mostrador, y enseña su QR.',
+            // Quién firma el descargo, ya pagado (Z6g·2): una sola tarjeta, por grupos; nadie se cuenta ni se da por hecho.
+            'firmas' => [
+                'titulo' => 'Todos los que saltan, con el descargo firmado',
+                'menores' => 'Menores a tu cargo:',
+                'menores_texto' => 'si aún no están en tu cuenta, añádelos a ella y firma el descargo en su nombre. Un minuto, y en la puerta solo enseñas tu QR.',
+                'adultos' => 'Otros adultos:',
+                'adultos_texto' => 'cada uno firma el suyo, desde casa o en el mostrador.',
+                'boton' => 'Añadir menores',
+            ],
             'fiesta_intro' => 'Ahora, dos cosas.',
             // T3e·5: sin invitación digital en ese producto, queda una; sin plazo publicado, la frase va sin fecha.
             'fiesta_intro_una' => 'Ahora, una cosa.',
@@ -535,14 +542,15 @@ return [
                 'muchos_plazos' => 'Y si quieres: :n extras para la fiesta, cada uno con su plazo; el primero cierra el :dia. Se pagan el día de la fiesta.',
                 'boton' => 'Añadir extras',
             ],
-            // «Añade a tus hijos» (T5d, `#777`): en una entrada, si la instalación firma el descargo dentro.
+            // «Añade a los menores» (T5d, `#777`; por grupos desde el zip (6), Z6g·2: «a tu cargo», no «tus hijos»): en una
+            // entrada, si la instalación firma el descargo dentro.
             'hijos' => [
-                'titulo' => 'Añade a tus hijos',
+                'titulo' => 'Añade a los menores',
                 'nota' => 'Un minuto',
-                'texto' => 'Añade a tus hijos: nombre y fecha de nacimiento, y firmas por ellos. Un minuto, y en la puerta solo enseñas el QR.',
+                'texto' => 'Añade a los menores a tu cargo: nombre y fecha de nacimiento, y firmas por ellos. Un minuto, y en la puerta solo enseñas el QR.',
                 'boton' => 'Añadir',
-                'linea' => 'Añade a tus hijos y firma por ellos: en la puerta solo enseñas el QR.',
-                'boton_isla' => 'Añadir a mis hijos',
+                'linea' => 'Añade a los menores a tu cargo y firma por ellos: en la puerta solo enseñas el QR.',
+                'boton_isla' => 'Añadir menores',
                 // `#825`: en un producto en el que puede entrar un adulto, opcional (ni «Siguiente» ni el punto del menú).
                 'opcional' => '¿Vienen menores? Firma por ellos antes y en la puerta solo enseñas el QR.',
             ],
@@ -553,20 +561,20 @@ return [
                 'boton' => 'Ver quién falta',
             ],
         ],
-        // Quién viene contigo, Añade a tus hijos y la ficha de un hijo (T5d, `#777`): los del mockup (`PMC.T.quien`,
+        // Quién viene contigo, Añade a los menores y la ficha de cada uno (T5d, `#777`; Z6g·2): los del mockup (`PMC.T.quien`,
         // `hijos`) y, para la ficha —que no dibuja—, los del sistema. Sin apellidos (`#773`·a); las cinco relaciones (b).
         'quien' => [
             'titulo' => 'Quién viene contigo',
-            'hijos' => 'Tus hijos',
+            'hijos' => 'Menores a tu cargo',
             'anadir' => 'Añadir',
-            'adultos' => 'Los adultos se registran ellos, desde casa o en el mostrador.',
+            'adultos' => 'Otros adultos: cada uno firma el suyo, desde casa o en el mostrador.',
             'firmado' => 'firmado',
             'falta_firma' => 'falta su firma',
             'anio' => ':n año',
             'anios' => ':n años',
         ],
         'hijos' => [
-            'titulo' => 'Añade a tus hijos',
+            'titulo' => 'Añade a los menores a tu cargo',
             'nombre' => 'Nombre',
             'nacimiento' => 'Fecha de nacimiento',
             'pista_fecha' => 'DD/MM/AAAA',
@@ -578,9 +586,9 @@ return [
                 'grandparent' => 'Abuelo o abuela',
                 'other' => 'Otra relación',
             ],
-            'otro' => 'Añadir otro hijo',
+            'otro' => 'Añadir otro menor',
             'quitar' => 'Quitar',
-            'hijo_n' => 'Hijo :n',
+            'hijo_n' => 'Menor :n',
             'casilla' => 'Acepto el descargo de responsabilidad en su nombre.',
             'leer' => 'Leer el descargo',
             'boton' => 'Guardar',
@@ -644,6 +652,9 @@ return [
             'google_vincular' => 'Vincular Google',
             'vincular' => 'Vincular',
             'desvincular' => 'Desvincular',
+            // La primera fila de «Acceso» (el zip (6), Z6g·2): cómo se entra, dicho una vez, sin nada que cambiar.
+            'acceso_codigo' => 'Entras con un código a tu correo',
+            'acceso_sin' => 'Sin contraseña',
             'otras' => 'Cerrar sesión en otros dispositivos',
             'cerrar_corto' => 'Cerrar',
             'novedades' => 'Novedades del parque',
@@ -713,7 +724,7 @@ return [
             ],
         ],
         // Los avisos de la cuenta arriba de Mi cuenta (T5e·2, `#779`), los del índice del cajón con las piezas del sistema
-        // (`#773`·d): confirmar el correo (con el reenvío y su cupo), firmar tu descargo y el de tus hijos.
+        // (`#773`·d): confirmar el correo (con el reenvío y su cupo), firmar tu descargo y el de los menores a tu cargo.
         'avisos' => [
             'verificar' => 'Confirma tu correo con el enlace que te enviamos.',
             'verificar_descargo' => 'Tu descargo quedará firmado al confirmarlo.',
@@ -725,14 +736,14 @@ return [
             'firmar' => 'Te falta firmar el descargo de responsabilidad.',
             'firmar_nuevo' => 'El descargo ha cambiado desde que lo firmaste: vuelve a firmarlo.',
             'firmar_boton' => 'Firmar',
-            'hijos' => 'Falta la firma del descargo de alguno de tus hijos.',
-            'hijos_boton' => 'Ver a tus hijos',
+            'hijos' => 'Falta la firma del descargo de alguno de los menores a tu cargo.',
+            'hijos_boton' => 'Ver a los menores',
         ],
         'borrar' => [
             'titulo' => 'Borrar tu cuenta',
             // Lo que hace `User::anonymize()` (`RGPD-01`), no lo que decía el mockup («se borran tus reservas y tus recibos»:
             // los pedidos se conservan sin tu identidad, para las facturas).
-            'texto' => 'Borramos tu nombre, tu correo y tu teléfono; tus hijos salen de la cuenta y se cierra tu sesión. De tus pedidos guardamos lo mínimo para las facturas, sin tu nombre, como pide la ley. No se puede deshacer.',
+            'texto' => 'Borramos tu nombre, tu correo y tu teléfono; los menores a tu cargo salen de la cuenta y se cierra tu sesión. De tus pedidos guardamos lo mínimo para las facturas, sin tu nombre, como pide la ley. No se puede deshacer.',
             'reserva' => 'Tienes una reserva el :dia a las :hora. Mientras tengas una por celebrar, la cuenta no se puede borrar: cuando pase, o si se cancela, sí.',
             'casilla' => 'Entiendo que no se puede deshacer.',
             'boton' => 'Borrar mi cuenta',

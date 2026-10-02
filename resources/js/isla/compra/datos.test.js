@@ -2,8 +2,9 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
     cuentaQueYaExiste, datosVacios, entradaVacia, erroresDelServidor, firmaPendiente, formularioDeAlta, hayQuePedir,
-    nacimientoDeAlta, revisarDatos,
+    nacimientoDeAlta, pistaDelDescargo, revisarDatos,
 } from './datos.js';
+import { t as texto } from '../../sidebar/i18n.js';
 import { entrar, errorDeEntrar, erroresDelCodigo, esNoDelCodigo } from './acceso.js';
 
 /**
@@ -211,5 +212,18 @@ describe('la fecha de nacimiento del titular, entera y opcional (`#792`)', () =>
 
     test('el «no» del servidor a la fecha va bajo su campo', () => {
         assert.deepEqual(erroresDelServidor({ born_on: 'Tienes que ser mayor de edad.' }).errores, { nacimiento: 'Tienes que ser mayor de edad.' });
+    });
+});
+
+describe('Z6g·2 · quién firma el descargo, en la pista de la casilla', () => {
+    const conPistas = { compra: { datos: { pista_descargo: 'Lo firma todo el que salta, una vez y para siempre.', pista_quien: 'A los menores a tu cargo los añades…' } } };
+    const t = (clave) => texto(conPistas, clave);
+
+    test('en entradas con la firma dentro: qué es y quién lo firma, en una sola pista', () => {
+        assert.equal(pistaDelDescargo(true, t), 'Lo firma todo el que salta, una vez y para siempre. A los menores a tu cargo los añades…');
+    });
+
+    test('en una fiesta o en «Crea tu cuenta», solo la primera frase: nada de menores ni de adultos', () => {
+        assert.equal(pistaDelDescargo(false, t), 'Lo firma todo el que salta, una vez y para siempre.');
     });
 });
