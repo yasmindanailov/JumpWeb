@@ -267,8 +267,15 @@ export function useSeccionCuenta(props) {
         nextTick(() => setTimeout(() => { const c = caja(); if (c) c.scrollTop = arriba; }, 60));
     }
 
+    /**
+     * Al inicio, en el punto en que se dejó la lista. ⚠️ **Con lo suyo cargado** (`cargar`, como toda llegada a una vista):
+     * Mi cuenta pudo NACER en otra —«Mi QR» de la isla abre Tu QR (Z6a), y su «Ir a mi cuenta» llega aquí— sin haber
+     * pintado nunca el inicio, y entonces los Ajustes (con «Cerrar sesión») y los menores no llegaban: no había forma de
+     * salir de la cuenta (lo vio el owner, 02-10). Sus cargas son idempotentes: lo ya cargado no se vuelve a pedir.
+     */
     function aInicio() {
         Object.assign(e, { vista: VISTA.INICIO, subpaso: '', dir: 'back', renovar: false, rSel: null });
+        cargar(VISTA.INICIO);
         volverAlPunto(scroll);
     }
 

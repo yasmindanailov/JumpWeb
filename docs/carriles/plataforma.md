@@ -65,7 +65,8 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
    copiada que Google enseñaba traducida no se publica nunca; `google-reviews.md` §9) · **Z6g·2 🟦** 02-10, EN EL ÁRBOL y
    falta el ojo del owner (§4.27: «Quién firma el descargo» en Tus datos, «¡Reservado!» y Mi cuenta, `#875`; «Entras con un
    código a tu correo» en Ajustes; la nota en el cierre de Normas). Con ella se cierra el zip (6) de este carril: lo de
-   Visítanos, Colegios y Entradas ya entró con la Z6a–Z6e · (4) la isla en un
+   Visítanos, Colegios y Entradas ya entró con la Z6a–Z6e · ✅ 02-10, lo que vio el owner: Mi cuenta abierta desde «Mi QR»
+   no traía los Ajustes ni «Cerrar sesión» (`aInicio` no cargaba; guarda nueva en `sonda-cuenta` §5, sin correr) · (4) la isla en un
    móvil de verdad, **en STAGING al terminarlo todo**. `isla_razon` y la imagen de la INVITACIÓN son del SPA (`#861`). ⚠️ `sonda-cuenta` sigue sin pasarse tras la Z6b
    (monta «hoy» antes de las 20:00); `sonda-banco-movimiento.mjs` sigue con los casos del 27-09: se rehace en la
    verificación final (`#768`).

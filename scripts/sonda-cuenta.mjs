@@ -8,7 +8,8 @@
  *   3. «Enseñar mi QR» abre Tu QR (el QR grande, el código en grupos de cuatro, «Guardar en el móvil» con su descarga) y
  *      su flecha vuelve a Mi cuenta; «Renovar mi QR» pregunta, renueva y lo confirma arriba con el código nuevo;
  *   4. la X cierra la capa y deja la dirección sin `#mi-cuenta`; «Mi QR» de la barra abre Tu QR directamente, sin flecha;
- *   5. las puertas: `/mi-cuenta` abre Mi cuenta en la isla, y `#mi-cuenta/qr`, Tu QR;
+ *   5. las puertas: `/mi-cuenta` abre Mi cuenta en la isla, y `#mi-cuenta/qr`, Tu QR —y desde esa carga, que nació en Tu
+ *      QR, «Ir a mi cuenta» trae los Ajustes con «Cerrar sesión» (02-10, lo vio el owner)—;
  *   6. LAS RESERVAS (T5b, `DECISIONES #775`), con las de `sonda-cuenta-datos.php` (un Jump en plazo y un cumpleaños con
  *      señal): «Tu próxima reserva» con su plazo, «Ver el pago» del libro, «Cambiar o cancelar» (lo que se puede, el
  *      mensaje escrito, «Llamar» y WhatsApp con el teléfono del parque), «Otras reservas» → «Tu reserva» con la señal
@@ -289,6 +290,14 @@ async function recorrer(navegador, ventana, informe) {
     await pagina.waitForTimeout(600);
     check('el enlace `#mi-cuenta/qr` abre Tu QR', (await banda()) === 'Tu QR', `banda «${await banda()}»`);
     await captura('5-enlace-qr');
+    // Esta carga NACIÓ en Tu QR: el inicio no se ha pintado nunca, y llegar a él tiene que traer lo suyo —los Ajustes, en su
+    // trozo, con «Cerrar sesión»—. Sin eso no había forma de salir de la cuenta (lo vio el owner, 02-10: `aInicio` no cargaba).
+    await capa().getByText('Ir a mi cuenta').click();
+    await capa().locator('#ajustes').waitFor({ timeout: 15000 }).catch(() => {});
+    check('de Tu QR recién abierto, «Ir a mi cuenta» trae los Ajustes y «Cerrar sesión»',
+        (await banda()) === 'Mi cuenta'
+            && await capa().locator('#ajustes').getByRole('button', { name: 'Cerrar sesión', exact: true }).isVisible().catch(() => false),
+        `banda «${await banda()}»`);
 
     // ── 6 · Las reservas (T5b) ───────────────────────────────────────────────────────────────────────
     const sitio = await (await pagina.request.get(`${base}/api/v1/site`, { headers: { Accept: 'application/json' } })).json();
