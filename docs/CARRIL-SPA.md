@@ -575,6 +575,12 @@ De «por dónde retomar», mudado VERBATIM el 2026-09-30 al empezar la R1·T (el
        261/261; spec §4.4). ▶ El arnés ENTERO, DE NOCHE (bloquea la local 45 min; parado a 22/129, muerden);
        la Puerta, entera (`mutar-puerta-p1.sh` sin `SOLO`; su resultado, en la spec §4.4 y aquí).
 
+- Mudado VERBATIM de «por dónde retomar» 0 de `carriles/spa.md` el 2026-10-02, noche (su techo), al llegar `#912`/`#913`:
+  0. ✅ **LOS COMPLEMENTOS DE LA FIESTA** (`#806`→`#808`, `fiesta-sistema-nuevo.md` §4.17): K1 y K2 en `main`; K3 es DATO del
+     panel (la receta, en §4.17 «K3»): lo configura el parque en SU panel al desplegar (merienda, calcetines, cono, tartas). ▶
+     **Antes de proponer código en cualquier tanda, medir si el panel ya lo configura** (montaje y sonda en la local); si algo
+     ya existía, parar y decírselo al owner (`#808`).
+
 - Mudado VERBATIM de «por dónde retomar» 1 de `carriles/spa.md` el 2026-10-02, 17:50 (su techo), al tomar la lista del owner
   (`#876`):
   1. ✅ **LA A4 DEL ACCESO CON CÓDIGO (el cajón), ENTERA EN `main`**: la A4a (`#810`→`#812`) y la A4b (`#813`), las dos con el

@@ -2,7 +2,7 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **910–939** (del owner, 02-10; 790–819 agotada con `#819`) · Último usado: **`#911`** (el siguiente, `#912`) · La banda está dada de alta en la
+> Banda: **910–939** (del owner, 02-10; 790–819 agotada con `#819`) · Último usado: **`#913`** (el siguiente, `#914`) · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs:
 > **`acceso-con-codigo.md` §0** (la A4 del cajón ✅ en `main`) · `correos-rediseno.md` §0 ·
 > `fiesta-sistema-nuevo.md` §4.17–§4.19 · `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7
@@ -58,10 +58,12 @@ filas 4 y 8), ANTES que la R1c («tus puntos primero»).
   sonda del cartel 10/10, suite verde. ▶ Falta su OJO en «Analítica → Clientes»; después, *fast-forward* a `main`. ⚠️ v1.1.0
   no tiene ni la analítica ni `#mi-cuenta`: un QR impreso hoy abre la portada y no cuenta nada hasta la v2.0.0.
 
-0. ✅ **LOS COMPLEMENTOS DE LA FIESTA** (`#806`→`#808`, `fiesta-sistema-nuevo.md` §4.17): K1 y K2 en `main`; K3 es DATO del
-   panel (la receta, en §4.17 «K3»): lo configura el parque en SU panel al desplegar (merienda, calcetines, cono, tartas). ▶
-   **Antes de proponer código en cualquier tanda, medir si el panel ya lo configura** (montaje y sonda en la local); si algo
-   ya existía, parar y decírselo al owner (`#808`).
+- ▶ **Después, del owner (02-10 noche, `#912`/`#913`; `fiesta-sistema-nuevo.md` §4.20)**: P1 UN plazo para toda la lista (24 h;
+  fuera el de cada complemento; `CRITICAL_RE`) → P2 la impar a lo ancho → P3 la merienda «hay que elegir uno» (`CRITICAL_RE`) →
+  P4 el correo «Falta elegir…» el día antes del plazo.
+
+0. ✅ Los complementos de la fiesta (K1–K3, `#806`→`#808`): su punto, mudado verbatim a `CARRIL-SPA.md` §9 (02-10). ▶ **Antes de
+   proponer código, medir si el panel ya lo configura**; si algo ya existía, parar y decírselo al owner (`#808`).
 1. ✅ **LA A4 DEL ACCESO CON CÓDIGO (el cajón), ENTERA EN `main`**: su punto, mudado verbatim a `CARRIL-SPA.md` §9 (02-10).
    ⚠️ El código, como la isla (`#812`): manda el servidor; si plataforma lo cambia, el cajón lo sigue.
 1b. ✅ **Lo del zip (6) que el owner repartió al SPA** (`#861`; `isla-y-landing-nueva.md` §4.27), EN `main` con el visto

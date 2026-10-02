@@ -1167,6 +1167,42 @@ navegador: el robot de WhatsApp no ejecuta JavaScript) **16/16** con tres invita
 entero **33/33**. ⚠️ **No verificado**: que WhatsApp la enseñe (se mide en un móvil, con producción desplegada). ⚠️ El mutante que guardaba la imagen, antes del arreglo, dejó
 `storage/app/private/invitaciones/1.jpg` (datos de prueba; ignorado por git): su borrado, pendiente del owner.
 
+### 4.20 Un solo plazo para la lista, y lo que hay que elegir (`[DECIDIDO owner]` `#912`, `#913`, 02-10) — al detalle, medido antes de codificar
+
+**El pedido del owner (02-10, noche)**: (1) «TODO de la lista de invitados solo tendrá 1 plazo máximo de cambiar antes del día
+de la fiesta… 24 H antes… nada de plazo por producto o complemento… lo ponemos solo en 1 sitio» (`#912`); (2) la merienda es
+UNA opción y obligatoria —un grupo «hay que elegir uno», genérico desde el panel—; al plazo sin elegir, el parque la ve «sin
+elegir»; un correo el día antes del plazo si sigue sin elegir; cono y calcetines, complementos aparte (`#913`); (3) en un grupo
+con tarjetas impares, la última a lo ancho (la A, elegida con la B y la C renderizadas: `storage/app/audit/medir-extras/`).
+
+**Medido (02-10, 20:40)**:
+1. **La lista YA tiene un plazo**: `GuestCountPolicy` (el ajuste `packs.guest_count_cutoff_hours`, 24 h por defecto) gobierna el
+   número de invitados, sus fichas (`GuestFormController`) y las respuestas a la invitación (`PartyInvitations::repliesOpenFor()`).
+   La API lo publica (`guest_count_cutoff_hours` y `OrderItem.guest_count_deadline`, desde 1.25.0).
+2. **Lo único con plazo PROPIO son los complementos de venta posterior**: `product_addons.postform_cutoff_hours` por enganche
+   (`ProductAddon::postformCutoffHours()`, `PostFormAddons::deadlineFor()`; obligatorio en `postFormProblem()`, `missing_cutoff`). De
+   ahí el «Hasta el martes 6 a las 18:00» de cada tarjeta y los dos pies de la tarta y de los padres (`ListaDeInvitados::pie()`).
+   En la local: merienda y tartas 48 h, calcetines y cono 0 h; en producción (folleto 26-09), calcetines y cono 12 h.
+3. **La API**: `PostFormAddon.closes_at` (obligatorio), `closed` y `closed_reason` por complemento: la MISMA forma, con el plazo
+   de la lista (sin versión rota). La landing de plataforma pinta el plazo de cada complemento (`BirthdayComparison::cutoff()`).
+4. **«Obligatorio» ya existe y es OTRA cosa**: `is_mandatory` se AÑADE solo (`AddonResolver`, paso 2) y la lista lo rechaza
+   (`complementos-post-reserva.md` §4.3, fila 1). Un grupo excluyente (`choice_group`) está prohibido en la lista porque siempre
+   lleva uno marcado (`groupDefault()`), y su fila 4 ya lo dice: «si algún día un grupo con opción «ninguno» explícita hace falta,
+   este guard es el primero que cae». La merienda es ese caso.
+5. **Los avisos de antes**: la víspera (`reservations:eve-notice`, desde las 18:00 del día antes) y «El cumple se acerca»
+   (comercial). Ninguno llega antes del plazo con margen: el de la merienda es un correo nuevo.
+
+**Las tandas** (cada una en `wip/`, con su «al detalle» y al ojo del owner):
+- **P1 · un plazo** (`CRITICAL_RE`: `PostFormAddons`, `ProductAddon`; `VERIFY_CONC=1` con sus verificadores): el plazo de cada
+  complemento ES el de la lista (`GuestCountPolicy::deadlineFor()`); fuera `missing_cutoff` y el campo del panel (la columna se
+  queda sin uso hasta una migración propia); la lista dice el plazo UNA vez, junto al número de invitados; la API, igual de forma.
+- **P2 · la impar a lo ancho**: una regla de la hoja de la lista, con su sonda a 390 y 1280.
+- **P3 · «hay que elegir uno»** (`CRITICAL_RE`): el grupo excluyente de venta posterior SIN marcado de serie, con su marca en el
+  panel (distinta de `is_mandatory`); en la lista, una pregunta de UNA respuesta y «Falta elegir…»; «sin elegir» en el panel y
+  en la hoja del día; la API lo publica. Cambiar de opción es neutro en dinero (todas a 0 €).
+- **P4 · el correo** «Falta elegir…», el día antes del plazo (cada hora con su marca, como la víspera), editable (R1·T) y en
+  `EmailUtm`.
+
 ## 5. Impacto en invariantes
 
 | ID | Cómo |
