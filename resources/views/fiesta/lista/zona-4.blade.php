@@ -22,9 +22,10 @@
     <div class="pli-ninos-g" id="pli-extras-ninos" data-ninos data-sois="{{ $ni['sois'] }}">
     <h3 class="pli-h3">{{ __('fiesta.lista.ninos.titulo') }}</h3>
     @if ($ta !== null)
-        <div class="pli-tarta" id="pli-tarta" data-tarta data-sois="{{ $ta['sois'] }}" data-guardar-texto="{{ $ta['cuando'] !== '' ? __('fiesta.lista.tarta.guardar', ['cuando' => $ta['cuando']]) : '' }}" data-pronto="{{ $ta['pronto'] ? '1' : '0' }}">
+        {{-- Sin aviso ni texto de plazo propio (`#912`, P1·b): la hora de la lista la dice la cabecera, siempre. --}}
+        <div class="pli-tarta" id="pli-tarta" data-tarta data-sois="{{ $ta['sois'] }}">
             <h4 class="pli-h4">{{ __('fiesta.lista.tarta.pregunta') }}</h4>
-            {{-- Una tarjeta por tarta del panel (su foto, «De 12 raciones», precio, tope y plazo): se piden varias a la vez. --}}
+            {{-- Una tarjeta por tarta del panel (su foto, «De 12 raciones», su precio y su tope): se piden varias a la vez. --}}
             @if ($ta['tarjetas'] !== [])
                 <div class="pli-grid2">
                     @foreach ($ta['tarjetas'] as $e)
@@ -37,7 +38,7 @@
             <p class="pli-sug" data-tarta-sug hidden><span data-tarta-sug-texto></span></p>
             <p class="pli-sug ok" data-tarta-ok hidden><span class="pli-cubre"><x-lucide name="circle-check" :size="15" /><span data-tarta-ok-texto></span></span></p>
             @if ($ta['abierta'])
-                {{-- «Sin tarta» decide (el aviso de arriba se va). El 0 oculto va DELANTE: marcada, manda el 1; desmarcada, el 0
+                {{-- «Sin tarta» decide. El 0 oculto va DELANTE: marcada, manda el 1; desmarcada, el 0
                      —sin él no se sabría si la desmarcó o no la vio—. Solo con alguna tarta en plazo, como el controlador. --}}
                 <input type="hidden" name="cake_declined" value="0">
                 <x-pieza.casilla name="cake_declined" value="1" id="pli-sin-tarta" :checked="$ta['declinada']" :label="__('fiesta.lista.tarta.sin')" />

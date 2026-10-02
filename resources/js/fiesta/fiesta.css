@@ -668,12 +668,9 @@ body.fiesta-lista { margin: 0; background: var(--bg-subtle); font-family: var(--
 .pli-sug.ok{box-shadow:inset 0 0 0 1px var(--border-subtle);background:var(--bg-subtle)}
 /* F5 (`#749`): las sugerencias las pinta `lista.js`; sin él se quedan escondidas (el `display` de arriba le ganaría a `hidden`). */
 .pli-sug[hidden]{display:none}
-.pli-aviso-tarta,.pli-padres{margin:0;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:12px 14px;border-radius:var(--r-lg);font:600 var(--fs-body-sm)/1.4 var(--font-ui);color:var(--fiesta-tinta-900)}
-.pli-aviso-tarta{background:var(--surface-card);box-shadow:inset 0 0 0 2px var(--fiesta-sol-500)}
-.pli-padres{background:var(--bg-subtle);box-shadow:inset 0 0 0 1px var(--border-subtle)}
-.pli-aviso-ic,.pli-padres-ic{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:32px;height:32px;border-radius:50%;background:var(--notice-info-bg);color:var(--icon-accent)}
-.pli-aviso-ic{background:var(--fiesta-sol-100, var(--notice-warn-bg));color:var(--fiesta-tinta-900)}
-.pli-aviso-tarta>span:nth-child(2),.pli-padres>span:nth-child(2){flex:1 1 180px;min-width:0}
+.pli-padres{margin:0;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:12px 14px;border-radius:var(--r-lg);font:600 var(--fs-body-sm)/1.4 var(--font-ui);color:var(--fiesta-tinta-900);background:var(--bg-subtle);box-shadow:inset 0 0 0 1px var(--border-subtle)}
+.pli-padres-ic{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:32px;height:32px;border-radius:50%;background:var(--notice-info-bg);color:var(--icon-accent)}
+.pli-padres>span:nth-child(2){flex:1 1 180px;min-width:0}
 .pli-grid2{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
 /* P1 de §4.20 (`#912`): el plazo de TODA la lista, una vez, bajo el resguardo de la cabecera. Cerrada, en el tono del aviso. */
 .pli-plazo-lista{margin:8px 0 0;display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:600 var(--fs-body-sm)/1.4 var(--font-ui);color:var(--text-muted)}

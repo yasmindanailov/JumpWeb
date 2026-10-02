@@ -1009,6 +1009,15 @@ Dos mutantes A MANO, 2/2 y restaurados por copia (`sha256sum`): la tarjeta de «
 dentro (`pasos.test.js`) y la pista de la casilla sin su segunda frase (`datos.test.js`). **Qué hacer**: llevarlos a
 `scripts/mutar-isla-z6b.sh` (o a uno propio de la compra) con los de arriba, la próxima vez que se toque «Listo».
 
+## ▶ Baja · los arneses de la lista, re-apuntados en LECTURA tras P1/P1·b pero sin correr (02-10, `#912`, modo ligero)
+
+P1 y P1·b cambiaron el código que miran `mutar-extras-fiesta.sh` (5 retiradas con su sujeto), `mutar-complementos-k2.sh` (2
+retiradas, 2 re-apuntadas) y el control de `mutar-plazo-unico.sh`. Sus anclas se comprobaron SIN aplicar nada (un comprobador
+que carga sus llamadas con todo anulado: 29/29, 14/14 y 9/9 casan), pero los arneses no se corrieron (el owner: «no lances
+mutaciones y arneses así por así»). Medido de paso: `mutar-invitacion-t43.sh` tiene un ancla vieja que NO es de P1 («1ª puerta ·
+la columna se cae al ENGANCHAR», `TicketType.php`), y los otros 21 arneses que cubren ficheros de P1/P1·b no se repasaron.
+**Qué hacer**: la próxima vez que se toque la lista, correr los tres (con permiso del owner) y re-apuntar el de la T4·3.
+
 ## ▶ Baja · la columna `product_addons.postform_cutoff_hours` se quedó SIN lectores (02-10, `#912`)
 
 Desde P1 el plazo de un complemento de venta posterior es el de la lista (`GuestCountPolicy`): el panel ya no la escribe y

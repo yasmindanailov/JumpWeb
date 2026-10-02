@@ -139,10 +139,7 @@ return [
                     $addon(1, 'Traemos la nuestra', 'Se cobra el cubierto', 10, 0, null),
                 ],
                 'declinada' => false,
-                // «Aquí, hoy es jueves 24» (`datos.js`): la tarta cierra hoy a las 17:00.
-                'cuando' => 'hoy a las 17:00',
-                'pronto' => true,
-                'urgente' => ! $guardado,
+                // Sin el aviso de la tarta del diseño (`PliAvisoTarta`, `tartaUrgente`): fuera por `#912` (P1·b), un desvío decidido.
                 'sois' => $RESERVA['reservados'],
             ],
             'padres' => [

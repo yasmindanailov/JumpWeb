@@ -87,6 +87,7 @@ class ExtrasDeLaFiestaListaTest extends TestCase
         $this->assertStringNotContainsString('name="cake_declined"', $cerrada);
         $this->assertStringNotContainsString('id="x-'.$nata->id.'"', $cerrada, 'cerrada, su cantidad no se cambia (viaja oculta, tal cual)');
         $this->assertStringNotContainsString('pasó', $cerrada, 'que la lista cerró lo dice su cabecera, no la tarta (`#912`)');
+        $this->assertStringNotContainsString('pli-tarta-fija', $cerrada, 'con una pedida, no se dice «Sin tarta»');
 
         // Cerrada y sin nada pedido: «Sin tarta», sin «pasó» (lo dice la cabecera).
         $this->plazoDeLaLista(24);
@@ -129,30 +130,25 @@ class ExtrasDeLaFiestaListaTest extends TestCase
         $this->assertStringNotContainsString('name="general[adultos]"', $this->zona4($html));
     }
 
-    public function test_the_cake_notice_shows_only_while_undecided_and_closing_soon(): void
+    /**
+     * `[DECIDIDO owner]` `#912`, P1·b: la tarta NO tiene aviso ni texto de plazo propio, ni cerrando mañana y sin decidir (el caso
+     * en el que el `PliAvisoTarta` del diseño salía arriba y la barra decía «La tarta se guarda hasta…»). La hora, una vez, en la
+     * cabecera. Hasta P1·b, este mismo caso aseveraba el aviso en ese escenario, y pasaba: con el aviso, esto es rojo.
+     */
+    public function test_the_cake_has_no_notice_nor_deadline_of_its_own_even_closing_tomorrow(): void
     {
         ['reservation' => $r, 'host' => $host] = $this->mountParty();
-        $tarta = $this->extra($this->tipo($r), 'Tarta', 2500, ['postform_block' => ProductAddon::BLOCK_CAKE], ['serves' => 12]);
+        $this->extra($this->tipo($r), 'Tarta', 2500, ['postform_block' => ProductAddon::BLOCK_CAKE], ['serves' => 12]);
 
-        // CONTROL: la fiesta es dentro de 12 días; la tarta cierra con la lista (24 h antes, `#912`), lejos: sin aviso.
-        $this->assertStringNotContainsString('data-aviso-tarta', $this->pagina($r, $host));
-
-        // Dentro de dos días, cierra MAÑANA: el aviso, arriba.
+        // Dentro de dos días, la lista cierra MAÑANA a las 17:00, con la tarta sin decidir.
         $r->slot?->forceFill(['date' => DisplayTime::today()->addDays(2)->toDateString()])->save();
         $html = $this->pagina($r, $host);
-        $this->assertStringContainsString('data-aviso-tarta', $html);
-        $this->assertStringContainsString('¿La tarta? Se elige hasta mañana a las 17:00.', $html);
-        // ⚠️ La cabecera también lleva `data-zona="1"`: el ancla es su cierre y la sección de la invitación.
-        $this->assertGreaterThan(strpos($html, '</header>'), strpos($html, 'data-aviso-tarta'), 'bajo la cabecera…');
-        $this->assertLessThan(strpos($html, 'id="gf-invite"'), strpos($html, 'data-aviso-tarta'), '…y antes de la invitación');
 
-        // Decidida (también «Sin tarta»), se va: depende de lo GUARDADO. Y deshecha la decisión, vuelve (CONTROL).
-        $this->guardar($r, $host, ['cake_declined' => '1']);
-        $this->assertStringNotContainsString('data-aviso-tarta', $this->pagina($r, $host));
-        $this->guardar($r, $host, ['cake_declined' => '0']);
-        $this->assertStringContainsString('data-aviso-tarta', $this->pagina($r, $host));
-        $this->guardar($r, $host, ['addons' => [['product_id' => $tarta->id, 'quantity' => 1]], 'cake_declined' => '0']);
-        $this->assertStringNotContainsString('data-aviso-tarta', $this->pagina($r, $host));
+        $this->assertStringContainsString('data-tarta', $html, 'el instrumento: la tarta está en la página');
+        $this->assertStringNotContainsString('data-aviso-tarta', $html);
+        $this->assertStringNotContainsString('data-guardar-texto', $html, 'ni el texto de la tarta para la barra');
+        $this->assertStringContainsString('Puedes cambiar la lista hasta mañana a las 17:00.', $html);
+        $this->assertSame(1, substr_count($html, 'mañana a las 17:00'), 'la hora, una vez: en la cabecera');
     }
 
     public function test_zone_three_points_to_the_parents_while_nothing_is_saved_for_them(): void

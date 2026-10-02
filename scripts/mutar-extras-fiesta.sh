@@ -173,28 +173,17 @@ mutar "los adultos se preguntan con lo de los padres cerrado" "$LDI" \
 mutar "las familias no agrupan" "$LDI" \
   "\$familias[\$a->family][] = \$tarjeta(" \
   "\$familias[''][] = \$tarjeta("
-# Re-apuntada en K2 (`#807`): «decidida» es ahora una tarta PEDIDA o «Sin tarta».
-mutar "el aviso de la tarta sigue con la tarta decidida" "$LDI" \
-  "'urgente' => \$pronto && ! \$pedida && ! \$declinada," \
-  "'urgente' => \$pronto,"
-mutar "el aviso de la tarta sale aunque cierre lejos" "$LDI" \
-  "&& (\$cierra->isSameDay(DisplayTime::today()) || \$cierra->isSameDay(DisplayTime::today()->addDay()))," \
-  ","
-mutar "la página no pinta el aviso de la tarta" "$LISTA" \
-  "            @include('fiesta.lista.aviso-tarta')" \
-  ""
+# Retiradas con su sujeto (§3.quater, `#912` P1·b): las tres del aviso de la tarta («sigue con la tarta decidida», «sale
+# aunque cierre lejos», «la página no lo pinta»): el aviso ya no existe; que no vuelva lo dice
+# `ExtrasDeLaFiestaListaTest::test_the_cake_has_no_notice_nor_deadline_of_its_own_even_closing_tomorrow`.
 mutar "la línea de los padres sigue con algo pedido" "$Z3" \
   " && \$m['extras']['padres']['nada_guardado'])" \
   ")"
 mutar "«Ver…» no nombra las familias" "$LDI" \
   "__('fiesta.lista.padres.ver', ['familias' => self::enumera(array_map(fn (string \$f): string => Str::lower(\$f), \$titulos))])" \
   "__('fiesta.lista.padres.ver_generico')"
-mutar "el pie no dice hasta cuándo" "$LDI" \
-  "(\$partes === [] ? '' : ' '.Str::ucfirst(implode('; ', \$partes)).'.')" \
-  "''"
-mutar "el pie no reconoce «el mismo día»" "$LDI" \
-  "\$fiesta !== null && \$c->isSameDay(\$fiesta)" \
-  "false"
+# Retiradas con su sujeto (§3.quater, `#912` P1): «el pie no dice hasta cuándo» y «el pie no reconoce «el mismo día»» — el
+# pie ya no lleva plazos; el de la lista lo guarda `scripts/mutar-plazo-unico.sh`.
 # K1 de §4.17 (`#806`/`#807`): los sueltos son de «Para los niños» y su chapa se cuenta en niños (fuera `para_personas`).
 mutar "los sueltos pierden «para cuántos niños»" "$LDI" \
   "\$a->serves === null ? '' : trans_choice('fiesta.lista.ninos.para'" \

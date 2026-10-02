@@ -457,18 +457,16 @@ function lista(form) {
         actualiza();
     });
 
-    // ── K2 (§4.17, `#807`): LA TARTA, VARIAS A LA VEZ (y `PliAvisoTarta`) ──
+    // ── K2 (§4.17, `#807`): LA TARTA, VARIAS A LA VEZ ──
     // Una tarjeta por tarta del panel, con su cantidad en `addons[i]` como cualquier complemento (el listener del formulario
     // repinta y guarda el borrador); debajo, sus raciones contra los niños (`racionesTarta()`); y «Sin tarta», una casilla:
-    // marcarla pone las tartas a 0, y subir una la desmarca.
+    // marcarla pone las tartas a 0, y subir una la desmarca. Sin aviso ni texto de plazo propio (`#912`, P1·b): la hora de la
+    // lista la dice la cabecera.
     const tarta = q('[data-tarta]', form);
     const sinTarta = tarta ? q('input[type="checkbox"][name="cake_declined"]', tarta) : null;
     const camposTarta = () => (tarta ? qa('[data-variante] [data-cantidad-campo]', tarta) : []);
     // Lo pedido de cada tarta: lo tecleado en las abiertas y lo pedido en las cerradas.
     const pedidoTarta = (c) => { const campo = q('[data-cantidad-campo]', c); return campo ? (parseInt(campo.value, 10) || 0) : Number(c.dataset.pedido || 0); };
-    const tartasPedidas = () => (tarta ? qa('[data-variante]', tarta).reduce((suma, c) => suma + pedidoTarta(c), 0) : 0);
-    // ¿Cambió alguna tarta desde que se abrió? (la isla dice «La tarta se guarda hasta…» con una pedida y sin guardar).
-    const tartaCambiada = () => camposTarta().some((el) => inicial.has(el) && inicial.get(el) !== valorDe(el));
     // Cuántos sois (el `sois` del diseño): el número elegido, o la lista si lo supera.
     // Sin el campo del número (cerrado), el que dio el servidor: en la tarta o, sin tarta, en «Para los niños» (K1).
     const soisServidor = () => Number(tarta?.dataset.sois || q('[data-ninos]', form)?.dataset.sois || 0);
@@ -490,19 +488,6 @@ function lista(form) {
         if (ok) {
             ok.hidden = !cuenta || !cuenta.cubre;
             if (!ok.hidden) q('[data-tarta-ok-texto]', ok).textContent = choice(t('ninos.cubierto', ''), n, { count: n });
-        }
-        // El aviso de arriba: pedida (o «Sin tarta») y sin guardar, cambia el texto EN EL MISMO HUECO (no se va: la página
-        // subiría bajo el dedo).
-        const v = sinTarta?.checked ? 'none' : (tartasPedidas() > 0 ? 'elegida' : '');
-        const aviso = q('[data-aviso-tarta]', form);
-        if (aviso) {
-            const tx = q('[data-aviso-texto]', aviso);
-            const ir = q('[data-aviso-ir]', aviso);
-            const irTx = ir ? (q('.pz-enlace__texto', ir) || ir) : null;
-            if (aviso.dataset.original === undefined) { aviso.dataset.original = tx?.textContent ?? ''; aviso.dataset.irOriginal = irTx?.textContent ?? ''; }
-            if (tx) tx.textContent = v === 'none' ? aviso.dataset.sin : (v ? aviso.dataset.elegida : aviso.dataset.original);
-            if (irTx) irTx.textContent = v ? aviso.dataset.ver : aviso.dataset.irOriginal;
-            qa('[data-aviso-icono]', aviso).forEach((ic) => { ic.hidden = (ic.dataset.avisoIcono === 'elegida') !== Boolean(v); });
         }
     };
     // «Sin tarta» marcada: las tartas a 0, cada campo avisando como si se hubiera tocado (el − y el + se repintan).
@@ -685,10 +670,8 @@ function lista(form) {
     const pintaIsla = () => {
         if (!isla || islaEstado.avisando) return;
         const n = cambios();
-        // F5/K2: con alguna tarta PEDIDA y sin guardar, y su plazo cerrando hoy o mañana, la isla lo dice (`guardarTarta`).
-        const tartaTexto = tarta?.dataset.pronto === '1' && tartasPedidas() > 0 && tartaCambiada() ? (tarta.dataset.guardarTexto || '') : '';
         const r = caraDeLaLista({
-            cambios: n, repasar, recuperado, tarta: tartaTexto, guardando: islaEstado.guardando,
+            cambios: n, repasar, recuperado, guardando: islaEstado.guardando,
             abiertas: Boolean(q('template[data-isla-plantilla="enviar"]', form)), compartida: islaEstado.enviada,
         }, textosIsla);
         if (r.cara === 'guardar') isla.cara('guardar', { primary: r.primary, ocupada: r.ocupada, sub: r.sub, label: r.ocupada ? t('guardar.guardando', 'Guardando la lista') : rotuloGuardar });

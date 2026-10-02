@@ -177,7 +177,7 @@ return [
             'abierta' => 'Puedes cambiar la lista hasta :cuando.',
             'cerrada' => 'La lista se cerró :cuando.',
         ],
-        // CUÁNDO, como lo lee quien lo lee: el plazo de la cabecera, el aviso de la tarta y «Guardado ayer a las…».
+        // CUÁNDO, como lo lee quien lo lee: el plazo de la cabecera y «Guardado ayer a las…».
         'momento' => [
             'hoy' => 'hoy a las :hora',
             'manana' => 'mañana a las :hora',
@@ -199,12 +199,6 @@ return [
             'raciones' => 'De :n raciones',
             'poca' => 'Sois :n y la tarta es de :r raciones.',
             'poca_varias' => 'Sois :n y :q tartas son :r raciones.',
-            'aviso' => '¿La tarta? Se elige hasta :cuando.',
-            'aviso_ir' => 'Elegir la tarta',
-            'aviso_elegida' => 'Tarta elegida: se guarda hasta :cuando.',
-            'aviso_sin' => 'Sin tarta: se guarda hasta :cuando.',
-            'aviso_ver' => 'Ver la tarta',
-            'guardar' => 'La tarta se guarda hasta :cuando',
         ],
         // EL DESCARGO DE QUIEN CUMPLE, bajo su fila (F7b de `fiesta-sistema-nuevo.md` §4.13, `#752`). «Descargo», nunca
         // «exención» (`#339`).

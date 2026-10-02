@@ -180,12 +180,6 @@ return [
             'raciones' => ':n parts',
             'poca' => 'Vous êtes :n et le gâteau fait :r parts.',
             'poca_varias' => 'Vous êtes :n et :q gâteaux font :r parts.',
-            'aviso' => 'Le gâteau ? À choisir jusqu’à :cuando.',
-            'aviso_ir' => 'Choisir le gâteau',
-            'aviso_elegida' => 'Gâteau choisi : à enregistrer jusqu’à :cuando.',
-            'aviso_sin' => 'Sans gâteau : à enregistrer jusqu’à :cuando.',
-            'aviso_ver' => 'Voir le gâteau',
-            'guardar' => 'Le gâteau s’enregistre jusqu’à :cuando',
         ],
         'cumple_firma' => [
             'quien' => 'l’enfant qui fête son anniversaire',

@@ -125,8 +125,8 @@ mutar "la insignia vuelve a decir «hasta 48 h antes»" "$RM" \
 
 # ── El CONTROL: tocar un comentario no puede poner nada en rojo ─────────────────────────────────
 control "un comentario de la tarta" "$LI" \
-  "El plazo de la tarta ES el de la lista" \
-  "El plazo de la tarta es el de la lista" \
+  "Fuera de plazo, solo las pedidas (como el diseño)" \
+  "Fuera de plazo, solo las pedidas, como el diseño" \
   "$TODOS"
 
 echo

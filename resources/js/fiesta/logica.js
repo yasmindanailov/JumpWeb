@@ -278,22 +278,22 @@ export function huecoIsla(alto, sin = false) {
 
 /**
  * QUÉ CARA LLEVA LA ISLA DE LA LISTA (L2 de §4.18; `paginas/lista-invitados/isla.jsx`): el ÚNICO Guardar, en naranja y solo
- * con algo que guardar, con lo exacto —la tarta que cierra (si se pidió y cambió), cuántos cambios y si el borrador es de
- * este móvil o recuperado, las respuestas por repasar—; guardando, ocupada; sin nada que guardar, «Enviar por WhatsApp» si
- * la invitación aún no salió y se puede contestar; si no, nada (se va). Sin el recordatorio del diseño: la lista no tiene
- * «sin contestar» desde `#805`.
+ * con algo que guardar, con lo exacto —cuántos cambios y si el borrador es de este móvil o recuperado, las respuestas por
+ * repasar—; guardando, ocupada; sin nada que guardar, «Enviar por WhatsApp» si la invitación aún no salió y se puede
+ * contestar; si no, nada (se va). Sin el recordatorio del diseño (la lista no tiene «sin contestar» desde `#805`) ni su
+ * «La tarta se guarda hasta…» (`guardarTarta`): la hora de la lista la dice su cabecera (`#912`, P1·b).
  *
- * @param {{cambios?: number, repasar?: number, recuperado?: boolean, tarta?: string, guardando?: boolean, abiertas?: boolean, compartida?: boolean}} estado
+ * @param {{cambios?: number, repasar?: number, recuperado?: boolean, guardando?: boolean, abiertas?: boolean, compartida?: boolean}} estado
  * @param {{corto: (n: number) => string, respuestas: (n: number) => string, movil: string, recuperado: string}} tx
  * @returns {{cara: ?string, primary?: boolean, ocupada?: boolean, sub?: string}}
  */
-export function caraDeLaLista({ cambios = 0, repasar = 0, recuperado = false, tarta = '', guardando = false, abiertas = false, compartida = false } = {}, tx) {
+export function caraDeLaLista({ cambios = 0, repasar = 0, recuperado = false, guardando = false, abiertas = false, compartida = false } = {}, tx) {
     if (guardando) return { cara: 'guardar', primary: true, ocupada: true, sub: '' };
     if (cambios > 0 || repasar > 0) {
         let sub = tx.respuestas(repasar);
         if (cambios > 0) sub = `${tx.corto(cambios)} · ${repasar > 0 ? tx.respuestas(repasar) : (recuperado ? tx.recuperado : tx.movil)}`;
 
-        return { cara: 'guardar', primary: true, ocupada: false, sub: tarta || sub };
+        return { cara: 'guardar', primary: true, ocupada: false, sub };
     }
     if (abiertas && ! compartida) return { cara: 'enviar' };
 

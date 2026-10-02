@@ -180,12 +180,6 @@ return [
             'raciones' => ':n servings',
             'poca' => 'There are :n of you and the cake serves :r.',
             'poca_varias' => 'There are :n of you and :q cakes serve :r.',
-            'aviso' => 'The cake? Choose it until :cuando.',
-            'aviso_ir' => 'Choose the cake',
-            'aviso_elegida' => 'Cake chosen: save it until :cuando.',
-            'aviso_sin' => 'No cake: save it until :cuando.',
-            'aviso_ver' => 'See the cake',
-            'guardar' => 'Save the cake until :cuando',
         ],
         'cumple_firma' => [
             'quien' => 'the birthday child',

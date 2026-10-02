@@ -23,9 +23,6 @@
         {{-- El TESTIGO de la reserva: si el parque la movió con la página abierta, el servidor rechaza el envío entero. --}}
         <input type="hidden" name="expected_version" value="{{ $m['testigo'] }}">
         @include('fiesta.lista.cabecera')
-        @if ($m['extras']['tarta'] !== null && $m['extras']['tarta']['urgente'])
-            @include('fiesta.lista.aviso-tarta')
-        @endif
         @include('fiesta.lista.avisos')
         @if ($m['invitacion'] !== null)
             @include('fiesta.lista.zona-1')

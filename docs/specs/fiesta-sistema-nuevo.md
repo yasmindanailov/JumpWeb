@@ -1210,7 +1210,12 @@ con tarjetas impares, la última a lo ancho (la A, elegida con la B y la C rende
   (rojo sin el servidor; la racha de tres marca el ÚLTIMO; de control, la pareja sin marca); arnés `scripts/mutar-lista-huecos.sh`
   **5/5** con su control; `scripts/sonda-lista-huecos.mjs` sin huecos en el KIDS y el JUMP a 1280 y 390, y su `--control` (la regla
   anulada en la página) ve los 4 huecos de antes.
-- **P1·b · el aviso de la tarta, fuera** (`[DECIDIDO owner]` 02-10, ~20:15: «2 · Quitarlo… sí, correcto, lo quitamos»): se van
+- 🟦 **P1·b · el aviso de la tarta, fuera — HECHA (02-10 noche, en `wip/`; falta el ojo del owner)**. Verificación (modo ligero):
+  `ExtrasDeLaFiestaListaTest::test_the_cake_has_no_notice_nor_deadline_of_its_own_even_closing_tomorrow` (el caso que antes
+  aseveraba el aviso en ese escenario y pasaba) y, de paso, la tarta cerrada con una pedida ya no puede decir «Sin tarta»;
+  `caraDeLaLista` sin texto de tarta (`node --test` 27/27); 551 tests del módulo, Larastan, ESLint. Los arneses NO se corrieron
+  (el owner: valorar antes): sus anclas, re-apuntadas o retiradas con su sujeto y comprobadas en lectura (`DEUDA.md`).
+  (`[DECIDIDO owner]` 02-10, ~20:15: «2 · Quitarlo… sí, correcto, lo quitamos»): se van
   «¿La tarta? Se elige hasta…» (`aviso-tarta`, el `PliAvisoTarta` del diseño) y el «La tarta se guarda hasta…» de la barra: la
   hora, SOLO en la cabecera, siempre. Medido (13 ficheros): la pieza y su `@include` (`lista.blade.php`), `zona-4`
   (`data-guardar-texto`, `data-pronto`), `ListaDeInvitados` (`cuando`, `pronto`, `urgente` de la tarta), `lista.js` (6),

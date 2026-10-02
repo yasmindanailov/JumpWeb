@@ -78,17 +78,15 @@ mutar "cerrada, salen también las tartas no pedidas" "$MODELO" \
 mutar "la tarjeta de la tarta no dice sus raciones" "$MODELO" \
   "\$a->serves === null ? '' : __('fiesta.lista.tarta.raciones'" "true ? '' : __('fiesta.lista.tarta.raciones'"
 mutar "«Sin tarta» vuelve sin marcar" "$MODELO" \
-  "                'declinada' => \$declinada," "                'declinada' => false,"
-mutar "el aviso sigue con una tarta pedida" "$MODELO" \
-  "'urgente' => \$pronto && ! \$pedida && ! \$declinada," "'urgente' => \$pronto && ! \$declinada,"
-mutar "el aviso sigue con «Sin tarta»" "$MODELO" \
-  "'urgente' => \$pronto && ! \$pedida && ! \$declinada," "'urgente' => \$pronto && ! \$pedida,"
+  "                'declinada' => \$reservation->cakeDeclined(\$addons)," "                'declinada' => false,"
+# Retiradas con su sujeto (§3.quater, `#912` P1·b): «el aviso sigue con una tarta pedida» y «…con «Sin tarta»» (el aviso de
+# la tarta ya no existe). Y la del «plazo pasado» se re-apunta: desde P1 la tarta cerrada no dice «pasó».
 mutar "sin el 0 oculto, desmarcar «Sin tarta» no se envía" "$Z4" \
   $'                <input type="hidden" name="cake_declined" value="0">\n' ""
 mutar "«Sin tarta» sale con la tarta cerrada" "$Z4" \
   "            @if (\$ta['abierta'])" "            @if (true)"
-mutar "cerrada y con una pedida, el plazo pasado se repite" "$Z4" \
-  "@if (\$ta['tarjetas'] === [])<x-pieza.aviso" "@if (true)<x-pieza.aviso"
+mutar "cerrada y con una pedida, sale también «Sin tarta»" "$Z4" \
+  "@if (\$ta['declinada'] || \$ta['tarjetas'] === [])<p class=\"pli-tarta-fija\">" "@if (true)<p class=\"pli-tarta-fija\">"
 
 # ── «Sin tarta» en el controlador ──────────────────────────────────────────────────────────────
 mutar "«Sin tarta» se decide con la tarta cerrada" "$GFW" \

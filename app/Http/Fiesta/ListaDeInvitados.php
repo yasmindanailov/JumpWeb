@@ -565,29 +565,20 @@ final class ListaDeInvitados
         $sueltos = collect($porBloque(null))->sortBy(fn (PostFormAddonView $a): int => $a->closed ? 1 : 0)->values()->all();
 
         // ── LA TARTA (K2 de §4.17, `#806`/`#807`): VARIAS A LA VEZ. Una tarjeta por tarta del panel (su foto, «De 12
-        // raciones», su precio, su tope y su plazo), con su cantidad en `addons[i]` como cualquier complemento; «Sin tarta»,
-        // una casilla (`cake_declined`). Las raciones contra los niños las cuenta `lista.js` (`racionesTarta()`). ──
+        // raciones», su precio y su tope), con su cantidad en `addons[i]` como cualquier complemento; «Sin tarta», una casilla
+        // (`cake_declined`). Las raciones contra los niños las cuenta `lista.js` (`racionesTarta()`). Sin aviso ni texto de
+        // plazo propio (`[DECIDIDO owner]` `#912`, P1·b): el `PliAvisoTarta` y el `tartaUrgente` del diseño se fueron; la hora,
+        // la de la cabecera. ──
         $tartas = $porBloque(ProductAddon::BLOCK_CAKE);
         $tarta = null;
         if ($tartas !== []) {
-            $pedida = collect($tartas)->contains(fn (PostFormAddonView $a): bool => $a->quantity > 0);
-            $declinada = $reservation->cakeDeclined($addons);
             $abierta = $abiertos($tartas);
-            // El plazo de la tarta ES el de la lista (`#912`): lo usa el aviso de «cierra hoy o mañana», no la tarjeta.
-            $cierra = self::cierreDeLaLista($reservation);
-            $cuando = $cierra === null ? '' : self::plazoEscrito($cierra);
             // Fuera de plazo, solo las pedidas (como el diseño): una tarta que ya no se puede pedir no es una opción.
             $visibles = $abierta ? $tartas : array_values(array_filter($tartas, fn (PostFormAddonView $a): bool => $a->quantity > 0));
             $tarta = [
                 'abierta' => $abierta,
                 'tarjetas' => array_map(fn (PostFormAddonView $a): array => $tarjeta($a, $a->serves === null ? '' : __('fiesta.lista.tarta.raciones', ['n' => $a->serves])), $visibles),
-                'declinada' => $declinada,
-                'cuando' => $cuando,
-                // Cierra hoy o mañana (`tartaUrgente` del diseño): la barra lo dice con una tarta pedida y sin guardar…
-                'pronto' => $pronto = $abierta && $cierra !== null
-                    && ($cierra->isSameDay(DisplayTime::today()) || $cierra->isSameDay(DisplayTime::today()->addDay())),
-                // …y el aviso de arriba (`PliAvisoTarta`), si además está sin decidir en lo GUARDADO.
-                'urgente' => $pronto && ! $pedida && ! $declinada,
+                'declinada' => $reservation->cakeDeclined($addons),
                 'sois' => $sois,
             ];
         }

@@ -223,7 +223,8 @@ test('con algo que guardar, el Guardar en naranja con lo EXACTO', () => {
     assert.equal(caraDeLaLista({ cambios: 1, recuperado: true }, TX_LISTA).sub, '1 cambio · borrador recuperado');
     assert.equal(caraDeLaLista({ cambios: 1, repasar: 3 }, TX_LISTA).sub, '1 cambio · 3 respuestas por repasar', 'con respuestas que repasar, eso en vez del borrador');
     assert.equal(caraDeLaLista({ repasar: 1 }, TX_LISTA).sub, '1 respuesta por repasar', 'sin cambios, solo lo que hay que repasar');
-    assert.equal(caraDeLaLista({ cambios: 1, tarta: 'La tarta se guarda hasta hoy a las 17:00' }, TX_LISTA).sub, 'La tarta se guarda hasta hoy a las 17:00', 'la tarta que cierra manda');
+    // `#912` (P1·b): la tarta ya no tiene texto propio en la isla; un `tarta` de antes no cambia nada.
+    assert.equal(caraDeLaLista({ cambios: 1, tarta: 'La tarta se guarda hasta hoy a las 17:00' }, TX_LISTA).sub, '1 cambio · borrador en este móvil', 'la hora, solo en la cabecera');
 });
 
 test('guardando, el Guardar ocupado; sin nada que guardar, enviar si aún no salió, y si no, nada', () => {
