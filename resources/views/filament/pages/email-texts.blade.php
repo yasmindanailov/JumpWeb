@@ -68,6 +68,20 @@
                         @endforeach
                         <x-filament::button size="sm" :color="$this->vistaOscuro ? 'gray' : 'primary'" wire:click="verVista(null, false)">{{ __('admin.mail_texts.claro') }}</x-filament::button>
                         <x-filament::button size="sm" :color="$this->vistaOscuro ? 'primary' : 'gray'" wire:click="verVista(null, true)">{{ __('admin.mail_texts.oscuro') }}</x-filament::button>
+                        {{-- La SITUACIÓN (R1·T2, `#809`): solo en los correos con textos que salen a veces. El valor lo valida la
+                             página contra las del correo (`MailSituations::elegida`). --}}
+                        @if ($this->situaciones() !== [])
+                            <label class="ms-auto flex items-center gap-2 text-sm" data-email-texts-situation>
+                                <span class="text-gray-600 dark:text-gray-300">{{ __('admin.mail_texts.situacion') }}</span>
+                                <x-filament::input.wrapper>
+                                    <x-filament::input.select wire:change="verVista(null, null, $event.target.value)">
+                                        @foreach ($this->situaciones() as $situacion => $nombre)
+                                            <option value="{{ $situacion }}" @selected($this->vistaSituacion === $situacion)>{{ $nombre }}</option>
+                                        @endforeach
+                                    </x-filament::input.select>
+                                </x-filament::input.wrapper>
+                            </label>
+                        @endif
                     </div>
                     @if ($this->vistaHtml !== null)
                         {{-- Lo que se lee en la BANDEJA antes de abrirlo: el asunto y el adelanto, que el cuerpo no enseña. --}}
@@ -87,6 +101,9 @@
                             style="height: 70vh;"
                         ></iframe>
                         <p class="jj-hub__desc pt-2">{{ __('admin.mail_texts.vista_nota') }}</p>
+                        @if ($this->situaciones() !== [])
+                            <p class="jj-hub__desc">{{ __('admin.mail_texts.situacion_nota') }}</p>
+                        @endif
                     @else
                         <p class="jj-hub__desc">{{ __('admin.mail_texts.sin_caso.'.$this->vistaMotivo) }}</p>
                     @endif

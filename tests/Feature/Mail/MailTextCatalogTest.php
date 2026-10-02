@@ -4,6 +4,7 @@ namespace Tests\Feature\Mail;
 
 use App\Domain\Content\Services\MailTextRules;
 use App\Domain\Platform\Services\Analytics\EmailUtm;
+use App\Notifications\Support\MailSituations;
 use App\Notifications\Support\MailTextCatalog;
 use Illuminate\Support\Facades\Lang;
 use Tests\TestCase;
@@ -40,8 +41,10 @@ class MailTextCatalogTest extends TestCase
     public function test_every_editable_text_is_painted_by_its_mail_and_by_nothing_else(): void
     {
         $fuentes = $this->fuentesDelProducto();
-        // El catálogo NOMBRA sus tramos (y un tramo puede ser un texto): declararla no es usarla.
+        // El catálogo NOMBRA sus tramos (y un tramo puede ser un texto), y `MailSituations` la condición de cada texto (R1·T2):
+        // declararla no es usarla.
         unset($fuentes[(string) realpath((string) (new \ReflectionClass(MailTextCatalog::class))->getFileName())]);
+        unset($fuentes[(string) realpath((string) (new \ReflectionClass(MailSituations::class))->getFileName())]);
         $fantasmas = [];
         $compartidas = [];
         $total = 0;

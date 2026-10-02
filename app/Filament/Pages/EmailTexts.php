@@ -10,6 +10,7 @@ use App\Domain\Platform\Services\AuditLogger;
 use App\Domain\Platform\Services\SiteLocales;
 use App\Filament\Resources\EmailSends\Tables\EmailSendTable;
 use App\Notifications\Support\MailPreviews;
+use App\Notifications\Support\MailSituations;
 use App\Notifications\Support\MailTextCatalog;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -64,6 +65,12 @@ class EmailTexts extends Page
     public string $vistaIdioma = 'es';
 
     public bool $vistaOscuro = false;
+
+    /**
+     * La SITUACIÓN de la vista previa (R1·T2, `#809`): una de `MailSituations::de($correo)`; `null`, la primera. Llega del
+     * navegador, así que se valida contra las del correo cada vez (`MailSituations::elegida`): una ajena no se pinta.
+     */
+    public ?string $vistaSituacion = null;
 
     public ?string $vistaHtml = null;
 
@@ -240,8 +247,21 @@ class EmailTexts extends Page
         Notification::make()->title(trans_choice('admin.mail_texts.guardado', count($cambios), ['count' => count($cambios)]))->success()->send();
     }
 
-    /** Pinta la vista previa con lo que hay en la pantalla (guardado o no) en el idioma y el tono elegidos. */
-    public function verVista(?string $locale = null, ?bool $oscuro = null): void
+    /**
+     * Las situaciones de la vista previa del correo abierto, clave → su nombre (vacío: el correo no tiene textos que dependan
+     * de la situación y la página no enseña el desplegable).
+     *
+     * @return array<string, string>
+     */
+    public function situaciones(): array
+    {
+        $suyas = MailSituations::de((string) $this->correo);
+
+        return array_combine($suyas, array_map(static fn (string $s): string => (string) __('admin.mail_texts.situaciones.'.$s), $suyas));
+    }
+
+    /** Pinta la vista previa con lo que hay en la pantalla (guardado o no) en el idioma, el tono y la situación elegidos. */
+    public function verVista(?string $locale = null, ?bool $oscuro = null, ?string $situacion = null): void
     {
         if ($this->correo === null) {
             return;
@@ -252,6 +272,10 @@ class EmailTexts extends Page
         if ($oscuro !== null) {
             $this->vistaOscuro = $oscuro;
         }
+        if ($situacion !== null) {
+            $this->vistaSituacion = $situacion;
+        }
+        $this->vistaSituacion = MailSituations::elegida($this->correo, $this->vistaSituacion);
 
         $estado = $this->textos ?? [];
         $borrador = [];
@@ -263,8 +287,8 @@ class EmailTexts extends Page
             }
         }
 
-        $resultado = MailPreviews::pintar($this->correo, $this->vistaIdioma, $borrador, $this->quien(), $this->vistaOscuro);
-        AuditLogger::log('emails.text_previewed', null, ['mail' => $this->correo, 'locale' => $this->vistaIdioma]);
+        $resultado = MailPreviews::pintar($this->correo, $this->vistaIdioma, $borrador, $this->quien(), $this->vistaOscuro, $this->vistaSituacion);
+        AuditLogger::log('emails.text_previewed', null, ['mail' => $this->correo, 'locale' => $this->vistaIdioma, 'situation' => $this->vistaSituacion]);
 
         $this->vistaHtml = isset($resultado['html']) ? EmailSendTable::inert($resultado['html'], '') : null;
         $this->vistaAsunto = $resultado['asunto'] ?? null;
@@ -319,7 +343,7 @@ class EmailTexts extends Page
                 ->maxLength(MailTextRules::tope($clave))
                 // Al salir del campo, la página se entera: aparece «Volver al de fábrica» y la chapa de su pestaña cuenta el cambio.
                 ->live(onBlur: true)
-                ->helperText($this->ayuda($fabrica))
+                ->helperText($this->ayuda($fabrica, $clave))
                 ->hint(fn (): ?string => $this->estadoDe($clave, $locale))
                 ->hintColor(fn (): string => $this->estadoDe($clave, $locale) === __('admin.mail_texts.estado.desfasado') ? 'danger' : 'primary')
                 ->hintAction(
@@ -333,11 +357,16 @@ class EmailTexts extends Page
         }, MailTextCatalog::claves((string) $this->correo));
     }
 
-    /** Debajo de cada bloque: el de fábrica y sus variables, con lo que significa cada una. */
-    private function ayuda(string $fabrica): string
+    /**
+     * Debajo de cada bloque: CUÁNDO sale, si depende de la situación (R1·T2, `#809`: «Solo sale si…», lo primero, porque es
+     * lo que la vista previa puede no enseñar), el de fábrica y sus variables, con lo que significa cada una.
+     */
+    private function ayuda(string $fabrica, string $clave): string
     {
         $variables = MailTextRules::variablesDeFabrica($fabrica);
-        $partes = [__('admin.mail_texts.de_fabrica', ['texto' => MailTextRules::aParque($fabrica)])];
+        $condicion = MailSituations::condicion($clave);
+        $partes = $condicion === null ? [] : [__('admin.mail_texts.solo_si.'.$condicion)];
+        $partes[] = __('admin.mail_texts.de_fabrica', ['texto' => MailTextRules::aParque($fabrica)]);
         if ($variables !== []) {
             $partes[] = __('admin.mail_texts.variables_intro').' '.implode(' · ', array_map(
                 static fn (string $v): string => '{'.$v.'}'.(Lang::has('admin.mail_texts.variables.'.$v) ? ' '.__('admin.mail_texts.variables.'.$v) : ''),

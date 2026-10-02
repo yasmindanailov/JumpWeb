@@ -199,6 +199,48 @@ class EmailTextsPageTest extends TestCase
         $this->assertStringNotContainsString('ROTO', (string) $pagina->get('vistaHtml'));
     }
 
+    /**
+     * LA SITUACIÓN (R1·T2, `#809`): el desplegable sale en un correo con textos que dependen de ella, elegir una pinta lo
+     * suyo y deja rastro de cuál; una que no es del correo (llega del navegador) no se pinta: sale la primera.
+     */
+    public function test_the_preview_paints_the_chosen_situation_and_only_one_of_its_mail(): void
+    {
+        $this->mountParty();
+        $admin = $this->con(['emails.edit_texts']);
+
+        $pagina = Livewire::withQueryParams(['correo' => 'order_item_modified'])->actingAs($admin)->test(EmailTexts::class)
+            ->call('verVista', 'es')
+            ->assertSeeHtml('data-email-texts-situation');
+        // Sin elegir, la primera: la reserva modificada nunca sale sin un cambio.
+        $this->assertSame('cambio_dia', $pagina->get('vistaSituacion'));
+
+        $cantidad = trim((string) strtok((string) __('emails.order_item_modified.quantity_change', ['old' => 'QQ', 'new' => 'QQ']), 'Q'));
+        $this->assertStringNotContainsString($cantidad, (string) $pagina->get('vistaHtml'), 'CONTROL: la del día no dice la cantidad');
+        $pagina->call('verVista', null, null, 'cambio_cantidad');
+        $this->assertSame('cambio_cantidad', $pagina->get('vistaSituacion'));
+        $this->assertStringContainsString($cantidad, (string) $pagina->get('vistaHtml'));
+        $this->assertSame('cambio_cantidad', AuditLog::query()->where('action', 'emails.text_previewed')->latest('id')->value('payload')['situation'] ?? null);
+
+        $pagina->call('verVista', null, null, 'suplemento_nace');
+        $this->assertSame('cambio_dia', $pagina->get('vistaSituacion'), 'una situación de otro correo no se pinta');
+
+        // Un correo sin textos que dependan de la situación no enseña el desplegable.
+        Livewire::withQueryParams(['correo' => 'login_code'])->actingAs($admin)->test(EmailTexts::class)
+            ->call('verVista', 'es')
+            ->assertDontSeeHtml('data-email-texts-situation');
+    }
+
+    /** Bajo el campo de un texto que solo sale a veces, CUÁNDO sale («Solo sale si…»); bajo uno de siempre, nada de eso. */
+    public function test_a_conditional_text_says_when_it_goes_out_under_its_field(): void
+    {
+        Livewire::withQueryParams(['correo' => 'order_refunded'])
+            ->actingAs($this->con(['emails.edit_texts']))
+            ->test(EmailTexts::class)
+            ->assertSee(__('admin.mail_texts.solo_si.devolucion_a_mano'))
+            ->assertSee(__('admin.mail_texts.solo_si.tambien_cancelado'))
+            ->assertDontSee(__('admin.mail_texts.solo_si.cambio_dia'));
+    }
+
     public function test_a_broken_block_in_the_preview_shows_what_would_still_go_out(): void
     {
         MailText::query()->create(['key' => self::INTRO, 'locale' => 'es', 'text' => 'GUARDADO {code}']);

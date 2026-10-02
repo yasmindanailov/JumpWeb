@@ -63,13 +63,12 @@
    la sonda ni el arnés entero, a petición suya). ✅ **La P2 (las pulseras y lo que se entrega, D10–D15) EN `main` con el
    visto bueno del owner** (02-10; arnés 20/20, sonda 254/254; spec §4.4). 🟦 **La P3 (la reseña del día por palabras,
    D16–D21) EN `main` con el visto bueno, el logo de Google y una con cada cliente (`#910`)** (arnés 44/44, sonda
-   261/261; spec §4.4). ▶ El arnés ENTERO, lanzado tras subir (~45 min);
+   261/261; spec §4.4). ▶ El arnés ENTERO, DE NOCHE (bloquea la local 45 min; parado a 22/129, muerden);
    la Puerta, entera (`mutar-puerta-p1.sh` sin `SOLO`; su resultado, en la spec §4.4 y aquí).
 2. ▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4; `#789`, `#800`→`#804`)**: ✅ R1a, R1b y **R1·T** en `main` (la
    R1·T revisada: §4.2.2; su sonda y el medidor de bloques, `CARRIL-SPA` §8 (26)). Del zip (6) (`#861`): el 8, «482-913 es tu
-   código para entrar» sin botón; «Quién firma el descargo» en el 1 y el 3; las dos horas (90 + 30). ▶ **Tras la A4, la R1·T2** (`#809`,
-   `[DECIDIDO owner]` 30-09): los 33 textos que solo salen a veces, con su aviso «Solo sale si…» y la «Situación» en la
-   vista previa (§4.2.2). Cada tanda con su «al detalle» MEDIDO
+   código para entrar» sin botón; «Quién firma el descargo» en el 1 y el 3; las dos horas (90 + 30). ✅ **La R1·T2** (`#809`:
+   «Solo sale si…» y la «Situación», §4.2.3–§4.2.4) EN `main` con el visto bueno. Cada tanda con su «al detalle» MEDIDO
    en la spec antes de codificar, en `wip/…`, con su arnés y al ojo del owner en Mailpit (el banco,
    `php scripts/banco-correos.php [filtro]`, y la sonda de la carpeta de auditoría, `sonda-correos-r1a.mjs N`):
    **R1c** los 27 correos a la plantilla → **R2** la reserva (1, 1b, 2, 3, 4, 5, 6: el QR dentro, el

@@ -22,7 +22,8 @@
   (23-09), los textos del 8 del brief están desfasados, y el diseño lo dice; (7) todo texto de un correo al cliente es
   editable (R1·T): un bloque nuevo sale en el panel, la negrita solo en párrafos y avisos, y `MailPreviewsTest` lo pinta.
 - **Estado**: 🟦 ✅ **R1a la plantilla y R1b los iconos** (29-09, §4.1.2 y §4.1.3; `#803`, `#804`) y ✅ **R1·T los textos
-  editables** (30-09, §4.2, `#802`; revisada antes de `main`, §4.2.2), en `main` y aprobadas → R1c → la R2.
+  editables** (30-09, §4.2, `#802`; revisada antes de `main`, §4.2.2) y ✅ **R1·T2** («Solo sale si…» y la «Situación»,
+  02-10, `#809`, §4.2.3–§4.2.4), en `main` y aprobadas → R1c → la R2.
 - **Invariantes**: `RGPD-01` (lo enviado), `RGPD-07`, el consentimiento de marketing; `PAY-14` (se encolan).
 
 ## 1. Contexto — medido el 29-09
@@ -361,6 +362,74 @@ una sonda por tanda; los comerciales con su prueba de consentimiento y de «una 
   entre sí) y solo el aviso. Su guarda: `MailPreviewsTest`, cada situación hace salir sus textos (hoy los declara
   `CONDICIONALES_DEL_CASO`). El copy del brief lo escribe el parque en SU panel al desplegar (white-label). La R2 y la C1 se
   escriben contra estas claves.
+
+#### 4.2.3 La R1·T2 al detalle — medida el 02-10 antes de codificar (del agente contra `#809`; vetable al ojo)
+
+**Lo medido.**
+- **La lista ha cambiado desde el 30-09** (la A4 y la A5 tocaron correos): el medidor (`medir-r1t-bloques.php`) da hoy 33 textos
+  que el último caso de la local NO pinta, y no son los 34 que declara `MailPreviewsTest`: aquí sale el aviso de extras (la
+  fiesta local tiene extras abiertos) y falta `surveys.mail.line1` (solo sale si la encuesta no tiene su propia entrada en el
+  idioma; la local la tiene). ▶ La lista depende del CASO: tiene que salir del CÓDIGO de cada correo, no de un caso.
+- **Leyendo los `toMail()`**: 15 de los 29 correos tienen ramas; quitando los 2 plurales (no editables), **56 textos en 13
+  correos dependen de la situación**, contando LAS DOS ramas de cada alternativa («con invitación digital» y «sin ella» se
+  condicionan las dos) y los que la vista previa sí enseña pero en la vida real salen a veces (en la víspera, los invitados
+  que faltan y el saldo; en la confirmación, el carné adjunto).
+- **Qué los enciende**: 23 dependen de un DATO que el correo recibe al construirse (los cambios de una reserva, el importe
+  del suplemento, si la devolución fue a mano, el precio «desde»…): basta un valor de ejemplo. El resto depende del CASO: un
+  pedido sin un día único (`Order::singleVisitDate()`, lee lo cargado), una fiesta sin invitación (`offersGuestInvitation()`,
+  un atributo del producto), quien cumple con o sin nombre (su fila de `guest_data`), la encuesta sin su entrada; y tres del
+  CATÁLOGO del parque: si el pedido lleva lista de invitados (`needsGuestForm()`), si la fiesta tiene extras abiertos
+  (`PostFormAddons::offerableFor`, una consulta) y si la firma es de una reserva (`WaiverProof::orderCode()`).
+- **En la local**: 140 pedidos pagados con fecha (50 con lista, 90 sin ella) y NINGUNO sin un día único; 52 fiestas, TODAS con
+  invitación, 9 con extras abiertos; firmas en es (19 de 20 de una reserva) y fr, ninguna en en. ▶ «Sin un día único» y «sin
+  invitación» solo se pueden enseñar con un cambio de ejemplo: no hay casos reales.
+- **La página**: `EmailTexts::verVista()` pinta con el idioma y el tono; la ayuda gris de cada campo ya dice el de fábrica y
+  sus variables (`ayuda()`): el aviso cabe ahí, delante.
+
+**Lo que se decide aquí** (contra `#809` y los objetivos: que quien edita vea cómo queda cada texto, «nada que ya no sea
+verdad», sin tocar ninguna notificación):
+- **T2-1 · El aviso, en TODO texto que depende de la situación** (los 56, no solo los 33 que hoy no se ven): «Solo sale si…»
+  delante de la ayuda gris del campo, con la condición en palabras del parque. Un texto que se ve en la vista previa pero que
+  casi nunca sale («el saldo en el parque») también lo dice: si no, la vista previa enseña como normal lo excepcional.
+- **T2-2 · La «Situación»** en la vista previa de esos 13 correos: la primera opción es la de siempre (el último caso real,
+  sin cambios), salvo en «Reserva modificada», donde sin un cambio el correo no existe (`#809`): allí la primera es «Cambio
+  de día u hora». Cada situación es el caso real con un **cambio de ejemplo EN MEMORIA** (el dato del correo, o un atributo
+  de su caso: sin franja, sin invitación, quien cumple con su nombre, la encuesta sin entrada), nunca guardado y dentro de la
+  transacción que ya se deshace. Las tres que dependen del CATÁLOGO del parque toman **el último caso real de esa clase** (un
+  pedido de entradas, una fiesta con extras abiertos, una firma de una reserva); sin él, su motivo, como hoy.
+- **T2-3 · Una sola declaración por correo**: sus situaciones (con los textos que hace salir) y la condición de cada texto
+  viven juntas en el producto; la página, la vista previa y la guarda leen la MISMA.
+- **T2-4 · La guarda sustituye a `CONDICIONALES_DEL_CASO`**: cada situación hace salir sus textos; todo texto del catálogo
+  sale en alguna (sin fantasmas); y todo texto que falta en alguna lleva su aviso (ninguno condicional en silencio).
+- **T2-5 · El rastro**: `emails.text_previewed` lleva la situación (sin contenido, como ahora).
+
+**Lo que cambia**: `MailPreviews` (las situaciones, el caso de cada clase y el cambio en memoria), un catálogo de condiciones
+junto a `MailTextCatalog`, la página (el desplegable y el aviso) y sus textos `es` y `zh_CN`. **Lo que no**: las 29
+notificaciones, el molde, el envío, los textos del parque, la API. **Pruebas, cada guarda con su mutación** (arnés
+`mutar-correo-r1t.sh`, `SOLO=`): cada situación y sus textos, los tres casos de clase y su motivo, nada escrito tras pintar,
+el desplegable (solo en esos correos, la situación que no es del correo no se pinta) y el aviso; la sonda en el panel.
+
+#### 4.2.4 La R1·T2, lo construido (02-10; ✅ en `main` con el visto bueno del owner, «Sí, buen trabajo»)
+
+- **Piezas**: `MailSituations` (junto al catálogo: `CONDICIONES`, 56 textos → su condición, y `SITUACIONES`, las de 13
+  correos en su orden; `elegida()` valida la que llega del navegador); `MailPreviews::constructores()` recibe la situación
+  (los cambios de ejemplo en memoria y los tres casos de clase, entre los 200 más recientes: `RECIENTES`), y `pintar()` arma
+  el caso DENTRO de la transacción que se deshace; la página («Situación» junto al idioma y el tono, el aviso delante de la
+  ayuda gris y el rastro con la situación); 34 situaciones y 44 condiciones con su texto en `es` y `zh_CN`. Sin migración.
+- **Medido al construir**: (1) `honoreeName()` toma, si la ficha de quien cumple no tiene nombre, el del homenajeado de la
+  reserva: «aún sin nombre» vacía los dos (con solo la ficha salía nombrado); (2) el resguardo del pedido usa `loadMissing`,
+  así que la franja quitada en memoria se respeta en todo el correo (asunto, titular y resguardo dicen lo mismo); (3) en la
+  sonda, la red nunca se queda quieta con la vista previa abierta (el correo del `iframe` pide sus imágenes): se espera al
+  `srcdoc`.
+- **Guardas**: `MailPreviewsTest` reescrita —pinta los 29 correos en TODAS sus situaciones con una marca por bloque, sobre
+  un caso con dos fiestas (una con extras abiertos), unas entradas, una firma y una encuesta con entrada— y sustituye a
+  `CONDICIONALES_DEL_CASO` por cuatro promesas (cada situación hace salir lo suyo, `SITUACION_HACE_SALIR`; sin fantasmas;
+  ningún condicional sin aviso; nada escrito), más los motivos de clase, la situación ajena y las palabras en los dos
+  idiomas; `EmailTextsPageTest` +2 (el desplegable y su rastro; el aviso bajo el campo); `MailTextCatalogTest`, la
+  declaración no cuenta como uso (como el catálogo). Arnés `mutar-correo-r1t.sh` (+27, `SOLO=` «situación» · «aviso ·» ·
+  «página ·»): **27/27**. En la primera pasada, 26: «la firma de una reserva» era lo mismo que «la última» con una sola firma
+  en el caso → prueba nueva con dos fiestas y la última cancelada (`AuthorizableReservations` ya no la da). Sonda
+  `storage/app/audit/sonda-r1t2.mjs` (fuera de git) a 1280 y 390: **16/16**.
 
 ## 7. Revisión y decisión
 

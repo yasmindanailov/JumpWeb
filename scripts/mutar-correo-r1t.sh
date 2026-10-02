@@ -32,6 +32,7 @@ FICHEROS=(
     app/Filament/Pages/EmailTexts.php
     app/Notifications/Support/MailTextCatalog.php
     app/Notifications/Support/MailPreviews.php
+    app/Notifications/Support/MailSituations.php
 )
 copia() { echo "$TMP/${1//\//__}"; }
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$(copia "$f")" "$f"; touch "$f"; done; }
@@ -232,6 +233,59 @@ mutar "la firma de otro idioma sirve de caso (lo escrito en la pestaña no se ve
   $'                    ->whereHas(\'version\', static fn ($q) => $q->where(\'locale\', $locale))\n' "" "$V"
 mutar "la vista previa no trae el asunto" "$VISTA" \
   "(string) \$mensaje->subject," "''," "$V"
+
+# ── La R1·T2 (`#809`): las situaciones y el aviso «Solo sale si…» (`specs/correos-rediseno.md` §4.2.3) ─────────────────
+SIT=app/Notifications/Support/MailSituations.php
+mutar "situación · la de entradas toma cualquier pedido" "$VISTA" \
+  "'entradas' => \$pedidoDe(false)," "'entradas' => \$pedido()," "$V"
+mutar "situación · la de cumpleaños toma cualquier pedido" "$VISTA" \
+  "'cumpleanos' => \$pedidoDe(true)," "'cumpleanos' => \$pedido()," "$V"
+mutar "situación · sin un día único, con sus franjas" "$VISTA" \
+  "\$o->items->each(static fn (OrderItem \$i) => \$i->setRelation('slot', null));" "" "$V"
+mutar "situación · quien cumple sin nombre conserva el homenajeado" "$VISTA" \
+  "\$f->setAttribute('event_data', [\$homenajeado => ''] + (is_array(\$f->event_data) ? \$f->event_data : []));" "" "$V"
+mutar "situación · los extras de cualquier fiesta" "$VISTA" \
+  "\$f = \$s === 'con_extras'" "\$f = false" "$V"
+mutar "situación · la invitación no cambia" "$VISTA" \
+  "\$f->ticketType?->setAttribute('guest_invitation', \$s === 'con_invitacion');" "" "$V"
+mutar "situación · la firma de una reserva es cualquiera" "$VISTA" \
+  "\$firma = \$s === 'firma_de_reserva'" "\$firma = false" "$V"
+mutar "situación · el extra que se quita no baja" "$VISTA" \
+  "'to' => 0], -1200]," "'to' => 0], 1200]," "$V"
+mutar "situación · el suplemento que se quita se queda" "$VISTA" \
+  "'suplemento_se_quita' => [400, 0]," "'suplemento_se_quita' => [400, 600]," "$V"
+mutar "situación · el parque no lo cambia nunca" "$VISTA" \
+  "\$s !== 'por_parque'" "true" "$V"
+mutar "situación · sin precio desde" "$VISTA" \
+  "\$s === 'con_desde' ? (string) __('admin.mail_texts.ejemplo_desde') : null" "null" "$V"
+mutar "situación · la cantidad no cambia" "$VISTA" \
+  "'cambio_cantidad' => ['quantity_change' =>" "'cambio_cantidad' => ['event_data_change' => true, 'x' =>" "$V"
+mutar "situación · no caen complementos" "$VISTA" \
+  "\$s === 'caen_complementos' ? 2 : 0" "0" "$V"
+mutar "situación · el pedido devuelto a mano no lo dice" "$VISTA" \
+  "new N\\OrderRefunded(\$o, null, \$s === 'tambien_cancelado', \$s === 'devolucion_a_mano')" "new N\\OrderRefunded(\$o, null, \$s === 'tambien_cancelado', false)" "$V"
+mutar "situación · Google nunca verificó" "$VISTA" \
+  "new N\\SocialIdentityLinked('google', \$s === 'google_verifico')" "new N\\SocialIdentityLinked('google', false)" "$V"
+mutar "situación · la encuesta conserva su entrada" "$VISTA" \
+  "\$encuesta->setAttribute('intro', []);" "" "$V"
+mutar "situación · sin elegir, ninguna" "$SIT" \
+  "? \$situacion : (\$suyas[0] ?? null);" "? \$situacion : null;" "$V"
+mutar "situación · una de otro correo se pinta" "$SIT" \
+  "return in_array(\$situacion, \$suyas, true) ?" "return \$situacion !== null ?" "$V"
+mutar "situación · el correo pierde una" "$SIT" \
+  "'order_item_modified' => ['cambio_dia', 'cambio_cantidad'," "'order_item_modified' => ['cambio_dia'," "$V"
+mutar "aviso · un texto que sale a veces no lo dice" "$SIT" \
+  "        'emails.order_refunded.when_manual' => 'devolucion_a_mano',
+" "" "$V"
+mutar "aviso · la página no lo enseña" "$PAGINA" \
+  "\$partes = \$condicion === null ? [] : [__('admin.mail_texts.solo_si.'.\$condicion)];" "\$partes = [];" "$P"
+mutar "página · la situación del navegador sin validar" "$PAGINA" \
+  "        \$this->vistaSituacion = MailSituations::elegida(\$this->correo, \$this->vistaSituacion);
+" "" "$P"
+mutar "página · la vista previa no pasa la situación" "$PAGINA" \
+  "\$this->vistaOscuro, \$this->vistaSituacion);" "\$this->vistaOscuro);" "$P"
+mutar "página · el rastro sin la situación" "$PAGINA" \
+  ", 'situation' => \$this->vistaSituacion]" "]" "$P"
 
 echo
 echo "$muerden/$total muerden"
