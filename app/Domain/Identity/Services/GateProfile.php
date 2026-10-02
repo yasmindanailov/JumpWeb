@@ -129,6 +129,13 @@ final class GateProfile
             'mixed_party_lines' => $r->mixedPartyLines,
             'mixed_party_surcharge_cents' => $r->mixedPartySurchargeCents,
             'mixed_party_credit' => $r->mixedPartyCredit,
+            // La fila de la Puerta nueva (`specs/puerta-nueva.md` §4.4, la P1): agrupa por zona y hora de inicio, y dice
+            // la duración («1 hora», sin duración = la ilimitada) y si es un cumpleaños.
+            'zone_name' => $r->zoneName,
+            'zone_slug' => $r->zoneSlug,
+            'duration_minutes' => $r->durationMinutes,
+            'start_time' => $r->startTime,
+            'is_party' => $r->isParty,
         ];
     }
 

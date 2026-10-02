@@ -98,5 +98,18 @@ final readonly class GateReservation
          * puede cambiar nada sería ruido en la pantalla que más se mira.
          */
         public bool $waiverOffered = false,
+        /**
+         * **La ZONA del producto** (`ticket_types.zone_id`), para la fila de la Puerta nueva (`specs/puerta-nueva.md` §4.4,
+         * la P1): su nombre ya traducido y su `slug`. `null` si el producto no tiene zona. Un pack lleva la suya (la sala
+         * de un cumpleaños, en la local) hasta que la P2 sepa su zona de salto.
+         */
+        public ?string $zoneName = null,
+        public ?string $zoneSlug = null,
+        /** Los minutos de la entrada (`duration_min`); `null` = sin duración (la ilimitada). */
+        public ?int $durationMinutes = null,
+        /** La hora de INICIO de la franja, `H:i`, o `null` si no tiene hora: la fila agrupa por zona y por ella. */
+        public ?string $startTime = null,
+        /** ¿Es un pack (un cumpleaños)? La Puerta le pone su etiqueta y no le cuenta nada de lo que se cobra al final. */
+        public bool $isParty = false,
     ) {}
 }

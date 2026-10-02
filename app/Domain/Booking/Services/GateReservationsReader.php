@@ -36,8 +36,9 @@ class GateReservationsReader implements GateReservations
             // HIJA `parent->slot`; las etiquetas caminan `ticketType`; las devoluciones,
             // `payments.refunds`). Sin ellos, cada fila costaba consultas POR FILA en la pantalla
             // de puerta; lo vigilan los presupuestos de `GateProfileTest` y `MixedPartyParkSurfacesTest`.
+            // `ticketType.zone`: la zona de la fila de la Puerta nueva (`specs/puerta-nueva.md` §4.4, la P1), UN lote.
             ->with([
-                'ticketType', 'slot', 'children.ticketType',
+                'ticketType.zone', 'slot', 'children.ticketType',
                 'order.adjustments', 'order.payments.refunds',
                 'order.items.slot', 'order.items.ticketType', 'order.items.parent.slot',
             ])
@@ -91,6 +92,12 @@ class GateReservationsReader implements GateReservations
                     honoreeName: $item->honoreeName(),
                     invitationOffered: $item->ticketType?->offersGuestInvitation() ?? false,
                     waiverOffered: ($item->ticketType?->guardianMode() ?? TicketType::GUARDIAN_NONE) !== TicketType::GUARDIAN_NONE,
+                    zoneName: $item->ticketType?->zone === null ? null : (string) $item->ticketType->zone->tr('name'),
+                    zoneSlug: $item->ticketType?->zone?->slug,
+                    // La ilimitada es «sin duración» (`TicketType::isUnlimited()`: vacío, también un 0).
+                    durationMinutes: $item->ticketType === null || $item->ticketType->isUnlimited() ? null : (int) $item->ticketType->duration_min,
+                    startTime: $item->slot?->start_time === null ? null : substr((string) $item->slot->start_time, 0, 5),
+                    isParty: $item->ticketType?->type === TicketType::TYPE_PACK,
                 );
             })
             ->all();

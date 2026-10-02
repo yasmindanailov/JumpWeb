@@ -173,6 +173,26 @@ class GateProfileTest extends TestCase
         $this->assertSame(GateProfileData::CARD_NONE, $nothing->card);
     }
 
+    /** La fila de la Puerta nueva (`specs/puerta-nueva.md` §4.4, la P1): agrupa por zona y hora, y dice duración y fiesta. */
+    public function test_each_row_carries_its_zone_its_duration_its_start_and_whether_it_is_a_party(): void
+    {
+        $kids = Zone::create(['slug' => 'kids', 'name' => ['es' => 'Kids'], 'position' => 2, 'is_active' => true]);
+        $unlimited = TicketType::create([
+            'name' => ['es' => 'Kids sin límite'], 'type' => TicketType::TYPE_ENTRY, 'zone_id' => $kids->id,
+            'duration_min' => null, 'seats_per_unit' => 1, 'is_sellable' => true, 'is_active' => true, 'position' => 9,
+        ]);
+        $holder = $this->holder();
+        [, [$entry, $free, $party]] = $this->paidOrder($holder, [[$this->entry, 2, self::TODAY], [$unlimited, 1, self::TODAY], [$this->pack, 8, self::TODAY]]);
+        $entry->update(['slot_id' => $this->slotOn(self::TODAY, '17:30:00')->id]);
+
+        $rows = collect($this->profile($holder)->today_reservations)->keyBy('order_item_id');
+        $of = fn (OrderItem $item): array => array_intersect_key($rows[$item->id], array_flip(['zone_name', 'zone_slug', 'duration_minutes', 'start_time', 'is_party']));
+
+        $this->assertSame(['zone_name' => 'Jump', 'zone_slug' => 'jump', 'duration_minutes' => 60, 'start_time' => '17:30', 'is_party' => false], $of($entry));
+        $this->assertSame(['zone_name' => 'Kids', 'zone_slug' => 'kids', 'duration_minutes' => null, 'start_time' => '10:00', 'is_party' => false], $of($free), 'la ilimitada no tiene duración');
+        $this->assertSame(['zone_name' => 'Jump', 'zone_slug' => 'jump', 'duration_minutes' => 120, 'start_time' => '10:00', 'is_party' => true], $of($party), 'un pack es un cumpleaños');
+    }
+
     public function test_the_window_is_configurable_and_zero_means_only_today(): void
     {
         $holder = $this->holder();
@@ -402,12 +422,14 @@ class GateProfileTest extends TestCase
         $forSmall = $count($small);
         $forBig = $count($big);
         $this->assertSame($forSmall, $forBig, "el presupuesto no crece con reservas ni menores ({$forSmall} frente a {$forBig})");
-        // Medido: 27 — las reservas con sus cargas eager (14: la T3 sumó cuatro LOTES —
+        // Medido: 29 el 2026-10-02 (eran 28 —este comentario se había quedado en 27— y la P1 de la Puerta nueva suma
+        // la ZONA del producto en UN lote, `ticketType.zone`: `specs/puerta-nueva.md` §4.4). El desglose de 27: las
+        // reservas con sus cargas eager (14: la T3 sumó cuatro LOTES —
         // `order.items.{slot,ticketType,parent.slot}` y `order.adjustments`— a cambio de quitar las
         // consultas POR AJUSTE de las etiquetas y de `isFinishedInPractice`, que sí crecían con las
         // filas; `MixedPartyParkSurfacesTest` vigila esa mitad), asignaciones y
         // menores (2), sus firmas (3), el waiver del titular (2), el carné (2), los menores a cargo
         // con sus firmas (3) y la visita (1).
-        $this->assertLessThanOrEqual(28, $forSmall, 'una ficha compuesta, no un escaneo que dispara decenas de consultas');
+        $this->assertLessThanOrEqual(29, $forSmall, 'una ficha compuesta, no un escaneo que dispara decenas de consultas');
     }
 }
