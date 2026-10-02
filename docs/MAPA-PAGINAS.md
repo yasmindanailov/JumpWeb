@@ -95,7 +95,7 @@ español — otra entrada para la decisión de slugs de Fase 1.
 |---|---|
 | `/admin` · `/admin/login` · `POST /admin/logout` | Dashboard: ventas, próximas reservas, ocupación. |
 | `/admin/contrasena` | Crear la contraseña del panel, por el enlace FIRMADO que un administrador envía desde la ficha (`#870`, sin sesión). |
-| `/admin/calendario` | **Calendario unificado** (FullCalendar), color por zona + estado «preparado». Feed JSON `/admin/calendario/eventos`; PDF resumen del día `/admin/calendario/resumen-dia`. Permiso `calendar.view`. |
+| `/admin/calendario` | **Calendario unificado** (FullCalendar), color por zona + estado «preparado». Feed JSON `/admin/calendario/eventos`; PDF resumen del día —o de su semana o su mes, `#879`— `/admin/calendario/resumen-dia`. Permiso `calendar.view`. |
 | `/admin/crear-pedido` | Pedido manual de back-office: efectivo/datáfono + alta por invitación. Permiso `orders.create_manual`. |
 | `/admin/users` | Gestión de usuarios *(v1: `/admin/usuarios`)*. |
 | `/admin/orders` | Pedidos: ver, reembolsar, marcar usada, reprogramar — las «reservas» se gestionan AQUÍ dentro (la `/admin/reservas` de la v1 no existe). Hoja de reserva PDF: `/admin/pedidos/{order}/items/{item}/imprimir` — nota: usa «pedidos» en español mientras el Resource vive en `/admin/orders`, misma incoherencia que las demás rutas admin custom (`puerta/validar`, `calendario/*`, `lang`). *(v1: `/admin/pedidos`)* |

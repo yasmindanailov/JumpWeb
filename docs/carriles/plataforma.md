@@ -3,11 +3,12 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
-> **820–849 AGOTADA con `#849`** → sigue en **850–879** (del owner, 29-09; centena `decisiones/800-899.md`) · Último usado:
-> **`#878`** (quedan `#879`: pedir banda al owner) · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-10-02**
-> (todo con el visto bueno del owner: **el zip (6) de este carril, ENTERO** —Z6a→Z6g, `#866`→`#875`; la Z6c·3 es del SPA—,
-> la A5 (`#869`/`#870`), las reseñas traducidas (`#874`) y Mi cuenta desde «Mi QR»; lo anterior, en `git log -p` de este fichero).
+> **820–849 AGOTADA con `#849`** → **850–879 AGOTADA con `#879`** (centena `decisiones/800-899.md`) · Último usado:
+> **`#879`** · ❗ **SIN BANDA: la próxima decisión espera a que el owner dé otra** (se anota en `DECISIONES.md`) · Spec:
+> `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador;
+> `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-10-02 noche** (todo con el visto bueno del owner: **su
+> lista del 02-10, L1→L5** —`#876`→`#879`, §4.28; el código de la L2, por hacer—, el zip (6) de este carril, ENTERO —Z6a→Z6g,
+> `#866`→`#875`— y la A5, `#869`/`#870`; lo anterior, en `git log -p` de este fichero).
 > ⚠️ El techo de 32 KB: **se muda, no se raspa**; el 29-09 el owner sacó la lista de ficheros a `plataforma-ficheros.md`
 > (`#852`) y NO subió el techo. Si vuelve a apretar tres veces seguidas, llévaselo con la medida.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -58,16 +59,21 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
    su §5), las cuatro de la Z6g·1 y `sonda-panel`, `sonda-banco-movimiento` (casos del 27-09) y `sonda-entradas` (ya lee «90
    minutos saltando»). **Queda de la isla**: probarla en un móvil de verdad, en STAGING al terminarlo todo; `isla_razon` y la
    imagen de la INVITACIÓN son del SPA (`#861`).
-   ▶▶▶ **SIGUE AQUÍ, en el 1**: la lista del owner (`#876`).
+   ▶▶▶ **SIGUE AQUÍ, en el 1**: el código de la L2 (`otra-zona.md`, K1→K4).
 1. ▶▶▶ **LA LISTA DEL OWNER DEL 02-10 (tarde)** (`#876`; su censo, medido, y el reparto en `isla-y-landing-nueva.md` §4.28):
    ✅ **L1** el panel recuerda UN día a todos (`#877`, `panel-a-salvo.md` §4.4: «Recordarme» marcada, 24 h; arnés 14/14,
    `sonda-panel` 14/14 a 1280 y 390; visto por el owner). El código ya se enviaba solo (`#867`, medido) → ✅ **L2** la
-   SPEC aprobada, `specs/otra-zona.md` (`#878`: un día y una hora para todo, «Quitar», la zona por su nombre); su código,
-   K1→K4, va tras la L5 → ✅ **L3** la isla en las páginas (§4.28, visto por el owner): «Reservar» abre la compra con la
-   intención de la página (instancia), la frase del cumpleaños solo con lista (`guest_form`, contrato 1.61.0) y «¿Qué menú?»
-   con condición → ✅ **L4** (§4.28, visto por el owner): la 404 del paquete (`'ocupa' => '404'`, `InstanceNotFound` y el
-   comodín; `mutar-404.sh` 12/12) y el hero a 1400 → ▶ **L5** el resumen A4 semanal y mensual de cumpleaños (amplía `#184`) → el código
-   de la L2, con su visto bueno → al final, tras sus vídeos, los textos («parking gratis» es falso). Al SPA, en el buzón.
+   SPEC aprobada, `specs/otra-zona.md` (`#878`: un día y una hora para todo, «Quitar», la zona por su nombre) → ✅ **L3** la
+   isla en las páginas (§4.28, visto por el owner): «Reservar» abre la compra con la intención de la página (instancia
+   `e8f742e`), la frase del cumpleaños solo con lista (`guest_form`, contrato 1.61.0) y «¿Qué menú?» con condición → ✅ **L4**
+   (§4.28, visto por el owner): la 404 del paquete (`'ocupa' => '404'`, `InstanceNotFound` y el comodín; `mutar-404.sh` 12/12)
+   y el hero a 1400 (instancia `6cf107d`) → ✅ **L5** (`#879`, §4.28, visto por el owner): el resumen A4 del calendario,
+   APAISADO, del día, la semana o el mes, con «Qué incluir» (todo, cumpleaños, excursiones o entradas) y nueve columnas (casilla,
+   hora, producto con sus complementos, cliente, teléfono, cantidad, homenajeado con su edad, merienda y tarta); el
+   cumpleaños es el pack que pide la edad del homenajeado (dato, no nombre); `mutar-resumen.sh` 12/12. ⚠️ En ESTE local la
+   columna Tarta sale vacía: la tarta de la lista (bloque `cake`) es dato del panel, la fila 4 del SPA (en producción, al desplegar).
+   ▶ **SIGUE**: el código de la L2, **K1→K4 de `otra-zona.md`** (DINERO y AFORO: `INVARIANTES` primero; los pesos de la compra,
+   al techo: su §0) → al final, tras sus vídeos e imágenes, los textos («parking gratis» es falso). Al SPA, en el buzón.
 2. ▶▶ **EL SEO** (`specs/seo.md`, 🟦; el owner: «IMPORTANTÍSIMO»). Investigado y medido (§1–§2: la marca ya está en el 1 y
    **cumpleaños no existe para Google**). HECHO el 01-10: **S4** (`robots.txt` con `Sitemap:`; JSON-LD con `geo`, `priceRange` y
    la dirección por campos; `mutar-seo.sh` 14/14; `52e6557e`), **S6** (`#862`: los titulares se quedan; Kids y Jump dicen «en
@@ -102,7 +108,7 @@ sigue 🟦 por lo del owner: el MATERIAL de los vídeos (en LOCAL, una muestra W
 dobles); el aviso de los calcetines, «se devuelve la señal» y el TRAMO DE EDAD de cada entrada (`#825`); `payment.marks` (en
 LOCAL, `bizum,visa,mastercard`). BD LOCAL con los valores de `#699`/`#761`.
 ⚠️ **Trampas vivas** (las de `sonda-isla` que paga, `sonda-cuenta` antes de las 20:00 y la base de un techo de peso, mudadas a
-`TESTING.md` §2.octies el 29-09): (b) el tracker, a 5 B de su techo (16 KB, 02-10 noche; la portada 📜 ya en una línea): el detalle de una línea cerrada se MUDA
+`TESTING.md` §2.octies el 29-09): (b) el tracker, a 1 B de su techo (16 KB, 02-10 noche, tras la L5; la portada 📜 ya en una línea): el detalle de una línea cerrada se MUDA
 a su spec (el 02-10, F3 a `producto-e-instancias.md` §4.6; antes, F2, F4 y F5); la próxima vez, otra cerrada;
 (d) Vue 3.5 reevalúa un `computed` fuera del `try` de quien lo lee: se protege DENTRO (`seguro.js`, §4.13); (f) un texto de la isla que
 use la COMPRA tiene que estar en un grupo que la compra recibe (`mi_cuenta.*` no le llega: §4.24); (g) `isla/hoja/montar.js` NO

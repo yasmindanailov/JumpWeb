@@ -12,16 +12,19 @@ use Illuminate\Support\Facades\App;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Resumen del día (PDF A4 horizontal) para la operativa física — el listado de
- * las reservas/entradas de un día, con filtro de tipo. Generado desde el botón
- * "Imprimir resumen del día" de la página de Calendario y del Escritorio.
+ * Resumen imprimible (PDF A4 horizontal) para la operativa física — el listado de
+ * las reservas/entradas de un DÍA o, desde la L5 de `#876`, de su SEMANA (de lunes
+ * a domingo) o de su MES, por días, con filtro de tipo. Generado desde el botón
+ * "Imprimir resumen" de la página de Calendario y del Escritorio.
  *
- * GET /admin/calendario/resumen-dia?date=YYYY-MM-DD&type=all|pack|entry
+ * GET /admin/calendario/resumen-dia?date=YYYY-MM-DD&period=day|week|month&type=all|pack|trip|entry
  *
  * Defensa: middleware `web+auth+panel_role` + permiso **`calendar.view`** (el
  * mismo que ve el calendario y los widgets de reservas). Parámetros validados de
- * forma no destructiva (fecha inválida → HOY; tipo inválido → todas). Se fuerza
- * español (documento del personal). NO expone datos de cobro sensibles.
+ * forma no destructiva (fecha inválida → HOY; periodo inválido → el día; tipo
+ * inválido → todas). Se fuerza español (documento del personal). Del dinero, solo
+ * lo que la hoja de cada reserva ya dice: el saldo del libro, por cobrar o pagado;
+ * nada de la pasarela.
  */
 class DailySummaryController extends Controller
 {
@@ -34,11 +37,13 @@ class DailySummaryController extends Controller
 
         $date = $this->resolveDate($request->query('date'));
         $type = (string) $request->query('type', DailyReservationsSummary::TYPE_ALL);
+        $period = (string) $request->query('period', DailyReservationsSummary::PERIOD_DAY);
 
-        $summary = DailyReservationsSummary::for($date, $type);
+        $summary = DailyReservationsSummary::for($date, $type, $period);
 
         AuditLogger::log('calendar.day_summary_printed', null, [
             'date' => $date,
+            'period' => $summary->period,
             'type' => $summary->type,
             'count' => $summary->count(),
         ]);
@@ -46,7 +51,9 @@ class DailySummaryController extends Controller
         $pdf = Pdf::loadView('pdf.daily-summary', ['summary' => $summary])
             ->setPaper('a4', 'landscape');
 
-        return $pdf->stream("resumen-{$date}.pdf");
+        return $pdf->stream($summary->period === DailyReservationsSummary::PERIOD_DAY
+            ? "resumen-{$date}.pdf"
+            : 'resumen-'.($summary->period === DailyReservationsSummary::PERIOD_MONTH ? 'mes' : 'semana').'-'.$summary->from->toDateString().'.pdf');
     }
 
     /**

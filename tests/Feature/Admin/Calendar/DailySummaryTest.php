@@ -21,7 +21,9 @@ use App\Filament\Pages\Dashboard;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -44,6 +46,8 @@ class DailySummaryTest extends TestCase
     private TicketType $entry;
 
     private TicketType $pack;
+
+    private TicketType $trip;
 
     private TicketType $addon;
 
@@ -72,10 +76,18 @@ class DailySummaryTest extends TestCase
             'name' => ['es' => 'Cumpleaños Jump'], 'type' => TicketType::TYPE_PACK,
             'zone_id' => $this->zoneJump->id, 'duration_min' => 120,
             'is_sellable' => true, 'is_active' => true, 'seats_per_unit' => 1, 'position' => 2,
+            // Un CUMPLEAÑOS (`#879`): su reserva pregunta la edad de quien cumple, por TIPO.
             'event_fields' => [
                 ['key' => 'celebrant', 'type' => 'text', 'required' => true, 'label' => ['es' => 'Homenajeado']],
-                ['key' => 'age', 'type' => 'number', 'required' => false, 'label' => ['es' => 'Edad']],
+                ['key' => 'age', 'type' => TicketType::FIELD_TYPE_CELEBRANT_AGE, 'required' => false, 'label' => ['es' => 'Edad']],
             ],
+        ]);
+        // Una EXCURSIÓN: también es un pack, pero no pregunta ninguna edad.
+        $this->trip = TicketType::create([
+            'name' => ['es' => 'Excursión escolar'], 'type' => TicketType::TYPE_PACK,
+            'zone_id' => $this->zoneJump->id, 'duration_min' => 120,
+            'is_sellable' => true, 'is_active' => true, 'seats_per_unit' => 1, 'position' => 4,
+            'event_fields' => [['key' => 'school', 'type' => 'text', 'required' => true, 'label' => ['es' => 'Colegio']]],
         ]);
         $this->addon = TicketType::create([
             'name' => ['es' => 'Calcetines'], 'type' => TicketType::TYPE_ADDON,
@@ -221,13 +233,11 @@ class DailySummaryTest extends TestCase
 
         $rows = DailyReservationsSummary::for(self::DAY)->rows();
 
-        // rows[0] = entrada (10:00), rows[1] = pack (16:00).
-        $this->assertSame('Entrada', $rows[0]['typeLabel']);
+        // rows[0] = entrada (10:00), rows[1] = pack (16:00). (El TIPO salió de la hoja con `#879`: lo dice el filtro.)
         $this->assertSame('Entrada 1 hora', $rows[0]['product']);
         $this->assertSame('3 entradas', $rows[0]['quantityLabel']);
         $this->assertNull($rows[0]['celebrant']);
 
-        $this->assertSame('Cumpleaños', $rows[1]['typeLabel']);
         $this->assertSame('Cumpleaños Jump', $rows[1]['product']);
         $this->assertSame('8 invitados', $rows[1]['quantityLabel']);
         $this->assertSame('Lucía', $rows[1]['celebrant']);
@@ -493,7 +503,14 @@ class DailySummaryTest extends TestCase
             ->test(CalendarPage::class)
             ->callAction('printDaySummary', ['date' => self::DAY, 'type' => 'pack'])
             ->assertNoRedirect()
-            ->assertDispatched('open-url-new-tab', url: route('admin.calendario.resumen-dia', ['date' => self::DAY, 'type' => 'pack']));
+            ->assertDispatched('open-url-new-tab', url: route('admin.calendario.resumen-dia', ['date' => self::DAY, 'period' => 'day', 'type' => 'pack']));
+
+        // `#879`: la semana o el mes, con cualquier tipo —también «Solo excursiones»—: el selector ya no desaparece.
+        Livewire::actingAs($this->staff())
+            ->test(CalendarPage::class)
+            ->callAction('printDaySummary', ['date' => self::DAY, 'period' => 'week', 'type' => 'trip'])
+            ->assertHasNoActionErrors()
+            ->assertDispatched('open-url-new-tab', url: route('admin.calendario.resumen-dia', ['date' => self::DAY, 'period' => 'week', 'type' => 'trip']));
     }
 
     public function test_open_url_listener_does_not_double_open_the_tab(): void
@@ -508,5 +525,119 @@ class DailySummaryTest extends TestCase
         $this->assertStringNotContainsString("window.open(url, '_blank', 'noopener')", $js); // patrón buggy fuera
         $this->assertStringContainsString("window.open(url, '_blank')", $js);                // apertura correcta
         $this->assertStringContainsString('opener = null', $js);                             // seguridad equivalente a noopener
+    }
+
+    // ─── `#879`: el periodo, cumpleaños y excursiones por separado, y lo que cabe en horizontal ────────────────
+
+    public function test_birthdays_and_trips_are_separate_types(): void
+    {
+        App::setLocale('es');
+        $this->makeItem($this->makeOrder(), $this->pack, $this->makeSlot(self::DAY, '16:00:00', '18:00:00'), ['quantity' => 8, 'seats' => 8]);
+        $this->makeItem($this->makeOrder(), $this->trip, $this->makeSlot(self::DAY, '09:00:00', '11:00:00'), ['quantity' => 25, 'seats' => 25]);
+        $this->makeItem($this->makeOrder(), $this->entry, $this->makeSlot(self::DAY, '12:00:00', '13:00:00'), ['quantity' => 3, 'seats' => 3]);
+
+        $this->assertSame([$this->pack->id], DailyReservationsSummary::for(self::DAY, 'pack')->items->pluck('ticket_type_id')->all(), '«Solo cumpleaños» ya no mete las excursiones');
+        $this->assertSame([$this->trip->id], DailyReservationsSummary::for(self::DAY, 'trip')->items->pluck('ticket_type_id')->all());
+        $this->assertSame(3, DailyReservationsSummary::for(self::DAY, 'all')->count());
+    }
+
+    public function test_the_week_runs_monday_to_sunday_and_the_month_is_natural(): void
+    {
+        $lunes = Carbon::parse(self::DAY)->startOfWeek(Carbon::MONDAY);
+        $domingo = $lunes->copy()->addDays(6);
+        foreach ([[$lunes, '17:00:00'], [$domingo, '12:00:00'], [$domingo, '10:00:00'], [$lunes->copy()->subDay(), '17:00:00'], [$lunes->copy()->addDays(7), '17:00:00']] as [$dia, $hora]) {
+            $slot = $this->makeSlot($dia->toDateString(), $hora, Carbon::parse($hora)->addHours(2)->format('H:i:s'));
+            $this->makeItem($this->makeOrder(), $this->pack, $slot, ['quantity' => 8, 'seats' => 8]);
+        }
+
+        $semana = DailyReservationsSummary::for(self::DAY, 'all', 'week');
+        $this->assertSame([$lunes->toDateString(), $domingo->toDateString()], [$semana->from->toDateString(), $semana->to->toDateString()]);
+        $this->assertSame(3, $semana->count(), 'ni el domingo de antes ni el lunes de después');
+        $dias = $semana->days();
+        $this->assertSame([$lunes->toDateString(), $domingo->toDateString()], array_map(fn (array $d): string => $d['date']->toDateString(), $dias));
+        $this->assertSame(['10:00–12:00', '12:00–14:00'], array_column($dias[1]['rows'], 'time'), 'dentro del día, por hora');
+
+        $mes = DailyReservationsSummary::for(self::DAY, 'all', 'month');
+        $this->assertSame(Carbon::parse(self::DAY)->startOfMonth()->toDateString(), $mes->from->toDateString());
+        $this->assertSame(Carbon::parse(self::DAY)->endOfMonth()->toDateString(), $mes->to->toDateString());
+        $this->assertSame('day', DailyReservationsSummary::for(self::DAY, 'all', 'trimestre')->period, 'un periodo que no existe, el día');
+    }
+
+    /**
+     * La EDAD, la MERIENDA y la TARTA (`#879`; el owner, al ver la hoja: «la merienda que será, tarta, y ya está»), por DATOS
+     * del enganche —nunca por el nombre del complemento—: la merienda, lo elegido del grupo de elección (el menú); la tarta, lo
+     * pedido del bloque «tarta» de la lista de invitados, o «Sin tarta» si lo contestó así. El resto, en la línea del producto.
+     */
+    public function test_rows_carry_the_age_the_snack_and_the_cake(): void
+    {
+        App::setLocale('es');
+        $complemento = fn (string $nombre): TicketType => TicketType::create(['name' => ['es' => $nombre], 'type' => TicketType::TYPE_ADDON,
+            'is_sellable' => true, 'is_active' => true, 'seats_per_unit' => 1, 'position' => 9]);
+        $menu1 = $complemento('Menú 1');
+        $menu2 = $complemento('Menú 2');
+        $tarta = $complemento('Tarta de chocolate');
+        $enganche = fn (TicketType $addon, array $mas = []) => DB::table('product_addons')->insert(array_merge([
+            'product_id' => $this->pack->id, 'addon_id' => $addon->id, 'position' => 0, 'stage' => 'booking',
+            'is_included' => false, 'included_quantity' => 1, 'is_mandatory' => false, 'quantity_mode' => 'fixed', 'allow_extra' => true,
+        ], $mas));
+        $enganche($menu1, ['choice_group' => 'menu', 'is_included' => true]);
+        $enganche($menu2, ['choice_group' => 'menu']);
+        $enganche($tarta, ['stage' => 'postform', 'postform_block' => 'cake', 'postform_cutoff_hours' => 48]);
+        $enganche($this->addon);
+
+        $fiesta = function (string $hora, array $hijos, array $extra = []): OrderItem {
+            $pedido = $this->makeOrder();
+            $item = $this->makeItem($pedido, $this->pack, $this->makeSlot(self::DAY, $hora, Carbon::parse($hora)->addHours(2)->format('H:i:s')),
+                ['quantity' => 8, 'seats' => 8, 'event_data' => ['celebrant' => 'Lucía', 'age' => 6]] + $extra);
+            foreach ($hijos as [$addon, $cuantos]) {
+                $this->makeItem($pedido, $addon, null, ['parent_item_id' => $item->id, 'quantity' => $cuantos, 'seats' => 0]);
+            }
+
+            return $item;
+        };
+        $fiesta('10:00:00', [[$menu2, 8], [$tarta, 2], [$this->addon, 3]]);
+        $fiesta('13:00:00', [[$menu1, 8]], ['cake_declined_at' => now()]);
+        $fiesta('16:00:00', []);
+
+        $rows = DailyReservationsSummary::for(self::DAY)->rows();
+
+        $this->assertSame('6 años', $rows[0]['age']);
+        $this->assertSame('Menú 2', $rows[0]['snack'], 'la merienda que será: lo elegido del menú');
+        $this->assertSame('2 × Tarta de chocolate', $rows[0]['cake']);
+        $this->assertSame([['name' => 'Calcetines', 'quantity' => 3]], $rows[0]['addons'], 'el resto, en la línea del producto; sin repetir merienda ni tarta');
+        $this->assertSame('Menú 1', $rows[1]['snack']);
+        $this->assertSame('Sin tarta', $rows[1]['cake'], 'lo contestó así');
+        $this->assertNull($rows[2]['snack']);
+        $this->assertNull($rows[2]['cake'], 'sin contestar, nada');
+    }
+
+    public function test_the_route_takes_the_period_and_leaves_it_in_the_trace(): void
+    {
+        $this->makeItem($this->makeOrder(), $this->pack, $this->makeSlot(self::DAY, '16:00:00', '18:00:00'), ['quantity' => 8, 'seats' => 8]);
+        $staff = $this->staff();
+
+        $respuesta = $this->actingAs($staff)->get($this->url(['period' => 'week', 'type' => 'pack']))->assertOk();
+        $this->assertStringStartsWith('%PDF-', $respuesta->getContent());
+
+        $rastro = AuditLog::where('action', 'calendar.day_summary_printed')->latest()->first();
+        $this->assertSame(['date' => self::DAY, 'period' => 'week', 'type' => 'pack', 'count' => 1], $rastro->payload);
+    }
+
+    public function test_the_week_view_titles_each_day_and_carries_the_new_columns(): void
+    {
+        App::setLocale('es');
+        $lunes = Carbon::parse(self::DAY)->startOfWeek(Carbon::MONDAY);
+        $this->makeItem($this->makeOrder(), $this->pack, $this->makeSlot($lunes->toDateString(), '16:00:00', '18:00:00'), [
+            'quantity' => 8, 'seats' => 8, 'event_data' => ['celebrant' => 'Lucía', 'age' => 6],
+        ]);
+
+        $html = view('pdf.daily-summary', ['summary' => DailyReservationsSummary::for(self::DAY, 'all', 'week')])->render();
+
+        $this->assertStringContainsString('Resumen de la semana', $html);
+        $this->assertStringContainsString(ucfirst($lunes->locale('es')->isoFormat('dddd D [de] MMMM')), $html);
+        foreach (['Merienda', 'Tarta', 'Lucía', '6 años'] as $texto) {
+            $this->assertStringContainsString($texto, $html);
+        }
+        $this->assertStringNotContainsString('admin.calendar.', $html);
     }
 }

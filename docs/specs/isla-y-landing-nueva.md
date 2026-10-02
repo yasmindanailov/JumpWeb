@@ -2839,7 +2839,18 @@ se ha ido de un salto», «Reservar» (el selector de planes) e «Ir al inicio»
 2), la isla y el pie—, con estado 404 y `noindex`. En el producto, `InstanceNotFound` (el pintor y el COMODÍN del grupo `web`,
 que respeta los 405 y no casa con la API ni con lo que lleva un punto: dos pruebas de 405 y un POST a la API lo midieron) y `404`
 en `InstancePages::OCUPABLES`. **Medido**: dos casos de `InstancePagesTest`, las de 405, `scripts/mutar-404.sh` 12/12 y, en
-local, la página con su 404, el JSON de la API y la 404 ligera de un `.php` o un `.png`.
+local, la página con su 404, el JSON de la API y la 404 ligera de un `.php` o un `.png`. La instancia, en `6cf107d`.
+
+**L5 ✅ (02-10, con el visto bueno del owner en vivo; `#879`).** No es un resumen aparte: el «Imprimir resumen» del día (`#184`)
+gana el PERIODO —día, su semana de lunes a domingo o su mes, por días y por hora— en A4 HORIZONTAL, con el mismo filtro de tipo
+en los tres (el owner tropezó con el selector que desaparecía en el primer intento, un resumen vertical solo de cumpleaños, y
+lo pidió así). «Solo cumpleaños» deja fuera las excursiones —cumpleaños es el pack que pregunta la edad de quien cumple
+(`celebrantAgeFieldKey()`)— y «Solo excursiones» es su opción. Las columnas, las que el owner dejó al verla: hora, producto (con
+el resto de complementos), cliente, teléfono, cantidad, homenajeado con su edad, MERIENDA (lo elegido de un grupo de elección
+—el menú— o lo marcado como el menú de la invitación) y TARTA (lo pedido del bloque «tarta» de la lista de invitados, o «Sin
+tarta»), por DATOS del enganche (`configurableAddons`); fuera tipo, lista y por cobrar. ⚠️ En LOCAL la tarta no está en el
+bloque «tarta» (K3 del SPA, dato del panel al desplegar): su columna sale vacía. **Medido**: `DailySummaryTest` (38),
+`scripts/mutar-resumen.sh` 12/12 y la hoja de la semana generada con los datos locales y vista en imagen.
 
 ## 5. Impacto en invariantes
 
