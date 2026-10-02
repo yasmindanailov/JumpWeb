@@ -23,6 +23,20 @@ class ScheduleFactsTest extends TestCase
     use RefreshDatabase;
 
     /**
+     * ⏰ El AHORA de los casos, en la hora del parque (`TESTING.md` §2: si el fixture tiene calendario, se ANCLA el reloj): un
+     * miércoles a media tarde, lejos de las DOS medianoches (la de Madrid y la de UTC). Sin el ancla, «abierto ahora» —el parque
+     * abre hoy de 00:00 a 23:59— caía si la suite corría en el último minuto del día del parque (medido con `audit-clock.sh`,
+     * «medianoche de MADRID», a las 23:59:30).
+     */
+    private const AHORA = '2026-09-23 16:00:00';
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->travelTo(Carbon::parse(self::AHORA, DisplayTime::timezone()));
+    }
+
+    /**
      * ⏰⏰ **«Ahora» es la hora del PARQUE, no la del contenedor** (que va en UTC).
      *
      * Estos casos abrían el día de la semana de `Carbon::now()` mientras el servicio pregunta por el

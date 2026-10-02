@@ -33,6 +33,12 @@ class GoogleReviewImagesTest extends TestCase
     {
         parent::setUp();
 
+        // ⏰ El barrido compara la fecha de un fichero en el DISCO —que pone el reloj REAL— con el «ahora» de Laravel. En
+        // producción son el mismo reloj, y aquí también: con `TEST_CLOCK` en otra fecha (`audit-clock.sh`, `TESTING.md`
+        // §2.septies) lo recién escrito parecía viejo y se barría. Por eso este fichero ancla su reloj al REAL y no a una
+        // fecha: su sujeto es la distancia entre los dos relojes, no el calendario.
+        $this->travelTo(new \DateTimeImmutable('@'.time()));
+
         Http::preventStrayRequests();
         Storage::fake(GoogleReviewImages::DISK);
     }

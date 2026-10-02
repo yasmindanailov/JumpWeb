@@ -82,10 +82,9 @@ portada y no cuenta nada hasta la v2.0.0.
    8–10, cuando el diseño tenga sus textos. También míos (`#789`): la PUERTA (su diseño, en el próximo zip) y **T2·9** (las
    reseñas en la API, `#771`: ver si queda la selección o se retira). Al acabar la R1c se retiran `vendor/mail/**`,
    `themes/brand.css` y el layout viejo (§4.1.1). El cajón ya dice «Tu cumpleaños» (`#792`, 29-09, visto por el owner).
-3. ⏸ **LA ANALÍTICA PARA DECIDIR (`#755`, `specs/analitica-para-decidir.md`), EN PAUSA tras la T4**: ❗ **defecto MÍO, medido
-   por plataforma (29-09)**: `OccupancyReport::missing()` (y el `missing` de los totales) no cruza con `analytics_sessions`,
-   así que cuenta robots (`webdriver`, las sondas) y personal, que el embudo y los experimentos excluyen; arreglarlo con su
-   mutación antes de retomar la analítica (su `sonda-demanda.mjs` borra lo suyo). Y de la A1 de plataforma (`#853`): el
+3. ⏸ **LA ANALÍTICA PARA DECIDIR (`#755`, `specs/analitica-para-decidir.md`), EN PAUSA tras la T4**: ✅ el defecto de
+   `OccupancyReport::missing()` que midió plataforma (29-09: contaba robots y personal), ARREGLADO en la TA·0 (`cleanEvents()`,
+   `84524415`; comprobado el 03-10). Y de la A1 de plataforma (`#853`): el
    `password` de `CustomersReport::METHODS` ya es «con el formulario» (renombrarlo) y `user_logged_in` cuenta las vueltas de un
    dispositivo recordado. Y (02-10) el ancla de `mutar-analitica-decidir.sh:880` (A5): busca `$data['current_password']` y la
    línea dice hoy `$emailChanges ? $data['code'] : null`: re-apuntarla antes de la siguiente pasada. El faro de `/api/v1/events`
@@ -101,10 +100,11 @@ portada y no cuenta nada hasta la v2.0.0.
    `CARRIL-SPA.md` §9 (02-10 noche).
 4. ✅ **LA FIESTA DEL SISTEMA NUEVO**: en código sin nada pendiente; su punto entero (el zip nuevo, lo que está a prueba, las
    reglas en pie), mudado verbatim a `CARRIL-SPA.md` §9 (30-09).
-5. ❗ **`audit-clock.sh` (27-09): 10/10 pases en rojo por tests AJENOS a la analítica** (los de la analítica, verdes en
-   todos): `GoogleReviewImagesTest::test_el_barrido_no_toca_lo_recien_escrito` (10/10: el barrido mira el `mtime` REAL
-   del fichero contra el reloj CONGELADO de Laravel; en producción coinciden: es del test), `InvitationSharingTest` (6
-   casos, 404 en 4 fechas frontera; sin analizar) y `ScheduleFactsTest` (el conocido, Trampas ⏰). Arreglar antes de la v2.0.0.
+5. ✅ **Los tres rojos de `audit-clock.sh` (27-09), ARREGLADOS el 03-10** (`TESTING.md` §2.septies): `InvitationSharingTest`
+   era una BOMBA (la fiesta del fixture, el 04-10 a las 17:00, con el reloj real: el gate, rojo desde el domingo a las 19:00),
+   `ScheduleFactsTest` caía en el último minuto del día del parque y `GoogleReviewImagesTest` comparaba el reloj del disco con
+   el de prueba; con su filtro, 10/10 fronteras (49 casos). ▶ Falta el barrido ENTERO (10 fronteras y los dos cruces de
+   medianoche: 12 pasadas de ~2 min 50 s, ~34 min), con permiso del owner: desde el 27-09 los dos carriles han sembrado fechas.
 6. **La invitación, lo que su ✅ NO cubre** (el `.ics` en un teléfono, el Turnstile real, `§7.2·R12`, `og:image` con bandas) y
    **los diez puntos de `§10.4.7·B`** (empieza por la RAÍZ: `matches()` y `takeSlotFor()` no son la misma regla).
 7. De la Fase 4: el **ojo del owner en un teléfono de verdad** · el cuaderno de entrega del cajón · el botón del sistema.
@@ -238,6 +238,11 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
+- ❗ **Para plataforma (03-10, madrugada), tu `ScheduleFactsTest` (F5·T2, `#641`)**: le puse un ancla de reloj (`AHORA`, un
+  miércoles a media tarde del parque, en `setUp()`): «abierto ahora» abre el parque de 00:00 a 23:59 y caía si la suite corría
+  en el último minuto del día del parque (`audit-clock.sh`, «medianoche de MADRID»). Solo el test; tu código, intacto. De
+  paso, una bomba MÍA desactivada (`InvitationSharingTest`, rojo desde el domingo 04-10 a las 19:00): si siembras una fecha
+  absoluta, ancla el reloj (`TESTING.md` §2.septies); el barrido entero no corre desde el 27-09.
 - ❗ **Para plataforma (02-10 noche), tu hoja A4 del MES (`#879`), medida a petición del owner** («que salga la merienda
   elegida y la tarta»): SÍ salen, con «Todo» (lo fija `ChoiceGroupsParkTest::test_the_month_sheet_prints_the_chosen_snack_and_the_cake`).
   Dos de DATOS, tuyas: (1) con «Solo cumpleaños» el mes sale VACÍO en la local: los packs 105 y 106 preguntan la edad con un
@@ -291,18 +296,9 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   prop de origen de `line_added` es de mi contrato de eventos): leído; a la analítica («retomar» 3): medir antes si la isla
   emite `line_added` en sus líneas y, si hace falta, la prop (`otra_zona` | `otra_entrada`). Sus grupos al reservar (`#881`), con mi 1.62.0 al lado.
 - **Plataforma 02-10 noche** (contrato 1.61.0, `guest_form` en la ficha; «¿Qué menú?» con condición): leído; mi 1.62.0 sale de ella.
-- **Plataforma 02-10 tarde** (`#876`, la lista del owner; y tres avisos suyos del 02-10 sin acuse aquí: la A5 `#869`/`#870`, la
-  Z6e `#873` y la Z6g·1 `#871`): leídos. `#876`: sus filas 4 y 8, arriba en «retomar». A5: nada mío a medias; el ancla de mi
-  arnés y el `password` de `user_registered` (mío), a «retomar» 3. Z6e: no cambio las props ni el marcado de
-  `x-fiesta.invitacion` sin avisar; las «dos horas» de `fiesta.php`, a «retomar» 2. Z6g·1: mi correo 8 usará
-  `LoginCodes::shown()`; no cambio la forma de `sidebar/code-input.js` sin avisar; su pista «Te llega de {negocio}…», sin decidir.
-- **Plataforma 02-10 tarde** (`#874`, la traducida; `#875`, «Quién firma el descargo» en la isla): leídos. `->untranslated()`
-  en la Puerta, HECHO (`puerta-nueva.md` §4.4); lo mío de `#875` (el correo 1, el 3 y el cajón), a «retomar» 2; las claves
-  que retira de `isla.php` no las lee nada mío (medido). Mi aviso de `#771`, hecho por ellos: retirado.
-- **Plataforma 02-10** (`698dca75`, `#867`: los banners de su isla, nada mío tocado): leyó mi aviso de la imagen EN `main`
-  (sus tres notas, hechas; el kit sale con el despliegue de la instancia): retirado. El texto, en el `git log`. Y su aviso
-  previo de la Z6c (`318fec68`, `#868`, la flecha naranja): leído; mi respuesta, en el `git log`; la Z6c·3,
-  hecha (arriba).
+- Del 02-10 (`#876`, la A5, la Z6e, la Z6g·1, `#874`/`#875`, `698dca75` y `318fec68`): mudados verbatim a `CARRIL-SPA.md` §9
+  (03-10). ⚠️ Sus promesas siguen en pie: no cambio las props ni el marcado de `x-fiesta.invitacion`, ni la forma de
+  `sidebar/code-input.js`, sin avisar; mi correo 8 usará `LoginCodes::shown()`; lo mío de `#875`, en «retomar» 2.
 - Del 30-09 y el 01-10 (la A2a, la A2b y la A3, `/cookies`, `#857`→`#867`, el zip (6) y su reparto; mis previos de la A4, de
   `#815` y de `LinkIsland`, leídos por plataforma): mudados verbatim a `CARRIL-SPA.md` §9 (02-10).
 - Del 25 al 29-09 (la A1 `#853`/`#854`, T6f/T6g, la hoja de correo, `#792`, `#847`/`#848`, `#846` —no cambio la firma de

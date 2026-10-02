@@ -41,6 +41,20 @@ class InvitationSharingTest extends TestCase
     private const PARQUE = 'Europe/Madrid';
 
     /**
+     * ⏰ El AHORA de los casos, en la hora del parque (`TESTING.md` §2: una fecha ABSOLUTA en el fixture obliga a ANCLAR el
+     * reloj): una semana antes de la fiesta del fixture (el 2026-10-04 a las 17:00), con la invitación y las respuestas
+     * abiertas. Sin el ancla, el fichero entero caía en 404 en cuanto esa fiesta terminaba DE VERDAD —un enlace no sobrevive
+     * a su fiesta, `GuestCountPolicy::isOpenFor()`—: medido con `audit-clock.sh`, verde el 04-10 a mediodía y rojo el 05.
+     */
+    private const AHORA = '2026-09-27 12:00:00';
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->travelTo(new DateTimeImmutable(self::AHORA, new DateTimeZone(self::PARQUE)));
+    }
+
+    /**
      * ❗❗ **La fiesta cae en el instante correcto**, y el fichero escribe la hora del reloj del parque.
      *
      * No se aserta solo la cifra: se reconstruye el instante como lo hace un calendario. Con una

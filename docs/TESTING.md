@@ -276,6 +276,15 @@ tests nuevos:
 - ⚠️ **No todo lo que caza el barrido es del reloj**: `#412` destapó un `mt_rand(100,999)` contra el
   `UNIQUE` de `orders.code` — una MONEDA AL AIRE que el barrido hace visible solo porque corre la
   suite diez veces. Si un culpable no tiene nada que ver con fechas, mira si es aleatoriedad.
+- ❗❗ **El 2026-10-03, tres más, y uno con fecha de disparo**: `InvitationSharingTest` sembraba la fiesta el `2026-10-04` a
+  las 17:00 con el reloj REAL, y un enlace no sobrevive a su fiesta (`GuestCountPolicy::isOpenFor()`): **el gate se iba a
+  poner rojo el domingo a las 19:00**, al terminar la fiesta del fixture → ancla en `setUp()` (`AHORA`, una semana antes).
+  ▶ Una FIESTA con fecha absoluta es la misma bomba que una reserva: el día que pasa, se cierra todo lo que cuelga de ella
+  (la invitación, la lista, las firmas). `ScheduleFactsTest` abría el parque «de 00:00 a 23:59» y caía en el último minuto
+  del día del parque → ancla a media tarde. Y `GoogleReviewImagesTest` **no era del calendario**: el barrido compara el
+  `mtime` del DISCO (reloj real) con `now()` (reloj de prueba), y con `TEST_CLOCK` en otra fecha lo recién escrito parecía
+  viejo → su reloj se ancla al REAL (`travelTo(new DateTimeImmutable('@'.time()))`): su sujeto es la distancia entre los
+  dos relojes. Con su filtro, 10/10 fronteras.
 
 ▶ **La lección de método, después de tres**: un test con fechas **sale verde el día que se escribe y
 eso no dice nada**. El barrido no es ceremonia de cierre — es el único momento en que este defecto es

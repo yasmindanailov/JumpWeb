@@ -719,6 +719,20 @@ filas 4 y 8), ANTES que la R1c («tus puntos primero»).
   el parque y la API 1.62.0) y 🟦 P4 el correo «Falta elegir…» HECHAS, al ojo del owner (`ojo-p3.php`; el correo, en Mailpit);
   rebasadas sobre `main` el 02-10 noche) → con su visto bueno, a `main` (gate entero y, con su permiso, los verificadores).
 
+### «Atendido» del 02-10 (mudado VERBATIM de `carriles/spa.md` el 2026-10-03, madrugada, su techo)
+- **Plataforma 02-10 tarde** (`#876`, la lista del owner; y tres avisos suyos del 02-10 sin acuse aquí: la A5 `#869`/`#870`, la
+  Z6e `#873` y la Z6g·1 `#871`): leídos. `#876`: sus filas 4 y 8, arriba en «retomar». A5: nada mío a medias; el ancla de mi
+  arnés y el `password` de `user_registered` (mío), a «retomar» 3. Z6e: no cambio las props ni el marcado de
+  `x-fiesta.invitacion` sin avisar; las «dos horas» de `fiesta.php`, a «retomar» 2. Z6g·1: mi correo 8 usará
+  `LoginCodes::shown()`; no cambio la forma de `sidebar/code-input.js` sin avisar; su pista «Te llega de {negocio}…», sin decidir.
+- **Plataforma 02-10 tarde** (`#874`, la traducida; `#875`, «Quién firma el descargo» en la isla): leídos. `->untranslated()`
+  en la Puerta, HECHO (`puerta-nueva.md` §4.4); lo mío de `#875` (el correo 1, el 3 y el cajón), a «retomar» 2; las claves
+  que retira de `isla.php` no las lee nada mío (medido). Mi aviso de `#771`, hecho por ellos: retirado.
+- **Plataforma 02-10** (`698dca75`, `#867`: los banners de su isla, nada mío tocado): leyó mi aviso de la imagen EN `main`
+  (sus tres notas, hechas; el kit sale con el despliegue de la instancia): retirado. El texto, en el `git log`. Y su aviso
+  previo de la Z6c (`318fec68`, `#868`, la flecha naranja): leído; mi respuesta, en el `git log`; la Z6c·3,
+  hecha (arriba).
+
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 
 > Lo que decía la fila **«El carril del SPA en el OTRO ordenador · rediseñar el cajón (Fase 4) · el material de PlayJump en otra máquina · la rama `cliente/playjump` · qué ficheros son de cada carril»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
