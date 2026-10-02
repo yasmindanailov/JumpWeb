@@ -456,8 +456,11 @@ final class PartyInvitations
             return [];
         }
 
+        // ❗ Y solo lo que SIGUE pedido: quitar un complemento en la lista CANCELA su línea (no la borra), y la invitación
+        // enseñaba también lo quitado (el owner, 02-10: «si he seleccionado Sándwich, ¿por qué me sale pizza?»;
+        // `fiesta-sistema-nuevo.md` §4.17). `children` trae las canceladas: las queries de `OrderItem` no las filtran.
         return $reservation->children
-            ->filter(static fn (OrderItem $line): bool => in_array((int) $line->ticket_type_id, $marked, true))
+            ->filter(static fn (OrderItem $line): bool => ! $line->isCancelled() && in_array((int) $line->ticket_type_id, $marked, true))
             ->map(static fn (OrderItem $line): array => [
                 'name' => trim((string) $line->ticketType?->tr('name')),
                 'features' => $line->ticketType?->featureLines() ?? [],

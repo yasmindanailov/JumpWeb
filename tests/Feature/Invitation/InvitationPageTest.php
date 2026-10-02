@@ -242,6 +242,40 @@ class InvitationPageTest extends TestCase
     }
 
     /**
+     * ❗❗ **Lo QUITADO en la lista no sale en la invitación** (el owner, 02-10: «si he seleccionado Sándwich, ¿por qué me sale
+     * pizza en la invitación?»; `fiesta-sistema-nuevo.md` §4.17). Quitar un complemento en la lista no borra su línea: la
+     * CANCELA (`cancelled_at`, con su historia), y `menuFor()` las leía todas. La familia cambia de idea: la Pizza, quitada;
+     * el Sándwich, pedido. De CONTROL, el Sándwich sí sale: una invitación sin menú también pasaría el `assertDontSee`.
+     */
+    public function test_a_dish_taken_off_the_list_leaves_the_invitation(): void
+    {
+        [$reservation, $invitation] = $this->party(withMenu: true);
+        OrderItem::query()->where('parent_item_id', $reservation->id)->sole()->forceFill(['cancelled_at' => now()])->save();
+        $sandwich = TicketType::create([
+            'zone_id' => $reservation->ticketType?->zone_id, 'type' => TicketType::TYPE_ADDON, 'name' => ['es' => 'Menú Sándwich'],
+            'duration_min' => 0, 'seats_per_unit' => 0, 'is_sellable' => true, 'is_active' => true, 'position' => 6,
+        ]);
+        // Como la merienda de K3 (`fiesta-sistema-nuevo.md` §4.17): venta posterior, tope 1, su plazo y marcada para la invitación.
+        $reservation->ticketType?->addons()->attach($sandwich->id, [
+            'stage' => ProductAddon::STAGE_POSTFORM, 'max_qty' => 1, 'postform_cutoff_hours' => 48, 'show_in_invitation' => true,
+        ]);
+        $reservation->order?->items()->create([
+            'ticket_type_id' => $sandwich->id, 'parent_item_id' => $reservation->id, 'quantity' => 1, 'unit_price' => 0, 'seats' => 0,
+        ]);
+
+        $this->get(route(PartyInvitations::PUBLIC_ROUTE, ['token' => $invitation->token]))
+            ->assertOk()
+            ->assertSee('Menú Sándwich')
+            ->assertDontSee('Menú Pizza');
+
+        $this->assertSame(
+            ['Menú Sándwich'],
+            array_column(app(PartyInvitations::class)->menuFor($reservation->fresh(['ticketType.addons', 'children.ticketType']) ?? $reservation), 'name'),
+            'la invitación enseñaba un complemento QUITADO de la lista'
+        );
+    }
+
+    /**
      * **La merienda, por lo que es** (el diseño del 24-09; `fiesta-sistema-nuevo.md` T2, antes el `<details>` de
      * `#416`): cada plato MARCADO y comprado es un grupo de `inv-merienda`, con su nombre de rótulo y sus detalles
      * en línea, **sin una línea de JS** — que es la condición de esta página.

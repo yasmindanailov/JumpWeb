@@ -50,9 +50,9 @@
 filas 4 y 8), ANTES que la R1c («tus puntos primero»).
 - 🟦 **Fila 4, los complementos y las opciones del menú en la lista**: SIN CÓDIGO (K3, `#808`): el JUMP (106) ya lo tenía en la
   local; el owner eligió (02-10) el KIDS (105) igual, montado con `ojo-kids.php` y medido con su sonda a 390 y 1280 (`CARRIL-SPA`
-  §8 (29)). ▶ Falta su OJO en vivo. En producción, con la v2.0.0: la receta, `fiesta-sistema-nuevo.md` §4.17 «K3». ❗ Al verlo,
-  el owner encontró un DEFECTO: la invitación pinta complementos CANCELADOS (`PartyInvitations::menuFor()`, §4.17): sin arreglar
-  («no escribas código»), a la espera de su sí.
+  §8 (29)). ▶ Falta su OJO en vivo. En producción, con la v2.0.0: la receta, `fiesta-sistema-nuevo.md` §4.17 «K3». ✅ El DEFECTO
+  que vio el owner (la invitación pintaba complementos CANCELADOS, `PartyInvitations::menuFor()`, §4.17), ARREGLADO en la misma
+  rama: su test (visto rojo), arnés `mutar-menu-cancelados.sh` 2/2 y las dos invitaciones medidas.
 - 🟦 **Fila 8, las altas en casa y en el parque** (la TA, `analitica-para-decidir.md` §4.15): HECHA en `wip/ta-altas-por-origen`
   con la TA·0 (los robots fuera de la demanda sin hueco); `#911` decidida por el owner («como el pedido»); arnés `SOLO=TA` 18/18,
   sonda del cartel 10/10, suite verde. ▶ Falta su OJO en «Analítica → Clientes»; después, *fast-forward* a `main`. ⚠️ v1.1.0
@@ -210,7 +210,8 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   node_modules/playwright-core/cli.js install chromium` (con `npx` cae en otra caché); `npm install` poda `playwright-core`.
 - `SidebarDomContractTest` renderiza el BUNDLE: `npm run build:ssr` antes de la suite, también tras traer
   commits del cajón, tras un arnés de mutación (restaura el árbol, no el bundle) **y siempre que toques un
-  `.vue`** (si no, 36 rojos que no son tuyos). Techo del chunk del motor **302** (`#812`, 01-10: 301,79).
+  `.vue`** (si no, 36 rojos que no son tuyos). ⚠️ **Aunque la tanda solo mute PHP** (02-10, 38 rojos tras `SOLO=TA`): el
+  arnés restaura y TOCA todos sus `FICHEROS`, también los JS, y el bundle sale «rancio» por fecha. Techo del chunk del motor **302** (`#812`, 01-10: 301,79).
 - ⚠️⚠️ **Un filtro que no ejecuta nada también sale ≠ 0**, y **Pint DESTROZA los nombres de método con
   palabras en MAYÚSCULAS** (`_UN_` → `_u_n_`): así se rompe un arnés **en silencio**. Los tests se nombran
   **sin mayúsculas**, y una mutación se cree tras ver el MISMO filtro en verde ejecutando su caso. Aseverar
