@@ -74,6 +74,84 @@ class FichaPuertaTest extends TestCase
         $this->assertNull($fiesta['dinero']);
     }
 
+    /**
+     * ▶ **La P2: una fila por ZONA, COLOR y HORA** (la clave del mockup, producto + color + inicio): la ilimitada (color fijo)
+     * y la de una hora a la misma hora y en la misma zona son DOS filas; la frase va según la CIFRA de la fila («pulsera
+     * lila» con una, «pulseras lilas» con varias), y la cifra, en tinta o en blanco sobre su color.
+     */
+    public function test_p2_a_row_is_a_zone_a_colour_and_a_start_and_says_its_wristband(): void
+    {
+        $lila = ['one' => 'pulsera lila', 'other' => 'pulseras lilas', 'hex' => '#a883f0'];
+        $gris = ['one' => 'pulsera gris', 'other' => 'pulseras grises', 'hex' => '#9aa7b2'];
+        $azul = ['one' => 'pulsera azul', 'other' => 'pulseras azules', 'hex' => '#1e7fe0'];
+
+        $f = FichaPuerta::de($this->ficha([
+            $this->fila(['order_code' => 'R-1', 'quantity' => 2, 'wristband' => $lila]),
+            $this->fila(['order_code' => 'R-2', 'quantity' => 1, 'wristband' => $gris, 'duration_minutes' => null]),
+            $this->fila(['order_code' => 'R-3', 'quantity' => 1, 'wristband' => $lila]),
+            $this->fila(['order_code' => 'R-4', 'quantity' => 1, 'start_time' => '18:00', 'wristband' => $azul]),
+        ]), $this->now());
+
+        $this->assertSame([[3, 'pulseras lilas'], [1, 'pulsera gris'], [1, 'pulsera azul']], array_map(fn (array $g): array => [$g['cifra'], $g['pulsera']['frase']], $f['filas']), 'la lila suma sus dos reservas; la gris, a la misma hora y zona, es otra fila');
+        $this->assertSame(['R-1', 'R-3'], array_column($f['filas'][0]['reservas'], 'codigo'));
+        $this->assertSame(['#a883f0', 'oscura'], [$f['filas'][0]['pulsera']['hex'], $f['filas'][0]['pulsera']['tinta']], 'sobre un color claro, la cifra en tinta');
+        $this->assertSame('clara', $f['filas'][2]['pulsera']['tinta'], 'sobre un azul oscuro, en blanco');
+
+        // Sin pulsera (sin rueda ni fijo), la fila de la P1: la loseta neutra y sin frase.
+        $sin = FichaPuerta::de($this->ficha([$this->fila()]), $this->now());
+        $this->assertNull($sin['filas'][0]['pulsera']);
+    }
+
+    /** La cifra sobre el color: tinta o blanco, el que más contraste dé (`ppuTinta` del mockup, la luminancia de WCAG). */
+    public function test_p2_the_ink_of_the_figure_is_the_one_with_more_contrast(): void
+    {
+        foreach (['#ff6a13' => 'oscura', '#ffc400' => 'oscura', '#17a94a' => 'oscura', '#9aa7b2' => 'oscura', '#e0263b' => 'clara', '#1e7fe0' => 'clara', '#000000' => 'clara', '#ffffff' => 'oscura'] as $hex => $ink) {
+            $this->assertSame($ink, FichaPuerta::tinta($hex), $hex);
+        }
+    }
+
+    /**
+     * El hex va en un `style` y la ficha viaja en el snapshot (el navegador puede devolverla cambiada): uno que no sea
+     * `#rrggbb` es una loseta NEUTRA, con su frase; una pulsera sin frase, ninguna.
+     */
+    public function test_p2_a_hex_that_is_not_a_colour_never_reaches_the_style(): void
+    {
+        foreach (['red;background:url(x)', '#fff', '#A883F0', 'javascript:1', ''] as $bad) {
+            $f = FichaPuerta::de($this->ficha([$this->fila(['wristband' => ['one' => 'pulsera lila', 'other' => 'pulseras lilas', 'hex' => $bad]])]), $this->now());
+            $this->assertNull($f['filas'][0]['pulsera']['hex'], "«{$bad}»");
+            $this->assertSame('pulseras lilas', $f['filas'][0]['pulsera']['frase']);
+        }
+
+        $f = FichaPuerta::de($this->ficha([$this->fila(['wristband' => ['one' => '', 'other' => '  ', 'hex' => '#a883f0']])]), $this->now());
+        $this->assertNull($f['filas'][0]['pulsera'], 'sin frase no hay pulsera que decir');
+        $f = FichaPuerta::de($this->ficha([$this->fila(['wristband' => ['one' => 'pulsera lila', 'hex' => '#a883f0']])]), $this->now());
+        $this->assertSame('pulsera lila', $f['filas'][0]['pulsera']['frase'], 'con una sola frase, esa para las dos');
+    }
+
+    /**
+     * ▶ **Lo que se ENTREGA en la puerta** (la P2, D14; el mockup: «2 pares de calcetines»): por complemento, sumado en TODAS
+     * las reservas de hoy, con su rótulo según la cifra y su icono —solo uno de la lista curada—.
+     */
+    public function test_p2_what_is_handed_at_the_gate_is_summed_per_addon_across_todays_bookings(): void
+    {
+        $socks = static fn (int $n): array => ['key' => 110, 'quantity' => $n, 'one' => 'par de calcetines', 'other' => 'pares de calcetines', 'icon' => 'socks'];
+
+        $f = FichaPuerta::de($this->ficha([
+            $this->fila(['order_code' => 'R-1', 'handed_at_gate' => [$socks(2)]]),
+            $this->fila(['order_code' => 'R-2', 'zone_name' => 'Jump', 'zone_slug' => 'jump', 'handed_at_gate' => [$socks(1), ['key' => 120, 'quantity' => 1, 'one' => 'toalla', 'other' => 'toallas', 'icon' => '../../layouts/app']]]),
+            $this->fila(['order_code' => 'R-3', 'handed_at_gate' => [$socks(0)]]),
+        ]), $this->now());
+
+        $this->assertSame([
+            ['clave' => '110', 'cifra' => 3, 'frase' => 'pares de calcetines', 'icono' => 'socks'],
+            ['clave' => '120', 'cifra' => 1, 'frase' => 'toalla', 'icono' => 'ticket'],
+        ], $f['entregas'], 'sumados por complemento; con uno, su singular; un icono ajeno a la lista, el de por defecto');
+
+        $uno = FichaPuerta::de($this->ficha([$this->fila(['handed_at_gate' => [$socks(1)]])]), $this->now());
+        $this->assertSame('par de calcetines', $uno['entregas'][0]['frase']);
+        $this->assertSame([], FichaPuerta::de($this->ficha([$this->fila()]), $this->now())['entregas'], 'sin nada que entregar, nada');
+    }
+
     public function test_the_time_says_when_it_starts_or_started_and_the_unlimited_comes_when_it_comes(): void
     {
         $hora = fn (array $over, string $now): string => FichaPuerta::hora($this->fila($over), $this->now($now));

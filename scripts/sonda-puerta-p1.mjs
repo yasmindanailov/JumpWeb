@@ -26,7 +26,7 @@ const OUT = 'storage/app/audit';
 const { tokens } = JSON.parse(readFileSync(`${OUT}/ojo-puerta.json`, 'utf8'));
 const TAMANOS = [[1080, 810], [1194, 834], [1366, 1024], [390, 844]];
 const COMUNES = ['ana', 'mostrador', 'carlos', 'marta', 'tomas'];
-const VEREDICTO = { ana: 'Listos para saltar', mostrador: 'Falta firmar el descargo', carlos: 'Falta firmar el descargo', marta: 'Listos para saltar', elena: 'Listos para saltar', jorge: 'Falta firmar el descargo', irene: 'Listos para saltar', tomas: 'Listos para saltar', david: 'Listos para saltar' };
+const VEREDICTO = { ana: 'Listos para saltar', mostrador: 'Falta firmar el descargo', carlos: 'Falta firmar el descargo', marta: 'Listos para saltar', elena: 'Listos para saltar', jorge: 'Falta firmar el descargo', irene: 'Listos para saltar', tomas: 'Listos para saltar', david: 'Listos para saltar', sofia: 'Listos para saltar', javier: 'Listos para saltar' };
 
 const informe = { cuando: new Date().toISOString(), checks: [] };
 const check = (nombre, ok, detalle = '') => informe.checks.push({ nombre, ok: Boolean(ok), detalle: String(detalle) });
@@ -56,11 +56,17 @@ const abrir = async () => {
     }
 };
 
-/** Teclea como el lector (el código y un Enter) y espera a que la respuesta pinte. */
+/**
+ * Teclea como el lector (el código y un Enter) y espera a que la respuesta pinte. ⚠️ Espera a que la ficha de ANTES ya no
+ * esté —cada lectura la sustituye: su clave es la lectura (la P1b)— y no un tiempo fijo: con once fichas y cuatro tamaños,
+ * una respuesta lenta dejó leer la de Jorge como si fuera la de Irene (02-10).
+ */
 const escanear = async (codigo) => {
+    const antes = await page.evaluateHandle(() => document.querySelector('[data-gate-profile], .ppu-cuerpo.centro'));
     await page.fill('#input', codigo);
     await page.press('#input', 'Enter');
     await page.waitForLoadState('networkidle');
+    await page.waitForFunction((el) => el === null || ! el.isConnected, antes, { timeout: 8000 }).catch(() => null);
     await page.waitForTimeout(450);
 };
 
@@ -201,6 +207,36 @@ check('encuesta · y el mismo día no vuelve a salir', (await page.locator('[dat
 await page.waitForTimeout(3200);
 await escanear(tokens.elena);
 check('encuesta · ya no se vuelve a ofrecer', (await page.locator('[data-gate-profile]').count()) === 1 && (await page.locator('[data-gate-survey]').count()) === 0);
+
+// LA P2 (`puerta-nueva.md` §4.4): las pulseras con la configuración de PlayJump que monta `ojo-puerta.php` en la local (sus
+// colores del mockup, la rueda desde las 11:00 cada 30 min, la ilimitada gris, los packs rojos con su zona de salto y los
+// calcetines que se entregan). Lo que mide el navegador: el COLOR de la loseta, la tinta de la cifra, la frase y que el dibujo
+// de los calcetines sea de trazo (sin la hoja de la web, salía relleno de negro).
+await page.waitForTimeout(3200);
+const pulseras = async (ficha) => {
+    await escanear(tokens[ficha]);
+    return page.evaluate(() => ({
+        filas: [...document.querySelectorAll('.ppu-ent')].map((el) => {
+            const s = getComputedStyle(el.querySelector('.ppu-cant'));
+            return { texto: el.querySelector('.ppu-ent__t')?.textContent.replace(/\s+/g, ' ').trim(), fondo: s.backgroundColor, blanca: s.color === 'rgb(255, 255, 255)' };
+        }),
+        entregas: [...document.querySelectorAll('[data-gate-handed]')].map((el) => {
+            const path = el.querySelector('.icon svg path');
+            return { texto: el.textContent.replace(/\s+/g, ' ').trim(), relleno: path ? getComputedStyle(path).fill : null };
+        }),
+    }));
+};
+const ana = await pulseras('ana');
+check('pulseras · Ana: «KIDS pulseras naranjas» sobre su naranja, la cifra en tinta', ana.filas.length === 1 && ana.filas[0].texto === 'KIDS pulseras naranjas' && ana.filas[0].fondo === 'rgb(255, 106, 19)' && ! ana.filas[0].blanca, JSON.stringify(ana.filas));
+check('pulseras · Ana: «2 pares de calcetines», con el dibujo de TRAZO', ana.entregas.length === 1 && ana.entregas[0].texto === '2 pares de calcetines' && ana.entregas[0].relleno === 'none', JSON.stringify(ana.entregas));
+await page.waitForTimeout(3200);
+const david = await pulseras('david');
+check('pulseras · David: la ilimitada gris (fija), Kids 17:00 naranja y Jump 18:00 amarilla (la rueda del mockup)', JSON.stringify(david.filas.map((f) => f.texto)) === JSON.stringify(['KIDS pulsera gris', 'KIDS pulseras naranjas', 'JUMP pulsera amarilla']), JSON.stringify(david.filas));
+check('pulseras · David: los calcetines de sus tres reservas, sumados', david.entregas.length === 1 && david.entregas[0].texto === '4 pares de calcetines', JSON.stringify(david.entregas));
+await page.waitForTimeout(3200);
+const sofia = await pulseras('sofia');
+check('pulseras · Sofía: el cumpleaños en la fila de KIDS (su zona de salto), rojo y la cifra en blanco', sofia.filas.length === 1 && sofia.filas[0].texto === 'KIDS pulseras rojas' && sofia.filas[0].fondo === 'rgb(224, 38, 59)' && sofia.filas[0].blanca, JSON.stringify(sofia.filas));
+await page.screenshot({ path: `${OUT}/sonda-puerta-p1-pulseras-sofia-1080.png` });
 
 // Una vez, en la tablet: la doble lectura, el velo y los estados sin ficha.
 await page.setViewportSize({ width: 1080, height: 810 });

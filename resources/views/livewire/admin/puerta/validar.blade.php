@@ -163,9 +163,9 @@
                         </div>
                     </div>
 
-                    {{-- 2 · Lo que hay que HACER: sin reserva, las pulseras por zona y hora con sus reservas debajo, el dinero
-                         en su línea ámbar y firmar. Solo lo que haya. --}}
-                    @if ($ficha['sin_reserva'] || $ficha['filas'] !== [] || $ficha['firmar'] !== [])
+                    {{-- 2 · Lo que hay que HACER: sin reserva, las pulseras por zona, color y hora con sus reservas debajo, el
+                         dinero en su línea ámbar, lo que se entrega (los calcetines) y firmar. Solo lo que haya. --}}
+                    @if ($ficha['sin_reserva'] || $ficha['filas'] !== [] || $ficha['entregas'] !== [] || $ficha['firmar'] !== [])
                         <div class="ppu-card ppu-tareas">
                             @if ($ficha['sin_reserva'])
                                 <div class="ppu-tarea" data-gate-today-empty>
@@ -182,10 +182,16 @@
                             @if ($ficha['filas'] !== [])
                                 <div data-gate-today>
                                     @foreach ($ficha['filas'] as $fila)
-                                        <div class="ppu-ent">
-                                            <span class="ppu-cant">{{ $fila['cifra'] }}</span>
+                                        {{-- La P2: la cifra sobre el COLOR de la pulsera (en tinta o en blanco, la que más contraste dé) y,
+                                             tras la zona, su frase («pulseras lilas»). El hex ya viene comprobado dos veces (`#rrggbb`):
+                                             va en un `style`. Sin color, la loseta neutra de la P1. --}}
+                                        @php
+                                            $pulsera = $fila['pulsera'];
+                                        @endphp
+                                        <div class="ppu-ent" @if ($pulsera !== null) data-gate-wristband="{{ $pulsera['frase'] }}" @endif>
+                                            <span @class(['ppu-cant', 'clara' => ($pulsera['tinta'] ?? null) === 'clara']) @if (($pulsera['hex'] ?? null) !== null) style="background: {{ $pulsera['hex'] }}" data-gate-wristband-hex="{{ $pulsera['hex'] }}" @endif>{{ $fila['cifra'] }}</span>
                                             <div class="ppu-ent__main">
-                                                <p class="ppu-ent__t"><b class="ppu-zona">{{ $fila['zona'] }}</b></p>
+                                                <p class="ppu-ent__t"><b class="ppu-zona">{{ $fila['zona'] }}</b>@if ($pulsera !== null) <span class="ppu-pulsera">{{ $pulsera['frase'] }}</span>@endif</p>
                                                 @foreach ($fila['reservas'] as $res)
                                                     <div class="ppu-ent__r" data-gate-reservation="{{ $res['codigo'] }}">
                                                         <p class="ppu-l1">
@@ -213,6 +219,18 @@
                                     @endforeach
                                 </div>
                             @endif
+
+                            {{-- Lo que se ENTREGA en la puerta (la P2, D14; el mockup: «2 pares de calcetines», tras las pulseras): la cifra
+                                 en gris, el dibujo del producto y su rótulo. El icono ya viene de la lista curada. --}}
+                            @foreach ($ficha['entregas'] as $entrega)
+                                <div class="ppu-tarea ppu-entrega" data-gate-handed="{{ $entrega['clave'] }}">
+                                    <span class="ppu-cant neutro">{{ $entrega['cifra'] }}</span>
+                                    <p class="ppu-entrega__t">
+                                        <x-dynamic-component :component="'icons.'.$entrega['icono']" :width="34" :height="34" class="ppu-entrega__ico" />
+                                        <span>{{ $entrega['frase'] }}</span>
+                                    </p>
+                                </div>
+                            @endforeach
 
                             @foreach ($ficha['firmar'] as $modo)
                                 @if ($modo === \App\Livewire\Admin\Puerta\FichaPuerta::FIRMAR_PENDIENTE)

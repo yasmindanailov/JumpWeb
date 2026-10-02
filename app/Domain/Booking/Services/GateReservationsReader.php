@@ -7,6 +7,7 @@ use App\Domain\Booking\Contracts\GateReservations;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Platform\Services\PersonNameKey;
 
 /**
@@ -25,6 +26,9 @@ class GateReservationsReader implements GateReservations
 
     public function forHolder(int $userId, string $fromDate, string $toDate): array
     {
+        // La rueda de las pulseras (la P2, D11): dos ajustes y una consulta para TODA la ficha, nunca una por fila.
+        $wheel = WristbandWheel::fromSettings();
+
         return OrderItem::query()
             ->active()
             ->whereNull('parent_item_id')
@@ -36,19 +40,22 @@ class GateReservationsReader implements GateReservations
             // HIJA `parent->slot`; las etiquetas caminan `ticketType`; las devoluciones,
             // `payments.refunds`). Sin ellos, cada fila costaba consultas POR FILA en la pantalla
             // de puerta; lo vigilan los presupuestos de `GateProfileTest` y `MixedPartyParkSurfacesTest`.
-            // `ticketType.zone`: la zona de la fila de la Puerta nueva (`specs/puerta-nueva.md` §4.4, la P1), UN lote.
+            // `ticketType.zone`: la zona de la fila de la Puerta nueva (`specs/puerta-nueva.md` §4.4, la P1), UN lote; y desde
+            // la P2, el color fijo y la zona de salto de un pack, un lote cada uno.
             ->with([
-                'ticketType.zone', 'slot', 'children.ticketType',
+                'ticketType.zone', 'ticketType.wristbandColor', 'ticketType.gateZone', 'slot', 'children.ticketType',
                 'order.adjustments', 'order.payments.refunds',
                 'order.items.slot', 'order.items.ticketType', 'order.items.parent.slot',
             ])
             ->get()
             ->sortBy(fn (OrderItem $item): string => ($item->slot?->date?->format('Y-m-d') ?? '9999-12-31').' '.substr((string) ($item->slot?->start_time ?? '00:00:00'), 0, 8))
             ->values()
-            ->map(function (OrderItem $item): GateReservation {
+            ->map(function (OrderItem $item) use ($wheel): GateReservation {
                 /** @var Order $order */
                 $order = $item->order;
                 $book = OrderBook::forReservation($order, $item);
+                $children = $item->children->reject(fn (OrderItem $child): bool => $child->isCancelled());
+                $zone = $this->gateZone($item);
 
                 // T3 · E (`specs/cumple-mixto.md` §23.2): lo ESCRITO del suplemento de fiesta mixta,
                 // para que el empleado vea la diferencia por cabeza con el cliente delante en vez de
@@ -65,8 +72,8 @@ class GateReservationsReader implements GateReservations
                     productName: $item->displayProductName(),
                     isEntry: $item->ticketType?->type === TicketType::TYPE_ENTRY,
                     quantity: (int) $item->quantity,
-                    addons: $item->children
-                        ->reject(fn (OrderItem $child): bool => $child->isCancelled())
+                    addons: $children
+                        ->reject(fn (OrderItem $child): bool => (bool) $child->ticketType?->handed_at_gate)
                         ->map(fn (OrderItem $child): string => $child->quantity.' × '.($child->ticketType?->tr('name') ?? ''))
                         ->values()
                         ->all(),
@@ -92,16 +99,78 @@ class GateReservationsReader implements GateReservations
                     honoreeName: $item->honoreeName(),
                     invitationOffered: $item->ticketType?->offersGuestInvitation() ?? false,
                     waiverOffered: ($item->ticketType?->guardianMode() ?? TicketType::GUARDIAN_NONE) !== TicketType::GUARDIAN_NONE,
-                    zoneName: $item->ticketType?->zone === null ? null : (string) $item->ticketType->zone->tr('name'),
-                    zoneSlug: $item->ticketType?->zone?->slug,
+                    zoneName: $zone === null ? null : (string) $zone->tr('name'),
+                    zoneSlug: $zone?->slug,
                     // La ilimitada es «sin duración» (`TicketType::isUnlimited()`: vacío, también un 0).
                     durationMinutes: $item->ticketType === null || $item->ticketType->isUnlimited() ? null : (int) $item->ticketType->duration_min,
                     startTime: $item->slot?->start_time === null ? null : substr((string) $item->slot->start_time, 0, 5),
                     isParty: $item->ticketType?->type === TicketType::TYPE_PACK,
                     guestAgeMax: $item->ticketType?->guest_age_max === null ? null : (int) $item->ticketType->guest_age_max,
+                    wristband: $this->wristband($item, $wheel),
+                    handedAtGate: $children
+                        ->filter(fn (OrderItem $child): bool => (bool) $child->ticketType?->handed_at_gate)
+                        ->map(fn (OrderItem $child): array => $this->handedAtGate($child))
+                        ->values()
+                        ->all(),
                 );
             })
             ->all();
+    }
+
+    /**
+     * La zona de la FILA en la Puerta (la P2, D13): la de salto de un pack si la tiene —sus invitados saltan en Kids o en
+     * Jump, aunque el pack viva en la zona de su sala— y, si no, la del producto.
+     */
+    private function gateZone(OrderItem $item): ?Zone
+    {
+        $type = $item->ticketType;
+        if ($type?->type === TicketType::TYPE_PACK && $type->gateZone !== null) {
+            return $type->gateZone;
+        }
+
+        return $type?->zone;
+    }
+
+    /**
+     * La pulsera de una reserva (la P2, D11/D12): la FIJA del producto gana a la de la RUEDA por su hora de inicio. El hex,
+     * solo si es `#rrggbb` (D15: va en un `style`); la frase se queda aunque no lo sea.
+     *
+     * @return array{one: string, other: string, hex: ?string}|null
+     */
+    private function wristband(OrderItem $item, WristbandWheel $wheel): ?array
+    {
+        $color = $item->ticketType->wristbandColor ?? $wheel->colorFor($item->slot?->start_time === null ? null : (string) $item->slot->start_time);
+        if ($color === null) {
+            return null;
+        }
+
+        return [
+            'one' => (string) $color->name_one,
+            'other' => (string) $color->name_other,
+            'hex' => $color->hasValidHex() ? strtolower((string) $color->hex) : null,
+        ];
+    }
+
+    /**
+     * Un complemento que se ENTREGA en la puerta (la P2, D14): su cantidad, su rótulo en singular y en plural —sin rótulo,
+     * su nombre; con uno solo, ese para los dos— y su icono (el del catálogo, `ProductIcon`).
+     *
+     * @return array{key: int, quantity: int, one: string, other: string, icon: string}
+     */
+    private function handedAtGate(OrderItem $child): array
+    {
+        $type = $child->ticketType;
+        $name = (string) ($type?->tr('name') ?? '');
+        $one = trim((string) $type?->gate_label_one);
+        $other = trim((string) $type?->gate_label_other);
+
+        return [
+            'key' => (int) $child->ticket_type_id,
+            'quantity' => (int) $child->quantity,
+            'one' => $one !== '' ? $one : ($other !== '' ? $other : $name),
+            'other' => $other !== '' ? $other : ($one !== '' ? $one : $name),
+            'icon' => ProductIcon::forProduct($type?->icon, false),
+        ];
     }
 
     /**

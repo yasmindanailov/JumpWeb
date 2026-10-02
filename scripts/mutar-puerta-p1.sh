@@ -34,6 +34,10 @@ FICHEROS=(
     app/Domain/Identity/Services/GateProfile.php
     resources/views/livewire/admin/puerta/validar.blade.php
     resources/css/filament/admin/puerta.css
+    app/Domain/Booking/Services/WristbandWheel.php
+    app/Filament/Resources/WristbandColors/WristbandColorResource.php
+    app/Filament/Resources/WristbandColors/Pages/CreateWristbandColor.php
+    app/Filament/Pages/Settings.php
 )
 copia() { echo "$TMP/${1//\//__}"; }
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$(copia "$f")" "$f"; touch "$f"; done; }
@@ -258,6 +262,54 @@ mutar "ahora no · la tarjeta se queda" "$COMPONENTE" \
         \$this->forgetSurvey();" "        app(SurveyResponses::class)->postponeInPerson(\$survey, (int) \$customer->getKey());"
 mutar "ahora no · vuelve a salir el mismo día" "$RESPUESTAS" \
   "        if (Cache::has(self::postponedKey((int) \$survey->getKey(), \$userId, \$today))) {" "        if (false) {"
+
+# ── La P2: las pulseras y lo que se entrega (`specs/puerta-nueva.md` §4.4) ─────────────────────────────────────────────
+RUEDA=app/Domain/Booking/Services/WristbandWheel.php
+mutar "pulsera · la rueda no da la vuelta hacia atrás" "$RUEDA" \
+  "return \$this->colors[((\$turns % \$count) + \$count) % \$count];" "return \$this->colors[\$turns % \$count] ?? null;"
+mutar "pulsera · la rueda redondea en vez de truncar" "$RUEDA" \
+  "\$turns = (int) floor((\$time - \$this->startMinutes) / \$this->step);" "\$turns = (int) round((\$time - \$this->startMinutes) / \$this->step);"
+mutar "pulsera · el paso sin acotar" "$RUEDA" \
+  "'options' => ['min_range' => self::STEP_MIN, 'max_range' => self::STEP_MAX]," "'options' => [],"
+mutar "pulsera · el fijo no gana a la rueda" "$LECTOR" \
+  "\$color = \$item->ticketType->wristbandColor ?? \$wheel->colorFor(" "\$color = \$wheel->colorFor(\$item->slot?->start_time === null ? null : (string) \$item->slot->start_time) ?? \$item->ticketType->wristbandColor ?? \$wheel->colorFor("
+mutar "pulsera · el hex sin comprobar en Booking" "$LECTOR" \
+  "'hex' => \$color->hasValidHex() ? strtolower((string) \$color->hex) : null," "'hex' => strtolower((string) \$color->hex),"
+mutar "pulsera · el hex sin comprobar en la ficha" "$FICHA" \
+  "'hex' => preg_match('/^#[0-9a-f]{6}\$/', \$hex) === 1 ? \$hex : null," "'hex' => \$hex !== '' ? \$hex : null,"
+mutar "pulsera · la fila no separa los colores" "$FICHA" \
+  "\$fiesta ? 'f' : 'e', \$color]);" "\$fiesta ? 'f' : 'e']);"
+mutar "pulsera · la frase no va con la cifra" "$FICHA" \
+  "'frase' => \$g['cifra'] === 1 ? \$p['one'] : \$p['other']," "'frase' => \$p['other'],"
+mutar "pulsera · la tinta al revés" "$FICHA" \
+  "return (\$l + 0.05) / 0.075 >= 1.05 / (\$l + 0.05) ? 'oscura' : 'clara';" "return (\$l + 0.05) / 0.075 < 1.05 / (\$l + 0.05) ? 'oscura' : 'clara';"
+mutar "zona · un pack en la fila de su sala" "$LECTOR" \
+  "if (\$type?->type === TicketType::TYPE_PACK && \$type->gateZone !== null) {" "if (false) {"
+mutar "zona · la de salto también en una entrada" "$LECTOR" \
+  "if (\$type?->type === TicketType::TYPE_PACK && \$type->gateZone !== null) {" "if (\$type?->gateZone !== null) {"
+mutar "entrega · sigue en la línea de complementos" "$LECTOR" \
+  "                        ->reject(fn (OrderItem \$child): bool => (bool) \$child->ticketType?->handed_at_gate)
+" ""
+mutar "entrega · no se suma entre reservas" "$FICHA" \
+  "\$entregas[\$clave]['cifra'] += (int) \$h['quantity'];" "\$entregas[\$clave]['cifra'] = (int) \$h['quantity'];"
+mutar "entrega · un icono cualquiera llega a la vista" "$FICHA" \
+  "'icono' => in_array(\$e['icono'], ProductIcon::CHOICES, true) ? \$e['icono'] : ProductIcon::DEFAULT_OTHER," "'icono' => \$e['icono'],"
+mutar "entrega · sin rótulo, nada" "$LECTOR" \
+  "'one' => \$one !== '' ? \$one : (\$other !== '' ? \$other : \$name)," "'one' => \$one,"
+mutar "panel · se borra un color en uso" "app/Filament/Resources/WristbandColors/WristbandColorResource.php" \
+  "            && ! \$record->ticketTypes()->exists();" "            && true;"
+mutar "panel · un color nuevo no va al final" "app/Filament/Resources/WristbandColors/Pages/CreateWristbandColor.php" \
+  "\$data['position'] = (int) WristbandColor::query()->max('position') + 1;" "\$data['position'] = 0;"
+mutar "panel · la hora de la rueda sin validar" "app/Filament/Pages/Settings.php" \
+  "->regex('/^\$|^([01]\\d|2[0-3]):[0-5]\\d\$/')," "->nullable(),"
+mutar "vista · la loseta sin su color" "$VISTA" \
+  " style=\"background: {{ \$pulsera['hex'] }}\"" ""
+mutar "hoja · los dibujos se rellenan de negro" "$HOJA" \
+  "    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;" "    fill: currentColor;
+    stroke: currentColor;
+    stroke-width: 1.6;"
 
 echo
 echo "$muerden/$total muerden"

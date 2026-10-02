@@ -2,6 +2,8 @@
 
 namespace App\Domain\Booking\Contracts;
 
+use App\Domain\Booking\Services\WristbandWheel;
+
 /**
  * Fase 6 · subsistema A — UNA reserva vista desde la PUERTA (`docs/specs/identidad-qr-puerta.md` §4.6,
  * §4.7, §9.2 A·3): lo que el empleado necesita para resolver «¿qué le entrego?» y «¿cuánto le cobro?».
@@ -15,7 +17,8 @@ namespace App\Domain\Booking\Contracts;
 final readonly class GateReservation
 {
     /**
-     * @param  list<string>  $addons  «2 × Calcetines», ya rotulados por Booking
+     * @param  list<string>  $addons  «2 × Tarta», ya rotulados por Booking; sin los que se ENTREGAN en la puerta, que van en
+     *                                {@see $handedAtGate}
      */
     public function __construct(
         public int $orderId,
@@ -99,9 +102,9 @@ final readonly class GateReservation
          */
         public bool $waiverOffered = false,
         /**
-         * **La ZONA del producto** (`ticket_types.zone_id`), para la fila de la Puerta nueva (`specs/puerta-nueva.md` §4.4,
-         * la P1): su nombre ya traducido y su `slug`. `null` si el producto no tiene zona. Un pack lleva la suya (la sala
-         * de un cumpleaños, en la local) hasta que la P2 sepa su zona de salto.
+         * **La ZONA de la fila** de la Puerta nueva (`specs/puerta-nueva.md` §4.4): la del producto (`ticket_types.zone_id`)
+         * y, en un pack, la de su ZONA DE SALTO si la tiene (`gate_zone_id`, la P2, D13), no la de su sala. Su nombre ya
+         * traducido y su `slug`; `null` sin zona.
          */
         public ?string $zoneName = null,
         public ?string $zoneSlug = null,
@@ -116,5 +119,21 @@ final readonly class GateReservation
          * (`TicketType::onlyGuestsUnder()`): quien lee la fila decide con ella si son «niños» o «personas».
          */
         public ?int $guestAgeMax = null,
+        /**
+         * **LA PULSERA** de esta reserva (la P2, D11/D12): el color FIJO del producto o, sin él, el de la RUEDA por su hora
+         * de inicio ({@see WristbandWheel}); su frase en singular y en plural, como la escribió
+         * el parque, y su hex —`null` si el guardado no es `#rrggbb`: va en un `style` (D15)—. `null` sin color.
+         *
+         * @var array{one: string, other: string, hex: ?string}|null
+         */
+        public ?array $wristband = null,
+        /**
+         * **Lo que se ENTREGA en la puerta** de esta reserva (la P2, D14): sus complementos marcados así (los calcetines),
+         * cada uno con su cantidad, su rótulo en singular y en plural (sin rótulo, su nombre) y su icono. No van en
+         * {@see $addons}.
+         *
+         * @var list<array{key: int, quantity: int, one: string, other: string, icon: string}>
+         */
+        public array $handedAtGate = [],
     ) {}
 }

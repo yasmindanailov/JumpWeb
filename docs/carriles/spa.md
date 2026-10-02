@@ -7,8 +7,8 @@
 > **`acceso-con-codigo.md` §0** (la A4 del cajón ✅ en `main`) · `correos-rediseno.md` §0 ·
 > `fiesta-sistema-nuevo.md` §4.17–§4.19 · `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7
 > (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md` §4.11 · `celebracion-e-invitacion.md` §0 ·
-> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-02, 10:55
-> (la imagen EN `main`, 🟦 hasta verla en WhatsApp; la Puerta: la P1 entera en `main`, sigue la P2).
+> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-02, 12:15
+> (la imagen EN `main`, 🟦 hasta verla en WhatsApp; la Puerta: la P1 y la P2 en `main`, sigue la P3).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
@@ -65,9 +65,9 @@
    pantalla) EN `main` con el visto bueno del owner** (02-10; D9 → `#818`; montaje y sonda: `CARRIL-SPA.md` §8 (27); arnés
    `mutar-puerta-p1.sh` 34/34, sonda `sonda-puerta-p1.mjs` 196/196). ✅ **La P1b (la encuesta pregunta a pregunta, solo en
    verde, robusta) y la P1c (a quién y «Ahora no», `#819`) EN `main` con el visto bueno del owner** (02-10; spec §4.4: sin
-   la sonda ni el arnés entero, a petición suya). ▶ **Ahora: la P2** (las pulseras por hora como dato del panel, el color
-   fijo de `ticket_types.wristband_color`, la casilla «Se entrega en la puerta» del complemento y la zona de la fiesta: el
-   censo y §4.3 de la spec), con su «al detalle» medido ANTES del código; después la P3 (la reseña del día).
+   la sonda ni el arnés entero, a petición suya). ✅ **La P2 (las pulseras y lo que se entrega, D10–D15) EN `main` con el
+   visto bueno del owner** (02-10; arnés 20/20, sonda 254/254; spec §4.4). ▶ **Ahora: la P3** (la reseña del día por palabras
+   del panel), con su «al detalle» medido en la spec ANTES del código.
 2. ▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4; `#789`, `#800`→`#804`)**: ✅ R1a, R1b y **R1·T** en `main` (la
    R1·T revisada: §4.2.2; su sonda y el medidor de bloques, `CARRIL-SPA` §8 (26)). Del zip (6) (`#861`): el 8, «482-913 es tu
    código para entrar» sin botón; «Quién firma el descargo» en el 1 y el 3; las dos horas (90 + 30). ▶ **Tras la A4, la R1·T2** (`#809`,

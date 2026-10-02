@@ -386,7 +386,12 @@ y las franjas que creara; las CUENTAS se quedan (sus firmas van encadenadas). Si
 «mostrador», la siguiente pasada la monta con una cuenta NUEVA (`-2`, `-3`…: el owner la firmó el 02-10). La sonda,
 `scripts/sonda-puerta-p1.mjs` (necesita `socat` en `:8081` dentro del contenedor, la skill `/sonda`). De la P1b, en la
 misma carpeta y fuera de git: `medir-encuesta.mjs` (la «recarga» y la de varias, toque a toque), `medir-firmar.mjs` («Dar
-por firmado») y `fotos-encuesta.mjs` (tablet y móvil, con un toque retrasado a propósito).
+por firmado») y `fotos-encuesta.mjs` (tablet y móvil, con un toque retrasado a propósito). ⚠️ **Desde la P2 el montaje pone
+además la CONFIGURACIÓN de PlayJump como dato de la local, y `OJO=desmontar` NO la quita** (es la del parque, no un pedido):
+los ocho colores del mockup en `wristband_colors`, la rueda (`puerta.wristband_wheel_start` 11:00, paso 30), la ilimitada
+(102) gris, los packs 105 y 106 rojos con su zona de salto (Kids y Jump) y los calcetines (110) que se entregan en la puerta,
+con su rótulo. Y dos fichas más, `sofia` (cumpleaños KIDS, con su tarta) y `javier` (JUMP); los calcetines van en las seis
+fichas con `tareas` de `datos.js` (ana, mostrador, carlos, marta, tomas y david). Fotos: `fotos-pulseras.mjs`.
 
 ## 9 · La foto vieja del carril (mudada VERBATIM de `carriles/spa.md` el 2026-09-29, su techo)
 

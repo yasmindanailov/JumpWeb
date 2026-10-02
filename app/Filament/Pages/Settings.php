@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Domain\Booking\Services\AvailabilitySettings;
 use App\Domain\Booking\Services\CatalogSettings;
 use App\Domain\Booking\Services\GuestCountPolicy;
+use App\Domain\Booking\Services\WristbandWheel;
 use App\Domain\Content\Services\MapsEmbed;
 use App\Domain\Content\Services\ShellSettings;
 use App\Domain\Content\Services\SocialEmbed;
@@ -202,6 +203,9 @@ class Settings extends Page
         'puerta.lookup_rate_limit_per_hour' => 'puerta',
         'puerta.profile_ttl_minutes' => 'puerta',
         'puerta.window_days' => 'puerta',
+        // La rueda de las pulseras (`specs/puerta-nueva.md` §4.4, la P2): la hora del primer color y el paso. Vacío = sin rueda.
+        WristbandWheel::KEY_START => 'puerta',
+        WristbandWheel::KEY_STEP => 'puerta',
         // T3 de las encuestas (`specs/encuestas.md` §4.3): el plazo entre dos correos de encuesta a la misma persona.
         'surveys.cooldown_days' => 'puerta',
         // Fase 6 · waiver (`DECISIONES #142`): el MODO sustituye al interruptor de #216 —externo (el
@@ -1175,6 +1179,19 @@ class Settings extends Page
                     ->integer()
                     ->minValue(PuertaSettings::WINDOW_DAYS_MIN)
                     ->maxValue(PuertaSettings::WINDOW_DAYS_MAX),
+                // La RUEDA de las pulseras (`specs/puerta-nueva.md` §4.4, la P2; D11): la hora del primer color y el paso. Los
+                // colores, en su propia pantalla («Ajustes → Pulseras»). Sin hora, no hay rueda.
+                TextInput::make(WristbandWheel::KEY_START)
+                    ->label(__('admin.settings.puerta_wheel_start'))
+                    ->helperText(__('admin.settings.puerta_wheel_start_hint'))
+                    ->placeholder('11:00')
+                    ->regex('/^$|^([01]\d|2[0-3]):[0-5]\d$/'),
+                TextInput::make(WristbandWheel::KEY_STEP)
+                    ->label(__('admin.settings.puerta_wheel_step'))
+                    ->helperText(__('admin.settings.puerta_wheel_step_hint'))
+                    ->integer()
+                    ->minValue(WristbandWheel::STEP_MIN)
+                    ->maxValue(WristbandWheel::STEP_MAX),
                 // T3 de las encuestas (`specs/encuestas.md` §4.3): la encuesta por correo nace de la visita
                 // acreditada aquí, y este es el plazo entre dos correos a la misma persona. Vacío = 30.
                 TextInput::make(SurveySettings::KEY_COOLDOWN_DAYS)

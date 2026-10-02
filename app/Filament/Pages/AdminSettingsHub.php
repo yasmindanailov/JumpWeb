@@ -24,6 +24,7 @@ use App\Filament\Resources\Surveys\SurveyResource;
 use App\Filament\Resources\Testimonials\TestimonialResource;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Filament\Resources\Users\UserResource;
+use App\Filament\Resources\WristbandColors\WristbandColorResource;
 use App\Filament\Resources\Zones\ZoneResource;
 use BackedEnum;
 use Filament\Pages\Page;
@@ -109,6 +110,9 @@ class AdminSettingsHub extends Page
                 ['key' => 'birthday_reminders', 'class' => BirthdayReminderResource::class],
                 ['key' => 'rate_types', 'class' => RateTypeResource::class],
                 ['key' => 'zones', 'class' => ZoneResource::class],
+                // Los colores de las pulseras de la Puerta (`specs/puerta-nueva.md` §4.4, la P2): junto a las zonas y el
+                // catálogo, que es quien les pone su color fijo.
+                ['key' => 'wristbands', 'class' => WristbandColorResource::class],
             ],
             'schedule' => [
                 ['key' => 'weekly_schedule', 'class' => WeeklySchedule::class],

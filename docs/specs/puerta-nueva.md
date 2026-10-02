@@ -1,7 +1,8 @@
 # [SPEC] La Puerta nueva — el mostrador del zip (6), sobre las garantías de la de hoy
 
-> Estado: 🟦 **la P1 entera EN `main` con el visto bueno del owner** (02-10): la pantalla (P1a), la encuesta (P1b) y a quién
-> y «Ahora no» (P1c); quedan la P2 y la P3 · Última actualización: 2026-10-02 · Decisiones: `#817`, `#818`, `#819` ·
+> Estado: 🟦 **la P1 y la P2 EN `main` con el visto bueno del owner** (02-10): la pantalla (P1a), la encuesta (P1b), a quién
+> y «Ahora no» (P1c) y las pulseras y lo que se entrega (P2); queda la P3 (la reseña del día) · Última actualización:
+> 2026-10-02 · Decisiones: `#817`, `#818`, `#819` ·
 > Carril: 🧩 **SPA** (`#861`, el reparto del zip (6), `isla-y-landing-nueva.md` §4.27) · Fuente: `instancias/playjump/diseno/playjump-design-system/paginas/puerta/`
 > y la sección «La Puerta · el mostrador (27-09)» de su `readme.md` (manda el mockup, `#767`); referencia, el brief
 > COMPLETO `uploads/brief-puerta-playjump (1).md` · La pantalla de hoy y sus garantías: `identidad-qr-puerta.md`.
@@ -20,8 +21,8 @@
 - **El owner ya contestó** (`#817`): «Nueva búsqueda» se queda en el pie, los invitados en una línea sin nombres, la
   encuesta pregunta a pregunta y la reseña del día por palabras. Tandas en §4.4: cada una en `wip/…`, con su «al
   detalle» medido aquí ANTES del código, su arnés, su sonda a 1080 × 810 y el ojo del owner en la tablet.
-- **Estado (02-10)**: la P1 entera EN `main` con el visto bueno del owner: la pantalla, la encuesta y, de sus respuestas
-  (`#819`), a quién sale y «Ahora no» (§4.4; D9 → `#818`). Sigue la P2 (las pulseras), con su «al detalle» antes del código.
+- **Estado (02-10)**: la P1 y la P2 EN `main` con el visto bueno del owner (la pantalla, la encuesta, `#818`, `#819`; las
+  pulseras y lo que se entrega, D10–D15, §4.4). Sigue la P3 (la reseña del día), con su «al detalle» medido ANTES del código.
 - No toca el `CRITICAL_RE` (medido). Sí RGPD (lo que ve la cola): `INVARIANTES.md` §3 antes de la P1.
 
 ## 1. Contexto y problema (medido el 2026-10-02)
@@ -406,6 +407,71 @@ caducidad (dos seguros de lo mismo). Medido en la local: con «Tu primera visita
 no» y la vuelta del mismo día; la prueba visual la hizo él) y el arnés ENTERO (los 34 mutantes de la P1a se midieron
 sobre su código; los de la P1b y la P1c, por tandas aquí).
 
+#### La P2 al detalle: las pulseras y lo que se entrega (medido el 02-10, antes del código; §4.3·1–3)
+
+**Lo medido.**
+- **El mockup** (`datos.js`, `ficha.jsx` y el readme, 27-09 y 29-09): el color sale de la HORA de inicio, en una rueda de
+  seis cada media hora (17:00 naranja, 17:30 lila… 21:30 rosa; 12:00 amarilla; 11:00 y 11:30 «por confirmar»); la ilimitada,
+  gris; un cumpleaños, rojo, sea Kids o Jump. Una fila por ZONA, COLOR y hora (la clave de `ficha.jsx`: producto + color +
+  inicio): «2 KIDS pulseras lilas», con la cifra en una loseta de 60 px DEL COLOR (la cifra en tinta o en blanco, la que más
+  contraste dé: la luminancia de WCAG). Los calcetines, como tarea tras las pulseras: «2» en gris, el dibujo y «pares de
+  calcetines». Sin tiras a la derecha (se quitaron: repetían la cifra).
+- **El catálogo**: `ticket_types.wristband_color` es texto libre que NINGÚN código lee, y el `ProductionSeeder` lo rellena
+  por ZONA («Naranja» Jump, «Verde» Kids): el modelo viejo que el mockup sustituye. Reaprovecharlo pondría en producción un
+  color fijo a todo Jump. En la local está vacío. Los iconos de producto son una lista curada (`ProductIcon`, con `socks`).
+- **La zona de un cumpleaños**: los packs viven en la zona de su SALA (`cumpleanos`) con cupo propio (`#139`); el aforo no
+  sabe dónde saltan, y la «familia por edad» (`guest_age_family`: 4–7 y 8+) es de precios, no de zonas.
+- **Dónde se guarda**: los ajustes guardan valores sueltos (`Settings`); las colecciones ordenables son tablas con su
+  pantalla en «Ajustes» (zonas, el bar, las normas). Booking puede leer Platform (`ModuleBoundariesTest::ALLOWED`).
+- **Lo que viaja**: `GateReservation` lleva los complementos ya rotulados («2 × Calcetines»), sin su producto: la tarea de
+  los calcetines necesita la cantidad, el rótulo y el icono, por separado.
+
+**Lo que se decide aquí** (contra los objetivos: data-driven, white-label, el mockup manda):
+- **D10 · Los colores, una lista del panel** (tabla `wristband_colors`, «Ajustes → Pulseras»): cada color con su frase en
+  singular y en plural tal como la lee el empleado («pulsera lila» / «pulseras lilas»: la palabra «pulsera» y su
+  concordancia son del parque, no del producto, §4.4·e) y su hex; ordenable y con «en la rueda». Un color usado por un
+  producto no se borra.
+- **D11 · La rueda**: los colores «en la rueda», en su orden, desde la hora del PRIMERO y cada `N` minutos (dos ajustes de
+  «Ajustes → Avanzado → Puerta»; sin hora, no hay rueda). Es PERIÓDICA hacia los dos lados —la hora solo ancla qué color va
+  con qué hora— y una hora a mitad de paso toma la del paso en curso (17:15 → 17:00). Comprobada contra toda la tabla `HORAS`.
+- **D12 · El color fijo gana a la rueda**: `ticket_types.wristband_color_id` (nuevo, en la sección «En la puerta» del
+  producto). La columna vieja se queda y nadie la lee (`MODELO-DATOS.md` lo dice).
+- **D13 · La zona de un cumpleaños**: `ticket_types.gate_zone_id` (nuevo, solo packs): dónde saltan los invitados; vacío,
+  la zona del pack (lo de la P1).
+- **D14 · Lo que se entrega en la puerta**: `ticket_types.handed_at_gate` y su rótulo en singular y en plural
+  (`gate_label_one` / `gate_label_other`; vacíos, el nombre del complemento), con el icono del producto. La ficha los suma
+  por complemento en las reservas de HOY y los saca de la línea de complementos.
+- **D15 · Lo resuelve Booking**: el lector de la Puerta da a cada reserva su pulsera (frase y hex) y su zona de puerta, y
+  los complementos que se entregan, aparte; la ficha solo agrupa y pinta. El hex se valida al guardar y otra vez al pintar
+  (va en un `style`): uno que no sea `#rrggbb` es una loseta neutra.
+
+**Lo que cambia**: una migración (la tabla y las cinco columnas), `WristbandColor` y `WristbandWheel` en Booking,
+`GateReservation` y su lector, la fila de `GateProfile`, `FichaPuerta` (la clave zona + color + hora, la frase, la tinta de la
+cifra y la tarea de lo que se entrega), la vista y su hoja, la pantalla «Pulseras», la sección «En la puerta» del catálogo
+y los dos ajustes. **Lo que no**: el orden de las filas (primero lo de solo menores, como en la P1), el resto de la ficha, el
+dinero, el veredicto y la encuesta.
+
+**Pruebas, cada guarda con su mutación**: la rueda (el paso, el ancla, hacia atrás, a mitad de paso, sin rueda), el fijo
+que gana, la zona del pack, los complementos que se entregan (sumados, fuera de la línea, su rótulo y su respaldo), la clave
+de la fila, la tinta, el hex que no vale, la pantalla de colores (orden, «en la rueda», no borrar uno en uso), la sección del
+producto por tipo y los dos ajustes. El presupuesto de consultas de la ficha, medido. La sonda, con una rueda montada en la
+local.
+
+**P2 · las pulseras y lo que se entrega, HECHA y EN `main`** (02-10, con el visto bueno del owner en vivo): la tabla `wristband_colors` y
+las cinco columnas (una migración); `WristbandColor` y `WristbandWheel` en Booking; el lector da a cada reserva su pulsera,
+su zona de puerta y lo que se entrega (`GateReservation::$wristband`, `$handedAtGate`); `FichaPuerta` agrupa por zona, color
+y hora, dice la frase según la cifra, pone la cifra en tinta o en blanco (`tinta()`) y suma lo que se entrega; la vista y su
+hoja (con las reglas de trazo de los dibujos del catálogo: sin ellas, el de los calcetines salía relleno de negro); «Ajustes →
+Pulseras» (con la rueda tal como la verá la Puerta, arriba de la lista); la sección «En la puerta» del producto; los dos
+ajustes. La P2 suma **tres consultas fijas** a la ficha (medido: los colores de la rueda y un lote para el fijo y otro para
+la zona de salto), nunca una por reserva. Pruebas: `WristbandWheelTest` (toda la tabla `HORAS` del mockup), `GateWristbandsTest`,
+`GatePanelDataTest`, `FichaPuertaTest` +4 y `GateKioskTest` +1; `AdminNavigationTest` cuenta ya 29 tarjetas. Destapado al
+probarla: el alias de morfo del modelo nuevo (`enforceMorphMap`) faltaba y el rastro de «Pulseras» fallaba EN SILENCIO (el
+`AuditLogger` no frena el panel). Arnés: 20 mutantes, 20/20. Sonda 254/254 en los cuatro tamaños con la configuración de
+PlayJump montada en la local (`ojo-puerta.php`: sus colores, la rueda desde las 11:00, la ilimitada gris, los packs rojos con
+su zona y los calcetines) y dos cumpleaños nuevos, Sofía (KIDS) y Javier (JUMP); su `escanear()` espera ahora a que la ficha
+de antes desaparezca (una respuesta lenta le dejó leer la de Jorge como la de Irene).
+
 ## 5. Impacto en invariantes
 
 - **RGPD** (`INVARIANTES.md` §3, lo que ve la cola): más estricto, con «Resultado para» enmascarado; sin apellidos de menores
@@ -439,3 +505,6 @@ sobre su código; los de la P1b y la P1c, por tandas aquí).
   los dos fallos (§4.4, «P1b robusta»); a quién sale y qué hace «Ahora no», a su decisión.
 - 2026-10-02 · el owner contesta las dos (`#819`: «a quién» por encuesta; «Ahora no» vuelve en la próxima visita) y prueba
   la P1c en vivo: «la revisión todo ok». La P1 entera, a `main`. Sigue la P2.
+- 2026-10-02 · la P2 (las pulseras y lo que se entrega), medida (§4.4, «La P2 al detalle», D10–D15), hecha y en vivo para el
+  owner, en `wip/puerta-p2`.
+- 2026-10-02 · el owner la ve en vivo: «Buen trabajo. visto bueno. continua.» La P2, a `main`. Sigue la P3.

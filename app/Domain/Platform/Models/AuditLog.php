@@ -93,6 +93,9 @@ class AuditLog extends Model
         'catalog.promotion_updated',
         'catalog.update_blocked',
         'catalog.updated',
+        // Los colores de las pulseras de la Puerta (`specs/puerta-nueva.md` §4.4, la P2).
+        'catalog.wristband_deleted',
+        'catalog.wristband_saved',
 
         // ── Contenido / CMS ────────────────────────────────────────────────────────────────
         'content.attraction_created',

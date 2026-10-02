@@ -259,6 +259,8 @@ class TicketType extends Model
         // señal se devuelve al cancelar en plazo. Datos de la instalación, no política del producto.
         'reservation_note' => 'array',
         'deposit_refundable_in_time' => 'boolean',
+        // La Puerta (`specs/puerta-nueva.md` §4.4, la P2; D14): el complemento que se ENTREGA allí, como los calcetines.
+        'handed_at_gate' => 'boolean',
         'featured' => 'boolean',
         'is_sellable' => 'boolean',
         'is_active' => 'boolean',
@@ -274,6 +276,28 @@ class TicketType extends Model
     public function zone(): BelongsTo
     {
         return $this->belongsTo(Zone::class);
+    }
+
+    /**
+     * El color de pulsera FIJO del producto (`specs/puerta-nueva.md` §4.4, la P2; D12): gana a la rueda de la hora. La
+     * ilimitada, un cumpleaños. ⚠️ No es `wristband_color`, la columna vieja de texto libre que nadie lee.
+     *
+     * @return BelongsTo<WristbandColor, $this>
+     */
+    public function wristbandColor(): BelongsTo
+    {
+        return $this->belongsTo(WristbandColor::class);
+    }
+
+    /**
+     * Dónde SALTAN los invitados de un pack (D13): la Puerta pinta sus pulseras en la fila de esa zona. Vacío, la zona del
+     * pack (la de su sala). Solo lo leen los packs.
+     *
+     * @return BelongsTo<Zone, $this>
+     */
+    public function gateZone(): BelongsTo
+    {
+        return $this->belongsTo(Zone::class, 'gate_zone_id');
     }
 
     /**

@@ -139,6 +139,10 @@ final class GateProfile
             // ¿Solo menores? Con tope por debajo de la mayoría de edad (la regla de «Antes de venir», `#825`): la fila dice
             // «2 niños» y no «2 personas», y la tarea de añadir a los hijos se apoya en ella.
             'minors_only' => $r->guestAgeMax !== null && $r->guestAgeMax < Dependent::ADULT_AGE,
+            // La P2: la pulsera (su frase y su hex, la fija o la de la rueda) y lo que se entrega en la puerta, ya
+            // resueltos por Booking. La ficha solo agrupa y pinta.
+            'wristband' => $r->wristband,
+            'handed_at_gate' => $r->handedAtGate,
         ];
     }
 

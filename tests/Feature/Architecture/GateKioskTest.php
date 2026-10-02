@@ -148,6 +148,18 @@ class GateKioskTest extends TestCase
         $this->assertStringNotContainsString('wire:model="surveyAnswers', $vista, 'Lo contestado viaja con el toque, no en un modelo a medias.');
     }
 
+    /**
+     * ▶ **La P2**: los dibujos del catálogo (`ProductIcon`, en «lo que se entrega») con su TRAZO —sus reglas son de la hoja
+     * de la web, que el panel no carga: sin estas, un dibujo de trazo sale como una mancha negra— y la cifra en blanco
+     * sobre un color de pulsera oscuro (`FichaPuerta::tinta`).
+     */
+    public function test_p2_catalogue_drawings_are_strokes_and_the_figure_can_be_white(): void
+    {
+        $this->declara('.ppu .icon svg :is(path, rect, line, polyline, circle)', 'fill: none;', 'un dibujo de trazo, relleno de negro');
+        $this->declara('.ppu .icon svg :is(path, rect, line, polyline, circle)', 'stroke: currentColor;');
+        $this->declara('.ppu-cant.clara', 'color: var(--color-white);');
+    }
+
     /** ▶ **La doble lectura** del lector (el mockup): el mismo código en menos de 3 s se corta ANTES que el `wire:submit`. */
     public function test_a_double_read_is_cut_before_livewire_sees_it(): void
     {

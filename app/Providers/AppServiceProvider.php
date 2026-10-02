@@ -23,6 +23,7 @@ use App\Domain\Booking\Models\SlotTemplate;
 use App\Domain\Booking\Models\SpecialDate;
 use App\Domain\Booking\Models\Ticket;
 use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\WristbandColor;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Content\Contracts\SocialProof;
 use App\Domain\Content\Models\Attraction;
@@ -404,6 +405,10 @@ class AppServiceProvider extends ServiceProvider
             'user' => User::class,
             'user_identity' => UserIdentity::class,
             'waiver_signature' => WaiverSignature::class,
+            // Los colores de las pulseras de la Puerta (`specs/puerta-nueva.md` §4.4, la P2): el rastro de «Ajustes → Pulseras»
+            // guarda `wristband_color`. Sin alias, el `enforceMorphMap` hacía fallar el rastro EN SILENCIO (el `AuditLogger`
+            // no frena la acción del panel): lo destapó su prueba.
+            'wristband_color' => WristbandColor::class,
             'zone' => Zone::class,
         ]);
 

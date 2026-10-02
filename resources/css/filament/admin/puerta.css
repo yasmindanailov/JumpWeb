@@ -534,6 +534,11 @@
     color: var(--gray-950);
 }
 
+/* La cifra sobre el color de la pulsera (la P2): en blanco cuando el color es oscuro; si no, la tinta (`FichaPuerta::tinta`). */
+.ppu-cant.clara {
+    color: var(--color-white);
+}
+
 .ppu-tt {
     font: 600 20px/1.3 var(--ppu-letra);
     color: var(--ppu-tinta);
@@ -581,7 +586,70 @@
 }
 
 .ppu-ent__t {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 10px;
     padding-top: 2px;
+}
+
+/* «pulseras lilas», tras la zona (el mockup: la frase en su tinta, más pequeña que la zona). */
+.ppu-pulsera {
+    font: 600 19px/1.2 var(--ppu-letra);
+    color: var(--ppu-texto);
+}
+
+/* Lo que se entrega en la puerta (la P2): la cifra en gris, el dibujo del producto y su rótulo, como una fila más. */
+.ppu-entrega__t {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px 12px;
+    font: 600 19px/1.2 var(--ppu-letra);
+    color: var(--ppu-texto);
+}
+
+.ppu-entrega__ico {
+    flex: none;
+    color: var(--ppu-tinta);
+}
+
+/* Los dibujos del catálogo (`ProductIcon`): sus trazos los pone la hoja de la WEB, que el panel no carga. Aquí, lo justo y
+   quietos —sin las animaciones de la web—; sin esto, un dibujo de trazo sale como una mancha negra. */
+.ppu .icon {
+    display: inline-grid;
+    place-items: center;
+    line-height: 0;
+}
+
+.ppu .icon svg {
+    display: block;
+    overflow: visible;
+}
+
+.ppu .icon svg :is(path, rect, line, polyline, circle) {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.ppu .icon svg :is(.filled, .accent-fill, .grip) {
+    fill: currentColor;
+    stroke: none;
+}
+
+.ppu .icon svg .thin {
+    stroke-width: 0.9;
+}
+
+.ppu .icon svg .bold {
+    stroke-width: 2.2;
+}
+
+.ppu .icon svg .dashed {
+    stroke-dasharray: 1.4 1.8;
 }
 
 .ppu-zona {

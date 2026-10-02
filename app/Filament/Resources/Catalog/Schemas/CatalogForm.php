@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Catalog\Schemas;
 
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\WristbandColor;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\ProductIcon;
 use App\Filament\Resources\Catalog\CatalogResource;
@@ -56,6 +57,7 @@ class CatalogForm
                 self::operationalSection(),
                 self::occupancySection(),
                 self::packSection(),
+                self::gateSection(),
                 self::priceSection(),
                 self::priceTiersSection(),
             ]);
@@ -526,6 +528,61 @@ class CatalogForm
         }
 
         return $options;
+    }
+
+    /**
+     * **EN LA PUERTA** (`specs/puerta-nueva.md` §4.4, la P2): lo que el empleado necesita de este producto en el mostrador.
+     *  - Entradas y packs: su pulsera FIJA, que gana a la rueda de la hora (D12; la ilimitada, un cumpleaños). Vacío, la
+     *    rueda.
+     *  - Packs: dónde SALTAN los invitados (D13), para que su fila diga «10 KIDS» y no la sala. Vacío, la zona del pack.
+     *  - Complementos: si se ENTREGA en la puerta (D14; los calcetines) y su rótulo allí, en singular y en plural.
+     */
+    private static function gateSection(): Section
+    {
+        $type = static fn (Get $get): string => (string) $get('type');
+
+        return Section::make(__('admin.catalog.section_gate'))
+            ->description(__('admin.catalog.section_gate_hint'))
+            ->schema([
+                Grid::make(['default' => 1, 'sm' => 2])->schema([
+                    Select::make('wristband_color_id')
+                        ->label(__('admin.catalog.field_wristband_color'))
+                        ->helperText(__('admin.catalog.wristband_color_hint'))
+                        ->options(static fn (): array => WristbandColor::query()->orderBy('position')->orderBy('id')->get()
+                            ->mapWithKeys(static fn (WristbandColor $color): array => [$color->id => $color->name_one])
+                            ->all())
+                        ->placeholder(__('admin.catalog.wristband_color_placeholder'))
+                        ->native(false)
+                        ->visible(static fn (Get $get): bool => $type($get) !== TicketType::TYPE_ADDON),
+                    Select::make('gate_zone_id')
+                        ->label(__('admin.catalog.field_gate_zone'))
+                        ->helperText(__('admin.catalog.gate_zone_hint'))
+                        ->options(static fn (): array => Zone::orderBy('position')->get()
+                            ->mapWithKeys(static fn (Zone $zone): array => [$zone->id => (string) $zone->tr('name')])
+                            ->all())
+                        ->placeholder(__('admin.catalog.gate_zone_placeholder'))
+                        ->native(false)
+                        ->visible(static fn (Get $get): bool => $type($get) === TicketType::TYPE_PACK),
+                ]),
+                Toggle::make('handed_at_gate')
+                    ->label(__('admin.catalog.field_handed_at_gate'))
+                    ->helperText(__('admin.catalog.handed_at_gate_hint'))
+                    ->default(false)
+                    ->live()
+                    ->visible(static fn (Get $get): bool => $type($get) === TicketType::TYPE_ADDON),
+                Grid::make(['default' => 1, 'sm' => 2])
+                    ->visible(static fn (Get $get): bool => $type($get) === TicketType::TYPE_ADDON && (bool) $get('handed_at_gate'))
+                    ->schema([
+                        TextInput::make('gate_label_one')
+                            ->label(__('admin.catalog.field_gate_label_one'))
+                            ->helperText(__('admin.catalog.gate_label_one_hint'))
+                            ->maxLength(60),
+                        TextInput::make('gate_label_other')
+                            ->label(__('admin.catalog.field_gate_label_other'))
+                            ->helperText(__('admin.catalog.gate_label_other_hint'))
+                            ->maxLength(60),
+                    ]),
+            ]);
     }
 
     private static function packSection(): Section

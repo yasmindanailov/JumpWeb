@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin\Puerta;
 
 use App\Domain\Booking\Services\Balance;
+use App\Domain\Booking\Services\ProductIcon;
 use App\Domain\Identity\Models\Dependent;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\Money;
@@ -37,7 +38,8 @@ final class FichaPuerta
      * @param  array<string, mixed>  $profile
      * @return array{
      *     descargo: string,
-     *     filas: list<array{zona: string, cifra: int, fiesta: bool, reservas: list<array{codigo: string, linea: string, quien: ?string, hora: string, pagado: ?string, complementos: ?string, fiesta: bool, dinero: ?array{clase: string, texto: string}}>}>,
+     *     filas: list<array{zona: string, cifra: int, fiesta: bool, pulsera: ?array{frase: string, hex: ?string, tinta: string}, reservas: list<array{codigo: string, linea: string, quien: ?string, hora: string, pagado: ?string, complementos: ?string, fiesta: bool, dinero: ?array{clase: string, texto: string}}>}>,
+     *     entregas: list<array{clave: string, cifra: int, frase: string, icono: string}>,
      *     sin_reserva: bool,
      *     otros_dias: list<string>,
      *     firmar: list<string>,
@@ -54,6 +56,7 @@ final class FichaPuerta
         return [
             'descargo' => self::descargo($profile),
             'filas' => self::filas($today, $now),
+            'entregas' => self::entregas($today),
             'sin_reserva' => $today === [],
             'otros_dias' => $today === [] ? array_map(self::otroDia(...), array_values(array_filter((array) ($profile['window'] ?? []), 'is_array'))) : [],
             'firmar' => self::firmar($profile, $today),
@@ -77,12 +80,14 @@ final class FichaPuerta
     }
 
     /**
-     * Una fila por ZONA y HORA de inicio —lo que se coge del cajón—, con la cifra sumada; un cumpleaños, aparte aunque
-     * coincida en hora (lleva otro color en la P2). Primero las de solo menores (el mockup: «Kids primero, siempre»),
-     * después por hora y por zona.
+     * Una fila por ZONA, COLOR y HORA de inicio —lo que se coge del cajón: la clave del mockup, producto + color + inicio—,
+     * con la cifra sumada; un cumpleaños, aparte aunque coincida en hora. Desde la P2, la PULSERA de la fila (la que Booking
+     * resolvió: la fija del producto o la de la rueda) con su frase según la cifra («pulsera lila» / «pulseras lilas») y la
+     * tinta de la cifra sobre su color. Primero las de solo menores (el mockup: «Kids primero, siempre»), después por hora
+     * y por zona.
      *
      * @param  list<array<string, mixed>>  $today
-     * @return list<array{zona: string, cifra: int, fiesta: bool, reservas: list<array<string, mixed>>}>
+     * @return list<array{zona: string, cifra: int, fiesta: bool, pulsera: ?array{frase: string, hex: ?string, tinta: string}, reservas: list<array<string, mixed>>}>
      */
     private static function filas(array $today, CarbonInterface $now): array
     {
@@ -90,12 +95,17 @@ final class FichaPuerta
         foreach ($today as $r) {
             $fiesta = (bool) ($r['is_party'] ?? false);
             $zona = (string) ($r['zone_name'] ?? '') !== '' ? (string) $r['zone_name'] : (string) ($r['product'] ?? '');
-            $clave = implode('|', [(string) ($r['zone_slug'] ?? $zona), (string) ($r['start_time'] ?? ''), $fiesta ? 'f' : 'e']);
+            $pulsera = self::pulseraDe($r);
+            $color = $pulsera === null ? '' : $pulsera['other'].'#'.($pulsera['hex'] ?? '');
+            $clave = implode('|', [(string) ($r['zone_slug'] ?? $zona), (string) ($r['start_time'] ?? ''), $fiesta ? 'f' : 'e', $color]);
 
             $grupos[$clave] ??= [
                 'zona' => $zona,
                 'cifra' => 0,
                 'fiesta' => $fiesta,
+                'pulsera' => $pulsera,
+                // A igualdad, el orden en que llegan (la ordenación de PHP 8 es estable): la de una hora y la ilimitada de la
+                // misma zona y hora, como vengan; nunca por el nombre de su color.
                 'orden' => [(bool) ($r['minors_only'] ?? false) ? 0 : 1, (string) ($r['start_time'] ?? '99:99'), $zona],
                 'reservas' => [],
             ];
@@ -107,9 +117,94 @@ final class FichaPuerta
 
         return array_values(array_map(static function (array $g): array {
             unset($g['orden']);
+            $p = $g['pulsera'];
+            $g['pulsera'] = $p === null ? null : [
+                'frase' => $g['cifra'] === 1 ? $p['one'] : $p['other'],
+                'hex' => $p['hex'],
+                'tinta' => $p['hex'] === null ? 'oscura' : self::tinta($p['hex']),
+            ];
 
             return $g;
         }, $grupos));
+    }
+
+    /**
+     * La pulsera de una reserva tal como viaja en la ficha, leída con cuidado (la ficha viaja en el snapshot: una clave
+     * puede faltar en una abierta antes de un despliegue). El hex, otra vez comprobado: va en un `style` (D15).
+     *
+     * @return array{one: string, other: string, hex: ?string}|null
+     */
+    private static function pulseraDe(array $r): ?array
+    {
+        $w = $r['wristband'] ?? null;
+        if (! is_array($w)) {
+            return null;
+        }
+        $one = trim((string) ($w['one'] ?? ''));
+        $other = trim((string) ($w['other'] ?? ''));
+        if ($one === '' && $other === '') {
+            return null;
+        }
+        $hex = (string) ($w['hex'] ?? '');
+
+        return [
+            'one' => $one !== '' ? $one : $other,
+            'other' => $other !== '' ? $other : $one,
+            'hex' => preg_match('/^#[0-9a-f]{6}$/', $hex) === 1 ? $hex : null,
+        ];
+    }
+
+    /**
+     * **La cifra sobre el color de la pulsera**, en tinta o en blanco: la que más contraste dé (el mockup, `ppuTinta`: la
+     * luminancia relativa de WCAG contra una tinta de 0,025 y el blanco). `oscura` = la tinta del panel; `clara` = blanco.
+     */
+    public static function tinta(string $hex): string
+    {
+        $canal = static function (int $offset) use ($hex): float {
+            $v = hexdec(substr($hex, $offset, 2)) / 255;
+
+            return $v <= 0.03928 ? $v / 12.92 : (($v + 0.055) / 1.055) ** 2.4;
+        };
+        $l = 0.2126 * $canal(1) + 0.7152 * $canal(3) + 0.0722 * $canal(5);
+
+        return ($l + 0.05) / 0.075 >= 1.05 / ($l + 0.05) ? 'oscura' : 'clara';
+    }
+
+    /**
+     * **Lo que se ENTREGA en la puerta** (la P2, D14; el mockup: «2 pares de calcetines», tras las pulseras): por complemento,
+     * las unidades de TODAS las reservas de hoy, con su rótulo según la cifra y su icono, en el orden en que aparecen.
+     *
+     * @param  list<array<string, mixed>>  $today
+     * @return list<array{clave: string, cifra: int, frase: string, icono: string}>
+     */
+    private static function entregas(array $today): array
+    {
+        $entregas = [];
+        foreach ($today as $r) {
+            foreach ((array) ($r['handed_at_gate'] ?? []) as $h) {
+                if (! is_array($h) || (int) ($h['quantity'] ?? 0) <= 0) {
+                    continue;
+                }
+                $clave = (string) ($h['key'] ?? '');
+                $entregas[$clave] ??= [
+                    'clave' => $clave,
+                    'cifra' => 0,
+                    'one' => (string) ($h['one'] ?? ''),
+                    'other' => (string) ($h['other'] ?? ''),
+                    'icono' => (string) ($h['icon'] ?? ''),
+                ];
+                $entregas[$clave]['cifra'] += (int) $h['quantity'];
+            }
+        }
+
+        return array_values(array_map(static fn (array $e): array => [
+            'clave' => $e['clave'],
+            'cifra' => $e['cifra'],
+            'frase' => $e['cifra'] === 1 ? $e['one'] : $e['other'],
+            // El icono decide qué componente pinta la vista y la ficha viaja en el snapshot (el navegador puede devolverla
+            // cambiada): solo uno de la lista curada.
+            'icono' => in_array($e['icono'], ProductIcon::CHOICES, true) ? $e['icono'] : ProductIcon::DEFAULT_OTHER,
+        ], $entregas));
     }
 
     /** @return array{codigo: string, linea: string, quien: ?string, hora: string, pagado: ?string, complementos: ?string, fiesta: bool, dinero: ?array{clase: string, texto: string}} */
