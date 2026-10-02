@@ -5,6 +5,7 @@ namespace Tests\Feature\Orders;
 use App\Domain\Booking\Models\AddonChoiceGroup;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\Price;
 use App\Domain\Booking\Models\ProductAddon;
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
@@ -101,6 +102,39 @@ class ChoiceGroupsParkTest extends TestCase
         app(PostFormAddons::class)->reconcile($item->fresh(['ticketType.addons', 'order', 'slot', 'children']), [$this->pizza->id => 1], 'signed_link');
         $this->assertSame([], ReservationSlip::make($order->fresh(), $item->fresh())->unansweredChoices());
         $this->assertStringNotContainsString('data-sin-elegir', $this->actingAs($staff, 'admin')->get('/admin/orders/'.$order->code)->getContent());
+    }
+
+    /**
+     * La hoja A4 del MES (el owner, 02-10: «revisa que en la hoja del MES salga la merienda elegida y la tarta»): la fila de
+     * la fiesta lleva la merienda ELEGIDA del grupo y la tarta pedida de su bloque, cada una en su columna — en el resumen y
+     * en el PDF que se imprime.
+     */
+    public function test_the_month_sheet_prints_the_chosen_snack_and_the_cake(): void
+    {
+        $this->merienda(required: true);
+        $tarta = TicketType::create([
+            'name' => ['es' => 'Tarta de chocolate'], 'type' => TicketType::TYPE_ADDON,
+            'seats_per_unit' => 1, 'is_sellable' => true, 'is_active' => true, 'position' => 21,
+        ]);
+        Price::create(['priceable_type' => $tarta->getMorphClass(), 'priceable_id' => $tarta->id,
+            'rate_type_id' => RateType::where('key', RateType::KEY_NORMAL)->value('id'), 'amount_cents' => 2500, 'currency' => 'EUR']);
+        $this->pack->configurableAddons()->attach($tarta->id, [
+            'position' => 2, 'quantity_mode' => ProductAddon::MODE_FIXED, 'stage' => ProductAddon::STAGE_POSTFORM,
+            'postform_block' => ProductAddon::BLOCK_CAKE, 'max_qty' => 3,
+        ]);
+        $this->pack->refresh();
+        $item = $this->party();
+        app(PostFormAddons::class)->reconcile($item, [$this->pizza->id => 1, $tarta->id => 1], 'signed_link');
+
+        $mes = DailyReservationsSummary::for((string) $item->slot?->date?->toDateString(), DailyReservationsSummary::TYPE_ALL, DailyReservationsSummary::PERIOD_MONTH);
+        $fila = collect($mes->rows())->sole();
+        $this->assertSame('Pizza', $fila['snack']);
+        $this->assertSame('Tarta de chocolate', $fila['cake']);
+
+        // Y en el PDF: las dos, en la MISMA fila de la tabla.
+        $html = view('pdf.daily-summary', ['summary' => $mes])->render();
+        $this->assertSame(1, preg_match('#<tr[^>]*>(?:(?!</tr>).)*Pizza(?:(?!</tr>).)*</tr>#s', $html, $tr), 'la fila de la fiesta');
+        $this->assertStringContainsString('Tarta de chocolate', $tr[0]);
     }
 
     // ── Fixture ─────────────────────────────────────────────────────────────────────────────────
