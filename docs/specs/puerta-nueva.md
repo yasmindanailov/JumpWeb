@@ -1,6 +1,6 @@
 # [SPEC] La Puerta nueva — el mostrador del zip (6), sobre las garantías de la de hoy
 
-> Estado: 🟦 **la P1a (la pantalla) HECHA en `wip/puerta-p1`, al ojo del owner**; quedan la P1b (la encuesta), la P2 y la
+> Estado: 🟦 **la P1a (la pantalla) EN `main` con el visto bueno del owner** (02-10); quedan la P1b (la encuesta), la P2 y la
 > P3 · Última actualización: 2026-10-02 · Decisiones: `#817`, `#818` · Carril: 🧩 **SPA** (`#861`, el reparto del
 > zip (6), `isla-y-landing-nueva.md` §4.27) · Fuente: `instancias/playjump/diseno/playjump-design-system/paginas/puerta/`
 > y la sección «La Puerta · el mostrador (27-09)» de su `readme.md` (manda el mockup, `#767`); referencia, el brief
@@ -20,8 +20,8 @@
 - **El owner ya contestó** (`#817`): «Nueva búsqueda» se queda en el pie, los invitados en una línea sin nombres, la
   encuesta pregunta a pregunta y la reseña del día por palabras. Tandas en §4.4: cada una en `wip/…`, con su «al
   detalle» medido aquí ANTES del código, su arnés, su sonda a 1080 × 810 y el ojo del owner en la tablet.
-- **Estado (02-10)**: la P1a (la pantalla) hecha en `wip/puerta-p1`, al ojo del owner; D9 → `#818`. Su montaje y su sonda,
-  en §4.4 («P1a · la pantalla, HECHA»).
+- **Estado (02-10)**: la P1a (la pantalla) EN `main` con el visto bueno del owner; D9 → `#818`. Su montaje y su sonda, en
+  §4.4 («P1a · la pantalla, HECHA»). Sigue la P1b (la encuesta pregunta a pregunta y solo en verde).
 - No toca el `CRITICAL_RE` (medido). Sí RGPD (lo que ve la cola): `INVARIANTES.md` §3 antes de la P1.
 
 ## 1. Contexto y problema (medido el 2026-10-02)
@@ -270,7 +270,7 @@ tras buscar, tocar y volver, y ningún correo ni teléfono enteros en el HTML.
 - **e · La palabra «pulseras»** es de PlayJump. ▶ En la P1 la fila dice la cifra y la zona («2 KIDS»); el rótulo de la
   pulsera («pulseras lilas») llega en la P2 con la rueda, y lo escribe el parque.
 
-**P1a · la pantalla, HECHA** (02-10, en `wip/puerta-p1`; al ojo del owner en la tablet; D9 → `#818`). La P1 se parte en
+**P1a · la pantalla, HECHA** (02-10; EN `main` con el visto bueno del owner, «visto bueno. continuamos.»; D9 → `#818`). La P1 se parte en
 dos: la **P1a**, la pantalla, y la **P1b**, la encuesta pregunta a pregunta y solo en verde (`#817`).
 - **Servidor**: `GateReservation` gana la zona, la duración, la hora de inicio, si es un pack y el tope de edad
   (`guestAgeMax`: la mayoría de edad la decide Identity, `minors_only`), con UN lote más (`ticketType.zone`; el presupuesto de
@@ -322,4 +322,4 @@ dos: la **P1a**, la pantalla, y la **P1b**, la encuesta pregunta a pregunta y so
 - 2026-10-02 · el «al detalle» de la P1, escrito y MEDIDO (§4.4), con D7 (el aviso del anonimato se queda) y D8 (los
   menores invitados fuera de una fiesta, con su nombre). Sigue el código de la P1, en `wip/puerta-p1`.
 - 2026-10-02 · la P1a, hecha (§4.4) y en vivo para el owner; contesta D9 (`#818`: un descargo de una versión anterior
-  deja pasar). Espera su visto bueno para ir a `main`; después, la P1b.
+  deja pasar) y le da el visto bueno («visto bueno. continuamos.»): a `main`. Sigue la P1b.

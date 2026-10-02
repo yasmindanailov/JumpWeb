@@ -61,10 +61,10 @@
    `main` con el visto bueno; la imagen, a la espera de verse en WhatsApp (la Foto). ▶ **Ahora: la Puerta**, spec nueva
    **`puerta-nueva.md`**: el censo del mockup contra la de hoy, MEDIDO (02-10), y las cuatro respuestas del owner (`#817`:
    «Nueva búsqueda» se queda en el pie, los invitados en una línea, la encuesta pregunta a pregunta, la reseña del día por
-   palabras «profesional y robusto»). Cambia la VISTA de `ValidarRegistro`; sus garantías se quedan. ▶ 🟦 **La P1a (la
-   pantalla) HECHA en `wip/puerta-p1`, al ojo del owner** (en vivo en la local: `CARRIL-SPA.md` §8 (27); D9 → `#818`):
-   suite 6739, arnés `mutar-puerta-p1.sh` 34/34, sonda `sonda-puerta-p1.mjs` 196/196. Con su visto bueno, a `main`; después
-   la **P1b** (la encuesta pregunta a pregunta y solo en verde), la P2 (pulseras) y la P3 (reseña).
+   palabras «profesional y robusto»). Cambia la VISTA de `ValidarRegistro`; sus garantías se quedan. ✅ **La P1a (la
+   pantalla) EN `main` con el visto bueno del owner** (02-10; D9 → `#818`; montaje y sonda: `CARRIL-SPA.md` §8 (27); arnés
+   `mutar-puerta-p1.sh` 34/34, sonda `sonda-puerta-p1.mjs` 196/196). ▶ **Ahora la P1b**: la encuesta pregunta a pregunta y
+   solo en verde (§4.4, punto a); después la P2 (pulseras) y la P3 (reseña).
 2. ▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4; `#789`, `#800`→`#804`)**: ✅ R1a, R1b y **R1·T** en `main` (la
    R1·T revisada: §4.2.2; su sonda y el medidor de bloques, `CARRIL-SPA` §8 (26)). Del zip (6) (`#861`): el 8, «482-913 es tu
    código para entrar» sin botón; «Quién firma el descargo» en el 1 y el 3; las dos horas (90 + 30). ▶ **Tras la A4, la R1·T2** (`#809`,
