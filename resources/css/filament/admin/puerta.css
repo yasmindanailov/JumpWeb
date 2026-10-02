@@ -183,6 +183,7 @@
     background: var(--ppu-blanco);
     font: 700 16px/1.1 var(--ppu-letra);
     color: var(--ppu-tinta);
+    white-space: nowrap;
     cursor: pointer;
 }
 
@@ -984,11 +985,15 @@
 
     .ppu-cuerpo {
         grid-template-columns: minmax(0, 1fr);
+        align-content: start;
         gap: 14px;
         overflow: auto;
     }
 
+    /* ⚠️ En UNA columna, cada `.ppu-col` es una fila de la rejilla: con el `min-height: 0` de la tablet la fila encoge por
+     * debajo de su contenido y la columna de al lado se le monta ENCIMA (medido a 390: «Sus hijos» tapaba la reserva). */
     .ppu-col {
+        min-height: auto;
         overflow: visible;
         padding-bottom: 0;
     }
