@@ -150,7 +150,7 @@ final class MailPreviews
             'order_item_refunded' => $conReserva(static fn (Order $o, OrderItem $r) => new N\OrderItemRefunded($o, $r, 500)),
             'order_cancelled' => $conPedido(static fn (Order $o) => new N\OrderCancelled($o)),
             'order_refunded' => $conPedido(static fn (Order $o) => new N\OrderRefunded($o)),
-            'customer_account_created' => static fn (): Notification => new N\CustomerAccountCreated('temporal-123'),
+            'customer_account_created' => static fn (): Notification => new N\CustomerAccountCreated,
             'verify_email_address' => static fn (): Notification => new N\VerifyEmailAddress,
             'verify_email_for_purchase' => static fn (): Notification => new N\VerifyEmailForPurchase('R-ABC123'),
             'login_code' => static fn (): Notification => new N\LoginCode('482913'),

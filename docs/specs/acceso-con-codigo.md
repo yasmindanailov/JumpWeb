@@ -1,7 +1,7 @@
 # [SPEC] Entrar con un código al correo — la contraseña del cliente se retira
 
 > Estado: ✅ aprobada (29-09: el owner contestó el §7) → **A1 ✅** (§4.8) · **A2 ✅** (§4.9) · **A3 ✅** (§4.10) · **A4a ✅**
-> (SPA, §4.11) · **A4b ✅** (vista por el owner) · **A5** (§4.12, plataforma): **A5a ✅** · **A5b ✅** · Última actualización: 2026-10-02 ·
+> (SPA, §4.11) · **A4b ✅** (vista por el owner) · **A5** (§4.12, plataforma): **A5a ✅** · **A5b ✅** · **A5c ✅** · Última actualización: 2026-10-02 ·
 > Decisiones: `#847` (el owner: código al correo y Google; fuera la contraseña) · `#848` (el §7: una sola puerta, borrar
 > las contraseñas, 90 días, solo el código) · `#849` (corrige el 1: el registro NO espera al código, hay cola en la puerta) ·
 > `#853`/`#854` (la A1: el código en el servidor; el dispositivo recordado y `RGPD-06`) · `#855` (la A2a: reconfirmar con
@@ -21,13 +21,15 @@
 - **Empieza por** §4.12 (la A5: lo que queda, medido) → §7 (lo que decidió el owner). §1 es la medida del 29-09.
 - **Trampas**: (1) la cola sale por el cron CADA MINUTO en producción (`ENTORNOS.md` §6): un código encolado puede tardar
   60 s; se envía en la misma petición, tras la respuesta (§4.3). (2) Reconfirmar las acciones sensibles (`SEGURIDAD.md`
-  §3) es SOLO el código (§4.4). (3) Las cuentas de Google nacen sin contraseña desde la A5b; las de antes llevan una
-  aleatoria hasta la A5d. (4) Los limitadores son de DOMINIO (`SEC-06`): ningún controlador los reimplementa. (5) La
+  §3) es SOLO el código (§4.4). (3) Las cuentas nuevas (Google, la propia y el mostrador) nacen sin contraseña desde
+  la A5b/A5c; las de antes la llevan hasta la A5d, que la borra AL DESPLEGAR. (4) Los limitadores son de DOMINIO
+  (`SEC-06`): ningún controlador los reimplementa. (5) La
   puerta dice si un correo tiene cuenta, como el alta de hoy (`#31`): la acotan los límites de §4.2.
 - **Estado**: ✅ aprobada (`#848`). **A1–A4 ✅** (29-09→01-10, `#853`→`#857`, `#810`→`#813`, §4.8–§4.11: el código en el
   servidor, reconfirmar con él, la isla y el cajón; vistos por el owner). La A5 (plataforma, §4.12, `#869`/`#870`):
-  **A5a ✅** (la contraseña del personal) · **A5b ✅** (el servidor y el contrato 1.59.0, sin la del cliente); siguen la A5c
-  (los correos y los textos) y la A5d (las contraseñas que ya existen).
+  **A5a ✅** (la contraseña del personal) · **A5b ✅** (el servidor y el contrato 1.59.0, sin la del cliente) · **A5c ✅**
+  (los correos y los textos; el mostrador, sin ella); sigue la A5d (las que ya existen: una migración que en producción
+  corre SOLO al desplegar la v2.0.0).
 - **Invariantes**: `SEC-06` (se amplía al código), `RGPD-01` (la purga borra los códigos), `RGPD-06` (sin cambio de
   forma). Ningún fichero del `CRITICAL_RE`.
 
@@ -472,6 +474,25 @@ SPA: quiere decir «con el formulario del correo», `SelfSignup`); la tabla `pas
   Arneses: `mutar-acceso-codigo.sh` **51/51**, `mutar-token-bearer.sh` **14/14** (su «verificar abre sesión», ahora sobre
   `EmailCodeLogin`) y `mutar-correos-framework.py` **5/5** (queda uno del marco, `VerifyEmailAddress`; su mutación del
   molde salía «NO APLICADA» desde `#678` y nadie lo vio: re-anclada). Correos: 30 (`EmailUtmTest`).
+
+**La A5c ✅** (02-10; el owner vio en local los correos en las vistas previas del panel y el alta del mostrador: «Visto bueno»):
+- **El mostrador, sin contraseña**: `CustomerRegistrar` crea la cuenta con `NULL` (con correo y sin él) y
+  `CustomerAccountCreated` ya no recibe nada: dice cómo entrar (el bloque `how_to_enter`, «Cómo entrar» en el editor),
+  sin ningún secreto —la contraseña viajaba EN CLARO por la cola y quedaba en la copia del registro—. Los rótulos del
+  alta en el panel (`register_*`), sin ella: si la bienvenida no sale, el cliente entra igual.
+- **Los textos que decían algo falso**, en es/en/fr: el alta repetida (`exists_mail`), Google vinculado (`promoted`),
+  los tres «no» de Google, borrar la cuenta, el cambio de correo (el código; y, si no fuiste tú, cerrar la sesión en
+  los otros dispositivos en vez de cambiar la contraseña), `api.errors.invalid_credentials` (el código que no vale,
+  como la isla) y `api.google.refused`.
+- **Fuera, sin nadie que los pusiera**: los tres `status` del cambio de correo que quedaban (`-requested`, `-cancelled`
+  y `-resent`; dos decían «enlace»); del editor de correos, los bloques `password_label` y `recommend_change` y la
+  descripción de `password_reset` (su nombre en «Correos enviados» se queda: hay envíos con él).
+- **Guardas**: `CustomerRegistrarTest` (nace sin contraseña, con correo y sin él; la bienvenida dice cómo entrar) y el
+  arnés `mutar-acceso-codigo.sh` **52/52** (el mostrador que vuelve a fabricarla). ✱ Medido: la línea de adelanto
+  francesa del alta repetida medía 91 caracteres (`MailInboxLineTest`, techo 85): acortada.
+- **La A5d, lo que queda** (el owner, 02-10: en producción no se borra nada hasta desplegar): la migración y
+  `User::anonymize()` con `NULL` (hoy un `Str::random(60)` hasheado; su frase de `RGPD-01` cambia con él); corre en
+  producción SOLO al desplegar la v2.0.0 (`#670`), medida antes y después (`ENTORNOS.md` §6).
 
 ## 5. Impacto en invariantes
 

@@ -115,7 +115,7 @@ class EmailUtmTest extends TestCase
             new VerifyEmailForPurchase('R-ABC123'),
             new VerifyPendingEmail('482913'),
             new AccountAlreadyExists,
-            new CustomerAccountCreated('temporal'),
+            new CustomerAccountCreated,
             new SocialIdentityLinked('google'),
             new EmailChangeRequested('n***@example.com'),
         ];
@@ -192,7 +192,7 @@ class EmailUtmTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $user->notify(new CustomerAccountCreated('temporal'));
+        $user->notify(new CustomerAccountCreated);
         NotificationFacade::route('mail', 'equipo@example.com')->notify(new GoogleBusinessLocationChanged('Ficha A', null, 'Ana'));
 
         $hechos = AnalyticsEvent::query()->where('name', 'email_sent')->get();

@@ -18,16 +18,17 @@ use Illuminate\Support\Str;
  * invitación por enlace firmado: el operador crea la cuenta en el acto con el cliente
  * delante.
  *
- *  - Contraseña ALEATORIA (cast `hashed` en `User`); se envía en claro UNA vez por email.
+ *  - **Sin contraseña** (A5c de `docs/specs/acceso-con-codigo.md` §4.12, `#869`): el cliente entra con un
+ *    código al correo, como todos. Hasta la A5 se fabricaba una aleatoria y viajaba EN CLARO en la bienvenida.
  *  - Cuenta **ya verificada** (`email_verified_at`): alta presencial, sin email de verificación.
  *  - Rol `customer` + consent de **privacidad** (el operador confirma haberla explicado en persona).
- *  - Email de bienvenida con la contraseña temporal + recomendación de cambiarla.
+ *  - Email de bienvenida que le dice cómo entrar (su correo y un código), sin ningún secreto.
  *
  * **Cliente SIN email (reserva de agenda, solo teléfono — #263):** la clienta da de alta reservas
  * escritas a mano de las que solo tiene el teléfono. En ese caso `email` se guarda como **`NULL`**
  * (nunca `''`: la cadena vacía colisionaría con el índice UNIQUE). La cuenta entonces:
  *   - NO recibe email de bienvenida (no hay a dónde) ni queda "verificada" (nada que verificar).
- *   - NO puede iniciar sesión ni usar autoservicio (recuperar contraseña, "Mis pedidos", RGPD): vive
+ *   - NO puede iniciar sesión ni usar autoservicio (el código va al correo, "Mis pedidos", RGPD): vive
  *     SOLO en el panel. Es el comportamiento esperado para un cliente de agenda.
  *   - Se deduplica por TELÉFONO en vez de por email (la decisión "reutilizar vs crear" la toma el
  *     operador en la página; este servicio solo CREA cuando se le llama). Ver `customersMatchingPhone`.
@@ -77,21 +78,16 @@ class CustomerRegistrar
             }
         }
 
-        // 10-12 caracteres letras+números (sin símbolos): segura pero fácil de teclear
-        // desde el email. Se hashea al asignarla (cast `hashed`); solo viaja en claro al correo.
-        // La cuenta SIN email también lleva contraseña (la columna es NOT NULL); es inservible
-        // mientras no haya email, pero deja la cuenta lista si más tarde se le añade uno.
-        $plainPassword = Str::password(12, letters: true, numbers: true, symbols: false, spaces: false);
         $now = now();
         $ip = request()?->ip();
 
-        $user = DB::transaction(function () use ($name, $email, $phone, $bornOn, $plainPassword, $now, $ip, $waiverDeclared): User {
+        $user = DB::transaction(function () use ($name, $email, $phone, $bornOn, $now, $ip, $waiverDeclared): User {
             $user = User::create([
                 'name' => $name,
                 'email' => $email,                 // NULL para el cliente de agenda sin correo
                 'phone' => $phone,
                 'born_on' => $bornOn,
-                'password' => $plainPassword,
+                'password' => null,                // se entra con un código al correo (A5c, `#869`)
                 'locale' => 'es',
                 'marketing_opt_in' => false,
                 'privacy_accepted_at' => $now,
@@ -128,17 +124,18 @@ class CustomerRegistrar
             return $user;
         });
 
-        // Email de bienvenida SOLO si hay dirección. Sin email, no hay nada que enviar ni
-        // contraseña que comunicar (la cuenta vive en el panel).
+        // Email de bienvenida SOLO si hay dirección. Sin email, no hay nada que enviar (la cuenta
+        // vive en el panel).
         $emailSent = false;
         if ($email !== null) {
             $emailSent = true;
             try {
-                $user->notify((new CustomerAccountCreated($plainPassword))->locale('es'));
+                $user->notify((new CustomerAccountCreated)->locale('es'));
             } catch (\Throwable $e) {
                 // Email NO bloqueante (#robustez): la cuenta ya está creada y comprometida en BD. Si el
                 // transporte falla (SMTP caído, cuenta de envío sin activar, IP no autorizada…), NO debe
-                // tirar el alta — se registra el fallo y el operador puede reenviar/resetear la contraseña.
+                // tirar el alta — se registra el fallo. El cliente entra igual: la bienvenida no lleva
+                // nada que no pueda pedir él (su código, desde la puerta).
                 $emailSent = false;
                 Log::warning('customer.welcome_email_failed', ['user_id' => $user->id, 'error' => $e->getMessage()]);
             }

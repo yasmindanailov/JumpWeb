@@ -12,7 +12,7 @@
 return [
     'errors' => [
         'unauthenticated' => 'You need to sign in to continue.',
-        'invalid_credentials' => 'The email or password is not correct.',
+        'invalid_credentials' => 'The code is not right or has expired. Ask for another one.',
         'unauthorized' => "You don't have permission to do this.",
         'not_found' => "We couldn't find what you're looking for.",
         'method_not_allowed' => 'That operation is not available at this address.',
@@ -90,6 +90,6 @@ return [
     ],
 
     'google' => [
-        'refused' => 'We could not finish signing you up with that Google account. Try again, or sign up with your email and a password.',
+        'refused' => 'We could not finish signing you up with that Google account. Try again, or sign in with your email: we’ll send you a code.',
     ],
 ];

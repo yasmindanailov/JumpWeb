@@ -94,7 +94,7 @@ return [
             'analytics_label' => 'Vincular mi navegación a mi cuenta para mejorar la web.',
             'analytics_hint' => 'Solo si además aceptas «análisis» en el aviso de cookies. Al apagarlo desvinculamos lo registrado y pedimos su borrado a la herramienta de análisis, si la hay.',
             'delete_title' => 'Eliminar mi cuenta',
-            'delete_intro' => 'Borraremos tu nombre, email, teléfono y contraseña de forma permanente, y cerraremos tu sesión. Por ley, conservamos los datos mínimos de tus pedidos (sin tu identidad) para la facturación. Esta acción no se puede deshacer.',
+            'delete_intro' => 'Borraremos tu nombre, email y teléfono de forma permanente, y cerraremos tu sesión. Por ley, conservamos los datos mínimos de tus pedidos (sin tu identidad) para la facturación. Esta acción no se puede deshacer.',
             'delete_confirm' => '¿Seguro que quieres eliminar tu cuenta? Esta acción es permanente.',
             // La pregunta de borrar la cuenta pasa a hacerse DENTRO del cajón (`#565`).
             'delete_confirm_yes' => 'Sí, eliminar',
@@ -335,9 +335,6 @@ return [
         'verification-link-sent' => 'Te hemos reenviado el correo de verificación. Revisa tu bandeja (y la carpeta de spam).',
         'verification-resend-throttled' => 'Acabamos de enviarte el correo. Espera un minuto antes de pedir otro.',
         'profile-updated' => 'Datos actualizados.',
-        'email-change-requested' => 'Hemos enviado un enlace al nuevo email para confirmar el cambio. Mientras tanto, tu cuenta sigue usando el email actual.',
-        'email-change-cancelled' => 'Cambio de email cancelado.',
-        'email-change-resent' => 'Te hemos reenviado el enlace al nuevo email.',
         'logged-out-others' => 'Has cerrado la sesión en los demás dispositivos.',
         'account-deleted' => 'Tu cuenta ha sido eliminada. Esperamos verte de nuevo.',
         'order-retry-unavailable' => 'Ya no podemos reintentar este pago: la reserva ha caducado y la plaza se ha liberado. Puedes hacer una nueva reserva cuando quieras.',
@@ -353,10 +350,10 @@ return [
         // no hay enumeración que proteger — y callarlo solo consigue que no sepa qué hacer.
         'google-linked' => 'Hemos vinculado tu cuenta de Google. A partir de ahora puedes entrar con ella.',
         'google-cancelled' => 'No has terminado de entrar con Google. Puedes intentarlo otra vez cuando quieras.',
-        'google-failed' => 'No hemos podido entrar con Google. Inténtalo de nuevo; si el problema sigue, entra con tu contraseña o escríbenos.',
-        'google-email-unverified' => 'Google no da por verificado ese correo, así que no podemos usarlo para identificarte. Verifícalo en tu cuenta de Google o regístrate con tu correo y contraseña.',
+        'google-failed' => 'No hemos podido entrar con Google. Inténtalo de nuevo; si el problema sigue, entra con tu email (te enviamos un código) o escríbenos.',
+        'google-email-unverified' => 'Google no da por verificado ese correo, así que no podemos usarlo para identificarte. Verifícalo en tu cuenta de Google o entra con tu email: te enviamos un código.',
         'google-anonymized' => 'Esa cuenta se eliminó a petición de su titular y no se puede recuperar. Puedes crear una nueva cuando quieras.',
-        'google-provider-conflict' => 'Tu cuenta ya está vinculada a otra cuenta de Google. Entra con aquélla, o con tu contraseña, y escríbenos si quieres cambiarla.',
+        'google-provider-conflict' => 'Tu cuenta ya está vinculada a otra cuenta de Google. Entra con aquélla, o con tu email y un código, y escríbenos si quieres cambiarla.',
         // ⚠️ El ESPEJO del anterior, y no se pueden intercambiar: aquél dice «tu cuenta ya tiene otra
         // llave» —y la salida es desvincular la tuya—; éste dice «esa llave ya abre otra cuenta», y
         // desde aquí no hay nada que se pueda hacer. Dar la salida equivocada manda a la persona a
@@ -385,9 +382,9 @@ return [
 
     'exists_mail' => [
         'subject' => 'Ya tienes una cuenta',
-        'preheader' => 'Nadie ha creado una cuenta nueva. Si fuiste tú, entra o recupera tu contraseña.',
+        'preheader' => 'Nadie ha creado una cuenta nueva. Si fuiste tú, entra con tu email y un código.',
         'greeting' => '¡Hola!',
-        'line1' => 'Alguien ha intentado registrarse con tu email. Si fuiste tú, ya tienes una cuenta: inicia sesión o recupera tu contraseña.',
+        'line1' => 'Alguien ha intentado registrarse con tu email. Si fuiste tú, ya tienes una cuenta: entra con tu email y te enviaremos un código.',
         'action' => 'Iniciar sesión',
         'line2' => 'Si no has sido tú, puedes ignorar este mensaje con tranquilidad.',
         'badge' => 'Ya tienes cuenta',
@@ -406,7 +403,7 @@ return [
         'preheader' => 'Si no has sido tú, cambia la contraseña de tu correo y avísanos cuanto antes.',
         'greeting' => '¡Hola!',
         'line1' => 'A partir de ahora puedes entrar en tu cuenta de :park con :provider, además de como lo hicieras antes.',
-        'promoted' => 'Como tu correo todavía no estaba verificado, lo hemos dado por verificado con :provider y, por seguridad, hemos cerrado las sesiones que hubiera abiertas y desactivado la contraseña anterior. Si quieres volver a tener contraseña, usa «he olvidado mi contraseña».',
+        'promoted' => 'Como tu correo todavía no estaba verificado, lo hemos dado por verificado con :provider y, por seguridad, hemos cerrado las sesiones que hubiera abiertas.',
         'not_you' => 'Si no has sido tú, cambia cuanto antes la contraseña de tu cuenta de correo y avísanos.',
         'action' => 'Escribirnos',
     ],

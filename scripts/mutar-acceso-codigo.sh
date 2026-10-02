@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Arnés de mutación del ACCESO CON CÓDIGO, tandas A1 a A3 (`docs/specs/acceso-con-codigo.md` §6, `DECISIONES #853`–`#857`).
+# Arnés de mutación del ACCESO CON CÓDIGO, tandas A1 a A3 y la A5 (`docs/specs/acceso-con-codigo.md` §6, `DECISIONES #853`–`#857`, `#869`).
 #
 # Entrar con un código al correo es una credencial nueva, y lo que la acota son reglas pequeñas que se caen sin ruido:
 # que el código caduque, se gaste y muera al quinto intento; que su huella lleve clave y correo; que pedirlo tenga techo
@@ -14,7 +14,7 @@ set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 SAIL="docker compose exec -u sail -T laravel.test"
-TESTS="$SAIL php artisan test --filter=AuthCodeTest|LoginCodesTest|RememberedDeviceTest|MeConfirmationCodeTest|SessionBindingTest|MePendingEmailCodeTest|EmailChangeRecipientsTest|MeCredentialsTest|MePrivacyTest"
+TESTS="$SAIL php artisan test --filter=AuthCodeTest|LoginCodesTest|RememberedDeviceTest|MeConfirmationCodeTest|SessionBindingTest|MePendingEmailCodeTest|EmailChangeRecipientsTest|MeCredentialsTest|MePrivacyTest|CustomerRegistrarTest"
 
 CODES=app/Domain/Identity/Services/LoginCodes.php
 LOGIN=app/Domain/Identity/Services/EmailCodeLogin.php
@@ -37,9 +37,11 @@ PROFILE=app/Domain/Identity/Services/AccountProfile.php
 PENDINGMAIL=app/Notifications/VerifyPendingEmail.php
 # La A3 (`#857`)
 REMEMBER=app/Domain/Identity/Services/RememberedDevice.php
+# La A5c (`#869`)
+COUNTER=app/Domain/Identity/Services/CustomerRegistrar.php
 
 TMP="$(mktemp -d)"
-FICHEROS=("$CODES" "$LOGIN" "$CODEMAIL" "$COPY" "$USER" "$BOOT" "$SESSION" "$SIGNUP" "$AUTHCONF" "$CREDS" "$BINDING" "$PROVIDER" "$VERDICTS" "$WEBOUT" "$CONFIRMMAIL" "$PROFILE" "$PENDINGMAIL" "$REMEMBER")
+FICHEROS=("$CODES" "$LOGIN" "$CODEMAIL" "$COPY" "$USER" "$BOOT" "$SESSION" "$SIGNUP" "$AUTHCONF" "$CREDS" "$BINDING" "$PROVIDER" "$VERDICTS" "$WEBOUT" "$CONFIRMMAIL" "$PROFILE" "$PENDINGMAIL" "$REMEMBER" "$COUNTER")
 copia() { echo "$TMP/${1//\//__}"; }
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$(copia "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
@@ -310,6 +312,11 @@ mutar "reenviar no tiene techo por hora (el buzón de un tercero, lleno)" "$PROF
 mutar "la copia del registro guarda el código del correo nuevo" "$PENDINGMAIL" \
   "        return [\$this->shown()];" \
   "        return [];"
+
+# ── A5c · el mostrador, sin contraseña (`#869`) ───────────────────────────────────────────────────
+mutar "el mostrador vuelve a fabricar una contraseña (la que viajaba en claro en la bienvenida)" "$COUNTER" \
+  "                'password' => null," \
+  "                'password' => Str::password(12),"
 
 echo
 echo "mutaciones que muerden: ${muerden}/${total}"

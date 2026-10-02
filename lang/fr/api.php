@@ -12,7 +12,7 @@
 return [
     'errors' => [
         'unauthenticated' => 'Vous devez vous connecter pour continuer.',
-        'invalid_credentials' => 'L’adresse e-mail ou le mot de passe n’est pas correct.',
+        'invalid_credentials' => 'Le code n’est pas bon ou a expiré. Demandez-en un autre.',
         'unauthorized' => "Vous n'avez pas l'autorisation d'effectuer cette action.",
         'not_found' => "Nous n'avons pas trouvé ce que vous cherchez.",
         'method_not_allowed' => "Cette opération n'est pas disponible à cette adresse.",
@@ -90,6 +90,6 @@ return [
     ],
 
     'google' => [
-        'refused' => "Nous n'avons pas pu terminer l'inscription avec ce compte Google. Réessaie, ou inscris-toi avec ton e-mail et un mot de passe.",
+        'refused' => "Nous n'avons pas pu terminer l'inscription avec ce compte Google. Réessaie, ou connecte-toi avec ton e-mail : nous t'envoyons un code.",
     ],
 ];

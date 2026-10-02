@@ -10,7 +10,6 @@ use App\Notifications\CustomerAccountCreated;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
@@ -18,7 +17,8 @@ use Tests\TestCase;
  * Fase 7.5 (#181) — Alta directa de cliente desde back-office (`CustomerRegistrar`).
  *
  * Sustituye a la invitación por enlace firmado: crea la cuenta verificada en el acto,
- * con rol customer + consent de privacidad, y envía la contraseña temporal por email.
+ * con rol customer + consent de privacidad, y le da la bienvenida por email. Sin contraseña desde
+ * la A5c (`docs/specs/acceso-con-codigo.md` §4.12, `#869`): entra con su correo y un código.
  */
 class CustomerRegistrarTest extends TestCase
 {
@@ -57,19 +57,27 @@ class CustomerRegistrarTest extends TestCase
         $this->assertNull($log->payload); // logSensitive → solo sha256 del email en payload_hash
     }
 
-    public function test_emailed_password_is_random_and_logs_the_user_in(): void
+    /**
+     * Hasta la A5 el mostrador FABRICABA una contraseña y la mandaba en claro en la bienvenida (viajaba por la cola y
+     * quedaba en la copia del registro de correos). Ahora la cuenta nace sin ninguna —con correo y sin él— y la
+     * bienvenida dice cómo entrar: su correo y un código.
+     */
+    public function test_the_counter_account_is_born_without_a_password_and_its_welcome_says_how_to_enter(): void
     {
         Notification::fake();
 
-        $result = app(CustomerRegistrar::class)->register('Bob', 'bob@example.com', null);
-        $user = $result['user'];
+        $conCorreo = app(CustomerRegistrar::class)->register('Bob', 'bob@example.com', null)['user'];
+        $sinCorreo = app(CustomerRegistrar::class)->register('Eve', null, '600333444')['user'];
 
-        // La contraseña almacenada está hasheada (no en claro) y la del email la valida.
-        Notification::assertSentTo(
-            $user,
-            CustomerAccountCreated::class,
-            fn (CustomerAccountCreated $n): bool => Hash::check($n->temporaryPassword, $user->password),
-        );
+        $this->assertNull($conCorreo->fresh()?->getAttributes()['password'], 'la cuenta del mostrador nace sin contraseña');
+        $this->assertNull($sinCorreo->fresh()?->getAttributes()['password'], 'también la de agenda, sin correo');
+
+        Notification::assertSentTo($conCorreo, CustomerAccountCreated::class, function (CustomerAccountCreated $n) use ($conCorreo): bool {
+            $correo = (string) $n->toMail($conCorreo)->render();
+
+            return str_contains($correo, e(__('emails.customer_account_created.how_to_enter')))
+                && str_contains($correo, 'bob@example.com');
+        });
     }
 
     public function test_register_returns_existing_without_creating_or_emailing(): void

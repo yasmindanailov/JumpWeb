@@ -25,13 +25,13 @@ return [
 
     'customer_account_created' => [
         'subject' => 'Tu cuenta ya está lista',
-        'preheader' => 'Dentro tienes tu contraseña temporal: cámbiala la primera vez que entres.',
+        'preheader' => 'Para entrar solo necesitas tu email: te enviaremos un código cada vez.',
         'greeting' => '¡Hola!',
         'intro' => 'El equipo de :park ha creado una cuenta para ti para que puedas consultar tus reservas.',
         'email_label' => 'Email',
-        'password_label' => 'Contraseña temporal',
+        // Sin contraseña desde la A5 (`#869`): se entra con el correo y un código, como todos.
+        'how_to_enter' => 'Para entrar, escribe tu email y te enviaremos un código de un solo uso. No necesitas contraseña.',
         'action' => 'Iniciar sesión',
-        'recommend_change' => 'Por seguridad, te recomendamos cambiar la contraseña en cuanto entres, desde «Mi cuenta».',
         'ignore' => 'Si no esperabas este correo, puedes ignorarlo.',
         'badge' => 'Cuenta creada',
         'headline' => 'Tu cuenta ya está lista',
@@ -123,8 +123,8 @@ return [
         'preheader' => 'Si no has sido tú, tu cuenta sigue con este correo. Dentro te decimos qué hacer.',
         'greeting' => '¡Hola!',
         'intro' => 'Alguien ha solicitado cambiar el email de tu cuenta a :new.',
-        'it_was_me' => 'Si has sido tú, confirma desde el enlace que hemos enviado al nuevo email.',
-        'it_was_not_me' => 'Si NO has sido tú, ignora ese correo: tu cuenta seguirá usando este email. Te recomendamos cambiar la contraseña.',
+        'it_was_me' => 'Si has sido tú, confirma con el código que hemos enviado al nuevo email.',
+        'it_was_not_me' => 'Si NO has sido tú, ignora ese correo: tu cuenta seguirá usando este email. Por si acaso, cierra la sesión en tus otros dispositivos desde «Mi cuenta».',
         'badge' => 'Revisa esto',
         'headline' => 'Se ha pedido cambiar tu email',
     ],

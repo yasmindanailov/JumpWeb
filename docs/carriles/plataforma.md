@@ -9,7 +9,7 @@
 > (el acceso con código: A1–A3 ✅ `#853`→`#857`; la A4 del SPA en `main`, `#813`; `/cookies` ✅ `#858`→`#860`; el zip (6) y
 > el reparto, `#861`; el SEO, `specs/seo.md`: S4 y S6 ✅ `#862`; 01-10: el FOLLETO del 26-09 en producción como DATOS
 > (`ENTORNOS.md` §6), los textos legales para el owner (`#863`→`#865`), **la Z6a de la isla ✅** y, por la noche, **la
-> Z6b ✅** (`#866`, `#867`) y sus tres usos de los banners ✅ (02-10), con su visto bueno).
+> Z6b ✅** (`#866`, `#867`) y sus tres usos de los banners ✅ (02-10), con su visto bueno; 02-10: **la A5a–A5c ✅**).
 > ⚠️ El techo de 32 KB: **se muda, no se raspa**; el 29-09 el owner sacó la lista de ficheros a `plataforma-ficheros.md`
 > (`#852`) y NO subió el techo. Si vuelve a apretar tres veces seguidas, llévaselo con la medida.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -56,8 +56,9 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
    `?isla=b3` y la flecha naranja, `#868`; lo hecho y lo medido, en §4.27). La Z6c·3, la MEDIDA, es del SPA (avisado en mi
    buzón). ⚠️ El experimento se CREA en el panel al desplegar (clave `isla`, variantes `hoy` y `b3`, 50/50) y corre con el
    vídeo de verdad, dos semanas como mínimo. **SIGUE, en el orden de `#867`**: (1) **la A5** (fuera la contraseña;
-   `acceso-con-codigo.md` §4.12, `#869`/`#870`: **A5a ✅** y **A5b ✅** 02-10, la del personal y el servidor con el contrato
-   1.59.0; **sigue la A5c**, los correos y textos que dirían algo falso, al ojo del owner, y la A5d, las que existen) · (2) el
+   `acceso-con-codigo.md` §4.12, `#869`/`#870`: **A5a–A5c ✅** 02-10, con el visto bueno del owner; **sigue la A5d**: la
+   migración que pone `NULL` en las de clientes y `anonymize()` sin ella —en producción corre SOLO al desplegar la v2.0.0,
+   medida antes y después (el owner, 02-10)—, apuntada en `ENTORNOS.md` §6) · (2) el
    acceso con código (su página, crear cuenta, «XXX-XXX» en el asunto, continuar al escribir el último dígito, también en el
    authenticator del panel; mucho es la Z6g) · (3) los retoques del zip (6) (Z6d–Z6f, colores, secciones; la cabecera sin
    precio salvo Colegios, la regla del owner en `instancias/playjump/docs/estrategia/2026-09-30/Web.md`) · (4) la isla en un
@@ -234,8 +235,10 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
   30-09: `VerifyPendingEmail` exige el código). `public/css/cajon.css` regenerado: fuera `.pwd-input*` y `.auth--page`,
   huérfanas. ⚠️ Tu `mutar-analitica-decidir.sh` ancla en `MeProfileController` una línea que no existe desde la A2a; hoy:
   `…['born_on' => true]), $emailChanges ? $data['code'] : null, (string) $request->ip());`.
-- **Viene, A5c**: `CustomerAccountCreated` sin la contraseña y los textos que dirían algo falso. El método `password` de
-  `user_registered` y del informe NO lo toco (tuyo).
+- **Hecho, A5c**: `CustomerAccountCreated` sin argumentos ni contraseña (bloque nuevo `how_to_enter`, rotulado en
+  `admin.mail_texts.bloques`; fuera `password_label`, `recommend_change` y la descripción de `password_reset`);
+  `account.privacy.delete_intro` (lo pinta tu cajón) sin «contraseña». El método `password` de `user_registered` y del
+  informe NO lo toco (tuyo).
 
 ### ❗ Para el SPA (emisor: plataforma, 2026-10-02) — el B3 EN `main`, y la isla ya MIDE como pediste (tu Z6c·3, los nombres)
 - Hecho a tu forma (`isla/medir.js`, por `JumpWeb.track`, resuelto en cada llamada): `experiment_exposed` con

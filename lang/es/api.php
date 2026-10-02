@@ -14,7 +14,8 @@
 return [
     'errors' => [
         'unauthenticated' => 'Necesitas iniciar sesión para continuar.',
-        'invalid_credentials' => 'El correo o la contraseña no son correctos.',
+        // Un código que no vale (mal escrito, caducado o gastado, que no se distinguen; A5c, `#869`), como la isla.
+        'invalid_credentials' => 'El código no es correcto o ha caducado. Pide otro.',
         'unauthorized' => 'No tienes permiso para hacer esto.',
         'not_found' => 'No hemos encontrado lo que buscas.',
         'method_not_allowed' => 'Esta operación no está disponible en esta dirección.',
@@ -108,6 +109,6 @@ return [
     'google' => [
         // Entre que se pintó la pantalla y se envió, esa identidad dejó de poder entrar: apareció una
         // cuenta con ese correo que se ha eliminado, o que ya tiene otra cuenta de Google vinculada.
-        'refused' => 'No hemos podido completar el alta con esa cuenta de Google. Vuelve a intentarlo o entra con tu correo y contraseña.',
+        'refused' => 'No hemos podido completar el alta con esa cuenta de Google. Vuelve a intentarlo o entra con tu correo: te enviamos un código.',
     ],
 ];
