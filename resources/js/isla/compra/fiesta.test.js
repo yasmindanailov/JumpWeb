@@ -17,6 +17,7 @@ const textos = {
             ajusta: '¿Aún no sabes cuántos seréis? Reserva con :n y ajusta hasta :horas h antes. Si vienen menos, pagas menos.',
             pack_de_a: ':pack, de :min a :max años', pack_desde: ':pack, desde :min años',
             menu_incluido: ':menu, incluido', menu_mas: ':menu, :precio más por niño',
+            fiesta_despues: 'Los invitados y los detalles de la fiesta, después y sin prisa, en tu lista de invitados.',
         },
         pagar: { hoy_pagas: 'Hoy pagas :importe' },
     },
@@ -139,6 +140,20 @@ describe('la pantalla 0 de una fiesta', () => {
 
         assert.equal(props.pack, '');
         assert.equal(listo, false);
+    });
+
+    /**
+     * `#876`·7: lo que queda para DESPUÉS, solo si la reserva del pack lleva la lista de invitados (`guest_form` de la
+     * ficha): no se promete una lista que no hay. Y sin menús al reservar (el panel los dejó para la lista), sin pregunta.
+     */
+    test('lo que queda para después, solo con la lista de invitados; sin menús al reservar, ninguno', () => {
+        const b = { edad: null, n: 8, dia: null, hora: null, menu: null, fila: 105 };
+
+        assert.equal(pantallaCuandoFiesta({ ...base, packs: [{ ...kids, guest_form: true }, jump], borrador: b }).props.despues,
+            'Los invitados y los detalles de la fiesta, después y sin prisa, en tu lista de invitados.');
+        assert.equal(pantallaCuandoFiesta({ ...base, packs: [{ ...kids, guest_form: false }, jump], borrador: b }).props.despues, '');
+        assert.equal(pantallaCuandoFiesta({ ...base, borrador: b }).props.despues, '', 'Sin el campo (una API anterior), tampoco.');
+        assert.deepEqual(pantallaCuandoFiesta({ ...base, grupos: [], borrador: b }).props.menus, [], 'La pantalla no pinta la pregunta con la lista vacía.');
     });
 
     /** El owner, 28-09: la capa va a lo que falta para continuar (`ir-a.js`). */

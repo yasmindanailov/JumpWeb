@@ -688,6 +688,23 @@ class CatalogTest extends ApiTestCase
         $this->assertTrue($fields[0]['required']);
     }
 
+    /**
+     * `#876`·7 (1.61.0): la ficha dice si la reserva lleva la LISTA DE INVITADOS —un pack con su esquema por invitado, la
+     * regla de `OrderItem::guestFormStatus()`—, para que la compra lo diga ANTES de reservar. Una entrada, nunca, aunque
+     * alguien le deje un esquema suelto.
+     */
+    public function test_the_detail_says_whether_the_booking_brings_a_guest_list(): void
+    {
+        $esquema = [['key' => 'nombre', 'label' => ['es' => 'Nombre'], 'type' => 'text', 'required' => true]];
+        $conLista = $this->priced($this->product('Fiesta', ['type' => TicketType::TYPE_PACK, 'min_qty' => 8, 'guest_fields' => $esquema]), 1500);
+        $sinLista = $this->priced($this->product('Excursión', ['type' => TicketType::TYPE_PACK, 'min_qty' => 10]), 900);
+        $entrada = $this->priced($this->product('Entrada', ['guest_fields' => $esquema]), 990);
+
+        $this->getJson(self::ROOT.'/catalog/products/'.$conLista->id)->assertOk()->assertValidResponse(200)->assertJsonPath('guest_form', true);
+        $this->getJson(self::ROOT.'/catalog/products/'.$sinLista->id)->assertOk()->assertValidResponse(200)->assertJsonPath('guest_form', false);
+        $this->getJson(self::ROOT.'/catalog/products/'.$entrada->id)->assertOk()->assertJsonPath('guest_form', false);
+    }
+
     /** Una entrada no pide datos de evento aunque alguien le deje un esquema suelto en BD. */
     public function test_an_entry_has_no_event_fields(): void
     {

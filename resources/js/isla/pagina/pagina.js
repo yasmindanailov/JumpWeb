@@ -5,7 +5,9 @@
  *   · calla [Hoy] cuando la pieza 6 ya lo dice (`[data-hoy-linea]`) o mientras se calcula;
  *   · mientras se calcula, su acción es el paso que falta («Elige el día», «Elige la hora»); con todo elegido, lo
  *     elegido en corto y el botón de la calculadora (situación `elegido`);
- *   · «Reservar para hoy» lleva a la pieza de precio con hoy ya elegido.
+ *   · «Reservar» ABRE LA COMPRA en el producto de la página si ella declara su intención (`#876`·3, el owner: «no hacerle
+ *     scroll a la calculadora, sin ser obligatorio usarla»): la pantalla 0, que ya elige hoy si quedan huecos; sin
+ *     intención, lleva a la pieza de precio, y «Reservar para hoy», con hoy ya elegido.
  * Los textos son del grupo `isla` de `lang/` (los de la acción) y de la página (su acción y su «desde»).
  */
 import { tp } from '../../sidebar/i18n.js';
@@ -114,6 +116,17 @@ function accionDeTarea({ label, href, zone }, acciones) {
 }
 
 /**
+ * **«Reservar» de la isla en una página que vende** (`#876`·3): con la INTENCIÓN de la página (`page.action.intent`, la
+ * misma forma que las del selector: `{type:'zone', slug}`), abre la compra en su producto sin bajar a la calculadora,
+ * que queda como opción; sin ella, el enlace de siempre a su pieza de precio, que para hoy elige hoy en la calculadora.
+ */
+function accionDeLaPagina({ intent, ...accion } = {}, paraHoy, acciones) {
+    if (intent && typeof acciones.comprar === 'function') return { label: accion.label, onClick: () => acciones.comprar({ ...intent }) };
+
+    return { ...accion, onClick: () => acciones.reservar(paraHoy) };
+}
+
+/**
  * Las props que la página le da a la isla. `config` es lo que da la página (su `page`, su `today` con sus huecos
  * —`slots`, del hecho de la página: los mismos que dicen su cabecera y su cierre—, su menú…); `estado`, lo que cambia
  * (`vista`, `calculo` de la calculadora, `cookies` y sus `categorias`); `acciones`, lo que hace cada botón. `textos`, el
@@ -127,9 +140,10 @@ export function propsDeLaIsla({ config, estado, acciones, textos }) {
     const huecos = Boolean(config.today?.slots);
     // Lo que falta, con su texto (`elige_dia`, `elige_hora` y, de la fiesta, `elige_edad`) y su ancla: la que manda la
     // calculadora (`faltaHref`, T6b·3) o, sin ella, la de la pieza 3 de Kids y Jump.
+    // A medias en la calculadora, el paso que falta sigue llevando a ella: quien empezó a usarla, la termina allí.
     const accion = falta
         ? { label: textos?.accion?.[`elige_${falta}`] ?? '', href: calculo.faltaHref || (falta === 'dia' ? '#p3-dia' : '#p3-hora') }
-        : { ...config.page.action, onClick: () => acciones.reservar(conHoy && huecos) };
+        : accionDeLaPagina(config.page.action, conHoy && huecos, acciones);
 
     return {
         page: { ...config.page, action: accion },

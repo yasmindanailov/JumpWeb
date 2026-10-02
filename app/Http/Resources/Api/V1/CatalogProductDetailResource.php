@@ -54,6 +54,8 @@ class CatalogProductDetailResource extends JsonResource
             // justificante del panel. ⚠️ Con la invitación, `guardian_authorization` (lo que pregunta el embudo) es
             // `none` aunque el pack admita la firma: pregunta la invitación.
             'guest_invitation' => $this->resource->guestInvitation,
+            // `#876`·7 (1.61.0): si su reserva lleva la lista de invitados (`TicketType::asksGuestForm()`).
+            'guest_form' => $this->resource->guestForm,
             'guardian_mode' => $this->resource->guardianMode,
         ] + (
             // Qué es este producto (`#632` P1). Como la foto en la lista: si la instalación no lo

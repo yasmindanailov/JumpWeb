@@ -16,6 +16,7 @@ const config = {
 const llamadas = [];
 const acciones = {
     reservar: (paraHoy) => llamadas.push(['reservar', paraHoy]), irAlResumen: () => llamadas.push(['resumen']),
+    comprar: (intencion) => llamadas.push(['comprar', intencion]),
     abrirCuenta: (zona, desde) => llamadas.push(desde === undefined ? ['cuenta', zona] : ['cuenta', zona, desde]),
     aceptarCookies: () => {}, rechazarCookies: () => {}, configurarCookies: () => {}, politicaCookies: () => {}, navegar: () => {},
 };
@@ -65,6 +66,23 @@ describe('las props de la isla', () => {
         props({}, false).page.action.onClick();
         assert.deepEqual(llamadas, [['reservar', false]], 'Sin huecos, «Reservar» no elige hoy.');
         assert.equal(props({}, false).today.slots, false, 'Sin huecos, la isla no los promete.');
+    });
+
+    test('`#876`·3: con la INTENCIÓN de la página, «Reservar» abre la compra en su producto, sin ancla a la calculadora', () => {
+        const conIntencion = (extra = {}, huecos = true) => propsDeLaIsla({
+            config: { ...config, page: { ...config.page, action: { ...config.page.action, intent: { type: 'zone', slug: 'kids' } } }, today: { ...config.today, slots: huecos } },
+            estado: estado(extra), acciones, textos,
+        });
+        const accion = conIntencion().page.action;
+        assert.equal(accion.label, 'Reservar Kids');
+        assert.equal(accion.href, undefined, 'Sin enlace: no baja a la calculadora.');
+        llamadas.length = 0;
+        accion.onClick();
+        assert.deepEqual(llamadas, [['comprar', { type: 'zone', slug: 'kids' }]], 'Con huecos hoy, la pantalla 0 ya elige hoy: no hace falta decírselo.');
+        // A medias en la calculadora, el paso que falta sigue llevando a ella (quien empezó a usarla, la termina allí).
+        assert.deepEqual(conIntencion({ calculo: { falta: 'hora', elegido: null } }).page.action, { label: 'Elige la hora', href: '#p3-hora' });
+        // Sin intención, como siempre: la pieza de precio (ya probado arriba).
+        assert.equal(props({}).page.action.href, '#precio');
     });
 
     test('la oferta de la página, tal cual la da la página; sin ella, ninguna', () => {

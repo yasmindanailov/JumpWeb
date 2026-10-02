@@ -210,6 +210,7 @@ return [
             'pregunta_ninos' => 'Combien d\'enfants viennent ?',
             'pregunta_dia_fiesta' => 'Quel jour ?',
             'pregunta_menu' => 'Quel menu ?',
+            'fiesta_despues' => 'Les invités et les détails de la fête, plus tard et sans vous presser, dans votre liste d\'invités.',
             'nino' => 'enfant',
             'ninos' => 'enfants',
             'minimo' => 'Minimum :n.',

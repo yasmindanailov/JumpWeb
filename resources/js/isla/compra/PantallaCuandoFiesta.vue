@@ -14,6 +14,7 @@ import SelectorHoras from '../ui/SelectorHoras.vue';
 import TarjetasOpcion from '../ui/TarjetasOpcion.vue';
 import AvisoDestacado from '../ui/AvisoDestacado.vue';
 import IconoLucide from '../ui/IconoLucide.vue';
+import { PASO } from './estilos.js';
 
 defineProps({
     // El «no» del servidor al continuar (T3e·5): la edad fuera de tramo, las reservas en pausa… Arriba, como en las entradas.
@@ -32,6 +33,8 @@ defineProps({
     hora: { type: String, default: null },
     menus: { type: Array, required: true },
     menu: { type: String, default: null },
+    // `#876`·7: «Los invitados y los detalles de la fiesta, después…», si el pack lleva la lista; si no, nada.
+    despues: { type: String, default: '' },
 });
 const emit = defineEmits(['cambiar']);
 </script>
@@ -108,7 +111,9 @@ const emit = defineEmits(['cambiar']);
                 @update:model-value="emit('cambiar', 'hora', $event)"
             />
         </PreguntaCompra>
+        <!-- Solo si el servidor da menús al reservar: el panel puede dejarlos para la lista de invitados (`#807`/`#808`). -->
         <PreguntaCompra
+            v-if="menus.length"
             id="pjc-q-menu"
             :titulo="preguntas[4]"
         >
@@ -120,5 +125,9 @@ const emit = defineEmits(['cambiar']);
                 @update:model-value="emit('cambiar', 'menu', $event)"
             />
         </PreguntaCompra>
+        <p
+            v-if="despues"
+            :style="PASO.pista"
+        >{{ despues }}</p>
     </PasoCompra>
 </template>

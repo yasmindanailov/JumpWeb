@@ -608,7 +608,7 @@ class OrderItem extends Model
         $type = $this->ticketType;
         // "No aplica" (entrada, o pack sin esquema por-niño) → nada que completar. Misma guarda
         // explícita que `guestFormStatus`, para que ambos compartan literalmente la condición.
-        if ($type === null || ! $type->isPack() || $type->guestFields() === []) {
+        if ($type === null || ! $type->asksGuestForm()) {
             return true;
         }
 
@@ -663,7 +663,7 @@ class OrderItem extends Model
     public function guestFormStatus(): ?string
     {
         $type = $this->ticketType;
-        if ($type === null || ! $type->isPack() || $type->guestFields() === []) {
+        if ($type === null || ! $type->asksGuestForm()) {
             return null;
         }
 
@@ -700,7 +700,7 @@ class OrderItem extends Model
     public function guestFormProgress(): array
     {
         $type = $this->ticketType;
-        if ($type === null || ! $type->isPack() || $type->guestFields() === []) {
+        if ($type === null || ! $type->asksGuestForm()) {
             return ['done' => 0, 'total' => 0];
         }
 

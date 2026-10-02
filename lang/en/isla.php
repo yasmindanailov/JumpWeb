@@ -210,6 +210,7 @@ return [
             'pregunta_ninos' => 'How many children are coming?',
             'pregunta_dia_fiesta' => 'Which day?',
             'pregunta_menu' => 'Which menu?',
+            'fiesta_despues' => 'Guests and party details come later, at your own pace, in your guest list.',
             'nino' => 'child',
             'ninos' => 'children',
             'minimo' => 'Minimum :n.',

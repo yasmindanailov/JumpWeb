@@ -64,6 +64,11 @@ final readonly class CatalogProductDetail
          */
         public bool $guestInvitation,
         /**
+         * ¿La reserva de este pack lleva FORMULARIO DE INVITADOS (la lista)? `TicketType::asksGuestForm()`, la regla de
+         * `OrderItem::guestFormStatus()` (`#876`·7): la compra lo dice ANTES de reservar. `false` en una entrada.
+         */
+        public bool $guestForm,
+        /**
          * El modo del justificante que el PRODUCTO admite (`none` · `optional` · `required`), el del panel (`#835`).
          *
          * ⚠️⚠️ **No es `guardianAuthorization`**, y la diferencia es la que confundió a la primera página de cumpleaños:

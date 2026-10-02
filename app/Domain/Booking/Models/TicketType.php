@@ -793,6 +793,16 @@ class TicketType extends Model
         return self::normalizeFieldSchema($this->guest_fields);
     }
 
+    /**
+     * **¿Su reserva lleva FORMULARIO DE INVITADOS** (la lista)? Un pack con su esquema por invitado: la regla de
+     * `OrderItem::guestFormStatus()`, en un sitio. La ficha del catálogo la publica (`guest_form`, `#876`·7) para que la
+     * compra lo diga ANTES de reservar —«los invitados y los detalles, después, en tu lista de invitados»—.
+     */
+    public function asksGuestForm(): bool
+    {
+        return $this->isPack() && $this->guestFields() !== [];
+    }
+
     /** Etiqueta de una columna por-niño en el idioma activo (con respaldo). */
     public function guestFieldLabel(array $field): string
     {

@@ -92,6 +92,8 @@ class CatalogReader implements ProductCatalog
             description: $product->tr('description') ?: null,
             // `#835`: lo que el producto OFRECE, para quien lo cuenta (una landing), no lo que pregunta el embudo.
             guestInvitation: $product->offersGuestInvitation(),
+            // `#876`·7: si su reserva lleva la lista de invitados, la compra lo dice antes de reservar.
+            guestForm: $product->asksGuestForm(),
             guardianMode: $product->guardianMode(),
         );
     }

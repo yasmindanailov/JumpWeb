@@ -132,6 +132,8 @@ export function pantallaCuandoFiesta(e) {
         hora: horaCorta(b.hora),
         menus: menusDe(e.grupos, { textos, locale }),
         menu: b.menu,
+        // `#876`·7: lo que queda para después, solo si su reserva lleva la lista de invitados (`guest_form` de la ficha).
+        despues: base?.guest_form ? t('fiesta_despues') : '',
     };
 
     const resumen = pack && b.dia

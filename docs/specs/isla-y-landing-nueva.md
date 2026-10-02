@@ -2816,6 +2816,19 @@ carril y la 404 compuesta con el sistema. Medido en el código ANTES de repartir
 **L5** el resumen A4 → el código de 6, tras su visto bueno → al final, el 10. La 404 se compone con piezas del sistema, no
 de un brief (`#767`). Después sigue el SEO (S3 y S5, `seo.md`).
 
+**L3 ✅ (02-10, con el visto bueno del owner en vivo).** «Reservar» de la isla abre la compra en el producto de la página
+—Kids y Jump en su zona (con hoy elegido si quedan huecos: lo hace ya la pantalla 0), Cumpleaños en la fiesta, Colegios en la
+excursión— con la intención que la página declara (`page.action.intent`, en la instancia; `pagina.js::accionDeLaPagina`). A
+medias en la calculadora, el paso que falta sigue llevando a ella; los botones de las piezas, también. Jump, incluido: es la
+misma página que Kids. La frase del cumpleaños (`compra.cuando.fiesta_despues`, la recomendada: `[DECIDIDO owner]`) sale solo
+si el pack lleva la lista: la ficha lo publica, `guest_form` (contrato **1.61.0**; `TicketType::asksGuestForm()`, la regla de
+`OrderItem::guestFormStatus()` en un sitio). «¿Qué menú?» sin menús al reservar, fuera. **Medido**: `node --test` (la acción de
+la página, la frase con y sin lista, los menús vacíos), `CatalogTest` (la ficha, contra el contrato), los pesos e
+`IslaTextosTest`; en navegador, una comprobación desechable a 390 y 1280 (las cuatro páginas abren la compra sin mover la
+página ni la URL; a 1280, en Kids y Jump la isla cede su botón a los de la página, como ya hacía) y la captura del final de la
+compra del cumpleaños. ⚠️ **De la fila 8, medido por el SPA** (`c19b9532`): v1.1.0 no tiene la analítica ni `#mi-cuenta`, así
+que un QR impreso hoy no cuenta nada hasta la v2.0.0.
+
 ## 5. Impacto en invariantes
 
 - `PAY-*`: solo si entra Bizum; entonces `VERIFY_CONC=1` y la lista del `CRITICAL_RE`.

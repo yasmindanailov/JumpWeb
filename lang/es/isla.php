@@ -250,6 +250,9 @@ return [
             'pregunta_ninos' => '¿Cuántos niños vienen?',
             'pregunta_dia_fiesta' => '¿Qué día?',
             'pregunta_menu' => '¿Qué menú?',
+            // `#876`·7: al reservar, lo que queda para DESPUÉS —solo si el pack lleva la lista (`guest_form`)—: que nadie
+            // deje de reservar por no tenerlo todo decidido.
+            'fiesta_despues' => 'Los invitados y los detalles de la fiesta, después y sin prisa, en tu lista de invitados.',
             'nino' => 'niño',
             'ninos' => 'niños',
             'minimo' => 'Mínimo :n.',

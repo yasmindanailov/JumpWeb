@@ -63,9 +63,9 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
    ✅ **L1** el panel recuerda UN día a todos (`#877`, `panel-a-salvo.md` §4.4: «Recordarme» marcada, 24 h; arnés 14/14,
    `sonda-panel` 14/14 a 1280 y 390; visto por el owner). El código ya se enviaba solo (`#867`, medido) → ✅ **L2** la
    SPEC aprobada, `specs/otra-zona.md` (`#878`: un día y una hora para todo, «Quitar», la zona por su nombre); su código,
-   K1→K4, va tras la L5 → **L3** la isla en las páginas: «Reservar» abre la compra sin la calculadora (Kids, Cumpleaños en la
-   fiesta, Colegios), el copy de cumpleaños («el resto, en la lista de invitados») y «¿Qué menú?» de
-   `PantallaCuandoFiesta.vue` con condición (del SPA, `#807`/`#808`: el Menú 1/2 es dato del panel) → **L4** la 404 con piezas
+   K1→K4, va tras la L5 → ✅ **L3** la isla en las páginas (§4.28, visto por el owner): «Reservar» abre la compra con la
+   intención de la página (instancia), la frase del cumpleaños solo con lista (`guest_form`, contrato 1.61.0) y «¿Qué menú?»
+   con condición → ▶ **L4** la 404 con piezas
    del sistema y el hero más ancho, en vivo → **L5** el resumen A4 semanal y mensual de cumpleaños (amplía `#184`) → el código
    de la L2, con su visto bueno → al final, tras sus vídeos, los textos («parking gratis» es falso). Al SPA, en el buzón.
 2. ▶▶ **EL SEO** (`specs/seo.md`, 🟦; el owner: «IMPORTANTÍSIMO»). Investigado y medido (§1–§2: la marca ya está en el 1 y
@@ -102,7 +102,7 @@ sigue 🟦 por lo del owner: el MATERIAL de los vídeos (en LOCAL, una muestra W
 dobles); el aviso de los calcetines, «se devuelve la señal» y el TRAMO DE EDAD de cada entrada (`#825`); `payment.marks` (en
 LOCAL, `bizum,visa,mastercard`). BD LOCAL con los valores de `#699`/`#761`.
 ⚠️ **Trampas vivas** (las de `sonda-isla` que paga, `sonda-cuenta` antes de las 20:00 y la base de un techo de peso, mudadas a
-`TESTING.md` §2.octies el 29-09): (b) el tracker, a 15 B de su techo (16 KB, 02-10 tarde; la portada 📜 ya en una línea): el detalle de una línea cerrada se MUDA
+`TESTING.md` §2.octies el 29-09): (b) el tracker, a 5 B de su techo (16 KB, 02-10 noche; la portada 📜 ya en una línea): el detalle de una línea cerrada se MUDA
 a su spec (el 02-10, F3 a `producto-e-instancias.md` §4.6; antes, F2, F4 y F5); la próxima vez, otra cerrada;
 (d) Vue 3.5 reevalúa un `computed` fuera del `try` de quien lo lee: se protege DENTRO (`seguro.js`, §4.13); (f) un texto de la isla que
 use la COMPRA tiene que estar en un grupo que la compra recibe (`mi_cuenta.*` no le llega: §4.24); (g) `isla/hoja/montar.js` NO
@@ -219,67 +219,13 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
 
 ## Buzón
 
-### ❗ Para el SPA (emisor: plataforma, 2026-10-02 tarde) — dos puntos de la lista del owner son tuyos (`#876`)
-- **«Añadir los nuevos complementos en la lista de invitados. Opciones del menú..»** (sus palabras): tu lista (`#805`/`#806`).
-  Tu regla de `#808`: medir antes si el panel ya lo configura (K3). Ojo: LOCAL y staging no llevan el catálogo del folleto
-  26-09 (solo producción, `ENTORNOS.md` §6).
-- **Las ALTAS por origen** («cuántos se registran en casa y en el parque»): las visitas guardan su origen (`AttributionContext`)
-  y el embudo lo reparte, pero `CustomersReport` corta `user_registered` solo por `method`. El enlace del cartel que le di
-  (sin verificar): `https://playjump.es/?utm_source=parque&utm_medium=qr&utm_campaign=registro#mi-cuenta`. Si lo cambias,
-  dímelo aquí. Su censo entero, en `isla-y-landing-nueva.md` §4.28.
-- Otro punto suyo, el código que se envía solo con la 6.ª cifra: tu `CodeInput` ya lo hace, y el del panel también (`#867`).
-
-### ❗ Para el SPA (emisor: plataforma, 2026-10-02) — «Quién firma el descargo» (Z6g·2, `#875`): lo de la isla, hecho; lo tuyo
-- El zip (6) («Quién firma el descargo: una regla, sin dar nada por hecho», 30-09) dice lo mismo en «la isla, los correos y Mi
-  cuenta». Hecho en la isla (compra y Mi cuenta: «menores a tu cargo», nunca «tus hijos»). Lo tuyo: el correo 1 (las dos
-  líneas), el 3 («Aún no has añadido a los menores a tu cargo») y lo que el cajón diga de «tus hijos».
-- `lang/*/isla.php`: fuera `compra.datos.linea` y `compra.listo.{menores,menores_boton,adulto,adultos}`; nuevas
-  `compra.datos.pista_quien`, `compra.listo.firmas.*` y `mi_cuenta.ajustes.acceso_{codigo,sin}`. Si algo tuyo las leía, avísame.
-- La tarjeta de «¡Reservado!» de la isla ya no mira `minors_only` (`#875`); el campo sigue en la API para quien lo use.
-
-### ❗ Para el SPA (emisor: plataforma, 2026-10-02) — tu aviso de `#771`, HECHO: `testimonials.translated` y `untranslated()` (`#874`)
-- El importador guarda la marca de la copia (`translated`, la columna nueva, aditiva) y `Testimonial::published()` pasa por
-  `Testimonial::untranslated()`: las páginas, `/reviews` y la cascada ya no publican una traducida aunque esté activa (owner:
-  «no se publica», ni con aviso). Lo tuyo: añadir `->untranslated()` a `GateReviewOfTheDay::copied()` (no lo toco). En la copia
-  curada, 1 traducida de 191 y fuera de las 18 publicadas: la marca entra con la importación del despliegue.
-
-### ❗ Para el SPA (emisor: plataforma, 2026-10-02) — la Z6e: tu invitación en Cumpleaños, y «Dos horas saltando» en lo tuyo (`#873`)
-- La pieza 5 de Cumpleaños (instancia) pinta tu `x-fiesta.invitacion`, SIN tocarla: su `thumb` y la tarjeta entera con datos de
-  ejemplo, en una ventana («Ver la invitación», 8a del zip (6)). Si cambias sus props o su marcado, avísame (registro vivo en
-  `plataforma-ficheros.md`).
-- Las dos horas, repartidas (zip (6), 28-09; `#873`: los 30 de merienda son texto de la instancia, en `components/merienda.php`;
-  los 90, de la duración del pack): la web ya no dice «dos horas saltando». Lo tuyo que aún lo dice: el `preheader` de
-  `lang/{es,en}/fiesta.php` («Dos horas saltando, merienda y regalos…»); y el readme pide lo mismo en la invitación y los correos.
-
-### ❗ Para el SPA (emisor: plataforma, 2026-10-02) — la Z6g·1 EN `main`: el código «482-913» y las casillas de la isla (`#871`)
-- **«482-913»** en el asunto y como titular de los tres correos con código: una sola forma, `LoginCodes::shown()` (para tu
-  correo 8). Tocado de lo tuyo: la vista previa de `EmailTextsPageTest` y el lector de `scripts/entrar-con-codigo.mjs`
-  (`(\d{3})-(\d{3})`, lo usa tu `sonda-cajon-a4b`). La copia del registro lo tapa entero (`•••••••`).
-- La isla usa tu `sidebar/code-input.js` (la regla de las casillas): si cambias su forma, avísame. Su código ya hace lo de tu
-  cajón (`#812`) y suma, del zip (6): «Revisa tu correo», «Te hemos enviado un código de 6 cifras a … · Cambiar» y la pista
-  «Te llega de {negocio}…» (`isla.compra.entrar.codigo_pista`, ya puesta por `SidebarBoot`). Por si el cajón la quiere.
-
-### ❗ Para el SPA (emisor: plataforma, 2026-10-02) — la A5 (fuera la contraseña del cliente) toca lo tuyo de los correos
-- **Hecho, A5a (`#870`)**: un correo nuevo AL PERSONAL, `PanelPasswordLink` (la contraseña del panel, desde la ficha): lo
-  declaran del equipo `EmailUtm::NOT_TO_CUSTOMERS` y `DEL_EQUIPO` de `MailTextCatalogTest`.
-- **Hecho, A5b** (`#869`, 1.59.0): fuera el correo `PasswordReset` (de `MailTextCatalog::CORREOS`, `MailPreviews` y
-  `EmailTiming`; tu trinquete de `EmailUtmTest`, 30, y `EmailsReportTest`, 28) y el enlace del correo nuevo (tu (2) del
-  30-09: `VerifyPendingEmail` exige el código). `public/css/cajon.css` regenerado: fuera `.pwd-input*` y `.auth--page`,
-  huérfanas. ⚠️ Tu `mutar-analitica-decidir.sh` ancla en `MeProfileController` una línea que no existe desde la A2a; hoy:
-  `…['born_on' => true]), $emailChanges ? $data['code'] : null, (string) $request->ip());`.
-- **Hecho, A5c**: `CustomerAccountCreated` sin argumentos ni contraseña (bloque nuevo `how_to_enter`, rotulado en
-  `admin.mail_texts.bloques`; fuera `password_label`, `recommend_change` y la descripción de `password_reset`);
-  `account.privacy.delete_intro` (lo pinta tu cajón) sin «contraseña». El método `password` de `user_registered` y del
-  informe NO lo toco (tuyo).
-
-### ❗ Para el SPA (emisor: plataforma, 2026-10-02) — el B3 EN `main`, y la isla ya MIDE como pediste (tu Z6c·3, los nombres)
-- Hecho a tu forma (`isla/medir.js`, por `JumpWeb.track`, resuelto en cada llamada): `experiment_exposed` con
-  `{ key: 'isla', variant }`, UNA vez por carga, con la isla abajo y fuera de la capa grande, y solo con variante asignada. ⚠️
-  `variant` es la ASIGNADA: por eso `<html data-isla-experimento>` lleva la variante (no la clave); la cara que se pinta va en
-  `data-isla-variante` (`hoy`|`b3`; otra variante asignada enseña `hoy`). Los gestos: `isla_accion` (`situacion`, `etiqueta`,
-  `tono`, `cara` `boton`|`barra`, `pagina`, `variante`), `isla_panel` (`panel`, `situacion`, `variante`) e `isla_razon`
-  (`situacion`, `tipo`, `razon`, `pagina`, `variante`), las props del diseño. Hasta tu contrato, el servidor los rechaza uno a
-  uno (202): sin errores en la consola. El plan y lo hecho, en `isla-y-landing-nueva.md` §4.27. `#868`: la flecha, naranja.
+### ❗ Para el SPA (emisor: plataforma, 2026-10-02 noche) — contrato **1.61.0**: `guest_form` en la ficha, y «¿Qué menú?» con condición
+- `GET /catalog/products/{id}` gana `guest_form` (booleano, aditivo; la L3 de `#876`, `isla-y-landing-nueva.md` §4.28): la
+  reserva del pack lleva la lista de invitados (`TicketType::asksGuestForm()`, la regla de `OrderItem::guestFormStatus()`, que ya
+  la usa en sus tres sitios). Si subes la versión del contrato, parte de **1.61.0**.
+- La isla ya no pinta «¿Qué menú?» sin menús al reservar: tu K3 (el menú de Kids en la lista, `c19b9532`) no deja la pregunta
+  vacía. Al final de la pantalla del cumpleaños, si el pack lleva la lista: «Los invitados y los detalles de la fiesta, después
+  y sin prisa, en tu lista de invitados.» (`isla.compra.cuando.fiesta_despues`).
 
 ### Para el SPA (emisor: plataforma, 25→26-09) — la T5 y lo compartido: MUDADO el 30-09
 - Verbatim a `plataforma-ficheros.md` («Lo del SPA que este carril usa sin tocarlo»): es el registro de lo tuyo que uso sin
@@ -292,13 +238,12 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
   aditivas, `products.cancellation_span_{hours,days}` («24 h», «3 días»: el tramo que Mi cuenta nombra fuera de plazo).
 
 ### Atendido
+- **SPA 02-10 noche** (`c19b9532`): tomó las filas 4 y 8 de `#876` (la 4, dato del panel sin código, montada en su local; la 8,
+  código suyo, y medido: un QR impreso hoy no cuenta hasta la v2.0.0) y acusó seis avisos míos (`#876`, `#875`, `#874`, la Z6e, la
+  Z6g·1 y la A5); el del B3 lo cerró su Z6c·3: los siete, RETIRADOS de mi buzón. El texto, en `git log -p`.
 - **SPA 02-10, su Z6c·3 EN `main`** (`ccf692d8`, contrato 1.60.0): los gestos de la isla en `Contract::EVENTS` y su informe
   (`isla_accion` por visita en móvil). La isla ya los emitía (`isla/medir.js`): nada que tocar. El experimento `isla` lo crea
   el owner en el panel al desplegar (ya en «retomar» 0).
-- **SPA 02-10, `#771`: las copiadas que Google enseñaba TRADUCIDAS** se publicaban como palabras del autor (`CopiedReviewImport`
-  tiraba el `translated` de `resenas-google.mjs`): leído, medido y HECHO (`#874`, mi aviso de arriba, para su Puerta).
-- **SPA 02-10, su respuesta a mi aviso previo del B3**: la isla cuenta lo suyo por `JumpWeb.track` (su forma): hecho, arriba.
-  Su Z6c·3 (los nombres en el contrato y el informe con `hoy`/`b3`) me la avisa al estar en `main`.
 - **Retirados el 02-10** mis acuses de lo del SPA que él ya retiró de su buzón (la imagen de la invitación `#815`/`#816`,
   `LinkIsland` `#814`, las notas de `/privacidad`, su A4 —el previo, la A4a y la A4b—, la R1·T y la R1b, `#807`/`#808`): sus
   pendientes, hechos (`submitLogin` y `PLEGABLE_DE_ZONA.password`, fuera; el (2) de la R1·T, en la A5b). El texto, en `git log -p`.
