@@ -873,7 +873,7 @@ el copy al máximo». Tres tandas, cada una con su «al detalle» medido y **sin
   un toque (LSSI art. 22.1) y un interruptor por felicitación en el panel. **Sin precios, sin botón de reservar, sin
   descuento**: el éxito no se mide en conversión. El copy se escribe CON el owner (es/en/fr) antes de construir: `[PENDIENTE:
   owner]`. Se apoya en lo que ya hay de `#750` (el aviso a invitados: su comando horario, su «una vez por cumpleaños» y su baja),
-  que sigue igual. `/privacidad` lo nombra (buzón a la web).
+  que sigue igual. `/privacidad` lo nombra (`textos-legales.md` §4.2.1, punto 15, «⟨si felicitaciones⟩»).
 
 **La TP·3a y la TP·3b al detalle — medido el 29-09, antes de codificar** (✅ el owner lo vio: «Bien. Continúa», 29-09; lo
 construido, al final de la lista):

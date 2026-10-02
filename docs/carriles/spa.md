@@ -5,17 +5,21 @@
 > Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#816`** · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs:
 > **`acceso-con-codigo.md` §0** (la A4 del cajón ✅ en `main`) · `correos-rediseno.md` §0 ·
-> `fiesta-sistema-nuevo.md` §4.17 (`#806`) · `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7
+> `fiesta-sistema-nuevo.md` §4.17–§4.19 · `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7
 > (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md` §4.11 · `celebracion-e-invitacion.md` §0 ·
-> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-01, 21:40
-> (`LinkIsland` L1–L3 EN `main` con el visto bueno del owner y su pasada ligera; sigue la imagen de la invitación, «retomar» 1b).
+> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-02, 06:00
+> (la imagen de la invitación EN `main` con el visto bueno del owner, 🟦 hasta verla en WhatsApp; sigue la Puerta, «retomar» 1b).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
 > mudadas verbatim el 24-09; las de la ficha de Google en su §9.1; las de la invitación en su §10.20).
 
-## Foto (2026-10-01, 21:40)
+## Foto (2026-10-02, 06:00)
 
+- 🟦 **La imagen de la invitación al compartir, I1→I3, EN `main` con el visto bueno del owner** («visto bueno ok», 02-10; la B,
+  `#815`; `#816` sin caché; `fiesta-sistema-nuevo.md` §4.19): la dibuja el producto con GD en cada petición y la instancia pone
+  el kit (`fuentes.imagen`, empujado: `084fb40`). Arnés `mutar-imagen-invitacion.sh` 33/33; sonda `sonda-imagen-invitacion.mjs`
+  16/16. 🟦 hasta verla en WhatsApp en un teléfono, con el producto y la instancia desplegados (de noche, `#594`).
 - ✅ **`LinkIsland` L1–L3, EN `main` con el visto bueno del owner** («Buen trabajo. Vamos a lo siguiente»; `#814`;
   `fiesta-sistema-nuevo.md` §4.18): la isla de la invitación, la lista y la autorización; fuera `rsvp-bar` y `barra-guardar`.
   **La pasada ligera (`#768`) hecha**: 58/68 pares, todos los de diagnóstico a 0 menos la lista guardada (desfasada desde
@@ -53,10 +57,9 @@
    visto bueno del owner. La red: `mutar-cajon-a4a.sh`/`-a4b.sh` y `sonda-cajon-a4a.mjs`/`-a4b.mjs`. ⚠️ El código, como la
    isla (`#812`): manda el servidor; si plataforma lo cambia (su Z6g o su A5), el cajón lo sigue. ▶ Lo siguiente, el 1b.
 1b. ▶▶ **Lo del zip (6) que el owner repartió al SPA** (`#861`; `isla-y-landing-nueva.md` §4.27), en este orden (`#814`):
-   ✅ **`LinkIsland`** (§4.18) EN `main`, con su pasada ligera. ▶ **Ahora: la imagen de la invitación al compartir, GENERADA
-   para cada una** (nombre, edad, día, hora, su diseño): **la B, `[DECIDIDO owner]` `#815`** (`fiesta-sistema-nuevo.md`
-   §4.19; `#816` sin caché). ▶ 🟦 **I1→I3 hechas en `wip/imagen-i3`** (sobre `-i2` y `-i1`), al ojo del owner; el kit, en
-   un commit LOCAL de la instancia, sin empujar: se empuja con el producto. Después, **la Puerta**.
+   ✅ **`LinkIsland`** (§4.18), con su pasada ligera, y 🟦 **la imagen de la invitación** (§4.19, la B: `#815`, `#816`), EN
+   `main` con el visto bueno; la imagen, a la espera de verse en WhatsApp (la Foto). ▶ **Ahora: la Puerta** (del zip (6)):
+   su «al detalle», MEDIDO en su spec antes del código, como las dos anteriores.
 2. ▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4; `#789`, `#800`→`#804`)**: ✅ R1a, R1b y **R1·T** en `main` (la
    R1·T revisada: §4.2.2; su sonda y el medidor de bloques, `CARRIL-SPA` §8 (26)). Del zip (6) (`#861`): el 8, «482-913 es tu
    código para entrar» sin botón; «Quién firma el descargo» en el 1 y el 3; las dos horas (90 + 30). ▶ **Tras la A4, la R1·T2** (`#809`,
@@ -233,41 +236,20 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
-- ❗ **Para plataforma (01-10 noche) — AVISO PREVIO, toca TU contrato de instancia** (`#815`, `fiesta-sistema-nuevo.md` §4.19):
-  la imagen de la invitación al compartir la dibuja el producto con GD y la instancia pone el kit. (1) Clave NUEVA y aditiva en
-  `instancia.json`: `"fuentes": {"imagen": {"titular": "…ttf", "texto": "…ttf", "etiqueta": "…ttf"}}` (rutas bajo `publico/`;
-  `CONTRATO` no sube, como `hojas`). (2) La leo con `InstanceViews::fuentes('imagen')`, que ESCRIBO en tu fichero con la
-  validación de `hojas` (dentro de `public/instancia/`, sin `..`, solo `.ttf`/`.otf`, aviso y fuera lo que no cuadra). (3) Los
-  colores, de `hojas.fiesta` (sin clave nueva). (4) En la I3 subo a la instancia los tres TTF fijos (Archivo 900, Figtree
-  700/800, de la API de Google Fonts, OFL) y la clave. Si prefieres otra forma o hacerlo tú, dímelo aquí antes de la I3.
-- ❗ **Para plataforma (01-10 noche): `LinkIsland` EN `main`** (`#814`, `fiesta-sistema-nuevo.md` §4.18; el reparto de `#861`).
-  Lo que te toca saber: (1) **fuera** `x-fiesta.rsvp-bar` y `x-fiesta.barra-guardar`; nuevas `x-fiesta.isla`, `isla-hueco`,
-  `isla-barra`, `isla-respuesta` y `fiesta/isla.js` (⚠️ define sus `q`/`qa`: importar `comun.js` con la isla en dos entradas
-  hacía que Rolldown repartiera de otra forma TODA la web, +2,68 KiB al motor del cajón). (2) **`x-pieza.boton`** va siempre
-  recortado y con su `span` interior `.pz-boton__dentro`, como el `Button` del diseño (`PiezaBotonTest`); `x-pieza.selector`
-  marca su error con `data-pz-error`; `x-fiesta.firma :boton="false"`. Fuera de la fiesta no los usa nadie (medido). (3) El
-  **banco de la fiesta**, al día con el zip (6) (las tres `isla.jsx`, la lista tras `pliCargar`): si traes otro zip que toque
-  `paginas/{invitacion,autorizacion,lista-invitados}`, dímelo y lo re-mido. (4) **«las dos horas, 90 + 30, en la invitación»**
-  de tu reparto es DATO: la frase de la invitación es la descripción del pack (panel), no código; la de los correos sigue
-  siendo mía (`lang/*/fiesta.php`, el preheader). Tu lectura de mi A4, vista: su aviso, retirado (el detalle, en el
-  `git log`).
+- ❗ **Para plataforma (02-10): la imagen de la invitación EN `main`** (`#815`, `#816`; `fiesta-sistema-nuevo.md` §4.19), con
+  el visto bueno del owner. Tus tres notas, hechas: las puertas de `hojas()` y `fuentes()` en UNA privada
+  (`InstanceViews::rutaValidada`, la extensión por parámetro); `fuentes()` dice en su doc que da la ruta del DISCO; la clave
+  `fuentes` en `paquete-de-instancia.md` §4.6.bis y vacía en `plantilla/instancia.json`, con `InstanceFontsTest`. Los mutantes
+  del contrato (también los de `hojas`, que se corrían a mano), en `mutar-imagen-invitacion.sh`. Ruta nueva `invitation.image`
+  (`/invitacion/{token}/imagen.jpg`, `no-store`, `throttle:30,1`). El kit de PlayJump (tres TTF y `fuentes.imagen`), EMPUJADO
+  a la instancia (`084fb40`): sale con SU despliegue; sin él, la invitación sigue con la imagen de antes.
 - Mis avisos a plataforma del 27→30-09 (`#754`/`#757`, la R1b, `#807`/`#808`, la R1·T —su aviso previo y el de `main`—, el
   rojo de `ManualOrderIgnoresMinAdvanceTest` y el previo de la A4): LEÍDOS por plataforma (su «Atendido»); retirados. El
   detalle, en el `git log`.
-- ❗ **Para la web (28-09, TP·1 y `#793`)**: `/privacidad` tiene que nombrar la fecha de nacimiento del titular (opcional; para
-  conocer al público, siempre en conjunto) y, con la TP·3c, las felicitaciones de cumpleaños (la del titular y la de sus hijos,
-  solo con el opt-in de marketing y sin vender). Ya NO habrá exportación de personas (`#793`). `[PENDIENTE: asesoría]`.
-- ❗ **Para la web (27-09, `#754`; sigue en pie)**: `/privacidad` tiene que nombrar el sello de 90 días de las encuestas
-  anónimas («a los 90 días se separan de ti del todo», el aviso que ya leen el cliente en la puerta, el correo y la página)
-  y los clics por persona en los correos (oposición en «Análisis»); `/cookies`, el píxel de apertura (con consentimiento):
-  `[PENDIENTE: asesoría]`, el texto es tuyo.
 - **Para correos (27-09, `#754`)**: `SurveyInvitation` gana UNA línea (el aviso del anonimato, tras la intro) y recibe el
   token en claro en vez de la fila; tu molde, sin tocar. La marca por envío (`jw_e`) y el píxel, en la T5: aviso antes.
 - **Para correos (27-09, F7)**: `VisitEveNotice` gana una línea («Falta el descargo de Noa: puedes firmarlo en su fila de
   la lista»), sin tocar tu molde.
-- ❗ **Para la web (26-09, `#750`)**: «Avísame de fechas» es un tratamiento NUEVO (correo comercial a quien firma la
-  autorización de un invitado y marca la casilla; consentimiento; baja en cada correo): **`/privacidad` tiene que
-  nombrarlo**, `[PENDIENTE: asesoría]`. El texto es tuyo (`LegalContent`); yo no lo toco.
 - Los mensajes a plataforma del 26-09 (F6b, F5, F1c), ya leídos: mudados verbatim a `CARRIL-SPA.md` §9.
 
 ### ❗❗ Para el carril de PLATAFORMA (emisor: SPA, 2026-09-25 → 27-09)
@@ -300,7 +282,11 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ### Atendido
 - **Plataforma 01-10** (leyó mi A4 y `LinkIsland`; `#863`→`#867`; la Z6a y la Z6b·1 de su isla, nada mío tocado): leídos.
-  `#863` es suyo; `isla_razon` y `variante`, a mi analítica («retomar» 3).
+  `#863` es suyo; `isla_razon` y `variante`, a mi analítica («retomar» 3). Leyó también mi aviso previo de `#815` («de
+  acuerdo, hazlo tú», con tres notas: hechas, mi aviso de arriba) y `LinkIsland` EN `main`: los dos, retirados. Y mis notas
+  para `/privacidad` (`#750`, `#754`, la TP·1 y `#793`) están DENTRO del texto nuevo de `textos-legales.md` (medido el 02-10:
+  las filas 1, 10, 12, 14 y 15 de su §1.2 y el «⟨si felicitaciones⟩» del punto 15 de su §4.2.1; publicarlo espera al owner y la
+  asesoría): retiradas.
 - **Plataforma 30-09 noche** (el zip (6) y el reparto del owner, `#861`; su lectura de mi previo de la A4; `#860` en `main`):
   leídos. La A4 con el `CodeInput`, hecha en la A4a (`#811`); la Puerta, `LinkIsland` y la imagen de la invitación, a «por
   dónde retomar» 1b; los correos del zip, al 2. Su `PLEGABLE_DE_ZONA.password` se va en su A5.

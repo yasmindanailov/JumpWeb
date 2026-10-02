@@ -1,8 +1,9 @@
 # [SPEC] La fiesta del sistema nuevo — vestir la lista de invitados, la invitación y la autorización
 
 > Estado: ✅ **APROBADA por el owner el 2026-09-25 con sus ocho respuestas (`#743`)** · en ejecución: T0 ✅, sigue
-> la T1 · Última actualización: 2026-09-29 · Decisiones: `#765` (el traspaso) · **`#743`** (la aprobación y las ocho
-> respuestas de §7) · `#805` (la lista del owner, §4.16) · `#806`, `#807` y `#808` (los complementos en dos, §4.17).
+> la T1 · Última actualización: 2026-10-02 · Decisiones: `#765` (el traspaso) · **`#743`** (la aprobación y las ocho
+> respuestas de §7) · `#805` (la lista del owner, §4.16) · `#806`, `#807` y `#808` (los complementos en dos, §4.17) ·
+> `#814` (`LinkIsland`, §4.18) · `#815` y `#816` (la imagen al compartir, §4.19).
 > Carril: 🧩 **SPA** (banda 730–759). Fuente del diseño: `instancias/playjump/diseno/playjump-design-system/`
 > (el zip de Claude Design, `#760`): `paginas/lista-invitados.card.html`, `paginas/invitacion.card.html`,
 > `paginas/autorizacion.card.html`, `components/invitados/*`, `components/forms/SaveBar.jsx`, el `readme.md`
@@ -1071,7 +1072,7 @@ abierta y cerrada, el recibo y la autorización, a 390 y 1280) y todas las pieza
 sus diagnósticos. ✱ **Deuda medida**: el diagnóstico de la lista guardada no recoge `#805` ni K1/K2 (no es la isla:
 `DEUDA.md`).
 
-### 4.19 La imagen de la invitación al compartir, GENERADA para cada una (`#861`, `#815`) — 🟦 la B, en tandas
+### 4.19 La imagen de la invitación al compartir, GENERADA para cada una (`#861`, `#815`) — 🟦 en `main` con el visto bueno del owner; falta verla en WhatsApp
 
 Del reparto del zip (6): la hace el SPA y, por decisión del owner, se GENERA para cada invitación (nombre, edad, día, hora,
 su diseño), no la fija por tema del diseño. **Todo lo de aquí está medido el 01-10**; lo que no, lo dice.
@@ -1144,8 +1145,8 @@ y compara `storage/app` entero; y en una prueba la aplicación se reutiliza entr
 siguiente). El censo de `FocusedPagesAreCookieFreeTest` sube a 18: la ruta nueva tampoco acuña la cookie del visitante (su
 robot es un chat). Arnés **8/8** más (`SOLO=I2`).
 
-**I3 · el kit de PlayJump, hecha** (01-10 noche, en `wip/imagen-i3`; la instancia, commit LOCAL sin empujar hasta el visto
-bueno): los tres TTF fijos en `publico/instancia/fuentes/imagen/` de la instancia (Archivo 900, Figtree 700 y 800, de la API
+**I3 · el kit de PlayJump, hecha** (01-10 noche; I1→I3 a `main` el 02-10 con el visto bueno del owner, «visto bueno ok», y
+la instancia empujada a la vez): los tres TTF fijos en `publico/instancia/fuentes/imagen/` de la instancia (Archivo 900, Figtree 700 y 800, de la API
 de Google Fonts; llevan el aviso de la OFL en sus metadatos, medido) y `fuentes.imagen` en su `instancia.json`. Las tres
 notas de plataforma al leer `#815`: las puertas de `hojas()` y `fuentes()` en UNA función (`InstanceViews::rutaValidada`, la
 extensión por parámetro; sus mutantes, versionados para las dos), `fuentes()` dice que devuelve la ruta del DISCO, y la clave
