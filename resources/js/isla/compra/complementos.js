@@ -106,6 +106,21 @@ export function complementosDe(e) {
 }
 
 /**
+ * **Lo elegido de CADA grupo de elección** («esto o aquello»; `#881`, con la L2): en una fiesta, el MENÚ en el primero
+ * (`menu`, como siempre); en los demás —y en TODOS, en una entrada— lo que el borrador guarda por grupo (`elecciones`,
+ * `{ [clave del grupo]: producto }`). Lo que no se eligió no viaja: el servidor deja el de por defecto (`selected_by_default`).
+ *
+ * @returns {Array<{group: string, product_id: number}>}
+ */
+export function eleccionesDelBorrador(grupos, { menu = null, elecciones = {}, conMenu = false } = {}) {
+    return (Array.isArray(grupos) ? grupos : []).flatMap((g, i) => {
+        const elegido = conMenu && i === 0 ? menu : elecciones?.[g?.key];
+
+        return g?.key && elegido != null && elegido !== '' ? [{ group: g.key, product_id: Number(elegido) }] : [];
+    });
+}
+
+/**
  * Lo que el servidor resuelve de un producto SIN día ni hora (con la gente que va): sus grupos de elección —el menú de un
  * pack— y sus sueltos, con su nota. El endpoint los da sin día ni hora, pero rechaza `null` en ellos, y el store del motor
  * siempre los manda (`selection.js::loadAddons`): por eso esta llamada aparte. Sin línea: el dinero llega con la hora.

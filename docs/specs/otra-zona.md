@@ -16,8 +16,8 @@
   en `items` y la candidata FUERA (`cart.js::validateLine`), o compite consigo misma. (3) Los pesos, a ras de su techo:
   la compra 190,66 de 191 y los pasos 55,15 de 56 (`SidebarBundleBudgetTest`, tras la M1 de `#880`, 02-10). (4) La hora
   llena (`#822`) y la vuelta del banco, con dos líneas.
-- **Estado**: ✅ aprobada (`#878`), sin código; sigue K1 (§4.6). ➕ `#881`: con ella, los grupos de elección que la isla no
-  pinta —uno en una ENTRADA o un segundo en un pack— (`isla-y-landing-nueva.md` §4.29, M1).
+- **Estado**: ✅ aprobada (`#878`). **K1 ✅** (02-10 noche, §4.6: el modelo y la cesta); sigue K2. ➕ `#881`: con ella, los
+  grupos de elección que la isla no pinta —uno en una ENTRADA o un segundo en un pack—: su modelo, en la K1; su pregunta, K2.
 - **Invariantes**: `PAY-12`, `PAY-20`, `AFORO-01`, `AFORO-02`, sin tocar el servidor ni el `CRITICAL_RE`; la compra
   entera con la pasarela de pruebas y la BD, sí (§6).
 
@@ -128,6 +128,18 @@ decide el mockup (`#767`).
 ➕ `#881` (`[DECIDIDO owner]`, 02-10): en K1 y K2, los GRUPOS DE ELECCIÓN que la M1 de `#880` no pinta —uno en una entrada o
 un segundo en un pack—: la elección de cada grupo en el borrador y en la línea, y su pregunta con `TarjetasOpcion`, como el
 menú del pack (`fiesta.js::menusDe`, hoy solo el primer grupo).
+
+**K1, hecha (02-10 noche; sin pantalla: nada se ve todavía).** `linea.js`: `pedidoDe` con `otras` (sin la fila del pedido
+—se funde en ella— ni repetidas), `lineasDe` (la suya primero; las otras con el mismo día y hora y lo que el servidor resolvió
+de cada una), `resolverOtras` (`POST /catalog/products/{id}/addons` de cada una, en paralelo; sin respuesta, `null`: nada a
+medias), `meterLineas` (en ORDEN, cada una con las anteriores de contexto; TODO O NADA, y dice qué `fila` no cupo) y
+`conLaCesta` (las cantidades por PRODUCTO). `meterLinea` mete el pedido entero; «Continuar», la vuelta de Google y el
+rehacer de «Pagar» leen por producto (fuera los `lines[0]`). Los grupos (`#881`): `elecciones` en el borrador
+(`{ [grupo]: producto }`), `complementos.js::eleccionesDelBorrador` (el menú de una fiesta en el primero; los demás —en una
+entrada, todos— por su clave), `cambiar('eleccion')`, y se limpian al cambiar de fila o de pack. **Medido**: `linea.test.js`
+(17) y `complementos.test.js` (1.749 de JS); dos mutaciones vistas morder —sin devolver la cesta (cae el todo o nada) y con la
+cesta vacía de contexto (caen el orden y la fusión)—; `SidebarBundleBudgetTest` (la compra 193,11 → 195,08, a 196);
+`sonda-conversion` 22/22 y la sonda desechable de la M1, 12/12, de punta a punta (una línea, como antes).
 
 ## 5. Impacto en invariantes
 - `PAY-12` y `PAY-20`: el recibo pinta el presupuesto del servidor y no suma nada.

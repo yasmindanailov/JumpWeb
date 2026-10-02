@@ -18,8 +18,8 @@ import { informarDemanda } from './demanda.js';
 import { borradorDeIntencion, borradorVacio } from './intencion.js';
 import { horaCorta } from './vista.js';
 import { datosDeReserva, filasDeZona, pantallaCuando, preguntaCalcetines, respuestasDe } from './pantalla-cuando.js';
-import { campoDeEdad, eleccionesDe, menuElegido, packPorEdad, packsDeFiesta, pantallaCuandoFiesta } from './fiesta.js';
-import { cargarSinHora, complementosDe, conExtra, quedanEn } from './complementos.js';
+import { campoDeEdad, menuElegido, packPorEdad, packsDeFiesta, pantallaCuandoFiesta } from './fiesta.js';
+import { cargarSinHora, complementosDe, conExtra, eleccionesDelBorrador, quedanEn } from './complementos.js';
 
 export function usePantallaCero({ flow, compra, enCola, textos }) {
     const { catalogStore, timeStore, selectionStore, cartStore } = flow;
@@ -54,11 +54,18 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
         timeStore.select(b.hora);
         selectionStore.setQuantity(b.n);
         selectionStore.setQuantities(pedidos());
-        selectionStore.setChoices(b.fiesta ? eleccionesDe(compra.grupos, b.menu) : []);
+        selectionStore.setChoices(elecciones());
         await selectionStore.loadAddons({ api, productId: b.fila, date: b.dia, time: b.hora });
-        // Con hora, los menús vuelven RESUELTOS para esa gente: son los que se pintan.
-        if (b.fiesta && selectionStore.addons?.groups?.length) compra.grupos = selectionStore.addons.groups;
+        // Con hora, los grupos de elección (el menú, o los de una entrada) vuelven RESUELTOS para esa gente: son los que se pintan.
+        if (selectionStore.addons?.groups?.length) compra.grupos = selectionStore.addons.groups;
     }
+
+    /** Lo elegido de cada grupo de elección (`#881`): el menú de una fiesta y lo de los demás grupos. */
+    const elecciones = () => {
+        const b = compra.borrador;
+
+        return eleccionesDelBorrador(compra.grupos, { menu: b.menu, elecciones: b.elecciones, conMenu: Boolean(b.fiesta) });
+    };
 
     /** Las horas de la fila y el día, con la cesta (`AFORO-02`). Una hora que ya no cabe se vacía. */
     async function cargarHoras() {
@@ -75,22 +82,29 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
     /** La demanda sin hueco (`#758`, `demanda.js`): la fila o el pack que la pantalla 0 enseña es el que el cliente mira. */
     const mirada = () => informarDemanda({ id: compra.borrador.fila, dias: compra.precios[compra.borrador.fila], llegaron: compra.llegaron });
 
-    /** Los complementos del producto resueltos SIN día ni hora: con ellos la lista tiene precio antes de la hora (`#880`). */
+    /**
+     * Lo que el producto resuelve SIN día ni hora: sus complementos —con ellos la lista tiene precio antes de la hora, `#880`—
+     * y sus grupos de elección (`#881`; con hora, `resolverLinea` los trae resueltos, con las mismas claves).
+     */
     async function cargarSueltos() {
         const b = compra.borrador;
+        const sinHora = await cargarSinHora({ api, productId: b.fila, quantity: b.n ?? 1 });
 
-        compra.sueltos = (await cargarSinHora({ api, productId: b.fila, quantity: b.n ?? 1 })).sueltos;
+        compra.sueltos = sinHora.sueltos;
+        if (! b.hora || ! compra.grupos.length) compra.grupos = sinHora.grupos;
     }
 
     /**
      * La ficha de la fila (sus complementos), lo que se le pide sin hora y sus horas. Lo elegido de la fila anterior que
-     * ésta no vende, fuera: otro producto, otros complementos (`#880`).
+     * ésta no vende, fuera: otro producto, otros complementos (`#880`) y otros grupos de elección (`#881`).
      */
     async function cargarFila() {
         mirada();
         catalogStore.select(compra.borrador.fila);
         await catalogStore.loadProduct({ api, id: compra.borrador.fila });
         compra.borrador.extras = quedanEn(compra.borrador.extras, catalogStore.product);
+        compra.borrador.elecciones = {};
+        compra.grupos = [];
         await Promise.all([cargarSueltos(), cargarHoras()]);
     }
 
@@ -177,8 +191,9 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
             if (! pack || pack.id === b.fila) return null;
             b.fila = pack.id;
             // La hora extra es de CADA pack (otro complemento, otro precio): la del anterior no vale en éste; lo que el
-            // nuevo también vende (los calcetines), sí (`#880`).
+            // nuevo también vende (los calcetines), sí (`#880`). Sus grupos de elección, los suyos (`#881`).
             b.extras = quedanEn(b.extras, pack);
+            b.elecciones = {};
             b.n = Math.min(Math.max(b.n ?? 0, pack.min_quantity ?? 1), pack.max_quantity ?? Infinity);
 
             return enCola(cargarPack);
@@ -189,6 +204,7 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
         if (campo === 'menu') { b.menu = valor; return enCola(resolverLinea); }
         if (campo === 'cal') { b.cal = valor; return enCola(resolverLinea); }
         if (campo === 'extra') { b.extras = conExtra(b.extras, valor.id, valor.n); return enCola(resolverLinea); }
+        if (campo === 'eleccion') { b.elecciones = { ...(b.elecciones ?? {}), [valor.grupo]: valor.valor }; return enCola(resolverLinea); }
 
         return null;
     }
@@ -207,6 +223,8 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
         if (campo === 'cal') { b.cal = valor; return enCola(resolverLinea); }
         // Un complemento de la lista (`#880`): `{ id, n }`; 0 lo quita.
         if (campo === 'extra') { b.extras = conExtra(b.extras, valor.id, valor.n); return enCola(resolverLinea); }
+        // Lo elegido en un grupo de elección (`#881`): `{ grupo, valor }`.
+        if (campo === 'eleccion') { b.elecciones = { ...(b.elecciones ?? {}), [valor.grupo]: valor.valor }; return enCola(resolverLinea); }
         // Un dato de la reserva de un pack (`#839`): se escribe en el borrador y viaja al continuar; no cambia la oferta.
         if (campo === 'evento') { b.evento = { ...(b.evento ?? {}), [valor.key]: valor.valor }; return null; }
 
@@ -214,8 +232,8 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
     }
 
     /**
-     * Lo que la línea lleva de la pantalla 0 además del borrador: los calcetines y lo elegido en la lista de complementos
-     * (`#880`) y, de una fiesta, la edad y el menú.
+     * Lo que la línea lleva de la pantalla 0 además del borrador: los calcetines, lo elegido en la lista de complementos
+     * (`#880`) y en los grupos de elección (`#881`) y, de una fiesta, la edad.
      */
     function extrasDelPedido() {
         const b = compra.borrador;
@@ -223,10 +241,10 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
         const extras = (b.extras ?? []).filter((x) => x.product_id !== calcetin?.id);
 
         // De un pack sin edad, lo que pide al reservar (`#839`): solo sus campos y contestados, como los valida el servidor.
-        if (! b.fiesta) return { calcetin, evento: respuestasDe(datosDeReserva(catalogStore.product, b.evento)), elecciones: [], extras };
+        if (! b.fiesta) return { calcetin, evento: respuestasDe(datosDeReserva(catalogStore.product, b.evento)), elecciones: elecciones(), extras };
         const campo = campoDeEdad(compra.fichas[b.fila]);
 
-        return { calcetin, evento: campo ? { [campo.key]: b.edad } : {}, elecciones: eleccionesDe(compra.grupos, b.menu), extras };
+        return { calcetin, evento: campo ? { [campo.key]: b.edad } : {}, elecciones: elecciones(), extras };
     }
 
     const vista = computed(() => {

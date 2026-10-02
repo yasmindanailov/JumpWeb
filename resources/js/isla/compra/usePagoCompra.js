@@ -18,7 +18,7 @@ import { t } from '../../sidebar/i18n.js';
 import { useCardStore } from '../../sidebar/stores/card.js';
 import { cardImageUrl } from '../../sidebar/account/card.js';
 import { cajonHost } from '../../sidebar/host-bridge.js';
-import { complementosDe, meterLinea } from './linea.js';
+import { complementosDe, conLaCesta, meterLinea, resolverOtras } from './linea.js';
 import { cambioDe } from './recibo.js';
 import { destinoDeTarea } from './pasos.js';
 
@@ -32,10 +32,11 @@ export function usePagoCompra({ flow, props, textos = {}, compra, enCola, alPaga
     const aviso = (clave) => t(props.messages, clave);
 
     /**
-     * Rehace la línea con otra gente u otros pares: los complementos RESUELTOS de nuevo por el servidor (los hay que
-     * dependen de la cantidad) y la línea validada y presupuestada otra vez. La cantidad se ve cambiar al momento
-     * —como en la pantalla 0— y el dinero, cuando llega; si el servidor dice que no, vuelve la de antes. Con OTRA
-     * HORA es lo mismo (T3e·6: la que se elige tras llenarse la primera). Dice si el servidor la aceptó.
+     * Rehace el pedido con otra gente u otros pares: los complementos RESUELTOS de nuevo por el servidor (los hay que
+     * dependen de la cantidad) y sus líneas validadas y presupuestadas otra vez —también las de la otra zona (L2,
+     * `otra-zona.md`), que van a la misma hora—. La cantidad se ve cambiar al momento —como en la pantalla 0— y el dinero,
+     * cuando llega; si el servidor dice que no, vuelve lo de antes. Con OTRA HORA es lo mismo, para todas (T3e·6: la que se
+     * elige tras llenarse la primera; D1-A, `#878`). Dice si el servidor lo aceptó.
      */
     async function rehacer(cambio) {
         const antes = compra.pedido;
@@ -49,8 +50,9 @@ export function usePagoCompra({ flow, props, textos = {}, compra, enCola, alPaga
         selectionStore.setChoices(p.elecciones ?? []);
 
         const resuelto = await selectionStore.loadAddons({ api, productId: p.fila, date: p.dia, time: p.hora });
-        const r = resuelto
-            ? await meterLinea({ api, pedido: p, resueltos: selectionStore.resolved, cartStore, messages: props.messages })
+        const resueltosOtras = resuelto ? await resolverOtras({ api, pedido: p }) : null;
+        const r = resueltosOtras !== null
+            ? await meterLinea({ api, pedido: p, resueltos: selectionStore.resolved, resueltosOtras, cartStore, messages: props.messages })
             : { ok: false, aviso: aviso('errors.try_later') };
 
         if (! r.ok) {
@@ -60,7 +62,7 @@ export function usePagoCompra({ flow, props, textos = {}, compra, enCola, alPaga
             return false;
         }
 
-        compra.pedido = { ...p, n: cartStore.lines[0]?.quantity ?? p.n };
+        compra.pedido = conLaCesta(p, cartStore.lines);
         Object.assign(compra.borrador, { n: compra.pedido.n, cal: p.cal, hora: p.hora });
 
         return true;

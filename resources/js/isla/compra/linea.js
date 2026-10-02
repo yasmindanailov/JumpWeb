@@ -1,12 +1,12 @@
 /**
- * **LA LÍNEA de la compra de la isla** (T3e·3 de `docs/specs/isla-y-landing-nueva.md` §4.10, `DECISIONES #692`).
+ * **LA LÍNEA de la compra de la isla** (T3e·3 de `docs/specs/isla-y-landing-nueva.md` §4.10, `DECISIONES #692`) y, desde la
+ * L2 (`docs/specs/otra-zona.md`, `#878`), **LAS LÍNEAS**: la del pedido y las de la otra zona, con el mismo día y hora.
  *
- * ⚠️⚠️ **La cesta de la isla es SU pedido, y por eso meter la línea la SUSTITUYE en vez de añadirla.** La pantalla 0
- * dice una línea y «Pagar» la cambia sin salir (gente, calcetines); no hay pantalla de cesta. Si se añadiera, lo que
- * quedara de antes —una cesta guardada de otra visita, o la línea de un «Continuar» anterior tras volver atrás— se
- * compraría con ella sin que el cliente lo viera en ningún sitio: el recibo no tiene «quitar». Lo que decide si cabe
- * sigue siendo del servidor (`POST /cart/validate-line`, con la cesta vacía como contexto) y el precio, de su
- * presupuesto (`PAY-12`).
+ * ⚠️⚠️ **La cesta de la isla es SU pedido, y por eso meterlo la SUSTITUYE en vez de añadir.** La pantalla 0 dice el
+ * pedido y «Pagar» lo cambia sin salir (gente, calcetines); no hay pantalla de cesta. Si se añadiera, lo que quedara de
+ * antes —una cesta guardada de otra visita, o el pedido de un «Continuar» anterior tras volver atrás— se compraría con él
+ * sin que el cliente lo viera en ningún sitio. Lo que decide si cabe sigue siendo del servidor (`POST /cart/validate-line`,
+ * cada línea con las anteriores de contexto) y el precio, de su presupuesto (`PAY-12`).
  *
  * ⚠️ Es el `addToCart()` del motor (`usePurchaseFlow`) sin lo que la isla no pregunta ANTES de pagar: las demás
  * respuestas del pack —van al formulario de invitados, `#692`—, menores asignados y el justificante opcional (el diseño
@@ -20,13 +20,41 @@ import { lineProblems } from '../../sidebar/line-problems.js';
 import { t } from '../../sidebar/i18n.js';
 
 /**
+ * Las líneas de la OTRA ZONA del pedido (L2, `otra-zona.md` §4.1): sin la fila del pedido y sin repetir fila —la misma fila
+ * no es otra línea, es más gente: se FUNDE, como hace el servidor (`merges_with_index`)— y con lo que cada una pide (su
+ * gente, si su justificante es obligatorio, su mínimo y lo que cabía a esa hora). Devuelve también lo que suma a la del pedido.
+ */
+function otrasDe(fila, otras) {
+    const porFila = new Map();
+    let aLaPrimera = 0;
+
+    for (const o of Array.isArray(otras) ? otras : []) {
+        const n = Number(o?.n) || 0;
+
+        if (! Number.isInteger(o?.fila) || n < 1) continue;
+        if (o.fila === fila) { aLaPrimera += n; continue; }
+        const ya = porFila.get(o.fila);
+
+        porFila.set(o.fila, ya
+            ? { ...ya, n: ya.n + n }
+            : { fila: o.fila, n, guardian: o.guardian === true || o.guardian === 'required', minimo: o.minimo ?? 1, maximo: o.maximo ?? null });
+    }
+
+    return { otras: [...porFila.values()], aLaPrimera };
+}
+
+/**
  * Lo que la isla recuerda del pedido al salir de la pantalla 0: el borrador y lo que en ese momento decían los datos
  * (el mínimo, lo que cabe a esa hora, el complemento por cantidad y el justificante), que el motor olvida al añadir.
  * De una FIESTA (T3e·5), además, su respuesta de reserva —la edad de quien cumple, en la clave de su campo—, su
  * elección de grupo —el menú— y lo que la alarga (`extras`, la hora extra de la calculadora de la página, T6b·3): el
  * recibo los necesita para rehacer la línea sin perderlos.
+ * ▶ Y las de la OTRA ZONA (`otras`, la L2 de `#876`, `otra-zona.md`): con el MISMO día y la MISMA hora que la suya (D1-A,
+ * `#878`); los calcetines y lo demás que se pregunta, en la primera.
  */
-export function pedidoDe(borrador, { minimo = 1, maximo = null, calcetin = null, guardian = 'none', evento = {}, elecciones = [], extras = [] } = {}) {
+export function pedidoDe(borrador, { minimo = 1, maximo = null, calcetin = null, guardian = 'none', evento = {}, elecciones = [], extras = [], otras = [] } = {}) {
+    const deLaOtraZona = otrasDe(borrador.fila, otras);
+
     return {
         // Si es una FIESTA (sus invitados son «niños» y el resto se paga «el día de la fiesta»): un pack sin edad —una
         // excursión, T6c·3— no lo es, y el recibo lo dice con sus palabras (`recibo.js`).
@@ -34,7 +62,7 @@ export function pedidoDe(borrador, { minimo = 1, maximo = null, calcetin = null,
         fila: borrador.fila,
         dia: borrador.dia,
         hora: borrador.hora,
-        n: borrador.n,
+        n: deLaOtraZona.aLaPrimera > 0 ? borrador.n + deLaOtraZona.aLaPrimera : borrador.n,
         cal: calcetin ? borrador.cal : 0,
         minimo,
         maximo,
@@ -43,6 +71,7 @@ export function pedidoDe(borrador, { minimo = 1, maximo = null, calcetin = null,
         evento: { ...evento },
         elecciones: [...elecciones],
         extras: extras.map((x) => ({ product_id: x.product_id, quantity: x.quantity })),
+        otras: deLaOtraZona.otras,
     };
 }
 
@@ -69,40 +98,105 @@ export function lineaDe(p, resueltos) {
     };
 }
 
+/**
+ * Las LÍNEAS candidatas del pedido, en su orden (L2, `otra-zona.md` §4.1): la suya, con los complementos que resolvió el
+ * servidor, y detrás las de la otra zona, con el MISMO día y la MISMA hora (D1-A, `#878`) y los complementos que el servidor
+ * resolvió para cada una (los obligatorios o incluidos: de las otras, la isla no pregunta ninguno).
+ */
+export function lineasDe(p, resueltos, resueltosOtras = {}) {
+    return [
+        lineaDe(p, resueltos),
+        ...(Array.isArray(p.otras) ? p.otras : []).map((o) => ({
+            product_id: o.fila,
+            date: p.dia,
+            time: p.hora,
+            quantity: o.n,
+            event_data: {},
+            addons: Array.isArray(resueltosOtras?.[o.fila]) ? resueltosOtras[o.fila] : [],
+            dependent_ids: [],
+            guardian_authorization: o.guardian === true,
+        })),
+    ];
+}
+
+/**
+ * Lo que el servidor RESUELVE de cada línea de la otra zona (`selection` de `POST /catalog/products/{id}/addons`, con su
+ * día, su hora y su gente: los complementos obligatorios o incluidos que la línea tiene que llevar), EN PARALELO. Si alguna
+ * no contesta, `null`: no se mete un pedido a medias. Sin otras, `{}` y ninguna petición.
+ *
+ * @returns {Promise<Record<number, Array<{product_id: number, quantity: number}>>|null>}
+ */
+export async function resolverOtras({ api, pedido }) {
+    const otras = Array.isArray(pedido?.otras) ? pedido.otras : [];
+    const respuestas = await Promise.all(otras.map((o) => api.post(`/catalog/products/${o.fila}/addons`, {
+        quantity: o.n, date: pedido.dia, time: pedido.hora, addons: [], choices: [],
+    })));
+
+    if (respuestas.some((r) => ! r?.ok)) return null;
+
+    return Object.fromEntries(otras.map((o, i) => [o.fila, respuestas[i].data?.selection ?? []]));
+}
+
 /** Si el «no» del servidor a una línea es la HORA: completa o que ya no se ofrece (`CartLineProblem`). */
 export function esHoraLlena(problemas) {
     return (Array.isArray(problemas) ? problemas : []).some((p) => p?.reason === 'sold_out' || p?.reason === 'time_unavailable');
 }
 
 /**
- * Mete la línea del pedido como la ÚNICA de la cesta, la guarda y pide su presupuesto.
+ * Mete las líneas del pedido como la cesta ENTERA de la isla, en su orden, y la guarda y pide su presupuesto.
  *
- * Si el servidor dice que no, la cesta vuelve a lo que era y se devuelve el aviso ya traducido (el mismo que da el
- * cajón: `line-problems.js`). `horaLlena`: el «no» es la HORA —completa (`sold_out`) o que ya no se ofrece
- * (`time_unavailable`)—, y la compra puede proponer las cercanas (`#822`, §4.16).
+ * ⚠️ Cada una se valida con las ANTERIORES de contexto (`items`) y ella FUERA (`cart.js::validateLine`): dentro competiría
+ * consigo misma y el tope saldría menor (`otra-zona.md` §0, trampa 2). La primera, con la cesta vacía: sustituye lo que
+ * hubiera, que no compite con lo que va a reemplazar.
+ * ⚠️ TODO O NADA: si una dice que no, la cesta vuelve a lo que era y se devuelve el aviso ya traducido (el del cajón:
+ * `line-problems.js`), con la fila que no cupo (`fila`), para nombrar su zona. `horaLlena`: el «no» es la HORA —completa
+ * (`sold_out`) o que ya no se ofrece (`time_unavailable`)—, y la compra puede proponer las cercanas (`#822`, §4.16).
  *
- * @param {{api: object, pedido: object, resueltos: Array, cartStore: object, messages?: object}} deps
- * @returns {Promise<{ok: boolean, aviso: string, horaLlena?: boolean}>}
+ * @param {{api: object, lineas: Array<object>, cartStore: object, messages?: object}} deps
+ * @returns {Promise<{ok: boolean, aviso: string, horaLlena?: boolean, fila?: number}>}
  */
-export async function meterLinea({ api, pedido, resueltos, cartStore, messages = {} }) {
-    const linea = lineaDe(pedido, resueltos);
+export async function meterLineas({ api, lineas, cartStore, messages = {} }) {
     const previas = cartStore.lines;
+    let cesta = [];
 
-    // Con la cesta VACÍA como contexto: la candidata sustituye, así que no compite con lo que va a reemplazar.
-    cartStore.setLines([]);
-    const respuesta = await cartStore.validateLine({ api, line: linea });
+    for (const linea of lineas) {
+        cartStore.setLines(cesta);
+        const respuesta = await cartStore.validateLine({ api, line: linea });
 
-    if (! respuesta?.ok || respuesta.data?.valid !== true) {
-        cartStore.setLines(previas);
-        const problemas = respuesta?.ok ? respuesta.data?.problems ?? [] : [];
-        const aviso = respuesta?.ok ? lineProblems(problemas, [], messages).error : '';
+        if (! respuesta?.ok || respuesta.data?.valid !== true) {
+            cartStore.setLines(previas);
+            const problemas = respuesta?.ok ? respuesta.data?.problems ?? [] : [];
+            const aviso = respuesta?.ok ? lineProblems(problemas, [], messages).error : '';
 
-        return { ok: false, aviso: aviso || t(messages, 'errors.choose_one'), horaLlena: esHoraLlena(problemas) };
+            return { ok: false, aviso: aviso || t(messages, 'errors.choose_one'), horaLlena: esHoraLlena(problemas), fila: linea.product_id };
+        }
+        cesta = addLine(cesta, linea, respuesta.data);
     }
 
-    cartStore.setLines(addLine([], linea, respuesta.data));
+    cartStore.setLines(cesta);
     cartStore.persist();
     await cartStore.refreshQuote({ api });
 
     return { ok: true, aviso: '' };
+}
+
+/**
+ * El PEDIDO como la cesta entera de la isla (`meterLineas`): la suya y, si las hay, las de la otra zona con lo que el
+ * servidor resolvió para cada una (`resolverOtras`).
+ *
+ * @param {{api: object, pedido: object, resueltos: Array, resueltosOtras?: object, cartStore: object, messages?: object}} deps
+ */
+export function meterLinea({ api, pedido, resueltos, resueltosOtras = {}, cartStore, messages = {} }) {
+    return meterLineas({ api, lineas: lineasDe(pedido, resueltos, resueltosOtras), cartStore, messages });
+}
+
+/**
+ * El pedido con las cantidades que la CESTA tiene de verdad —las que admitió el servidor, que puede recortar—, leídas por
+ * PRODUCTO y no por posición (`otra-zona.md` §4.1: con varias líneas, `lines[0]` ya no es «la del pedido»).
+ */
+export function conLaCesta(pedido, lines) {
+    const cesta = Array.isArray(lines) ? lines : [];
+    const cuantas = (fila, n) => cesta.find((l) => l.product_id === fila)?.quantity ?? n;
+
+    return { ...pedido, n: cuantas(pedido.fila, pedido.n), otras: (pedido.otras ?? []).map((o) => ({ ...o, n: cuantas(o.fila, o.n) })) };
 }

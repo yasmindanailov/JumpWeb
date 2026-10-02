@@ -27,7 +27,7 @@ import { usePagoCompra } from './usePagoCompra.js';
 import { usePantallaCero } from './usePantallaCero.js';
 import { borradorDeIntencion, sigueSola } from './intencion.js';
 import { euros, horasCercanas, horasDelSelector } from './vista.js';
-import { meterLinea, pedidoDe } from './linea.js';
+import { conLaCesta, meterLinea, pedidoDe, resolverOtras } from './linea.js';
 import { alPrincipio, irA } from './ir-a.js';
 import { FALTA, PERDIDA, conFalta, faltaDeEntrada, faltaDePerdida, marcaDe, sigueLaMarca } from './falta.js';
 import { lineaListo, marcasDe, reciboDe, resumenDeLaCesta, resumenDelPedido } from './recibo.js';
@@ -177,7 +177,7 @@ export function useSeccionCompra(props) {
         try {
             await flow.ready;
             if (compra.pedido && cartStore.lines.length > 0) {
-                compra.pedido = { ...compra.pedido, n: cartStore.lines[0].quantity ?? compra.pedido.n };
+                compra.pedido = conLaCesta(compra.pedido, cartStore.lines);
                 if (store.step === STEPS.CART) await flow.checkout();
                 if (store.step === STEPS.IDENTIFY || store.step === STEPS.PAY) {
                     if (store.step === STEPS.IDENTIFY) await datos.altaGooglePendiente();
@@ -266,7 +266,11 @@ export function useSeccionCompra(props) {
             });
 
             cartStore.setError('');
-            const r = await meterLinea({ api, pedido, resueltos: selectionStore.resolved, cartStore, messages: props.messages });
+            // Las de la otra zona (L2, `otra-zona.md`), con lo que el servidor resuelve de cada una; sin respuesta, nada.
+            const resueltosOtras = await resolverOtras({ api, pedido });
+
+            if (resueltosOtras === null) { compra.aviso = t(props.messages, 'errors.try_later'); alPrincipio(); return; }
+            const r = await meterLinea({ api, pedido, resueltos: selectionStore.resolved, resueltosOtras, cartStore, messages: props.messages });
 
             // La hora se llenó ENTRE elegirla y continuar (`#822`, §4.16): el aviso del diseño con las cercanas y «Elegir
             // esta hora», no un texto en la pantalla 0. El pedido intentado queda como el perdido, para rehacerlo.
@@ -278,7 +282,7 @@ export function useSeccionCompra(props) {
             }
             // El «no» del servidor se pinta ARRIBA de la pantalla 0: la capa sube a él (se continúa desde abajo).
             if (! r.ok) { compra.aviso = r.aviso; alPrincipio(); return; }
-            compra.pedido = { ...pedido, n: cartStore.lines[0]?.quantity ?? pedido.n };
+            compra.pedido = conLaCesta(pedido, cartStore.lines);
             await admitir();
         } finally {
             compra.ocupado = null;

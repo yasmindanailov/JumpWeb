@@ -1019,7 +1019,12 @@ class SidebarBundleBudgetTest extends TestCase
     // M3 de `#880` (el owner: el correo primero): la vista con que se llega a «Tus datos» y la flecha dentro de él
     // (`datos.js::vistaInicial` y `atras`) y su cableado. Medido 192,50 → 193,11 (base: la medida de la M2, `79ff2fb9`). El
     // techo, a 194. ⚠️ De la M1 a la M3, +5,94 kB (187,17 → 193,11): la primera cuenta de la M4.
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 194;
+    // K1 de la L2 (`otra-zona.md` §4.1, `#878`; y los grupos de elección de `#881`): el pedido con las líneas de la otra
+    // zona —en orden, cada una con las anteriores de contexto, todo o nada (`linea.js`: `lineasDe`, `resolverOtras`,
+    // `meterLineas`, `conLaCesta`)— y lo elegido de cada grupo (`complementos.js::eleccionesDelBorrador`). Medido 193,11 →
+    // 195,08 (base: la medida de la M3, `55abbb0b`). El techo, a 196. ⚠️ Pasar código al trozo de los pasos no ahorra
+    // descarga —la isla de cada página pide los dos al montarse—: el ahorro es CARGAR la compra al abrirla (la M4).
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 196;
 
     // T4d·4 (`specs/isla-y-landing-nueva.md` §4.12): la CALCULADORA de una página, entrada propia que la página pide
     // (`scripts` de `<x-pagina>`) y se monta al acercarse su pieza. Su DESCARGA entera, como la mide el navegador que

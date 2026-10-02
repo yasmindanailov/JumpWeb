@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { cargarSinHora, complementosDe, conExtra, deLaFicha, elegido, formaDe, quedanEn } from './complementos.js';
+import { cargarSinHora, complementosDe, conExtra, deLaFicha, eleccionesDelBorrador, elegido, formaDe, quedanEn } from './complementos.js';
 
 /**
  * Los complementos de la pantalla 0 de la isla (M1 de `specs/isla-y-landing-nueva.md` §4.29, `#880`): todos los que se
@@ -106,6 +106,22 @@ describe('las filas', () => {
         const [fila] = complementosDe({ ficha: { addons: [incluidos] }, sinHora: [{ product_id: 110, note: 'Incluido' }], conHora: null, extras: [], textos });
 
         assert.deepEqual([fila.forma, fila.disponible, fila.precio, fila.porQue], ['fijo', false, 'Incluido', '']);
+    });
+});
+
+describe('los grupos de elección, TODOS (`#881`)', () => {
+    const grupos = [{ key: 'menu', options: [] }, { key: 'pulsera', options: [] }];
+
+    test('en una fiesta, el menú en el primero y lo elegido en los demás', () => {
+        assert.deepEqual(eleccionesDelBorrador(grupos, { menu: '108', elecciones: { pulsera: '201' }, conMenu: true }), [
+            { group: 'menu', product_id: 108 }, { group: 'pulsera', product_id: 201 },
+        ]);
+    });
+
+    test('en una entrada, todos por su clave; lo no elegido no viaja (el servidor deja el de por defecto)', () => {
+        assert.deepEqual(eleccionesDelBorrador(grupos, { elecciones: { pulsera: 201 } }), [{ group: 'pulsera', product_id: 201 }]);
+        assert.deepEqual(eleccionesDelBorrador(grupos, { menu: '108' }), [], 'sin `conMenu`, el menú del borrador no cuenta');
+        assert.deepEqual(eleccionesDelBorrador(null), []);
     });
 });
 

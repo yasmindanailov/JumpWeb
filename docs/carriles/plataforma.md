@@ -60,8 +60,9 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
    su §5), las cuatro de la Z6g·1 y `sonda-panel`, `sonda-banco-movimiento` (casos del 27-09) y `sonda-entradas` (ya lee «90
    minutos saltando»). **Queda de la isla**: probarla en un móvil de verdad, en STAGING al terminarlo todo; `isla_razon` y la
    imagen de la INVITACIÓN son del SPA (`#861`).
-   ▶▶▶ **SIGUE AQUÍ, en el 2**: el código de la L2 (`otra-zona.md`, K1→K4, con los grupos de `#881`); la lista nueva del
-   owner (el 1), con M1→M3 ✅, espera solo a su M4 (después de la L2).
+   ▶▶▶ **SIGUE AQUÍ, en el 2**: el código de la L2 (`otra-zona.md`; **K1 ✅** el 02-10 noche —el modelo y la cesta, sin
+   pantalla—; sigue **K2**, la pantalla 0, con la pregunta de los grupos de `#881`); la lista nueva del owner (el 1), con
+   M1→M3 ✅, espera solo a su M4 (después de la L2). ⚠️ La compra, a 195,08 de 196 kB: la M4 empieza por cargarla al abrirla.
 1. ▶▶▶ **LA LISTA DEL OWNER DEL 02-10 (noche)** (`#880`; su censo, medido, en `isla-y-landing-nueva.md` §4.29), en este orden:
    ✅ **M1** la compra de la isla enseña TODOS los complementos que se venden al reservar el producto, «los que sean» (los de la
    lista de invitados, no; visto por el owner, §4.29: `compra/complementos.js`, la lista diferida, `calcetinDe` con tope, los

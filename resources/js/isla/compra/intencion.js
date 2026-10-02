@@ -8,10 +8,11 @@
  */
 
 /**
- * El borrador de la pantalla 0 en blanco: sin zona, una persona, sin calcetines (`startCuando` del diseño) y sin ningún
- * otro complemento (`extras`, la lista de `complementos.js`, `#880`).
+ * El borrador de la pantalla 0 en blanco: sin zona, una persona, sin calcetines (`startCuando` del diseño), sin ningún
+ * otro complemento (`extras`, la lista de `complementos.js`, `#880`) y sin nada elegido en los grupos de elección más allá
+ * del menú de una fiesta (`elecciones`, `#881`).
  */
-export const borradorVacio = () => ({ modo: 'nuevo', zona: null, elegirZona: false, dia: null, hora: null, fila: null, n: 1, cal: 0, extras: [], otra: null });
+export const borradorVacio = () => ({ modo: 'nuevo', zona: null, elegirZona: false, dia: null, hora: null, fila: null, n: 1, cal: 0, extras: [], elecciones: {}, otra: null });
 
 /**
  * El de una FIESTA (T3e·5, `fiesta.js`): sin edad, sin día —una fiesta no nace «para hoy»—, los niños en el mínimo del
