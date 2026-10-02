@@ -65,8 +65,8 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
    SPEC aprobada, `specs/otra-zona.md` (`#878`: un día y una hora para todo, «Quitar», la zona por su nombre); su código,
    K1→K4, va tras la L5 → ✅ **L3** la isla en las páginas (§4.28, visto por el owner): «Reservar» abre la compra con la
    intención de la página (instancia), la frase del cumpleaños solo con lista (`guest_form`, contrato 1.61.0) y «¿Qué menú?»
-   con condición → ▶ **L4** la 404 con piezas
-   del sistema y el hero más ancho, en vivo → **L5** el resumen A4 semanal y mensual de cumpleaños (amplía `#184`) → el código
+   con condición → ✅ **L4** (§4.28, visto por el owner): la 404 del paquete (`'ocupa' => '404'`, `InstanceNotFound` y el
+   comodín; `mutar-404.sh` 12/12) y el hero a 1400 → ▶ **L5** el resumen A4 semanal y mensual de cumpleaños (amplía `#184`) → el código
    de la L2, con su visto bueno → al final, tras sus vídeos, los textos («parking gratis» es falso). Al SPA, en el buzón.
 2. ▶▶ **EL SEO** (`specs/seo.md`, 🟦; el owner: «IMPORTANTÍSIMO»). Investigado y medido (§1–§2: la marca ya está en el 1 y
    **cumpleaños no existe para Google**). HECHO el 01-10: **S4** (`robots.txt` con `Sitemap:`; JSON-LD con `geo`, `priceRange` y

@@ -2827,7 +2827,19 @@ la página, la frase con y sin lista, los menús vacíos), `CatalogTest` (la fic
 `IslaTextosTest`; en navegador, una comprobación desechable a 390 y 1280 (las cuatro páginas abren la compra sin mover la
 página ni la URL; a 1280, en Kids y Jump la isla cede su botón a los de la página, como ya hacía) y la captura del final de la
 compra del cumpleaños. ⚠️ **De la fila 8, medido por el SPA** (`c19b9532`): v1.1.0 no tiene la analítica ni `#mi-cuenta`, así
-que un QR impreso hoy no cuenta nada hasta la v2.0.0.
+que un QR impreso hoy no cuenta nada hasta la v2.0.0. Las intenciones de las páginas, en la instancia `e8f742e`.
+
+**L4 ✅ (02-10, con el visto bueno del owner en vivo).** **El hero, más ancho** (`[DECIDIDO owner]`: con tres anchos delante
+eligió 1600 y, al verlo, «demasiado ancho; a 1400 mejor»): la sección de arriba de las siete páginas que lo llevan
+(`.pj-sec--top > .pj-wrap`, `--pj-cabecera-ancho`, en `entradas.css` de la instancia) sube de la retícula de 1240 a **1400**: la
+tarjeta mide 1304 px en escritorio (era 1144) y su titular y su firma siguen alineados con la retícula; el móvil, igual (medido
+a 390, 1440 y 1920). **La 404** («perfecto»): la página del paquete que OCUPA la 404 (`'ocupa' => '404'`,
+`paquete-de-instancia.md`), sin mockup y con piezas del sistema —la cabecera en tarjeta con la foto de la portada, «Esta página
+se ha ido de un salto», «Reservar» (el selector de planes) e «Ir al inicio»; debajo, el reparto de la portada tal cual (su pieza
+2), la isla y el pie—, con estado 404 y `noindex`. En el producto, `InstanceNotFound` (el pintor y el COMODÍN del grupo `web`,
+que respeta los 405 y no casa con la API ni con lo que lleva un punto: dos pruebas de 405 y un POST a la API lo midieron) y `404`
+en `InstancePages::OCUPABLES`. **Medido**: dos casos de `InstancePagesTest`, las de 405, `scripts/mutar-404.sh` 12/12 y, en
+local, la página con su 404, el JSON de la API y la 404 ligera de un `.php` o un `.png`.
 
 ## 5. Impacto en invariantes
 

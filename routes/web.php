@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Booking\Services\PartyInvitations;
+use App\Http\Api\ApiSurface;
 use App\Http\Controllers\Account\AccountController;
 use App\Http\Controllers\Admin\AnalyticsExportController;
 use App\Http\Controllers\Admin\CalendarEventsController;
@@ -34,6 +35,7 @@ use App\Http\Controllers\RobotsController;
 use App\Http\Controllers\ServicesController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SurveyPageController;
+use App\Http\Instancia\InstanceNotFound;
 use App\Http\Instancia\InstancePages;
 use App\Http\Middleware\RecordEmailClick;
 use App\Http\Middleware\RedirectToInstancePage;
@@ -617,3 +619,13 @@ Route::get('/'.$panel.'/analitica/csv', AnalyticsExportController::class)
  * al desplegar: una página nueva en el paquete necesita volver a construir esa caché.
  */
 app(InstancePages::class)->registrarRutas(app('router'));
+
+/*
+ * **EL COMODÍN: lo que no es ninguna ruta, DENTRO del grupo `web`** (la L4 de `#876`). Laravel lo prueba el último. Sin él,
+ * una dirección que no existe salía sin sesión ni idioma, y la 404 del paquete (`InstanceNotFound`), con su isla y su cuenta,
+ * no se podía pintar; con él, pasa por la web como cualquier página y lanza su 404, que pinta esa clase o la de siempre. ⚠️ Un
+ * GET a una dirección que solo existe con otro método sigue siendo un 405 (`InstanceNotFound::comodin`). ⚠️ Y el comodín NO
+ * casa con la API ni con lo que lleva un punto (`.php`, `.png`): Laravel lo cuenta también al decidir los 405, y un POST a una
+ * dirección de la API que no existe daría 405 en vez de 404 (un cambio de contrato); eso sigue como siempre.
+ */
+Route::fallback([InstanceNotFound::class, 'comodin'])->where('fallbackPlaceholder', '(?!'.preg_quote(ApiSurface::PREFIX, '#').'(?:/|$))[^.]*');

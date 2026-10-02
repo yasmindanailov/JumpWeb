@@ -1099,6 +1099,51 @@ BLADE);
         $this->assertSame(array_values(array_unique($urls)), $urls, 'sin repetir');
     }
 
+    /**
+     * **La 404 del paquete** (la L4 de `#876`): la página que OCUPA la 404 pinta lo que la web no encuentra —una dirección que
+     * no es ninguna ruta (por el comodín del grupo `web`) y un `abort(404)` dentro de una ruta—, con su estado, `noindex` y las
+     * cabeceras de la web. Lo que no es la web sale como siempre: la API con su sobre, lo que lleva extensión y el panel.
+     */
+    public function test_a_declared_404_paints_what_the_web_does_not_find(): void
+    {
+        File::put($this->paquete.'/web/no-encontrada.blade.php', <<<'BLADE'
+<h1>Esta página se ha ido de un salto</h1>
+<p id="noindex">{{ $pagina['noindex'] ? 'sí' : 'no' }}</p>
+BLADE);
+        $this->declarar(['no-encontrada' => ['vista' => 'no-encontrada', 'ocupa' => '404', 'hechos' => ['site']]]);
+        Route::middleware('web')->get('/_prueba-404', fn () => abort(404));
+        Route::middleware('web')->post('/_prueba-404', fn () => abort(404));
+        app('router')->getRoutes()->refreshNameLookups();
+
+        $respuesta = $this->get('/esto-no-existe')->assertNotFound()->assertSee('Esta página se ha ido de un salto')
+            ->assertSee('<p id="noindex">sí</p>', false);
+        $this->assertNotEmpty($respuesta->headers->get('Content-Security-Policy'), 'pasa por el grupo web, con su CSP');
+        $this->get('/_prueba-404')->assertNotFound()->assertSee('Esta página se ha ido de un salto');
+        $this->post('/_prueba-404')->assertNotFound()->assertDontSee('Esta página se ha ido de un salto');
+        // Sin dirección propia: ni su slug la sirve como página ni el sitemap la anuncia.
+        $this->assertStringNotContainsString('no-encontrada', (string) $this->get('/sitemap.xml')->assertOk()->getContent());
+
+        $this->getJson('/api/v1/esto-no-existe')->assertNotFound()->assertJsonStructure(['error' => ['code', 'message']]);
+        // El comodín no casa con la API: un POST a lo que no existe sigue siendo un 404, no un 405 (contrato).
+        $this->postJson('/api/v1/esto-no-existe')->assertNotFound()->assertJsonStructure(['error' => ['code', 'message']]);
+        $this->getJson('/esto-no-existe')->assertNotFound()->assertDontSee('Esta página se ha ido de un salto');
+        $this->get('/esto-no-existe.png')->assertNotFound()->assertDontSee('Esta página se ha ido de un salto');
+        $this->get('/admin/esto-no-existe')->assertNotFound()->assertDontSee('Esta página se ha ido de un salto');
+        // En un grupo SIN sesión (la encuesta por correo), la de siempre o la del paquete, pero nunca un 500.
+        $this->get('/encuesta/'.str_repeat('a', 40))->assertNotFound();
+    }
+
+    /** Sin la 404 declarada, la del producto; y si la del paquete no se puede pintar, también: un error ahí no es un 500. */
+    public function test_without_a_declared_404_or_with_a_broken_one_the_product_paints_its_own(): void
+    {
+        $this->declarar(['kids' => ['vista' => 'kids', 'hechos' => ['site']]]);
+        $this->get('/esto-no-existe')->assertNotFound()->assertSee('e404', false);
+
+        File::put($this->paquete.'/web/rota.blade.php', "@php throw new \\RuntimeException('rota'); @endphp");
+        $this->declarar(['rota' => ['vista' => 'rota', 'ocupa' => '404', 'hechos' => ['site']]]);
+        $this->get('/esto-no-existe')->assertNotFound()->assertSee('e404', false);
+    }
+
     /** Sin paquete, o con un paquete que no declara páginas, no hay ninguna: el estado normal, no un error. */
     public function test_without_a_declaration_there_are_no_pages(): void
     {

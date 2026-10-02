@@ -6,6 +6,7 @@ use App\Domain\Platform\Services\Analytics\EmailUtm;
 use App\Domain\Platform\Services\Analytics\Visitor;
 use App\Http\Api\ApiExceptionRenderer;
 use App\Http\Api\ApiSurface;
+use App\Http\Instancia\InstanceNotFound;
 use App\Http\Middleware\Api\ApiLocale;
 use App\Http\Middleware\Api\NoStoreWhenAuthenticated;
 use App\Http\Middleware\EnsureSessionIsCurrent;
@@ -28,6 +29,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Laravel\Sanctum\Http\Middleware\CheckAbilities;
 use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -209,5 +211,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // todo lo que no sea la API, así que la web conserva intactas sus páginas de error.
         $exceptions->render(
             fn (Throwable $e, Request $request) => (new ApiExceptionRenderer)->render($e, $request)
+        );
+        // La 404 de la WEB, con la página del paquete si la declara (`'ocupa' => '404'`, la L4 de `#876`); si no, `null` y
+        // la de siempre. Después de la API: lo de `/api/v1` ya salió arriba con su sobre.
+        $exceptions->render(
+            fn (NotFoundHttpException $e, Request $request) => app(InstanceNotFound::class)->render($request)
         );
     })->create();

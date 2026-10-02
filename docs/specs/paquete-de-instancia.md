@@ -257,6 +257,12 @@ como contexto—), porque solo sus controladores preguntan (`InstancePages::queO
 `PageController::rules` y `PageController::show`); una ruta fuera de la lista, una
 segunda página en la misma o una portada que ocupa otra dejan esa página fuera con aviso. Conserva la dirección (la de más
 valor en Google), sin 301. Una ruta que se quiera ceder entra en la lista con su controlador en el mismo cambio.
+▶ **Y la 404** (`[DECIDIDO owner]` 2026-10-02, la L4 de `#876`; `isla-y-landing-nueva.md` §4.28): `'ocupa' => '404'` (en texto) —no
+es una ruta: es la respuesta a lo que no lo es—. Lo que la web no encuentra (una dirección que no es ninguna ruta, por el
+COMODÍN del grupo `web`, y un `abort(404)` dentro de una ruta) se pinta con esa página, con estado 404 y `noindex`
+(`InstanceNotFound`); sin dirección propia, no sale en el sitemap. Fuera: la API (su sobre), el panel, lo que no es GET ni pide
+HTML y lo que lleva extensión; y si pintarla falla, la 404 del producto, nunca un 500. El comodín no casa con la API ni con lo
+que lleva un punto, y respeta los 405. Lo vigilan dos casos de `InstancePagesTest` y `scripts/mutar-404.sh` (12/12).
 `InstancePagesTest` +2 y el arnés, 12/12.
 
 ▶▶ **Y las rutas VIEJAS que una página SUSTITUYE, con un 301** (`[DECIDIDO]` 2026-09-29, `#843`; T6f de

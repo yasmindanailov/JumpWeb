@@ -50,9 +50,11 @@ final class InstancePages
     /**
      * Las rutas del producto que una página del paquete puede ocupar: las que su controlador sabe cederle. `normas`, desde la
      * T6e (`#842`): `PageController::rules`. `legal`, desde la T6h (`#844`): las CINCO rutas legales a la vez
-     * (`PageController::show`), cada una con su texto en el hecho `legal`.
+     * (`PageController::show`), cada una con su texto en el hecho `legal`. `404`, desde la L4 de `#876`: la página de «no
+     * encontrada» de la web, que no es una ruta sino la respuesta a lo que no lo es (`InstanceNotFound`); sin dirección propia,
+     * tampoco sale en el sitemap.
      */
-    public const OCUPABLES = ['home', 'cumpleanos', 'normas', 'legal'];
+    public const OCUPABLES = ['home', 'cumpleanos', 'normas', 'legal', '404'];
 
     /**
      * Las rutas del producto que una página puede SUSTITUIR con un 301 (`#843`): las páginas viejas de la landing, solo en GET
