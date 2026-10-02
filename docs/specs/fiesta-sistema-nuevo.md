@@ -1239,6 +1239,43 @@ con tarjetas impares, la última a lo ancho (la A, elegida con la B y la C rende
 - **P4 · el correo** «Falta elegir…», el día antes del plazo (cada hora con su marca, como la víspera), editable (R1·T) y en
   `EmailUtm`.
 
+### 4.21 P3 al detalle · los GRUPOS DE OPCIONES, genéricos (`[PENDIENTE: owner]`, 02-10, 21:35) — medido, sin código
+
+**El encargo** (owner, 02-10): «esa config debe ser profesional y escalable… no sé si ya tenemos configurable por familia
+seleccionar una opción de complemento incluido o no, también puede ser de pago… lo de obligatorio sí que es nuevo… nada
+hardcoded». La merienda es el primer caso, no el mecanismo.
+
+**Lo que hay** (medido en el código):
+1. **Al reservar, «elige uno» YA existe**: `product_addons.choice_group`, una clave de TEXTO en cada enganche («misma clave =
+   el cliente elige solo uno», `AddonsRelationManager`). Cada opción, **incluida** (`is_included`: todas sus unidades gratis
+   con `per_guest`, `AddonResolver::freeUnitsForUnit()`) o **de pago** (su tarifa), **por niño** (`per_guest`) o fija. El
+   grupo siempre lleva una marcada (`AddonResolver::groupDefault()`: la incluida o la primera). Era el Menú 1/2.
+2. **En la lista (venta posterior), no**: el panel esconde grupo, incluido y por invitado, y `ProductAddon::postFormProblem()`
+   los rechaza (reglas 2–4, por dinero). La FAMILIA solo agrupa en pantalla: no obliga a nada.
+3. **«Hay que elegir» es nuevo**: `is_mandatory` es otra cosa («se añade solo»).
+4. **El grupo no existe como tal**: es una clave repetida en cada opción, sin título ni ajustes propios; por eso la isla de
+   plataforma pinta «¿Qué menú?» QUEMADO (§4.17·2) y la API solo publica la clave (`CatalogAddon.choice_group`).
+
+**Propuesta (A, recomendada): el GRUPO DE OPCIONES como entidad del producto**. Tabla `addon_choice_groups` (por producto: la
+clave que ya usan los enganches, un TÍTULO traducible —«¿Qué merienda?»—, «hay que elegir» sí/no y su posición). Las opciones
+siguen siendo enganches con su `choice_group` (nada vendido cambia), cada una incluida o de pago y por niño o fija. Vale en
+las dos fases: al reservar, igual que hoy (siempre una marcada) pero con su título del panel; en la lista, una pregunta de
+UNA respuesta, sin marcada de serie, «No, gracias» si no es obligatoria y «Falta elegir…» si lo es.
+- **Dinero, sin regla nueva**: incluida = gratis; de pago = se paga en el parque, como todo complemento de la lista; cambiar
+  de opción = cancelar una línea y crear la otra en el MISMO guardado (bajo el lock de `PostFormAddons`, `CRITICAL_RE`); lo
+  «por niño» sigue al número (`#449`). Las reglas 2–4 se abren SOLO para miembros de un grupo de la tabla; la 1 sigue cerrada.
+- **El parque**: «sin elegir» en el panel, la ficha (`ReservationSlipController`) y el resumen del día; la API publica el
+  grupo (título, obligatorio, elegida): versión menor del contrato, aviso a plataforma (su isla podrá leer el título).
+- **Las fiestas vendidas ANTES de crear el grupo no lo deben** (recomendado): ya eligieron con el Menú al reservar; para ellas
+  no hay «Falta elegir» ni correo (lo elige el parque si hace falta).
+- **Tandas** (en `wip/p3-…`, sobre esta rama): P3·1 dominio (tabla, guardas, reconciliador, verificadores) → P3·2 panel
+  («Grupos de opciones» del producto; en el enganche, el grupo se ELIGE de la lista, ya no se escribe) → P3·3 la lista → P3·4
+  el parque y la API. Y la receta de producción (la merienda como grupo obligatorio, incluida y por niño) es DATO del panel.
+
+**Descartadas**: (B) una casilla «hay que elegir» en cada opción, sin tabla: el ajuste se repite y puede quedar distinto
+entre opciones del mismo grupo, y el título sigue sin existir; (C) la familia como grupo: la familia es del complemento en
+todo el catálogo y la regla es de cada pack (la trampa de `#485`, presentación usada como regla).
+
 ## 5. Impacto en invariantes
 
 | ID | Cómo |
