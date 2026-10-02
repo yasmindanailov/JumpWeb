@@ -742,6 +742,24 @@
     color: var(--primary-700);
 }
 
+/* «Pregúntale.» a la izquierda y por cuál va («2 de 3») a la derecha. */
+.ppu-enc__cab {
+    justify-content: space-between;
+}
+
+.ppu-enc__paso {
+    color: var(--ppu-suave);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Cada pregunta es su bloque: al pasar a la siguiente, SOLO él entra (la ficha de alrededor no se mueve). */
+.ppu-enc__q {
+    display: grid;
+    gap: 10px;
+    min-width: 0;
+    animation: ppu-in 220ms ease-out;
+}
+
 .ppu-enc__intro {
     font: 500 15px/1.4 var(--ppu-letra);
     color: var(--ppu-texto);
@@ -776,6 +794,56 @@
     transform: scale(0.98);
 }
 
+.ppu-op:focus-visible {
+    outline: 2px solid var(--primary-500);
+    outline-offset: 2px;
+}
+
+/* La de un toque, mientras se guarda (`data-loading`, de Livewire): el dedo ve su respuesta AL INSTANTE, sin esperar al
+   servidor. */
+.ppu-op[data-loading] {
+    border-color: var(--primary-600);
+    background: var(--primary-600);
+    color: var(--color-white);
+}
+
+/* Marcada en una de varias: tinte y borde de la marca, con su ✓. El relleno entero es de la acción («Siguiente»): una
+   opción marcada no puede parecer un botón. */
+.ppu-op[aria-pressed='true'] {
+    border-color: var(--primary-600);
+    background: color-mix(in oklab, var(--primary-600) 12%, var(--ppu-blanco));
+    box-shadow: inset 0 0 0 1px var(--primary-600);
+    color: var(--primary-700);
+}
+
+/* Mientras se guarda un toque, las demás descansan: un segundo toque no sale (y si sale, el servidor lo ignora). */
+.ppu-ops:has(.ppu-op[data-loading]) .ppu-op:not([data-loading]) {
+    opacity: 0.45;
+    pointer-events: none;
+}
+
+.ppu-op--varias {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.ppu-op__marca {
+    display: none;
+    flex: none;
+    width: 18px;
+    height: 18px;
+}
+
+.ppu-op[aria-pressed='true'] .ppu-op__marca {
+    display: block;
+}
+
+.ppu-enc__siguiente {
+    justify-self: start;
+}
+
 /* «Ahora no»: un enlace, pero de 44 px de alto (se toca con el mismo dedo). */
 .ppu-ahora {
     justify-self: start;
@@ -796,6 +864,7 @@
     gap: 8px;
     font: 700 17px/1.2 var(--ppu-letra);
     color: var(--success-700);
+    animation: ppu-in 220ms ease-out;
 }
 
 .ppu-guardado svg {
@@ -806,90 +875,6 @@
 .gate-hint {
     font: 500 14px/1.4 var(--ppu-letra);
     color: var(--ppu-suave);
-}
-
-.gate-survey__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 6px;
-}
-
-.gate-survey__form {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.gate-q {
-    min-width: 0;
-    margin: 0;
-    padding: 0;
-    border: 0;
-}
-
-.gate-q__label {
-    display: block;
-    margin-bottom: 8px;
-    font: 600 16px/1.3 var(--ppu-letra);
-    color: var(--ppu-tinta);
-}
-
-.gate-q__required {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--ppu-suave);
-}
-
-.gate-q__options {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-/* El control de verdad, fuera de la vista pero no del teclado ni del lector de pantalla. */
-.gate-q__input {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    padding: 0;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-}
-
-.gate-q__btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 44px;
-    min-height: 48px;
-    padding: 8px 14px;
-    border: 1px solid var(--ppu-borde-fuerte);
-    border-radius: 10px;
-    background: var(--ppu-blanco);
-    font: 600 15px/1.25 var(--ppu-letra);
-    color: var(--ppu-tinta);
-    cursor: pointer;
-    user-select: none;
-}
-
-.gate-q__btn--scale {
-    min-width: 3.5rem;
-    font-size: 1.25rem;
-}
-
-.gate-q__input:checked + .gate-q__btn {
-    border-color: var(--primary-600);
-    background: var(--primary-600);
-    color: var(--color-white);
-}
-
-.gate-q__input:focus-visible + .gate-q__btn {
-    outline: 2px solid var(--primary-500);
-    outline-offset: 2px;
 }
 
 .gate-q__text {

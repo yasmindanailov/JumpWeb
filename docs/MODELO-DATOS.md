@@ -644,12 +644,12 @@ lo pide el gestor directamente) · `verdict` nullable (`null` cuenta; `apple`, `
 `(email_send_id, opened_at)`. **Sin IP ni agente de usuario.** Único escritor `Services\Analytics\EmailOpens::record()` (desde
 `EmailOpenController`, `GET /e/{send}.gif` sin sesión ni cookies, con el envío bloqueado y un tope por envío y minuto).
 
-### `surveys` · `survey_participations` · `survey_responses` · `survey_spent_tokens` — las encuestas, ANÓNIMAS · `#740`, `#754`, `#757`
+### `surveys` · `survey_participations` · `survey_responses` · `survey_spent_tokens` — las encuestas, ANÓNIMAS · `#740`, `#754`, `#757`, `#819`
 
 `specs/encuestas.md` §4.1 y §4.7. **Participación y respuesta NO comparten clave**: nada en la base une lo contestado con
 quien lo contestó, salvo el SELLO cifrado de 90 días.
-- `surveys` (Survey): `key` string(48) **unique** · `name`/`intro` json es/en/fr · `kind` (`internal`|`external`) · `active`
-  · `starts_at`/`ends_at` nullable (viva = activa y dentro) · `questions` json (`{key, type, required, label, options?}`,
+- `surveys` (Survey): `key` string(48) **unique** · `name`/`intro` json es/en/fr · `kind` (`internal`|`external`) ·
+  `audience` string(16) default `all` (`all`|`first_visit`, `#819`) · `active` · `starts_at`/`ends_at` nullable (viva = activa y dentro) · `questions` json (`{key, type, required, label, options?}`,
   `QuestionSchema`) · `created_by` FK nullOnDelete · timestamps. Una viva por clase (la valida el formulario).
 - `survey_participations` (SurveyParticipation, **MassPrunable** a 24 meses por `asked_on`) — A QUIÉN se preguntó: `survey_id`
   FK cascade · `user_id` FK nullOnDelete (se suelta al anonimizar) · `channel` · `asked_by` (el empleado, puerta) · `asked_on`

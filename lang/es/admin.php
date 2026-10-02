@@ -131,6 +131,7 @@ return [
             'pie' => 'La ficha se cierra sola a los :min min.',
             'velo' => 'Ficha oculta por inactividad. Toca para seguir.',
             'preguntale' => 'Pregúntale.',
+            'paso' => ':n de :total',
             'siguiente' => 'Siguiente',
             'ahora_no' => 'Ahora no',
             'guardado' => 'Guardado.',
@@ -251,25 +252,16 @@ return [
                 'via_card' => 'Abierta por QR',
                 'via_lookup' => 'Abierta por búsqueda',
                 'waiver_disabled' => 'Esta instalación no comprueba el descargo en la puerta.',
-                // LA ENCUESTA INTERNA (T2 de `specs/encuestas.md` §4.2): la tarjeta debajo de «Hoy», solo con
-                // la visita acreditada. El operador pregunta y marca con el dedo; «No preguntar» también es una
-                // respuesta (no se vuelve a ofrecer). Los errores se componen por clave (`survey_error_`.$tipo).
-                'survey_questions' => '{1}:count pregunta|[2,*]:count preguntas',
-                'survey_ask' => 'Preguntar',
-                'survey_skip' => 'No preguntar',
-                'survey_save' => 'Guardar respuestas',
-                'survey_cancel' => 'Ahora no',
-                'survey_answered' => 'Encuesta contestada',
-                'survey_declined' => 'No se ha preguntado',
+                // LA ENCUESTA INTERNA (`specs/encuestas.md` §4.2), PREGUNTA A PREGUNTA desde la P1b de la Puerta nueva: sus
+                // rótulos están en `admin.puerta.ficha` («Pregúntale.», «Siguiente», «Ahora no», «Guardado.»); aquí quedan
+                // el aviso, el sí/no, el texto y el error.
                 // `#754`: EL AVISO DEL ANONIMATO, para leerlo en voz alta antes de preguntar, y junto a cada pregunta de
                 // texto. Texto del PRODUCTO, fijo: el mismo que llevan el correo y la página (`surveys.notice`).
                 'survey_notice' => 'Es anónima: nadie en el parque verá tu nombre junto a tus respuestas, y a los 90 días se separan de ti del todo.',
                 'survey_text_hint' => 'Si quiere seguir en el anonimato, que no diga su nombre ni datos personales.',
-                'survey_required' => 'obligatoria',
                 'survey_yes' => 'Sí',
                 'survey_no' => 'No',
                 'survey_text_placeholder' => 'Lo que diga el cliente',
-                'survey_error_required' => 'Falta contestar esta pregunta.',
                 'survey_error_invalid' => 'Respuesta no válida para esta pregunta.',
             ],
         ],
@@ -4216,7 +4208,7 @@ return [
         'subheading' => 'Internas: el empleado pregunta en la puerta al validar la entrada. Externas: un correo al día siguiente de la visita. Una viva de cada clase como máximo; los resultados, en Analítica → Satisfacción.',
         'create_title' => 'Nueva encuesta',
         'edit_title' => 'Encuesta «:name»',
-        'locked_hint' => 'Esta encuesta ya tiene respuestas: la clave, la clase y la estructura de las preguntas están bloqueadas. Los rótulos y el encendido se pueden cambiar; para otra estructura, crea una encuesta nueva.',
+        'locked_hint' => 'Esta encuesta ya tiene respuestas: la clave, la clase, a quién y la estructura de las preguntas están bloqueadas. Los rótulos y el encendido se pueden cambiar; para otra estructura, crea una encuesta nueva.',
         // `#754`: texto del PRODUCTO, fijo: las encuestas son anónimas y el operador no lo puede cambiar.
         'anonymous_notice' => 'Las encuestas son anónimas: no preguntes el nombre, el teléfono ni el correo.',
         'section_survey' => 'La encuesta',
@@ -4229,6 +4221,13 @@ return [
         'kind' => [
             'internal' => 'Interna (en la puerta)',
             'external' => 'Externa (por correo)',
+        ],
+        // `#819`: a quién, en cada encuesta.
+        'field_audience' => 'A quién',
+        'field_audience_hint' => 'Primera visita: nunca había venido ni tenía nada pagado para un día anterior. En la puerta cuenta la visita de hoy; en el correo, la de ayer.',
+        'audience' => [
+            'all' => 'A todos',
+            'first_visit' => 'Solo en su primera visita',
         ],
         'field_active' => 'Encendida',
         'field_active_hint' => 'Solo una interna y una externa pueden estar vivas a la vez.',

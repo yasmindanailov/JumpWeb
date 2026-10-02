@@ -45,4 +45,25 @@ final class CustomerVisitFacts implements VisitFacts
 
         return $days === [] ? null : min($days);
     }
+
+    public function firstVisitDays(array $userIds): array
+    {
+        $ids = array_values(array_unique($userIds));
+        $first = [];
+        // En tandas: una lista de clientes de un trimestre no cabe entera en un `IN` de SQLite.
+        foreach (array_chunk($ids, 500) as $chunk) {
+            $rows = CustomerVisit::query()->whereIn('user_id', $chunk)->groupBy('user_id')
+                ->selectRaw('user_id, MIN(visited_on) AS first_day')->get();
+            foreach ($rows as $row) {
+                $first[(int) $row->getAttribute('user_id')] = substr((string) $row->getAttribute('first_day'), 0, 10);
+            }
+        }
+        foreach ($this->paid->firstPaidDays($ids) as $userId => $day) {
+            if (! isset($first[$userId]) || $day < $first[$userId]) {
+                $first[$userId] = $day;
+            }
+        }
+
+        return $first;
+    }
 }

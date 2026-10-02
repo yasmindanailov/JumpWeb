@@ -126,8 +126,26 @@ class GateKioskTest extends TestCase
     {
         $this->declara('.ppu-boton', 'min-height: 44px;');
         $this->declara('.ppu-boton--buscar', 'min-height: 58px;');
-        $this->declara('.gate-q__btn', 'min-height: 48px;');
+        $this->declara('.ppu-op', 'min-height: 48px;');
+        $this->declara('.ppu-ahora', 'min-height: 44px;');
+        $this->declara('.gate-q__text', 'min-height: 44px;');
         $this->declara('.ppu-campo__input', 'height: 58px;');
+    }
+
+    /**
+     * ▶ **Un toque de la encuesta no rehace la ficha** (la P1b; el owner, 02-10: «no quiero que se recargue la página»). La
+     * clave de la ficha y la del veredicto llevan la LECTURA, nunca `expires_at`: cada toque renueva el reloj, y con él en
+     * la clave la ficha entraba entera otra vez —su entrada, el salto del veredicto y el pitido—. La identidad la mide el
+     * navegador (la sonda de la P1); aquí se fija la decisión.
+     */
+    public function test_a_tap_inside_the_sheet_does_not_rebuild_it(): void
+    {
+        $vista = $this->fichero(self::VISTA);
+
+        $this->assertStringContainsString('wire:key="ficha-{{ $lectura }}-{{ $profile[\'user_id\'] }}"', $vista);
+        $this->assertStringContainsString('wire:key="veredicto-{{ $lectura }}-{{ $verdict[\'tone\'] }}"', $vista);
+        $this->assertDoesNotMatchRegularExpression('/wire:key="[^"]*(expires_at|uniqid)/', $vista, 'Una clave que cambia sin una lectura nueva rehace la ficha en cada toque.');
+        $this->assertStringNotContainsString('wire:model="surveyAnswers', $vista, 'Lo contestado viaja con el toque, no en un modelo a medias.');
     }
 
     /** ▶ **La doble lectura** del lector (el mockup): el mismo código en menos de 3 s se corta ANTES que el `wire:submit`. */

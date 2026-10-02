@@ -8,6 +8,7 @@ use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Models\Survey;
 use App\Domain\Platform\Models\SurveyResponse;
 use App\Filament\Pages\AdminSettingsHub;
+use App\Filament\Resources\Surveys\Concerns\GuardsSurveyForm;
 use App\Filament\Resources\Surveys\Pages\CreateSurvey;
 use App\Filament\Resources\Surveys\Pages\EditSurvey;
 use App\Filament\Resources\Surveys\Pages\ListSurveys;
@@ -212,6 +213,67 @@ class SurveyResourceTest extends TestCase
             ->assertHasNoFormErrors();
         $this->assertFalse($survey->refresh()->active);
         $this->assertSame(2, AuditLog::where('action', 'surveys.saved')->where('target_id', $survey->id)->count());
+    }
+
+    /**
+     * `#819`: A QUIÉN se elige en cada encuesta —a todos por defecto, o solo en su primera visita—, viaja en su rastro, se ve
+     * en la lista y, con respuestas, queda fijo como la clase. Un valor que no es de los dos no entra.
+     */
+    public function test_the_audience_is_chosen_per_survey_and_fixed_once_answered(): void
+    {
+        Livewire::actingAs($this->admin())
+            ->test(CreateSurvey::class)
+            ->assertSchemaStateSet(['audience' => Survey::AUDIENCE_ALL])
+            ->fillForm($this->validForm(['audience' => 'todo-el-mundo']))
+            ->call('create')
+            ->assertHasFormErrors(['audience']);
+        $this->assertSame(0, Survey::query()->count());
+
+        Livewire::actingAs($this->admin())
+            ->test(CreateSurvey::class)
+            ->fillForm($this->validForm(['audience' => Survey::AUDIENCE_FIRST_VISIT]))
+            ->call('create')
+            ->assertHasNoFormErrors();
+        $survey = Survey::query()->sole();
+        $this->assertSame(Survey::AUDIENCE_FIRST_VISIT, $survey->audience);
+        $this->assertSame(Survey::AUDIENCE_FIRST_VISIT, AuditLog::where('action', 'surveys.saved')->where('target_id', $survey->id)->sole()->payload['audience'] ?? null);
+
+        Livewire::actingAs($this->admin())->test(ListSurveys::class)->assertSee(__('admin.surveys.audience.first_visit'));
+
+        $this->answered($survey, ['ambiente' => 4]);
+        Livewire::actingAs($this->admin())
+            ->test(EditSurvey::class, ['record' => $survey->id])
+            ->fillForm(['audience' => Survey::AUDIENCE_ALL])
+            ->call('save')
+            ->assertHasNoFormErrors();
+        $this->assertSame(Survey::AUDIENCE_FIRST_VISIT, $survey->refresh()->audience, 'con respuestas, a quién no cambia');
+    }
+
+    /**
+     * La SEGUNDA defensa, la del guardado (`GuardsSurveyForm`; ocultar no es autorizar, `SEC-04`): el formulario ya rechaza
+     * un valor ajeno y no manda un campo bloqueado, pero un cuerpo forjado que llegara hasta aquí tampoco pasa. Se llama
+     * directamente porque por el formulario no se llega.
+     */
+    public function test_the_save_guard_fixes_the_audience_whatever_the_body_says(): void
+    {
+        $guard = new class
+        {
+            use GuardsSurveyForm;
+
+            /** @param  array<string, mixed>  $data */
+            public function run(array $data, ?Survey $record): array
+            {
+                return $this->guard($data, $record);
+            }
+        };
+        $questions = $this->validForm()['questions'];
+
+        $this->assertSame(Survey::AUDIENCE_ALL, $guard->run(['kind' => Survey::KIND_INTERNAL, 'audience' => 'todo-el-mundo', 'questions' => $questions], null)['audience']);
+        $this->assertSame(Survey::AUDIENCE_FIRST_VISIT, $guard->run(['kind' => Survey::KIND_INTERNAL, 'audience' => Survey::AUDIENCE_FIRST_VISIT, 'questions' => $questions], null)['audience']);
+
+        $locked = $this->stored(['audience' => Survey::AUDIENCE_FIRST_VISIT, 'active' => false]);
+        $this->answered($locked, ['ambiente' => 4]);
+        $this->assertSame(Survey::AUDIENCE_FIRST_VISIT, $guard->run(['audience' => Survey::AUDIENCE_ALL, 'questions' => $questions], $locked)['audience']);
     }
 
     public function test_a_survey_with_responses_is_not_deleted_and_one_without_is_deleted_with_a_trace(): void

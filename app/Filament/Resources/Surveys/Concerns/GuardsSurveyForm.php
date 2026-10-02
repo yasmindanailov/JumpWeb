@@ -25,8 +25,11 @@ trait GuardsSurveyForm
         if ($record !== null && $record->hasResponses()) {
             $data['key'] = $record->key;
             $data['kind'] = $record->kind;
+            $data['audience'] = $record->audience;
             $data['questions'] = self::keepStructure($record->questionList(), QuestionSchema::normalize($data['questions'] ?? []));
         } else {
+            // `#819`: solo los dos valores; cualquier otro (un cuerpo forjado) es «a todos», lo de siempre.
+            $data['audience'] = in_array($data['audience'] ?? null, Survey::AUDIENCES, true) ? $data['audience'] : Survey::AUDIENCE_ALL;
             $data['questions'] = QuestionSchema::normalize($data['questions'] ?? []);
         }
 
@@ -91,6 +94,7 @@ trait GuardsSurveyForm
             'key' => $record->key,
             'name' => $record->displayName('es'),
             'kind' => $record->kind,
+            'audience' => $record->audience,
             'active' => $record->active,
             'questions' => count($record->questionList()),
         ];

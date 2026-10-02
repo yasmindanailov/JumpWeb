@@ -11,8 +11,8 @@ use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 
 /**
- * **La lista de encuestas** (`docs/specs/encuestas.md` §4.4, T1): nombre, clave, clase, estado real (viva ·
- * programada · terminada · apagada), respuestas recibidas y ventana.
+ * **La lista de encuestas** (`docs/specs/encuestas.md` §4.4, T1): nombre, clave, clase, a quién (`#819`), estado real
+ * (viva · programada · terminada · apagada), respuestas recibidas y ventana.
  */
 class SurveyTable
 {
@@ -34,6 +34,9 @@ class SurveyTable
                     ->badge()
                     ->formatStateUsing(static fn (string $state): string => __('admin.surveys.kind.'.$state))
                     ->color(static fn (string $state): string => $state === Survey::KIND_INTERNAL ? 'info' : 'primary'),
+                TextColumn::make('audience')
+                    ->label(__('admin.surveys.field_audience'))
+                    ->formatStateUsing(static fn (string $state): string => __('admin.surveys.audience.'.(in_array($state, Survey::AUDIENCES, true) ? $state : Survey::AUDIENCE_ALL))),
                 TextColumn::make('active')
                     ->label(__('admin.surveys.col_state'))
                     ->badge()

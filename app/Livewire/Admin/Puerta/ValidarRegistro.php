@@ -129,26 +129,29 @@ class ValidarRegistro extends Component
     public ?int $profileExpiresAt = null;
 
     /**
-     * **LA ENCUESTA INTERNA** (`specs/encuestas.md` §4.2, T2): la oferta y su estado dentro de ESTA ficha.
-     * Forma: `['key', 'name', 'intro', 'count', 'state', 'questions']` con `state` ∈ `offer` (la tarjeta con
-     * «Preguntar» y «No preguntar») · `open` (el formulario) · `answered` · `declined`. Las preguntas viajan
-     * con sus rótulos en el idioma del PANEL: las lee el operador, que es quien pregunta y marca.
+     * **CADA LECTURA, SU NÚMERO** (`specs/puerta-nueva.md` §4.4, la P1b): sube con cada búsqueda —escaneada o tecleada— y
+     * con nada más. La vista lo pone en la `wire:key` de la ficha y del veredicto: una lectura NUEVA entra entera (su
+     * entrada, su sonido), y lo que pasa DENTRO de una ficha —un toque de la encuesta, «Dar por firmado»— solo cambia lo
+     * que cambió. ⚠️ Antes la clave llevaba `expires_at`, que cada toque renueva: cada toque rehacía la ficha entera,
+     * con su entrada, el salto del veredicto y el pitido otra vez (medido el 02-10: la «recarga» que vio el owner).
+     */
+    #[Locked]
+    public int $lectura = 0;
+
+    /**
+     * **LA ENCUESTA INTERNA** (`specs/encuestas.md` §4.2) y, desde la P1b, **PREGUNTA A PREGUNTA**: la oferta y su estado
+     * dentro de ESTA ficha. Forma: `['key', 'name', 'intro', 'count', 'state', 'step', 'questions']` con `state` ∈ `asking`
+     * · `answered` y `step` la pregunta EN PANTALLA (la que se deja para otro día, `#819`, deja de estar: `null`). Las preguntas viajan con sus rótulos en el idioma del
+     * PANEL: las lee el operador, que es quien pregunta y marca.
      *
-     * ⚠️ Viaja en el snapshot como `$profile`: lleva la encuesta (dato del panel) y nunca respuestas de nadie.
-     * Vive y muere con la ficha: `search()`, `clear()` y la caducidad la vacían.
+     * ⚠️ Viaja en el snapshot como `$profile`: lleva la encuesta (dato del panel) y nunca respuestas de nadie. Vive y muere
+     * con la ficha: `search()`, `clear()` y la caducidad la vacían. **Bloqueada**: el navegador no mueve la tarjeta ni
+     * cambia lo que se pregunta; lo contestado viaja con cada toque (`answerQuestion()`), no en el estado.
      *
      * @var array<string,mixed>|null
      */
+    #[Locked]
     public ?array $survey = null;
-
-    /**
-     * Lo que el operador marca con el dedo, `wire:model` DIFERIDO (cero idas y vueltas hasta «Guardar»). Llega
-     * como cadenas y listas; el servidor lo tipa y lo valida contra las preguntas al guardar (`SEC-04`: el
-     * navegador no decide qué vale).
-     *
-     * @var array<string,mixed>
-     */
-    public array $surveyAnswers = [];
 
     /** La encuesta ofrecida, bloqueada como el sujeto: el navegador no elige a qué encuesta responde. */
     #[Locked]
@@ -204,6 +207,7 @@ class ValidarRegistro extends Component
     public function search(): void
     {
         $this->authorizeAccess();
+        $this->lectura++;
         $this->ensureFresh();
         $this->profile = null;
         $this->profileUserId = null;
@@ -476,7 +480,6 @@ class ValidarRegistro extends Component
         $this->survey = null;
         $this->surveyId = null;
         $this->surveyResponseId = null;
-        $this->surveyAnswers = [];
     }
 
     /**
@@ -513,13 +516,18 @@ class ValidarRegistro extends Component
     }
 
     /**
-     * **Un toque, una respuesta** (`docs/specs/puerta-nueva.md` §4.4, la P1b; `#817`·3): el valor de UNA pregunta se TIPA
-     * y se VALIDA solo contra ella —y contra la encuesta GUARDADA, nunca contra la copia del navegador—; el primero abre la
-     * participación y la respuesta anónima (`startInPerson()`) y los siguientes la completan (`addInPerson()`). Sin valor
-     * (varias o texto vacíos, «Siguiente»), la pregunta se salta: en la puerta una obligatoria no frena. Tras la última,
-     * la tarjeta se cierra como «Ahora no».
+     * **Un toque, una respuesta** (`docs/specs/puerta-nueva.md` §4.4, la P1b; `#817`·3). El valor VIAJA CON EL TOQUE —una
+     * cadena, o la lista entera de una de varias— y se TIPA y se VALIDA solo contra su pregunta de la encuesta GUARDADA,
+     * nunca contra la copia del navegador; el primero abre la participación y la respuesta anónima (`startInPerson()`) y
+     * los siguientes la completan (`addInPerson()`). Sin valor (varias o texto vacíos, «Siguiente»), la pregunta se salta:
+     * en la puerta una obligatoria no frena. Tras la última, la tarjeta se cierra como «Ahora no».
+     *
+     * ▶ Solo contesta la pregunta QUE ESTÁ EN PANTALLA (la del `step` bloqueado): un toque doble o tardío —Livewire los
+     * encola y llegan cuando la tarjeta ya pasó— ni rebobina la tarjeta ni contesta otra.
+     * ▶ Un CARNÉ dentro de una respuesta de texto es el lector escribiendo donde estaba el cursor: es una lectura NUEVA y
+     * se busca; jamás se guarda (un carné es una credencial).
      */
-    public function answerQuestion(string $key, ?string $value = null): void
+    public function answerQuestion(string $key, mixed $value = null): void
     {
         $subject = $this->surveySubject();
         if ($subject === null || ($this->survey['state'] ?? null) !== 'asking') {
@@ -527,37 +535,70 @@ class ValidarRegistro extends Component
         }
         [$customer, $survey] = $subject;
 
-        $questions = $survey->questionList();
-        $index = array_search($key, array_column($questions, 'key'), true);
-        if ($index === false) {
+        $step = (int) ($this->survey['step'] ?? 0);
+        if (($this->survey['questions'][$step]['key'] ?? null) !== $key) {
             return;
         }
-        $question = $questions[$index];
+
+        // La pregunta GUARDADA con esa clave. Si el panel la quitó después de la oferta, se salta sin escribir.
+        $saved = $survey->questionList();
+        $index = array_search($key, array_column($saved, 'key'), true);
+        $question = $index === false ? null : $saved[$index];
+
+        if ($question !== null && $question['type'] === QuestionSchema::TYPE_TEXT && is_string($value)) {
+            $card = self::cardIn($value);
+            if ($card !== null) {
+                $this->input = $card;
+                $this->search();
+
+                return;
+            }
+        }
 
         $this->resetErrorBag();
-        $typed = QuestionSchema::fromForm([$question], [$key => $value ?? ($this->surveyAnswers[$key] ?? null)]);
-        if (array_key_exists($key, $typed)) {
-            if (! QuestionSchema::accepts($question, $typed[$key])) {
-                throw ValidationException::withMessages(['surveyAnswers.'.$key => (string) __('admin.puerta.validar.profile.survey_error_invalid')]);
+        if ($question !== null) {
+            $typed = QuestionSchema::fromForm([$question], [$key => $value]);
+            if (array_key_exists($key, $typed)) {
+                if (! QuestionSchema::accepts($question, $typed[$key])) {
+                    throw ValidationException::withMessages(['respuesta.'.$key => (string) __('admin.puerta.validar.profile.survey_error_invalid')]);
+                }
+                $this->escribir($customer, $survey, [$key => $typed[$key]]);
             }
-            $this->escribir($customer, $survey, [$key => $typed[$key]]);
         }
 
         if (($this->survey['state'] ?? null) === 'asking') {
-            $this->survey['step'] = $index + 1;
-            if ($index + 1 >= count($questions)) {
+            $this->survey['step'] = $step + 1;
+            if ($step + 1 >= count($this->survey['questions'])) {
                 $this->cerrar($customer, $survey);
             }
         }
 
-        $this->surveyAnswers = [];
         $this->touchProfileWindow();
         $this->releaseReader();
     }
 
     /**
-     * «Ahora no»: sin nada contestado, es el «no preguntar» de siempre —la fila `declined`, sin sello, y no se vuelve a
-     * ofrecer—; con algo contestado, cierra con lo contestado (`#817`·3: «deja el resto»).
+     * El carné que el lector tecleó DENTRO de un texto (solo, o pegado a lo que ya había escrito): el primer trozo con forma
+     * de carné que además pasa el carácter de control. Un texto de verdad no lo pasa por casualidad.
+     */
+    private static function cardIn(string $text): ?string
+    {
+        $normalized = CardToken::normalize($text);
+        $offset = 0;
+        while (($at = strpos($normalized, CardToken::PREFIX, $offset)) !== false) {
+            $candidate = substr($normalized, $at, CardToken::LENGTH);
+            if (CardToken::isWellFormed($candidate)) {
+                return $candidate;
+            }
+            $offset = $at + 1;
+        }
+
+        return null;
+    }
+
+    /**
+     * «Ahora no»: sin nada contestado, no escribe nada y la encuesta vuelve a salir en su próxima visita (`#819`); con algo
+     * contestado, cierra con lo contestado (`#817`·3: «deja el resto»).
      */
     public function skipSurvey(): void
     {
@@ -568,7 +609,6 @@ class ValidarRegistro extends Component
         [$customer, $survey] = $subject;
 
         $this->cerrar($customer, $survey);
-        $this->surveyAnswers = [];
         $this->touchProfileWindow();
         $this->releaseReader();
     }
@@ -602,7 +642,10 @@ class ValidarRegistro extends Component
         $this->auditSurveyClosed($customer, $survey);
     }
 
-    /** Cierra la tarjeta: con algo escrito, «Guardado.»; sin nada, la fila `declined` de «no preguntar». */
+    /**
+     * Cierra la tarjeta: con algo escrito, «Guardado.»; sin nada, la deja para su PRÓXIMA visita (`#819`, el mockup: «no
+     * guarda nada») —ni participación, ni respuesta, ni rastro— y la tarjeta se va.
+     */
     private function cerrar(User $customer, Survey $survey): void
     {
         if ($this->surveyResponseId !== null) {
@@ -611,10 +654,8 @@ class ValidarRegistro extends Component
             return;
         }
 
-        if (app(SurveyResponses::class)->declineInPerson($survey, (int) $customer->getKey(), Auth::id() === null ? null : (int) Auth::id())) {
-            $this->auditSurveyClosed($customer, $survey);
-        }
-        $this->survey['state'] = 'declined';
+        app(SurveyResponses::class)->postponeInPerson($survey, (int) $customer->getKey());
+        $this->forgetSurvey();
     }
 
     /**
@@ -726,7 +767,11 @@ class ValidarRegistro extends Component
             $customer->refresh();
 
             $this->profile = $this->composeProfile($customer, (string) $this->profile['via']);
-            $this->result = $this->stateFor($customer, (string) ($this->result['query'] ?? ''));
+            // Con el eco que tenía: el de una búsqueda tecleada se queda, y un escaneo (sin eco) sigue sin él. ⚠️ Con
+            // `(string) (… ?? '')` el «sin eco» del escaneo volvía como cadena vacía y la vista pintaba un «Resultado para» en
+            // blanco (medido en navegador el 02-10).
+            $eco = $this->result['query'] ?? null;
+            $this->result = $this->stateFor($customer, is_string($eco) ? $eco : null);
         }
 
         $this->touchProfileWindow();

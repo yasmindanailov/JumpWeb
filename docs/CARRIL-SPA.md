@@ -381,9 +381,12 @@ nueve clientes `ojo-puerta-<ficha>@jumpweb.test` (las fichas de `datos.js`: ana,
 irene, tomas, david) con sus pedidos de hoy `JW-OJO-P-*`, sus menores (el «sin descargo» es un menor HEREDADO: en modo
 interno el producto no deja declararlo) y su carné; escribe los códigos en `ojo-puerta.json` (al lado). Y el empleado
 `ojo-puerta-empleado@jumpweb.test` / `Sonda-puerta-2026!` con `staff` (el admin está obligado a los dos pasos y el rol
-`puerta` no está sembrado en la local). `OJO=desmontar` quita pedidos, carnés, visitas y las franjas que creara; las
-CUENTAS se quedan (sus firmas van encadenadas). La sonda, `scripts/sonda-puerta-p1.mjs` (necesita `socat` en `:8081` dentro
-del contenedor, la skill `/sonda`).
+`puerta` no está sembrado en la local). `OJO=desmontar` quita pedidos, carnés, visitas, las participaciones de la encuesta
+y las franjas que creara; las CUENTAS se quedan (sus firmas van encadenadas). Si alguien pulsa «Dar por firmado» con
+«mostrador», la siguiente pasada la monta con una cuenta NUEVA (`-2`, `-3`…: el owner la firmó el 02-10). La sonda,
+`scripts/sonda-puerta-p1.mjs` (necesita `socat` en `:8081` dentro del contenedor, la skill `/sonda`). De la P1b, en la
+misma carpeta y fuera de git: `medir-encuesta.mjs` (la «recarga» y la de varias, toque a toque), `medir-firmar.mjs` («Dar
+por firmado») y `fotos-encuesta.mjs` (tablet y móvil, con un toque retrasado a propósito).
 
 ## 9 · La foto vieja del carril (mudada VERBATIM de `carriles/spa.md` el 2026-09-29, su techo)
 

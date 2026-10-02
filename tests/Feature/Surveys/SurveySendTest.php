@@ -149,6 +149,27 @@ class SurveySendTest extends TestCase
         Notification::assertSentTo($reciente, SurveyInvitation::class);
     }
 
+    /**
+     * ▶ **«Solo en su primera visita»** (`#819`): el correo sale a quien vino AYER por primera vez —ni visita acreditada ni
+     * día cobrado antes de ayer—; a quien ya había venido, no. Y el ensayo cuenta igual que el envío.
+     */
+    public function test_a_first_visit_survey_is_mailed_only_after_the_first_visit(): void
+    {
+        $this->survey(['audience' => Survey::AUDIENCE_FIRST_VISIT]);
+        $nueva = $this->visitor('nueva@example.com');
+        $habitual = $this->visitor('habitual@example.com');
+        app(GateVisits::class)->register($habitual, null, Carbon::parse('2026-08-30'));
+
+        Artisan::call('surveys:send-external', ['--dry-run' => true]);
+        $this->assertStringContainsString('Mandaría 1', Artisan::output());
+
+        Artisan::call('surveys:send-external');
+
+        Notification::assertSentTo($nueva, SurveyInvitation::class);
+        Notification::assertNotSentTo($habitual, SurveyInvitation::class);
+        $this->assertSame([$nueva->id], SurveyParticipation::query()->pluck('user_id')->map(static fn ($id): int => (int) $id)->all());
+    }
+
     public function test_it_waits_for_ten_in_the_park_and_force_overrides(): void
     {
         $this->survey();

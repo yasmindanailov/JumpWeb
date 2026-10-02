@@ -2,7 +2,8 @@
  * SONDA DE LA PUERTA NUEVA, P1 (`docs/specs/puerta-nueva.md` §4.4): lo que una prueba de PHP no ve, en un navegador de
  * verdad y en los tamaños del brief —la tablet horizontal 1080 × 810 (la referencia), 1194 × 834, 1366 × 1024 y el móvil
  * en vertical—, con las fichas del mockup montadas en la BD local (`storage/app/audit/ojo-puerta.php`, fuera de git).
- * (La sonda de la encuesta en la puerta de `#741` sigue en `sonda-puerta.mjs`; su encuesta se rehace en la P1b.)
+ * Y la encuesta de la P1b entera, con la de VARIAS, y que un toque no rehace la ficha (la de `#741`, `sonda-puerta.mjs`, se
+ * retiró con ella).
  *
  * En cada tamaño y ficha: el veredicto con su palabra, el nombre, ningún correo entero en el HTML (la cola ve la
  * pantalla), el foco de vuelta en el campo, todo lo que se toca ≥ 44 px y, en la tablet horizontal y el caso común, la
@@ -64,7 +65,7 @@ const escanear = async (codigo) => {
 };
 
 /** Todo lo VISIBLE que se toca, con su alto. */
-const tocables = () => page.evaluate(() => [...document.querySelectorAll('.ppu button, .ppu [role="button"], .ppu input:not([type="radio"]):not([type="checkbox"]), .ppu label.gate-q__btn')]
+const tocables = () => page.evaluate(() => [...document.querySelectorAll('.ppu button, .ppu [role="button"], .ppu input')]
     .filter((el) => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== 'hidden'; })
     .map((el) => ({ que: (el.textContent || el.getAttribute('placeholder') || el.tagName).trim().slice(0, 30), alto: Math.round(el.getBoundingClientRect().height) })));
 
@@ -78,7 +79,7 @@ for (const [ancho, alto] of TAMANOS) {
         const html = await page.content();
         const texto = await page.locator('[data-gate-profile] [role="status"]').first().textContent().catch(() => '');
         check(`${ancho} · ${ficha}: el veredicto dice «${VEREDICTO[ficha]}»`, texto.includes(VEREDICTO[ficha]), texto.trim().slice(0, 60));
-        check(`${ancho} · ${ficha}: ningún correo entero en el HTML`, ! html.includes(`ojo-puerta-${ficha}@jumpweb.test`));
+        check(`${ancho} · ${ficha}: ningún correo entero en el HTML`, ! /ojo-puerta-(?!empleado)[a-z0-9-]+@jumpweb\.test/.test(html));
         check(`${ancho} · ${ficha}: el foco vuelve al campo`, await page.evaluate(() => document.activeElement?.id === 'input'));
         const bajos = (await tocables()).filter((t) => t.alto < 44);
         check(`${ancho} · ${ficha}: todo lo que se toca ≥ 44 px`, bajos.length === 0, JSON.stringify(bajos));
@@ -100,30 +101,101 @@ for (const [ancho, alto] of TAMANOS) {
     }
 }
 
-// La encuesta PREGUNTA A PREGUNTA (la P1b), con Elena —verde y sin participación—: la PRIMERA pregunta con el aviso del
-// anonimato; un toque pasa a la siguiente; «Ahora no» cierra con lo contestado («Guardado.»). En amarillo, ni se pinta.
-// (Tras el recorrido de tamaños, que solo ESCANEA: la encuesta no se escribe hasta el primer toque. El montaje borra las
-// participaciones de sus clientes, así que en cada pasada se vuelve a ofrecer.)
+// La encuesta PREGUNTA A PREGUNTA (la P1b), con Elena —verde y sin participación—: la PRIMERA con el aviso del anonimato y
+// «1 de N»; un toque pasa a la siguiente SIN REHACER LA FICHA (los mismos nodos, sin pitido y sin que el veredicto vuelva a
+// entrar: la «recarga» que vio el owner el 02-10); la de VARIAS marca y desmarca de una en una sin ir al servidor (el fallo
+// de `#741`: un toque las marcaba todas) y la última cierra con «Guardado.». Con Irene, «Ahora no» tras un toque cierra con
+// lo contestado. En ámbar, ni se pinta. (Tras el recorrido de tamaños, que solo ESCANEA: la encuesta no se escribe hasta el
+// primer toque. El montaje borra las participaciones de sus clientes, así que en cada pasada se vuelve a ofrecer.)
 await page.setViewportSize({ width: 1080, height: 810 });
 await abrir();
+await page.evaluate(() => {
+    window.__sonidos = [];
+    window.__entradas = [];
+    window.addEventListener('puerta-sonido', (e) => window.__sonidos.push(e.detail));
+    document.addEventListener('animationstart', (e) => window.__entradas.push(`${e.animationName} ${String(e.target.className)}`), true);
+});
 await escanear(tokens.jorge);
 check('encuesta · en ámbar no se pinta', (await page.locator('[data-gate-survey]').count()) === 0);
 await escanear(tokens.elena);
 const tarjeta = page.locator('[data-gate-survey]');
-check('encuesta · Elena (verde) la ve preguntando la PRIMERA, con el aviso del anonimato', (await tarjeta.getAttribute('data-gate-survey')) === 'asking' && (await page.locator('[data-gate-survey-notice]').count()) === 1 && (await page.locator('[data-gate-question]').count()) === 1);
-const primera = await page.locator('[data-gate-question]').getAttribute('data-gate-question');
-await page.locator('[data-gate-survey-option]').first().click();
-await page.waitForLoadState('networkidle');
-await page.waitForTimeout(300);
-const segunda = await page.locator('[data-gate-question]').getAttribute('data-gate-question').catch(() => null);
+const pregunta = () => page.locator('[data-gate-question]').getAttribute('data-gate-question').catch(() => null);
+const tipo = () => page.locator('[data-gate-question]').getAttribute('data-gate-question-type').catch(() => null);
+/** Un toque, y la espera a que la tarjeta pase a la siguiente (o se cierre). */
+const tocar = async (boton) => {
+    const antes = await pregunta();
+    await boton.click();
+    await page.waitForFunction((p) => (document.querySelector('[data-gate-question]')?.dataset.gateQuestion ?? null) !== p
+        || document.querySelector('[data-gate-survey]')?.dataset.gateSurvey !== 'asking', antes, { timeout: 8000 }).catch(() => null);
+    await page.waitForTimeout(300);
+};
+const progreso = await page.locator('[data-gate-survey-progress]').textContent().catch(() => '');
+check('encuesta · Elena (verde) la ve preguntando la PRIMERA, con el aviso del anonimato y «1 de N»', (await tarjeta.getAttribute('data-gate-survey')) === 'asking' && (await page.locator('[data-gate-survey-notice]').count()) === 1 && (await page.locator('[data-gate-question]').count()) === 1 && /^1 de \d+$/.test(progreso.trim()), progreso.trim());
+const primera = await pregunta();
+await page.evaluate(() => {
+    document.querySelector('[data-gate-profile]').__marca = 1;
+    document.querySelector('[data-gate-profile] [data-gate-status]').__marca = 1;
+    window.__sonidos = [];
+    window.__entradas = [];
+});
+await tocar(page.locator('[data-gate-survey-option]').first());
+const segunda = await pregunta();
 check('encuesta · un toque guarda y pasa a la siguiente (sin el aviso)', segunda !== null && segunda !== primera && (await page.locator('[data-gate-survey-notice]').count()) === 0, `${primera} → ${segunda}`);
+const quieta = await page.evaluate(() => ({
+    ficha: document.querySelector('[data-gate-profile]')?.__marca === 1,
+    veredicto: document.querySelector('[data-gate-profile] [data-gate-status]')?.__marca === 1,
+    sonidos: window.__sonidos,
+    entradas: window.__entradas.filter((a) => ! a.includes('ppu-enc__q')),
+}));
+check('encuesta · el toque NO rehace la ficha: los mismos nodos, sin pitido y solo entra la pregunta', quieta.ficha && quieta.veredicto && quieta.sonidos.length === 0 && quieta.entradas.length === 0, JSON.stringify(quieta));
 check('encuesta · el foco vuelve al campo tras el toque', await page.evaluate(() => document.activeElement?.id === 'input'));
 await page.screenshot({ path: `${OUT}/sonda-puerta-p1-encuesta-1080.png` });
-await page.locator('[data-gate-survey-skip]').click();
-await page.waitForLoadState('networkidle');
-await page.waitForTimeout(300);
-check('encuesta · «Ahora no» cierra con lo contestado: «Guardado.»', (await tarjeta.getAttribute('data-gate-survey')) === 'answered' && (await tarjeta.textContent()).includes('Guardado.'));
+
+for (let i = 0; i < 8 && (await tipo()) !== 'multi' && (await tarjeta.getAttribute('data-gate-survey')) === 'asking'; i += 1) {
+    await tocar(page.locator('[data-gate-survey-option]').first());
+}
+const enVarias = (await tipo()) === 'multi';
+check('encuesta · la encuesta local llega a una pregunta de VARIAS', enVarias, String(await tipo()));
+if (enVarias) {
+    const opciones = page.locator('[data-gate-survey-toggle]');
+    const marcadas = () => page.locator('[data-gate-survey-toggle][aria-pressed="true"]').count();
+    const antes = peticiones;
+    await opciones.first().click();
+    const una = await marcadas();
+    await opciones.first().click();
+    const ninguna = await marcadas();
+    await opciones.nth(1).click();
+    await opciones.last().click();
+    const dos = await marcadas();
+    check('encuesta · VARIAS: un toque marca UNA, otro la desmarca, y dos marcan dos', una === 1 && ninguna === 0 && dos === 2, `${una} · ${ninguna} · ${dos} de ${await opciones.count()}`);
+    check('encuesta · VARIAS: marcar y desmarcar no van al servidor', peticiones === antes, `${peticiones - antes} peticiones`);
+    await page.screenshot({ path: `${OUT}/sonda-puerta-p1-encuesta-varias-1080.png` });
+    await tocar(page.locator('[data-gate-survey-next]'));
+}
+for (let i = 0; i < 8 && (await tarjeta.getAttribute('data-gate-survey')) === 'asking'; i += 1) {
+    const t = await tipo();
+    await tocar(t === 'multi' || t === 'text' ? page.locator('[data-gate-survey-next]') : page.locator('[data-gate-survey-option]').first());
+}
+check('encuesta · tras la última, «Guardado.»', (await tarjeta.getAttribute('data-gate-survey')) === 'answered' && (await tarjeta.textContent()).includes('Guardado.'));
 await page.screenshot({ path: `${OUT}/sonda-puerta-p1-encuesta-guardada-1080.png` });
+
+await escanear(tokens.irene);
+await tocar(page.locator('[data-gate-survey-option]').first());
+await tocar(page.locator('[data-gate-survey-skip]'));
+check('encuesta · «Ahora no» tras un toque cierra con lo contestado: «Guardado.»', (await tarjeta.getAttribute('data-gate-survey')) === 'answered' && (await tarjeta.textContent()).includes('Guardado.'));
+
+// `#819`: «Ahora no» SIN nada contestado, con David —verde y sin participación—: la tarjeta se va (el mockup) y la ficha se
+// queda; al volver a escanearle el mismo día (más de 3 s después: si no, es una doble lectura), no vuelve a salir.
+await escanear(tokens.david);
+const conTarjeta = (await page.locator('[data-gate-survey="asking"]').count()) === 1;
+await page.locator('[data-gate-survey-skip]').click();
+await page.waitForFunction(() => document.querySelector('[data-gate-survey]') === null, null, { timeout: 8000 }).catch(() => null);
+await page.waitForTimeout(300);
+check('encuesta · «Ahora no» sin nada contestado: la tarjeta se va y la ficha se queda', conTarjeta && (await page.locator('[data-gate-survey]').count()) === 0 && (await page.locator('[data-gate-profile]').count()) === 1);
+await page.screenshot({ path: `${OUT}/sonda-puerta-p1-encuesta-ahora-no-1080.png` });
+await page.waitForTimeout(3200);
+await escanear(tokens.david);
+check('encuesta · y el mismo día no vuelve a salir', (await page.locator('[data-gate-profile]').count()) === 1 && (await page.locator('[data-gate-survey]').count()) === 0);
 // ⚠️ Más de 3 s antes de volver a escanearla: el mismo código antes es una DOBLE LECTURA y no busca (la primera vuelta de
 // esta sonda lo confundió con que la encuesta se volvía a ofrecer).
 await page.waitForTimeout(3200);

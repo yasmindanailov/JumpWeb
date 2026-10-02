@@ -2,13 +2,13 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#818`** · La banda está dada de alta en la
+> Banda: **910–939** (del owner, 02-10; 790–819 agotada con `#819`) · Último usado: **`#819`** (el siguiente, `#910`) · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs:
 > **`acceso-con-codigo.md` §0** (la A4 del cajón ✅ en `main`) · `correos-rediseno.md` §0 ·
 > `fiesta-sistema-nuevo.md` §4.17–§4.19 · `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7
 > (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md` §4.11 · `celebracion-e-invitacion.md` §0 ·
-> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-02, 06:20
-> (la imagen EN `main`, 🟦 hasta verla en WhatsApp; la Puerta, medida y con las respuestas del owner, `#817`: sigue su P1).
+> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-02, 10:55
+> (la imagen EN `main`, 🟦 hasta verla en WhatsApp; la Puerta: la P1 entera en `main`, sigue la P2).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
@@ -63,9 +63,11 @@
    «Nueva búsqueda» se queda en el pie, los invitados en una línea, la encuesta pregunta a pregunta, la reseña del día por
    palabras «profesional y robusto»). Cambia la VISTA de `ValidarRegistro`; sus garantías se quedan. ✅ **La P1a (la
    pantalla) EN `main` con el visto bueno del owner** (02-10; D9 → `#818`; montaje y sonda: `CARRIL-SPA.md` §8 (27); arnés
-   `mutar-puerta-p1.sh` 34/34, sonda `sonda-puerta-p1.mjs` 196/196). 🟦 **La P1b (la encuesta pregunta a pregunta, solo en
-   verde) HECHA en `wip/puerta-p1b`, al ojo del owner** (suite 6747; sus 11 mutantes 11/11; sonda 202/202). Con su visto
-   bueno, a `main`; después la P2 (pulseras) y la P3 (reseña).
+   `mutar-puerta-p1.sh` 34/34, sonda `sonda-puerta-p1.mjs` 196/196). ✅ **La P1b (la encuesta pregunta a pregunta, solo en
+   verde, robusta) y la P1c (a quién y «Ahora no», `#819`) EN `main` con el visto bueno del owner** (02-10; spec §4.4: sin
+   la sonda ni el arnés entero, a petición suya). ▶ **Ahora: la P2** (las pulseras por hora como dato del panel, el color
+   fijo de `ticket_types.wristband_color`, la casilla «Se entrega en la puerta» del complemento y la zona de la fiesta: el
+   censo y §4.3 de la spec), con su «al detalle» medido ANTES del código; después la P3 (la reseña del día).
 2. ▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4; `#789`, `#800`→`#804`)**: ✅ R1a, R1b y **R1·T** en `main` (la
    R1·T revisada: §4.2.2; su sonda y el medidor de bloques, `CARRIL-SPA` §8 (26)). Del zip (6) (`#861`): el 8, «482-913 es tu
    código para entrar» sin botón; «Quién firma el descargo» en el 1 y el 3; las dos horas (90 + 30). ▶ **Tras la A4, la R1·T2** (`#809`,

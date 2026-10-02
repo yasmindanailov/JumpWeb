@@ -2,6 +2,7 @@
 
 namespace App\Filament\Analytics;
 
+use App\Domain\Platform\Contracts\VisitFacts;
 use App\Domain\Platform\Enums\Comparison;
 use App\Domain\Platform\Models\Survey;
 use App\Domain\Platform\Models\SurveyResponse;
@@ -11,6 +12,7 @@ use App\Domain\Platform\Services\Surveys\QuestionSchema;
 use App\Domain\Platform\Services\Surveys\SurveySeals;
 use App\Domain\Platform\Services\Translated;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -107,7 +109,7 @@ final class SurveysReport
      * Todas las encuestas, con sus preguntas normalizadas y rotuladas en el idioma del panel, y su ventana en días
      * del parque (para contar las ofertas de la interna).
      *
-     * @return array<int, array{id: int, key: string, name: string, kind: string, live: bool, active: bool, starts_on: ?string, ends_on: ?string, questions: list<array{key: string, type: string, label: string, options: array<string, string>}>}>
+     * @return array<int, array{id: int, key: string, name: string, kind: string, audience: string, live: bool, active: bool, starts_on: ?string, ends_on: ?string, questions: list<array{key: string, type: string, label: string, options: array<string, string>}>}>
      */
     private function surveys(string $timezone): array
     {
@@ -127,6 +129,7 @@ final class SurveysReport
                 'key' => (string) $survey->key,
                 'name' => $survey->displayName($locale),
                 'kind' => (string) $survey->kind,
+                'audience' => (string) $survey->audience,
                 'live' => $survey->isRunning(),
                 'active' => (bool) $survey->active,
                 'starts_on' => $survey->starts_at?->copy()->setTimezone($timezone)->toDateString(),
@@ -201,7 +204,12 @@ final class SurveysReport
      * días en que una encuesta interna estaba viva —por su ventana; `active` no guarda historia, así que una apagada
      * hoy no cuenta ofertas— y de clientes SIN participación previa en ella: a quien ya se le preguntó no se le vuelve a
      * ofrecer, así que su visita no es una oferta. Una participación del MISMO día sí lo es (es la respuesta a esa
-     * oferta): por eso se compara su día con el de la visita, estrictamente anterior.
+     * oferta): por eso se compara su día con el de la visita, estrictamente anterior. En una «solo en su primera visita»
+     * (`#819`), solo la primera visita de cada cliente ({@see firstVisitsAmong()}).
+     *
+     * ⚠️ Es una APROXIMACIÓN y sale algo alta: cuenta también las visitas en las que la tarjeta no se pintó —en ámbar (solo
+     * se pinta en verde, la P1b de `puerta-nueva.md`) o con un empleado sin `puerta.profile`—, así que la tasa sale algo
+     * baja. Contar las ofertas de verdad es otra tanda.
      *
      * @param  array<int, array<string, mixed>>  $surveys
      */
@@ -217,18 +225,35 @@ final class SurveysReport
             if ($from > $to) {
                 continue;
             }
-            $offered += (int) DB::table('customer_visits as v')
+            $visits = DB::table('customer_visits as v')
                 ->whereBetween('v.visited_on', [$from, $to])
                 ->whereNotExists(static function ($query) use ($survey): void {
                     $query->selectRaw('1')->from('survey_participations as p')
                         ->whereColumn('p.user_id', 'v.user_id')
                         ->where('p.survey_id', $survey['id'])
                         ->whereColumn('p.asked_on', '<', 'v.visited_on');
-                })
-                ->count();
+                });
+            $offered += $survey['audience'] === Survey::AUDIENCE_FIRST_VISIT ? $this->firstVisitsAmong($visits) : $visits->count();
         }
 
         return $offered;
+    }
+
+    /**
+     * `#819`: en una encuesta «solo en su primera visita», solo es oferta la visita que fue la PRIMERA del cliente —la de su
+     * primer día, el menor entre su primera visita acreditada y su primer día cobrado ({@see VisitFacts::firstVisitDays()}),
+     * la misma regla que decide la oferta en la puerta—. Por conjuntos: nunca una consulta por visita.
+     */
+    private function firstVisitsAmong(QueryBuilder $visits): int
+    {
+        $rows = $visits->get(['v.user_id', 'v.visited_on']);
+        if ($rows->isEmpty()) {
+            return 0;
+        }
+
+        $first = app(VisitFacts::class)->firstVisitDays($rows->map(static fn (stdClass $row): int => (int) $row->user_id)->unique()->values()->all());
+
+        return $rows->filter(static fn (stdClass $row): bool => ($first[(int) $row->user_id] ?? null) === substr((string) $row->visited_on, 0, 10))->count();
     }
 
     // ─── Por encuesta y por pregunta ─────────────────────────────────────────────────────────────

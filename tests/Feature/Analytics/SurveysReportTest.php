@@ -287,6 +287,23 @@ class SurveysReportTest extends TestCase
         $this->assertSame(['El resto (3 a 5)', '5', 'menos de 5', '—'], $rows[1]);
     }
 
+    /**
+     * `#819`: en una encuesta «solo en su primera visita», solo es oferta la PRIMERA visita de cada cliente. Dan ya había
+     * venido en mayo: a todos, su visita del 20 de junio es una oferta (8); solo primera visita, no (7).
+     */
+    public function test_a_first_visit_survey_only_counts_first_visits_as_offers(): void
+    {
+        $this->seedJune();
+        app(GateVisits::class)->register($this->users['dan'], null, Carbon::parse('2026-05-10'));
+
+        $this->assertSame(8, (new SurveysReport)->compute($this->june())['totals']['offered'], 'a todos: la visita de Dan es una oferta');
+
+        $this->internal->update(['audience' => Survey::AUDIENCE_FIRST_VISIT]);
+        $totals = (new SurveysReport)->compute($this->june())['totals'];
+        $this->assertSame(7, $totals['offered'], 'solo primera visita: la de Dan, que ya vino en mayo, no');
+        $this->assertSame(10000, $totals['internal_rate_bp'], 'las 7 contestadas en la puerta entre las 7 ofertas');
+    }
+
     public function test_the_report_runs_in_a_constant_budget_of_queries(): void
     {
         $this->seedJune();

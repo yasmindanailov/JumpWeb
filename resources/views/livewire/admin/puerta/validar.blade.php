@@ -90,8 +90,9 @@
             <x-filament::icon :icon="Heroicon::OutlinedQrCode" class="ppu-vacio__ico" />
         </div>
     @elseif ($verdict['notice'])
-        {{-- Los avisos de la BÚSQUEDA, en gris y sin nombre: no hablan del cliente. --}}
-        <div class="ppu-cuerpo solo centro" wire:key="aviso-{{ $estado }}-{{ uniqid() }}">
+        {{-- Los avisos de la BÚSQUEDA, en gris y sin nombre: no hablan del cliente. La clave lleva la LECTURA (`$lectura`): cada
+             búsqueda entra de nuevo, aunque repita el aviso. --}}
+        <div class="ppu-cuerpo solo centro" wire:key="aviso-{{ $estado }}-{{ $lectura }}">
             <p class="ppu-aviso" role="status" aria-live="polite" data-gate-status="{{ $estado }}"
                @if ($estado === \App\Livewire\Admin\Puerta\ValidarRegistro::STATUS_LOOKUP_LIMITED) data-gate-lookup-limited @endif>
                 <x-filament::icon :icon="Heroicon::OutlinedInformationCircle" class="ppu-aviso__ico" />
@@ -100,7 +101,7 @@
         </div>
     @elseif ($ficha === null)
         {{-- Sin ficha (no encontrado, el QR, o un empleado sin `puerta.profile`): el veredicto grande y sin nombre. --}}
-        <div class="ppu-cuerpo solo centro" wire:key="veredicto-{{ $estado }}-{{ uniqid() }}">
+        <div class="ppu-cuerpo solo centro" wire:key="veredicto-{{ $estado }}-{{ $lectura }}">
             <div class="ppu-ver grande t-{{ $verdict['tone'] }}" role="status" aria-live="polite" data-gate-status="{{ $estado }}"
                  @if ($estado === \App\Livewire\Admin\Puerta\ValidarRegistro::STATUS_CARD_REVOKED) data-gate-card-revoked @endif
                  @if ($estado === \App\Livewire\Admin\Puerta\ValidarRegistro::STATUS_CARD_UNKNOWN) data-gate-card-unknown @endif
@@ -117,10 +118,12 @@
     @else
         {{-- LA FICHA. Dos relojes en el navegador —el velo a los 60 s y el cierre al TTL— que NO son la garantía: la ficha
              caduca en el SERVIDOR (`ensureFresh()`). Cualquier toque o tecla reinicia los dos. Mientras llega otra búsqueda,
-             la ficha abierta se APAGA: con cola, nunca se entrega con la ficha del anterior. --}}
+             la ficha abierta se APAGA: con cola, nunca se entrega con la ficha del anterior.
+             ⚠️ La clave es la LECTURA, nunca `expires_at` (que cada toque renueva): con ella, cada toque de la encuesta rehacía
+             la ficha entera —su entrada, el salto del veredicto y el pitido— y el owner lo vio como una recarga (02-10). --}}
         <section
             class="ppu-ficha"
-            wire:key="ficha-{{ $profile['user_id'] }}-{{ $profile['expires_at'] }}"
+            wire:key="ficha-{{ $lectura }}-{{ $profile['user_id'] }}"
             wire:loading.class="sale"
             wire:target="search"
             data-gate-profile
@@ -144,8 +147,9 @@
             @endphp
             <div @class(['ppu-cuerpo', 'solo' => $ficha['hijos'] === [] && $ficha['invitados'] === [] && $ficha['fiesta'] === null && ! $conEncuesta])>
                 <div class="ppu-col" data-gate-col="main">
-                    {{-- 1 · El veredicto y, dentro de la misma tarjeta, el nombre: una sola cosa que mirar. --}}
-                    <div class="ppu-ver t-{{ $verdict['tone'] }}" role="status" aria-live="polite" data-gate-status="{{ $estado }}" data-gate-waiver="{{ $ficha['descargo'] }}"
+                    {{-- 1 · El veredicto y, dentro de la misma tarjeta, el nombre: una sola cosa que mirar. Su clave lleva el
+                         TONO: si cambia («Dar por firmado» lo pone en verde) vuelve a entrar y a sonar; si no, no se mueve. --}}
+                    <div class="ppu-ver t-{{ $verdict['tone'] }}" wire:key="veredicto-{{ $lectura }}-{{ $verdict['tone'] }}" role="status" aria-live="polite" data-gate-status="{{ $estado }}" data-gate-waiver="{{ $ficha['descargo'] }}"
                          @if ($verdict['sound'] !== null) x-init="$dispatch('puerta-sonido', '{{ $verdict['sound'] }}')" @endif>
                         <div class="ppu-ver__top">
                             <span class="ppu-ver__ico"><x-filament::icon :icon="$iconos[$verdict['tone']]" /></span>
@@ -286,7 +290,9 @@
 
                     {{-- LA ENCUESTA INTERNA, PREGUNTA A PREGUNTA y SOLO EN VERDE (`specs/puerta-nueva.md` §4.4, la P1b; `#817`·3; el
                          mockup): un toque guarda y pasa a la siguiente; «Siguiente» en las de varias y de texto; «Ahora no» deja el
-                         resto. ▶ `#754`: ANÓNIMA, y su aviso (y la intro del panel) se lee antes de la PRIMERA pregunta (D7). --}}
+                         resto. ▶ `#754`: ANÓNIMA, y su aviso (y la intro del panel) se lee antes de la PRIMERA pregunta (D7).
+                         ▶ El VALOR VIAJA CON EL TOQUE (`answerQuestion(clave, valor)`), nunca en un `wire:model`: el servidor lo tipa
+                         y lo valida contra su pregunta, y no hay estado escondido que pueda llegar a medias. --}}
                     @if ($conEncuesta)
                         @php
                             $paso = (int) ($survey['step'] ?? 0);
@@ -294,50 +300,65 @@
                         @endphp
                         <section class="ppu-card pad ppu-enc gate-survey" data-gate-survey="{{ $survey['state'] }}" data-gate-survey-key="{{ $survey['key'] }}">
                             @if ($survey['state'] === 'asking' && $q !== null)
-                                <p class="ppu-over">{{ __('admin.puerta.ficha.preguntale') }}</p>
-                                @if ($paso === 0)
-                                    @if (filled($survey['intro'] ?? null))
-                                        <p class="ppu-enc__intro">{{ $survey['intro'] }}</p>
+                                <p class="ppu-over ppu-enc__cab">
+                                    <span>{{ __('admin.puerta.ficha.preguntale') }}</span>
+                                    <span class="ppu-enc__paso" data-gate-survey-progress>{{ __('admin.puerta.ficha.paso', ['n' => $paso + 1, 'total' => $survey['count']]) }}</span>
+                                </p>
+                                {{-- Cada pregunta es SU bloque (`wire:key`): al pasar a la siguiente entra nuevo —solo él se mueve, y lo
+                                     marcado en una de varias no se arrastra a la siguiente—; la ficha de alrededor no se toca. --}}
+                                <div class="ppu-enc__q" wire:key="pregunta-{{ $lectura }}-{{ $q['key'] }}" x-data="{ marcadas: [], texto: '' }">
+                                    @if ($paso === 0)
+                                        @if (filled($survey['intro'] ?? null))
+                                            <p class="ppu-enc__intro">{{ $survey['intro'] }}</p>
+                                        @endif
+                                        <p class="gate-hint" data-gate-survey-notice>{{ __('admin.puerta.validar.profile.survey_notice') }}</p>
                                     @endif
-                                    <p class="gate-hint" data-gate-survey-notice>{{ __('admin.puerta.validar.profile.survey_notice') }}</p>
-                                @endif
-                                <h3 class="ppu-enc__pregunta" data-gate-question="{{ $q['key'] }}" data-gate-question-type="{{ $q['type'] }}">{{ $q['label'] }}</h3>
+                                    <h3 class="ppu-enc__pregunta" id="pregunta-{{ $q['key'] }}" data-gate-question="{{ $q['key'] }}" data-gate-question-type="{{ $q['type'] }}">{{ $q['label'] }}</h3>
 
-                                @if (in_array($q['type'], ['choice', 'yesno', 'scale'], true))
-                                    @php
-                                        $opciones = match ($q['type']) {
-                                            'yesno' => [['key' => '1', 'label' => __('admin.puerta.validar.profile.survey_yes')], ['key' => '0', 'label' => __('admin.puerta.validar.profile.survey_no')]],
-                                            'scale' => array_map(static fn (int $n): array => ['key' => (string) $n, 'label' => (string) $n], range(\App\Domain\Platform\Services\Surveys\QuestionSchema::SCALE_MIN, \App\Domain\Platform\Services\Surveys\QuestionSchema::SCALE_MAX)),
-                                            default => $q['options'],
-                                        };
-                                    @endphp
-                                    <div class="ppu-ops">
-                                        @foreach ($opciones as $o)
-                                            <button type="button" class="ppu-op" wire:click="answerQuestion('{{ $q['key'] }}', '{{ $o['key'] }}')" data-gate-survey-option="{{ $o['key'] }}">{{ $o['label'] }}</button>
-                                        @endforeach
-                                    </div>
-                                @elseif ($q['type'] === 'multi')
-                                    <div class="gate-q__options">
-                                        @foreach ($q['options'] as $o)
-                                            <input type="checkbox" id="q-{{ $q['key'] }}-{{ $o['key'] }}" class="gate-q__input" wire:model="surveyAnswers.{{ $q['key'] }}" value="{{ $o['key'] }}">
-                                            <label for="q-{{ $q['key'] }}-{{ $o['key'] }}" class="gate-q__btn">{{ $o['label'] }}</label>
-                                        @endforeach
-                                    </div>
-                                    <button type="button" class="ppu-boton ppu-boton--primario" wire:click="answerQuestion('{{ $q['key'] }}')" data-gate-survey-next>{{ __('admin.puerta.ficha.siguiente') }}</button>
-                                @else
-                                    <input type="text" id="q-{{ $q['key'] }}" class="gate-q__text" wire:model="surveyAnswers.{{ $q['key'] }}" maxlength="{{ \App\Domain\Platform\Services\Surveys\QuestionSchema::TEXT_MAX }}" autocomplete="off" placeholder="{{ __('admin.puerta.validar.profile.survey_text_placeholder') }}" aria-describedby="q-{{ $q['key'] }}-hint">
-                                    <p class="gate-hint" id="q-{{ $q['key'] }}-hint" data-gate-survey-text-hint>{{ __('admin.puerta.validar.profile.survey_text_hint') }}</p>
-                                    <button type="button" class="ppu-boton ppu-boton--primario" wire:click="answerQuestion('{{ $q['key'] }}')" data-gate-survey-next>{{ __('admin.puerta.ficha.siguiente') }}</button>
-                                @endif
+                                    @if (in_array($q['type'], ['choice', 'yesno', 'scale'], true))
+                                        @php
+                                            $opciones = match ($q['type']) {
+                                                'yesno' => [['key' => '1', 'label' => __('admin.puerta.validar.profile.survey_yes')], ['key' => '0', 'label' => __('admin.puerta.validar.profile.survey_no')]],
+                                                'scale' => array_map(static fn (int $n): array => ['key' => (string) $n, 'label' => (string) $n], range(\App\Domain\Platform\Services\Surveys\QuestionSchema::SCALE_MIN, \App\Domain\Platform\Services\Surveys\QuestionSchema::SCALE_MAX)),
+                                                default => $q['options'],
+                                            };
+                                        @endphp
+                                        {{-- Un toque: la opción se marca AL INSTANTE (`data-loading`, que Livewire pone mientras guarda) y
+                                             las demás descansan; un segundo toque llega tarde y el servidor lo ignora. --}}
+                                        <div class="ppu-ops" role="group" aria-labelledby="pregunta-{{ $q['key'] }}">
+                                            @foreach ($opciones as $o)
+                                                <button type="button" class="ppu-op" wire:click="answerQuestion(@js($q['key']), @js($o['key']))" data-gate-survey-option="{{ $o['key'] }}">{{ $o['label'] }}</button>
+                                            @endforeach
+                                        </div>
+                                    @elseif ($q['type'] === 'multi')
+                                        {{-- VARIAS: cada opción se marca y se desmarca SOLA, en una lista de verdad (`marcadas`), y
+                                             «Siguiente» la manda entera. ⚠️ Con un `wire:model` sin lista inicial, un toque las marcaba
+                                             TODAS y no se guardaba ninguna (desde `#741`; medido el 02-10). --}}
+                                        <div class="ppu-ops" role="group" aria-labelledby="pregunta-{{ $q['key'] }}">
+                                            @foreach ($q['options'] as $o)
+                                                <button type="button" class="ppu-op ppu-op--varias" aria-pressed="false"
+                                                        x-bind:aria-pressed="marcadas.includes(@js($o['key']))"
+                                                        x-on:click="marcadas = marcadas.includes(@js($o['key'])) ? marcadas.filter((k) => k !== @js($o['key'])) : [...marcadas, @js($o['key'])]"
+                                                        data-gate-survey-toggle="{{ $o['key'] }}"><x-filament::icon :icon="Heroicon::OutlinedCheck" class="ppu-op__marca" />{{ $o['label'] }}</button>
+                                            @endforeach
+                                        </div>
+                                        <button type="button" class="ppu-boton ppu-boton--primario ppu-enc__siguiente" wire:click="answerQuestion(@js($q['key']), marcadas)" data-gate-survey-next>{{ __('admin.puerta.ficha.siguiente') }}</button>
+                                    @else
+                                        {{-- TEXTO: «Siguiente» o Enter. Si el lector escribe aquí un carné, el servidor lo busca y no lo guarda. --}}
+                                        <input type="text" id="q-{{ $q['key'] }}" class="gate-q__text" x-model="texto" wire:keydown.enter.prevent="answerQuestion(@js($q['key']), texto)" maxlength="{{ \App\Domain\Platform\Services\Surveys\QuestionSchema::TEXT_MAX }}" autocomplete="off" placeholder="{{ __('admin.puerta.validar.profile.survey_text_placeholder') }}" aria-labelledby="pregunta-{{ $q['key'] }}" aria-describedby="q-{{ $q['key'] }}-hint">
+                                        <p class="gate-hint" id="q-{{ $q['key'] }}-hint" data-gate-survey-text-hint>{{ __('admin.puerta.validar.profile.survey_text_hint') }}</p>
+                                        <button type="button" class="ppu-boton ppu-boton--primario ppu-enc__siguiente" wire:click="answerQuestion(@js($q['key']), texto)" data-gate-survey-next>{{ __('admin.puerta.ficha.siguiente') }}</button>
+                                    @endif
 
-                                @error('surveyAnswers.'.$q['key'])
-                                    <p class="gate-q__error" data-gate-survey-error="{{ $q['key'] }}">{{ $message }}</p>
-                                @enderror
+                                    @error('respuesta.'.$q['key'])
+                                        <p class="gate-q__error" data-gate-survey-error="{{ $q['key'] }}">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                {{-- «Ahora no»: con algo contestado, «Guardado.»; sin nada, la tarjeta se va y la encuesta vuelve
+                                     a salir en su próxima visita (`#819`, el mockup: «no guarda nada»). --}}
                                 <button type="button" class="ppu-ahora" wire:click="skipSurvey" data-gate-survey-skip>{{ __('admin.puerta.ficha.ahora_no') }}</button>
-                            @elseif ($survey['state'] === 'answered')
-                                <p class="ppu-guardado"><x-filament::icon :icon="Heroicon::OutlinedCheck" />{{ __('admin.puerta.ficha.guardado') }}</p>
                             @else
-                                <p class="gate-hint">{{ __('admin.puerta.validar.profile.survey_declined') }}</p>
+                                <p class="ppu-guardado"><x-filament::icon :icon="Heroicon::OutlinedCheck" />{{ __('admin.puerta.ficha.guardado') }}</p>
                             @endif
                         </section>
                     @endif

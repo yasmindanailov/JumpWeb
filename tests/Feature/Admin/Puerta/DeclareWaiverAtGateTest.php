@@ -7,6 +7,7 @@ use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\WaiverSignature;
+use App\Domain\Identity\Services\CustomerCards;
 use App\Domain\Identity\Services\LegalDocumentPublisher;
 use App\Domain\Identity\Services\WaiverCounterDeclaration;
 use App\Domain\Identity\Services\WaiverSettings;
@@ -228,5 +229,28 @@ class DeclareWaiverAtGateTest extends TestCase
 
         $this->assertSame($antes['via'], $despues['via'], 'el origen de la ficha no cambia al firmar');
         $this->assertSame($antes['ttl_minutes'], $despues['ttl_minutes']);
+    }
+
+    /**
+     * La ficha recompuesta conserva el ECO que tenía: el de una búsqueda tecleada (enmascarado) se queda, y un ESCANEO, que no
+     * lo tiene, sigue sin él. ⚠️ Recomponer con `(string) (… ?? '')` convertía el «sin eco» del escaneo en una cadena vacía, y
+     * la vista pintaba un «Resultado para» en blanco (medido en navegador el 02-10, al probar la encuesta de la P1b).
+     */
+    public function test_the_repainted_card_keeps_the_echo_it_had(): void
+    {
+        $tecleado = $this->conAceptacionRetenida();
+        $page = Livewire::actingAs($this->operador())->test(ValidarRegistro::class)->set('input', $tecleado->email)->call('search');
+        $eco = $page->get('result.query');
+        $this->assertIsString($eco);
+        $page->call('declareWaiver')->assertSet('profile.waiver.signed', true)->assertSet('result.query', $eco)->assertSee('data-gate-query', false);
+
+        $escaneado = $this->conAceptacionRetenida();
+        $carne = (string) app(CustomerCards::class)->ensureFor($escaneado)->plainToken();
+        Livewire::actingAs($this->operador())->test(ValidarRegistro::class)->set('input', $carne)->call('search')
+            ->assertSet('result.query', null)
+            ->call('declareWaiver')
+            ->assertSet('profile.waiver.signed', true)
+            ->assertSet('result.query', null)
+            ->assertDontSee('data-gate-query', false);
     }
 }

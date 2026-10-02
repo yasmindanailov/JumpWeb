@@ -29,4 +29,13 @@ interface PaidVisits
 
     /** El primer día cobrado de `($after, $until]`, o `null`. */
     public function firstBetween(int $userId, string $after, string $until): ?string;
+
+    /**
+     * El PRIMER día cobrado de cada cliente, por conjuntos (`#819`: la tasa de una encuesta «solo primera visita» sin una
+     * consulta por visita). Quien no tiene ninguno no sale.
+     *
+     * @param  list<int>  $userIds
+     * @return array<int, string> `[user_id => 'Y-m-d']`
+     */
+    public function firstPaidDays(array $userIds): array;
 }

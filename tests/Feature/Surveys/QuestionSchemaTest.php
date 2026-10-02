@@ -55,6 +55,25 @@ class QuestionSchemaTest extends TestCase
         $this->assertFalse(QuestionSchema::accepts(['type' => 'text'], '   '));
     }
 
+    /** Lo que llega de un formulario, al tipo de su pregunta; lo que no es de su tipo, o viene vacío, se queda fuera. */
+    public function test_form_values_are_typed_by_their_question(): void
+    {
+        $questions = QuestionSchema::normalize([
+            ['key' => 'ambiente', 'type' => 'scale', 'label' => 'x'],
+            ['key' => 'zonas', 'type' => 'multi', 'label' => 'x', 'options' => [['key' => 'jump', 'label' => 'J'], ['key' => 'kids', 'label' => 'K']]],
+            ['key' => 'volveria', 'type' => 'yesno', 'label' => 'x'],
+            ['key' => 'comentario', 'type' => 'text', 'label' => 'x'],
+        ]);
+
+        $this->assertSame(
+            ['ambiente' => 4, 'zonas' => ['kids', 'jump'], 'volveria' => false, 'comentario' => 'Bien'],
+            QuestionSchema::fromForm($questions, ['ambiente' => '4', 'zonas' => ['kids', 'jump', 'kids', 7], 'volveria' => '0', 'comentario' => ' Bien ']),
+            'cada opción de una de varias, UNA vez: repetida contaría doble en el cuadro',
+        );
+        // Lo que mandaba la puerta vieja tras un toque en una de varias (`true`, el fallo de `#741`) no es una lista.
+        $this->assertSame([], QuestionSchema::fromForm($questions, ['zonas' => true, 'comentario' => '   ', 'volveria' => 'quizá']));
+    }
+
     public function test_the_label_falls_back_to_spanish_and_to_the_key(): void
     {
         $this->assertSame('Hola', QuestionSchema::label(['es' => 'Hola'], 'fr'));

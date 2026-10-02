@@ -49,6 +49,31 @@ final class PaidVisitsReader implements PaidVisits
         return $first === null ? null : substr((string) $first, 0, 10);
     }
 
+    public function firstPaidDays(array $userIds): array
+    {
+        $first = [];
+        // En tandas: una lista de clientes de un trimestre no cabe entera en un `IN` de SQLite.
+        foreach (array_chunk(array_values(array_unique($userIds)), 500) as $chunk) {
+            $items = OrderItem::query()
+                ->paidScheduledPrincipal()
+                ->whereHas('order', static fn ($query) => $query->whereIn('user_id', $chunk))
+                ->with(['order:id,user_id', 'slot:id,date'])
+                ->get(['id', 'order_id', 'slot_id']);
+            foreach ($items as $item) {
+                if ($item->order === null || $item->slot === null) {
+                    continue;
+                }
+                $userId = (int) $item->order->user_id;
+                $day = substr((string) $item->slot->getRawOriginal('date'), 0, 10);
+                if (! isset($first[$userId]) || $day < $first[$userId]) {
+                    $first[$userId] = $day;
+                }
+            }
+        }
+
+        return $first;
+    }
+
     /** @return Builder<OrderItem> */
     private function paidOf(int $userId): Builder
     {

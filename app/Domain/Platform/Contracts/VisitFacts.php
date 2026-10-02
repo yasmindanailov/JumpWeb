@@ -29,4 +29,13 @@ interface VisitFacts
 
     /** El PRIMER día de `($after, $until]` con una visita, o `null` si no volvió en ese tramo. */
     public function firstReturn(int $userId, string $after, string $until): ?string;
+
+    /**
+     * El PRIMER día de cada cliente —el menor entre su primera visita acreditada y su primer día cobrado—, por conjuntos
+     * (`#819`). Una visita del día `D` es su primera visita ({@see isFirstVisit()}) si y solo si `D` es ese día.
+     *
+     * @param  list<int>  $userIds
+     * @return array<int, string> `[user_id => 'Y-m-d']`; quien no tiene ninguno no sale
+     */
+    public function firstVisitDays(array $userIds): array;
 }

@@ -10,19 +10,21 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 
 /**
- * **El formulario de una encuesta** (`docs/specs/encuestas.md` §4.1 y §4.4, T1): la clave, la clase, el encendido y
- * la ventana; el nombre y la frase de cabecera en tres idiomas; y las preguntas, con el molde de los esquemas de
+ * **El formulario de una encuesta** (`docs/specs/encuestas.md` §4.1 y §4.4, T1): la clave, la clase, a quién (`#819`), el
+ * encendido y la ventana; el nombre y la frase de cabecera en tres idiomas; y las preguntas, con el molde de los esquemas de
  * campos del catálogo (`{key, type, required, label{es,en,fr}}`) y sus opciones cuando el tipo las pide.
  *
- * ⚠️ **Con respuestas guardadas, la clave, la clase y las claves y los tipos de las preguntas van BLOQUEADOS**
+ * ⚠️ **Con respuestas guardadas, la clave, la clase, a quién y las claves y los tipos de las preguntas van BLOQUEADOS**
  * (los rótulos siguen editables): cambiar una pregunta a mitad mezcla lo medido, como los pesos de un experimento.
  * Un campo deshabilitado no viaja al guardar: el valor de la BD se queda tal cual. Las preguntas se normalizan al
  * guardar (`QuestionSchema::normalize()`, en las páginas): lo que entra en la BD es lo que la puerta y el correo leen.
@@ -58,6 +60,25 @@ class SurveyForm
                             ->native(false)
                             ->selectablePlaceholder(false)
                             ->disabled($locked),
+                        // `#819`: A QUIÉN, en cada encuesta, porque depende de la pregunta («¿Cómo nos conociste?» solo
+                        // tiene sentido la primera vez). Bloqueado con respuestas, como la clase: cambiarlo a mitad mezcla
+                        // a quién se le preguntó.
+                        ToggleButtons::make('audience')
+                            ->label(__('admin.surveys.field_audience'))
+                            ->helperText(__('admin.surveys.field_audience_hint'))
+                            ->options([
+                                Survey::AUDIENCE_ALL => __('admin.surveys.audience.all'),
+                                Survey::AUDIENCE_FIRST_VISIT => __('admin.surveys.audience.first_visit'),
+                            ])
+                            ->icons([
+                                Survey::AUDIENCE_ALL => Heroicon::OutlinedUserGroup,
+                                Survey::AUDIENCE_FIRST_VISIT => Heroicon::OutlinedSparkles,
+                            ])
+                            ->inline()
+                            ->default(Survey::AUDIENCE_ALL)
+                            ->required()
+                            ->disabled($locked)
+                            ->columnSpanFull(),
                         Toggle::make('active')
                             ->label(__('admin.surveys.field_active'))
                             ->helperText(__('admin.surveys.field_active_hint'))

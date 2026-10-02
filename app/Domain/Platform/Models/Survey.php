@@ -22,6 +22,7 @@ use Illuminate\Support\Carbon;
  * @property array<string, string> $name
  * @property ?array<string, string> $intro
  * @property string $kind
+ * @property string $audience a quién se le pregunta (`#819`): `all` o `first_visit`
  * @property bool $active
  * @property ?Carbon $starts_at
  * @property ?Carbon $ends_at
@@ -37,9 +38,25 @@ class Survey extends Model
     /** @var list<string> */
     public const KINDS = [self::KIND_INTERNAL, self::KIND_EXTERNAL];
 
+    /** A todos (lo de siempre). */
+    public const AUDIENCE_ALL = 'all';
+
+    /**
+     * Solo en su PRIMERA visita (`#819`): ni visita acreditada ni día cobrado antes de ese día, la regla de
+     * `VisitFacts::isFirstVisit()`. En la puerta, la de hoy; en el correo, la de ayer.
+     */
+    public const AUDIENCE_FIRST_VISIT = 'first_visit';
+
+    /** @var list<string> */
+    public const AUDIENCES = [self::AUDIENCE_ALL, self::AUDIENCE_FIRST_VISIT];
+
     public const KEY_RE = '/^[a-z][a-z0-9_-]{0,47}$/';
 
-    protected $fillable = ['key', 'name', 'intro', 'kind', 'active', 'starts_at', 'ends_at', 'questions', 'created_by'];
+    protected $fillable = ['key', 'name', 'intro', 'kind', 'audience', 'active', 'starts_at', 'ends_at', 'questions', 'created_by'];
+
+    protected $attributes = [
+        'audience' => self::AUDIENCE_ALL,
+    ];
 
     protected $casts = [
         'name' => 'array',
@@ -68,6 +85,12 @@ class Survey extends Model
         return $this->active
             && ($this->starts_at === null || $this->starts_at->lte(now()))
             && ($this->ends_at === null || $this->ends_at->gt(now()));
+    }
+
+    /** ¿Solo en su primera visita? (`#819`). Cualquier otro valor guardado es «a todos», lo de siempre. */
+    public function onlyFirstVisit(): bool
+    {
+        return $this->audience === self::AUDIENCE_FIRST_VISIT;
     }
 
     /** @return list<array{key: string, type: string, required: bool, label: array<string, string>, options: list<array{key: string, label: array<string, string>}>}> */

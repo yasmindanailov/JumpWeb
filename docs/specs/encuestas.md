@@ -2,8 +2,9 @@
 
 > Estado: ✅ **aprobada por el owner el 24-09** (`#740`: sus cinco respuestas en §7) → **T1→T4 en `main`** (carril
 > del SPA) · ✅ **T5, el anonimato** (`[DECIDIDO owner]` 27-09, `#754`, §4.7: sustituye al punto 1 de `#740`; construida
-> con los siete ajustes de `#757` y aprobada por el owner) · Última actualización: 2026-09-27 · Decisiones: `#740`, `#754`,
-> `#757`. Es la **T7** de `analitica.md` (§4.8 y §4.10) y la T1 de `analitica-para-decidir.md`.
+> con los siete ajustes de `#757` y aprobada por el owner) · ✅ **02-10: la tarjeta de la puerta, pregunta a pregunta**
+> (`puerta-nueva.md` §4.4) **y `#819`** (a quién; «Ahora no») · Última actualización: 2026-10-02 · Decisiones: `#740`,
+> `#754`, `#757`, `#819`. Es la **T7** de `analitica.md` (§4.8 y §4.10) y la T1 de `analitica-para-decidir.md`.
 
 ## §0 · Antes de tocar
 
@@ -105,7 +106,8 @@ WhatsApp; recompensas (JumpPoints) por contestar.
 > y RESPUESTA (sin cliente, sin hora, clave aleatoria). Lo que sigue describe la T1 tal como se construyó.
 
 - `surveys`: `id`, `key` (`^[a-z][a-z0-9_-]{0,47}$`, única), `name` json es/en/fr, `kind`
-  (`internal`|`external`), `active` bool, `starts_at`, `ends_at` (nulos = sin plazo), `intro` json es/en/fr (la
+  (`internal`|`external`), `audience` (`all`|`first_visit`: a quién, `[DECIDIDO owner]` `#819`, 02-10; bloqueado con
+  respuestas, como la clase), `active` bool, `starts_at`, `ends_at` (nulos = sin plazo), `intro` json es/en/fr (la
   frase de cabecera del correo o de la tablet), `questions` json, `created_by`, timestamps. **Vivo** = activa y
   dentro de su ventana (la regla de `Experiment::isRunning()`). `[PENDIENTE: owner]` §7·5: **una viva por clase**
   (recomendado; el panel lo valida al encender) o varias.
@@ -128,6 +130,16 @@ WhatsApp; recompensas (JumpPoints) por contestar.
   ref `user_id`, régimen del contrato como `visit_checked_in`). Ninguna respuesta entra en el libro.
 
 ### 4.2 La interna: en la puerta, con la persona delante
+
+- ⚠️ **Corregido por la P1b de la Puerta nueva (02-10, `puerta-nueva.md` §4.4)**: la tarjeta va PREGUNTA A PREGUNTA, solo
+  en verde, y cada valor viaja con su toque (`answerQuestion()`), sin `wire:model`. Con el `wire:model` de abajo, **la de
+  VARIAS marcaba todas al primer toque y no guardaba ninguna** (desde `#741`; las pruebas fijaban la lista con `set()`).
+  En producción sigue esa vista hasta que se despliegue la P1.
+- ⚠️ **Corregido por `#819` (`[DECIDIDO owner]` 02-10)**: (1) cada encuesta dice **a quién** —a todos o solo en su PRIMERA
+  visita (ni visita acreditada ni día cobrado antes: `VisitFacts::isFirstVisit()`)—, en la puerta y en el correo; (2)
+  **«Ahora no» sin nada contestado no escribe NADA** (ni participación, ni respuesta, ni rastro) y la encuesta vuelve en su
+  próxima visita (ese día ya no: una marca en la caché, `SurveyResponses::postponeInPerson()`). La puerta ya no escribe
+  filas `declined`; lo de abajo sobre «No preguntar» queda como historia.
 
 - ⚠️ **Corregido por `#756` (27-09)**: la visita se acredita también al BUSCAR al cliente por correo o móvil (no solo al
   escanear), así que la interna se ofrece también ahí, y la externa del día siguiente llega a quien se buscó así; la visita
@@ -160,6 +172,10 @@ WhatsApp; recompensas (JumpPoints) por contestar.
   cierra sin guardar y se vuelve a ofrecer en la siguiente búsqueda.
 
 ### 4.3 La externa: el correo del día siguiente
+
+- ⚠️ **`#819` (02-10)**: una externa «solo en su primera visita» sale solo a quien vino AYER por primera vez; lo mira
+  `SendExternalSurveys` cliente a cliente (los días cobrados son de Booking, y la consulta no los ve), antes de contar el
+  ensayo.
 
 - **El comando** `surveys:send-external`, programado a las **10:00 del parque** (`DisplayTime`), en
   `routes/console.php` (+1 tarea: `deploy.sh` «esperadas» sube EN EL MISMO commit, §0·4). Por cada encuesta externa

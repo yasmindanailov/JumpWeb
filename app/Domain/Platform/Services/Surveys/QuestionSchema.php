@@ -99,6 +99,8 @@ final class QuestionSchema
      * «1», la clave de una opción) y listas de cadenas; aquí cada una se convierte al tipo de su pregunta y lo
      * que no viene —o viene vacío— se queda FUERA (una pregunta sin contestar no es una respuesta inválida:
      * {@see validate()} decide si era obligatoria). Es fuente única para la puerta y para la página del correo.
+     * Una de varias guarda cada opción UNA vez: un dedo no marca dos veces la misma, y una repetida contaría doble en el
+     * cuadro.
      *
      * @param  list<array{key: string, type: string, required: bool, label: array<string, string>, options: list<array{key: string, label: array<string, string>}>}>  $questions
      * @param  array<string, mixed>  $raw
@@ -111,7 +113,7 @@ final class QuestionSchema
             $value = $raw[$question['key']] ?? null;
             $typed = match ($question['type']) {
                 self::TYPE_CHOICE => is_string($value) && $value !== '' ? $value : null,
-                self::TYPE_MULTI => is_array($value) ? array_values(array_filter($value, 'is_string')) : null,
+                self::TYPE_MULTI => is_array($value) ? array_values(array_unique(array_filter($value, 'is_string'))) : null,
                 self::TYPE_SCALE => is_int($value) || (is_string($value) && preg_match('/^\d+$/', $value) === 1) ? (int) $value : null,
                 self::TYPE_YESNO => match (true) {
                     $value === true, $value === 1, $value === '1', $value === 'true' => true,

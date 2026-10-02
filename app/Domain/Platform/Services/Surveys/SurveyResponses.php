@@ -9,6 +9,7 @@ use App\Domain\Platform\Models\SurveyResponse;
 use App\Domain\Platform\Services\Analytics\Recorder;
 use App\Domain\Platform\Services\DisplayTime;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -21,7 +22,9 @@ use Illuminate\Support\Str;
  *  - **Una por cliente y encuesta** (`#740` §7·2): el índice único de la PARTICIPACIÓN es el árbitro. Una segunda
  *    escritura (una tablet dormida que reenvía, una página abierta dos veces) no pisa la primera ni deja una segunda
  *    respuesta: devuelve `false` y no pasa nada.
- *  - **«No preguntar» también es una fila**: participación y respuesta con `declined`, para la tasa.
+ *  - **«No preguntar» también es una fila**: participación y respuesta con `declined`, para la tasa. ⚠️ Desde `#819` la
+ *    puerta ya no la escribe: su «Ahora no» sin nada contestado deja la encuesta para otro día ({@see postponeInPerson()}).
+ *    Las filas `declined` que hay se quedan, y `declineInPerson()` es la API con la que las pruebas montan sus datos.
  *  - **La respuesta no lleva a nadie**: ni cliente, ni hora (la FRANJA), ni idioma; lleva primera visita y tipo de
  *    visita ({@see VisitFacts}) y, si se contestó, el SELLO ({@see SurveySeals}). Participación y respuesta se escriben
  *    en la misma transacción, pero nada en ellas las une.
@@ -56,7 +59,10 @@ final class SurveyResponses
 
     // ─── La puerta ───────────────────────────────────────────────────────────────────────────────
 
-    /** La encuesta VIVA de esa clase a la que este cliente aún no ha participado, o `null`. */
+    /**
+     * La encuesta VIVA de esa clase a la que este cliente aún no ha participado, o `null`; desde `#819`, además, no la
+     * dejó HOY para otro día («Ahora no») y, si es «solo en su primera visita», hoy es su primera visita.
+     */
     public function offerFor(string $kind, int $userId): ?Survey
     {
         $survey = Survey::runningOfKind($kind);
@@ -65,8 +71,42 @@ final class SurveyResponses
         }
 
         $asked = SurveyParticipation::query()->where('survey_id', $survey->getKey())->where('user_id', $userId)->exists();
+        if ($asked) {
+            return null;
+        }
 
-        return $asked ? null : $survey;
+        $today = DisplayTime::today()->toDateString();
+
+        // `#819`: «Ahora no» sin nada contestado la deja para su PRÓXIMA visita; hoy, ya no.
+        if (Cache::has(self::postponedKey((int) $survey->getKey(), $userId, $today))) {
+            return null;
+        }
+
+        // `#819`: «solo en su primera visita» — ni visita acreditada ni día cobrado ANTES de hoy (la de hoy ya está
+        // acreditada al escanear, y no cuenta).
+        if ($survey->onlyFirstVisit() && ! $this->visits->isFirstVisit($userId, $today)) {
+            return null;
+        }
+
+        return $survey;
+    }
+
+    /**
+     * **«Ahora no» SIN nada contestado** (`#819`, `[DECIDIDO owner]`; el mockup: «no guarda nada»): no escribe NADA —ni
+     * participación, ni respuesta, ni rastro— y la encuesta vuelve a salir en su PRÓXIMA visita. Ese día ya no (una visita
+     * es un día: `customer_visits`): lo recuerda una marca en la caché que caduca al acabar el día del parque. Con algo
+     * contestado no se llega aquí: se cierra con lo contestado.
+     */
+    public function postponeInPerson(Survey $survey, int $userId): void
+    {
+        $today = DisplayTime::today();
+        Cache::put(self::postponedKey((int) $survey->getKey(), $userId, $today->toDateString()), true, $today->copy()->endOfDay());
+    }
+
+    /** La marca de «Ahora no» de un cliente, una encuesta y un día del parque (`Y-m-d`). */
+    public static function postponedKey(int $surveyId, int $userId, string $day): string
+    {
+        return "surveys:postponed:{$surveyId}:{$userId}:{$day}";
     }
 
     /**
@@ -81,7 +121,10 @@ final class SurveyResponses
         return $this->startInPerson($survey, $userId, $answers, $askedBy) !== null;
     }
 
-    /** «No preguntar»: participación y una respuesta `declined`, sin sello; no se vuelve a ofrecer. */
+    /**
+     * «No preguntar»: participación y una respuesta `declined`, sin sello; no se vuelve a ofrecer. ⚠️ La puerta ya no lo usa
+     * (`#819`: su «Ahora no» es {@see postponeInPerson()}); queda para las filas que hay y para las pruebas.
+     */
     public function declineInPerson(Survey $survey, int $userId, ?int $askedBy): bool
     {
         return $this->closeInPerson($survey, $userId, null, $askedBy) !== null;

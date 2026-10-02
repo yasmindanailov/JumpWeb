@@ -1,8 +1,8 @@
 # [SPEC] La Puerta nueva — el mostrador del zip (6), sobre las garantías de la de hoy
 
-> Estado: 🟦 **la P1a (la pantalla) EN `main` con el visto bueno del owner** (02-10); quedan la P1b (la encuesta), la P2 y la
-> P3 · Última actualización: 2026-10-02 · Decisiones: `#817`, `#818` · Carril: 🧩 **SPA** (`#861`, el reparto del
-> zip (6), `isla-y-landing-nueva.md` §4.27) · Fuente: `instancias/playjump/diseno/playjump-design-system/paginas/puerta/`
+> Estado: 🟦 **la P1 entera EN `main` con el visto bueno del owner** (02-10): la pantalla (P1a), la encuesta (P1b) y a quién
+> y «Ahora no» (P1c); quedan la P2 y la P3 · Última actualización: 2026-10-02 · Decisiones: `#817`, `#818`, `#819` ·
+> Carril: 🧩 **SPA** (`#861`, el reparto del zip (6), `isla-y-landing-nueva.md` §4.27) · Fuente: `instancias/playjump/diseno/playjump-design-system/paginas/puerta/`
 > y la sección «La Puerta · el mostrador (27-09)» de su `readme.md` (manda el mockup, `#767`); referencia, el brief
 > COMPLETO `uploads/brief-puerta-playjump (1).md` · La pantalla de hoy y sus garantías: `identidad-qr-puerta.md`.
 
@@ -20,8 +20,8 @@
 - **El owner ya contestó** (`#817`): «Nueva búsqueda» se queda en el pie, los invitados en una línea sin nombres, la
   encuesta pregunta a pregunta y la reseña del día por palabras. Tandas en §4.4: cada una en `wip/…`, con su «al
   detalle» medido aquí ANTES del código, su arnés, su sonda a 1080 × 810 y el ojo del owner en la tablet.
-- **Estado (02-10)**: la P1a (la pantalla) EN `main` con el visto bueno del owner; D9 → `#818`. Su montaje y su sonda, en
-  §4.4 («P1a · la pantalla, HECHA»). Sigue la P1b (la encuesta pregunta a pregunta y solo en verde).
+- **Estado (02-10)**: la P1 entera EN `main` con el visto bueno del owner: la pantalla, la encuesta y, de sus respuestas
+  (`#819`), a quién sale y «Ahora no» (§4.4; D9 → `#818`). Sigue la P2 (las pulseras), con su «al detalle» antes del código.
 - No toca el `CRITICAL_RE` (medido). Sí RGPD (lo que ve la cola): `INVARIANTES.md` §3 antes de la P1.
 
 ## 1. Contexto y problema (medido el 2026-10-02)
@@ -89,7 +89,7 @@ HAY = el producto ya lo sabe (dónde) · FALTA = hay que construirlo · CHOCA = 
 | 13 | Firmar: pendiente («Dar por firmado» y su confirmación DENTRO de la ficha: «¿Ana Martínez está delante y acepta el descargo, por ella y por Vera y Leo? Quedará firmado con tu nombre.» · «Sí, firmado» · «Cancelar») · nada · cambiado · hijos | `declareWaiver()` (`#336`), `waiver.pending_acceptance`, `waiver.outdated` (hoy «versión anterior» señala y deja pasar) y el descargo de cada menor | HAY; cambian los textos. Cambiado = verde con la tarea «El descargo ha cambiado…» (deja pasar y lo señala, como hoy). «Hijos sin añadir»: a medir en P1 |
 | 14 | «Sus hijos»: los menores a cargo con nombre y edad; quien cumple, el primero, con «su cumple»; el adulto no sale; «Descargo ✓» en verde claro o «sin descargo» en ámbar | `dependents` (nombre de pila, edad, `waiver`), el `honoree` de las fiestas de hoy | HAY; CHOCA «Descargo ✓» con `#320` (§4.2·D1) |
 | 15 | Sin reserva hoy: en la primera línea, neutro, «Sin reserva a su nombre hoy» y «Tiene reserva, pero otro día: Sábado 26 a las 17:00 · …» | `today_reservations` vacío y `window` (±`puerta.window_days`, 1 por defecto) | HAY |
-| 16 | La encuesta, solo en verde y en la primera visita: «Pregúntale.», la pregunta, sus opciones (un toque guarda), «Ahora no» (no guarda nada), «Guardado.» | La encuesta interna (`encuestas.md` §4.2): se ofrece con la visita acreditada si `SurveyResponses::offerFor()` la da; varias preguntas y «Guardar» (la de la local, `visita-de-hoy`: elección de 4, sí/no y varias de 3) | HAY; la forma, pregunta a pregunta (`#817`), que pide guardar a medias; «solo en verde», nuevo |
+| 16 | La encuesta, solo en verde y en la primera visita: «Pregúntale.», la pregunta, sus opciones (un toque guarda), «Ahora no» (no guarda nada), «Guardado.» | La encuesta interna (`encuestas.md` §4.2): se ofrece con la visita acreditada si `SurveyResponses::offerFor()` la da; varias preguntas y «Guardar» (la de la local, `visita-de-hoy`: elección de 4, sí/no y varias de 3) | HAY; la forma, pregunta a pregunta (`#817`), que pide guardar a medias; «solo en verde», nuevo; «en la primera visita», por encuesta desde el panel (`#819`, la P1c) |
 | 17 | Pie, solo con ficha: «La ficha se cierra sola a los 5 min.»; sin «Nueva búsqueda» | `gate-expires` y el botón «Nueva búsqueda» (`clear()`), que `GateKioskTest::test_the_privacy_reset_is_never_hidden` fija como control de PRIVACIDAD | HAY: se queda, pequeña, en el pie (`#817`) |
 | 18 | Velo a los 60 s, opaco, con la reseña del día; el cierre a los 5 min | El velo (Alpine, 60 000 ms) y el cierre (`$wire.clear()` a los `ttl_minutes`; 5 por defecto), con la caducidad de verdad en el servidor | HAY; FALTA la reseña (§4.3·4) |
 | 19 | Dos columnas en horizontal, cada una con su desplazamiento; sin nada a la derecha, una sola | Dos columnas a la misma altura (`#234`, `GateKioskTest`) | FALTA (la vista) |
@@ -334,6 +334,78 @@ las participaciones de sus clientes para que se vuelva a ofrecer). Dos trampas, 
 bloque `@php … @endphp` deja media vista sin compilar (la regex de Blade va del primero al `@endphp`: en la vista, solo
 bloques); y la sonda leyó como «se vuelve a ofrecer» una DOBLE LECTURA (el mismo código en < 3 s): el instrumento espera.
 
+**P1b · la encuesta, robusta** (02-10, tras el ojo del owner: «¿a quién sale?», «no quiero que se recargue la página» y
+«la última pregunta selecciona todas las opciones a la vez»). Medido ANTES del código con una sonda de navegador (fuera de
+git), y los dos fallos eran de verdad:
+- **La «recarga»**: la `wire:key` de la ficha llevaba `expires_at`, que cada toque renueva (`touchProfileWindow()`): cada
+  toque REHACÍA la ficha entera —su entrada, el salto y el destello del veredicto y el pitido verde—, 3 de 3 toques. Ahora
+  la clave es la LECTURA (`$lectura`, `#[Locked]`, solo sube con `search()`), también en las pantallas sin ficha (antes,
+  `uniqid()`), y el veredicto lleva además su TONO: si cambia («Dar por firmado») vuelve a entrar y a sonar. Medido
+  después: los mismos nodos, sin pitido, y solo entra el bloque de la pregunta (150–200 ms de ida y vuelta en la local); y
+  «Dar por firmado»: la ficha se queda, el veredicto entra en verde con su pitido y aparece la encuesta.
+- **La de VARIAS** marcaba TODAS y no guardaba NINGUNA, **desde `#741`** (la vista vieja tenía el mismo enlace): un
+  `wire:model` de casillas sin lista inicial es un BOOLEANO para Alpine, así que un toque las marcaba todas y al servidor
+  llegaba `true`, que `fromForm()` descarta. En la local, ninguna de las 7 respuestas del 02-10 tenía la de varias. Las
+  pruebas no lo veían: fijaban la lista con `set()`, justo lo que el navegador nunca mandaba. ⚠️ En producción corre esa
+  vista vieja: si hay una encuesta interna con una de varias, esa pregunta no se ha guardado nunca (y, obligatoria, no
+  dejaba guardar). No verificado allí.
+- **Lo que cambia**: el valor VIAJA CON EL TOQUE (`answerQuestion(clave, valor)`, `mixed`; fuera `$surveyAnswers`); la de
+  varias son botones con su lista en el navegador (`marcadas`, `aria-pressed`, su ✓) y «Siguiente» la manda entera; la de
+  texto, «Siguiente» o Enter. La tarjeta, `#[Locked]`, y solo se contesta la pregunta EN PANTALLA: Livewire 4 encola un
+  segundo toque hasta que vuelve el primero, y llega con la tarjeta ya en la siguiente (ni la rebobina ni contesta otra).
+  Una pregunta que el panel quite después de la oferta se salta sin escribir. Un carné tecleado DENTRO de un texto (el
+  lector escribe donde está el cursor) es una lectura nueva y jamás se guarda (`cardIn()`, con el carácter de control). Una
+  de varias guarda cada opción una vez (`QuestionSchema::fromForm()`: una repetida contaría doble en el cuadro). Lo que ve
+  el dedo: «2 de 3», la opción tocada marcada AL INSTANTE (`data-loading`) con las demás en reposo, y la marcada de una de
+  varias con tinte y ✓ (el relleno entero es de «Siguiente»).
+- **De paso, un defecto de la P1a** (ya en `main`): «Dar por firmado» recomponía el eco con `(string) (… ?? '')`, y en un
+  ESCANEO (sin eco) la vista pintaba un «Resultado para» en blanco. Ahora conserva el que tenía.
+- **Pruebas**: `GateSurveyTest` 18 (la de varias, la pregunta quitada, el carné en el texto, y la copia del navegador
+  rehecha para la tarjeta bloqueada), `DeclareWaiverAtGateTest` +1 (el eco), `QuestionSchemaTest` +1 y `GateKioskTest` +1
+  (las claves). Arnés: +9 mutantes, y por tandas 21/21 (`SOLO=encuesta` 16/16, `lectura` 2/2, las dos claves y el eco).
+  Sonda 207/207 con la encuesta ENTERA (la de varias de una en una, sin ir al servidor) y «el toque no rehace la ficha»; el
+  control, con la clave vieja: 206/207, esa, con el pitido y las tres entradas. El montaje da a «mostrador» una cuenta
+  nueva (`-2`, `-3`…) cuando alguien la firma (lo hizo el owner en su prueba: las firmas no se borran).
+- **Al owner** (sin código): a quién sale —hoy, a todos con la visita acreditada, una vez por encuesta y solo en verde; el
+  mockup decía «en la primera visita» (fila 16 del censo) y no está hecho— y qué hace «Ahora no» sin nada contestado —hoy,
+  no vuelve a salir; el mockup: «no guarda nada»—. ▶ Contestó las dos (`#819`): la P1c.
+
+#### La P1c al detalle: a quién sale y «Ahora no» (`#819`; medido el 02-10, antes del código)
+- **A quién** (`surveys.audience`: `all` · `first_visit`; por defecto `all`): la oferta de la puerta
+  (`SurveyResponses::offerFor()`) pregunta `VisitFacts::isFirstVisit($cliente, hoy)` —ni visita acreditada ni día cobrado
+  ANTES de hoy; la de hoy ya se acreditó al escanear y no cuenta—; el correo (`SendExternalSurveys`), lo mismo con ayer,
+  cliente a cliente en su bucle (los días cobrados son de Booking: la consulta no los ve). En el panel, un selector junto a
+  la clase, bloqueado con respuestas como ella (`GuardsSurveyForm` lo vuelve a fijar: ocultar no es autorizar); su rastro
+  lleva `audience`.
+- **La tasa de la puerta** (`SurveysReport::offered()`): en una «solo primera visita», solo es oferta la visita que fue la
+  primera del cliente (su primer día, el menor entre su primera visita acreditada y su primer día cobrado, es ese).
+  Por conjuntos —`VisitFacts::firstVisitDays()` sobre `PaidVisits::firstPaidDays()`—, nunca una consulta por visita.
+  ⚠️ Lo que ya sesgaba esa tasa y aquí NO se arregla: cuenta como ofertas las visitas en ÁMBAR (la tarjeta solo se pinta
+  en verde desde la P1b) y las de un empleado sin `puerta.profile`; contar las ofertas de verdad es otra tanda (al owner).
+- **«Ahora no» sin nada contestado** (`SurveyResponses::postponeInPerson()`): nada en la BD; una marca en la caché hasta
+  que acaba el día del parque (`surveys:postponed:{encuesta}:{cliente}:{día}`) para que ese día no se le vuelva a ofrecer
+  (una visita es un día: `customer_visits`). La tarjeta se va, como en el mockup (`setEnc("oculta")`; si la columna de la
+  derecha se queda vacía, la ficha pasa a una sola, también como allí). La tarjeta pierde su estado `declined`.
+- **Lo que no cambia**: una por cliente y encuesta; el anonimato (`#754`: lo aplazado no deja nada que separar); «Ahora
+  no» con algo contestado; solo en verde.
+- **Pruebas**: la oferta «solo primera visita» (primera vez · ya vino · tenía un día cobrado antes), el correo igual, el
+  formulario (se guarda, se bloquea con respuestas, un valor forjado no entra), la tasa (solo las primeras visitas) y
+  «Ahora no» (nada escrito; ese día no vuelve; al siguiente, sí). Arnés con sus mutantes; la sonda, con «Ahora no» y la
+  vuelta del mismo día.
+
+**P1c · a quién y «Ahora no», HECHA** (02-10; con el visto bueno del owner —«la revisión todo ok»—, a `main` con la P1b):
+`surveys.audience` (migración, el modelo, el selector del panel con su rastro y su columna en la lista, bloqueado con
+respuestas y fijado otra vez en el guardado); la oferta de la puerta y el correo del día siguiente con «solo en su primera
+visita»; la tasa de la puerta, por conjuntos (`VisitFacts::firstVisitDays()` sobre `PaidVisits::firstPaidDays()`); y
+«Ahora no» sin nada contestado con `SurveyResponses::postponeInPerson()` (la tarjeta se va; la puerta ya no escribe
+filas `declined`, y fuera los textos de la tarjeta vieja que nadie usaba). Pruebas: `GateSurveyTest` (2), `SurveySendTest`,
+`SurveysReportTest`, `SurveyVisitFactsTest` y `SurveyResourceTest` (2, una llama al guardado directamente). Arnés: 11
+mutantes, 11/11 (`SOLO='a quién'` 8/8, `SOLO='ahora no'` 3/3); sin mutante, a propósito, la fecha de la marca y su
+caducidad (dos seguros de lo mismo). Medido en la local: con «Tu primera visita» viva, Elena (primera vez) la tiene, Irene
+(vino hace 30 días) no. ⚠️ **Lo que NO se corrió, a petición del owner para ir más rápido**: la sonda (lleva ya «Ahora
+no» y la vuelta del mismo día; la prueba visual la hizo él) y el arnés ENTERO (los 34 mutantes de la P1a se midieron
+sobre su código; los de la P1b y la P1c, por tandas aquí).
+
 ## 5. Impacto en invariantes
 
 - **RGPD** (`INVARIANTES.md` §3, lo que ve la cola): más estricto, con «Resultado para» enmascarado; sin apellidos de menores
@@ -363,3 +435,7 @@ bloques); y la sonda leyó como «se vuelve a ofrecer» una DOBLE LECTURA (el mi
 - 2026-10-02 · la P1a, hecha (§4.4) y en vivo para el owner; contesta D9 (`#818`: un descargo de una versión anterior
   deja pasar) y le da el visto bueno («visto bueno. continuamos.»): a `main`. Sigue la P1b.
 - 2026-10-02 · la P1b (la encuesta pregunta a pregunta), hecha (§4.4) y en vivo para el owner, en `wip/puerta-p1b`.
+- 2026-10-02 · el owner la prueba: «¿a quién sale?», la «recarga» y la de varias que las marcaba todas. Medidos y arreglados
+  los dos fallos (§4.4, «P1b robusta»); a quién sale y qué hace «Ahora no», a su decisión.
+- 2026-10-02 · el owner contesta las dos (`#819`: «a quién» por encuesta; «Ahora no» vuelve en la próxima visita) y prueba
+  la P1c en vivo: «la revisión todo ok». La P1 entera, a `main`. Sigue la P2.

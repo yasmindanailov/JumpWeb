@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Platform\Contracts\VisitFacts;
 use App\Domain\Platform\Models\Survey;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\Surveys\SurveyResponses;
@@ -32,7 +33,8 @@ use Throwable;
  *    `#754` la participación no guarda el desenlace: lo dice el SELLO de las respuestas de ayer
  *    (`SurveySeals::answeredInPersonOn()`), que solo tienen las contestadas;
  *  · con un correo de encuesta en los últimos `surveys.cooldown_days` días (30 por defecto): una persona que
- *    viene cada semana no recibe una encuesta cada semana.
+ *    viene cada semana no recibe una encuesta cada semana;
+ *  · si la encuesta es «solo en su primera visita» (`#819`), quien ya había venido antes de ayer (o tenía un día cobrado).
  *
  * ## Por qué corre CADA HORA y decide él, desde las 10:00 del parque
  * Las dos razones de `reservations:eve-notice`: la zona del parque es un AJUSTE que se resuelve en la EJECUCIÓN,
@@ -56,7 +58,7 @@ class SendExternalSurveys extends Command
 
     protected $description = 'Manda por correo la encuesta externa viva a quien acreditó su visita ayer.';
 
-    public function handle(SurveyResponses $responses, SurveySeals $seals): int
+    public function handle(SurveyResponses $responses, SurveySeals $seals, VisitFacts $visits): int
     {
         $now = DisplayTime::now();
 
@@ -78,9 +80,15 @@ class SendExternalSurveys extends Command
 
         $answeredInPerson = $seals->answeredInPersonOn($yesterday);
 
-        $this->eligible($survey, $yesterday, $answeredInPerson)->chunkById(self::CHUNK, function (Collection $users) use ($responses, $survey, $yesterday, $dryRun, &$sent, &$failed): void {
+        $this->eligible($survey, $yesterday, $answeredInPerson)->chunkById(self::CHUNK, function (Collection $users) use ($responses, $visits, $survey, $yesterday, $dryRun, &$sent, &$failed): void {
             /** @var User $user */
             foreach ($users as $user) {
+                // `#819`: «solo en su primera visita» — la de AYER fue la primera (ni visita ni día cobrado antes). Aquí y no
+                // en la consulta: los días cobrados son de Booking y se preguntan por su contrato.
+                if ($survey->onlyFirstVisit() && ! $visits->isFirstVisit((int) $user->getKey(), $yesterday)) {
+                    continue;
+                }
+
                 if ($dryRun) {
                     $sent++;
 

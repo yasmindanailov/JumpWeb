@@ -135,4 +135,45 @@ class SurveyVisitFactsTest extends TestCase
         $this->assertNull($this->facts()->firstReturn($user->id, '2026-09-10', '2026-09-24'), 'fuera del tramo no cuenta');
         $this->assertSame('2026-09-25', $this->facts()->firstReturn($user->id, '2026-09-10', '2026-09-25'), 'el último día del tramo sí');
     }
+
+    /**
+     * `#819`: el PRIMER día de cada cliente, por conjuntos —el menor entre su primera visita acreditada y su primer día
+     * cobrado—, para la tasa de una encuesta «solo primera visita» sin una consulta por visita. Tiene que decir lo mismo que
+     * `isFirstVisit()` cliente a cliente: una visita del día D es la primera si y solo si D es su primer día.
+     */
+    public function test_the_first_visit_days_agree_with_the_first_visit_rule(): void
+    {
+        $entry = $this->product(TicketType::TYPE_ENTRY);
+
+        $soloPuerta = User::factory()->create();
+        $this->visited($soloPuerta, '2026-09-10');
+        $this->visited($soloPuerta, '2026-09-20');
+
+        $compro = User::factory()->create();
+        $this->booked($compro, $entry, '2026-09-01');
+        $this->visited($compro, '2026-09-10');
+
+        $reservaDespues = User::factory()->create();
+        $this->visited($reservaDespues, '2026-09-10');
+        $this->booked($reservaDespues, $entry, '2026-09-30');
+
+        $sinPagar = User::factory()->create();
+        $this->booked($sinPagar, $entry, '2026-09-01', Order::STATUS_PENDING);
+        $this->visited($sinPagar, '2026-09-10');
+
+        $nada = User::factory()->create();
+
+        $first = $this->facts()->firstVisitDays([$soloPuerta->id, $compro->id, $reservaDespues->id, $sinPagar->id, $nada->id, $soloPuerta->id]);
+
+        $this->assertSame('2026-09-10', $first[$soloPuerta->id]);
+        $this->assertSame('2026-09-01', $first[$compro->id], 'el día cobrado va antes que la primera visita');
+        $this->assertSame('2026-09-10', $first[$reservaDespues->id], 'una reserva posterior no adelanta nada');
+        $this->assertSame('2026-09-10', $first[$sinPagar->id], 'una cesta sin pagar no es un día');
+        $this->assertArrayNotHasKey($nada->id, $first, 'sin visitas ni días cobrados, no sale');
+
+        foreach ([[$soloPuerta, '2026-09-10'], [$soloPuerta, '2026-09-20'], [$compro, '2026-09-10'], [$reservaDespues, '2026-09-10'], [$sinPagar, '2026-09-10']] as [$user, $day]) {
+            $this->assertSame($this->facts()->isFirstVisit($user->id, $day), $first[$user->id] === $day, "la regla y el conjunto discrepan para el {$day}");
+        }
+        $this->assertSame([], $this->facts()->firstVisitDays([]));
+    }
 }

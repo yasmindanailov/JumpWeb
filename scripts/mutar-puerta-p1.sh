@@ -6,8 +6,8 @@
 # Reglas de la casa dentro: verde antes de mutar · veredicto por código de salida · comprobar que la mutación SE APLICÓ y que
 # su ancla es ÚNICA · restaurar por COPIA DE SEGURIDAD y `touch`, no con `git checkout` (`#181`) · copia por RUTA.
 #
-# ⚠️ Lo que NO juzga (es la sonda y el ojo): cómo se ve, el sonido, el solape de tarjetas, los 44 px de verdad. Para eso,
-# `scripts/sonda-puerta-p1.mjs`.
+# ⚠️ Lo que NO juzga (es la sonda y el ojo): cómo se ve, el sonido, el solape de tarjetas, los 44 px de verdad, que un toque
+# no rehaga la ficha ni que la de varias marque de una en una. Para eso, `scripts/sonda-puerta-p1.mjs`.
 #
 #   bash scripts/mutar-puerta-p1.sh                  (todas)
 #   SOLO='veredicto' bash scripts/mutar-puerta-p1.sh (las que llevan eso en su nombre)
@@ -15,11 +15,17 @@ set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 EXEC="docker compose exec -u sail -T laravel.test"
-PHP='Puerta|GateKioskTest|GateVerdictTest|QueryMaskTest|FichaPuertaTest|WaiverGateTest|MixedPartyParkSurfacesTest|PanelSecretPathTest|SurveyInPersonStepsTest'
+PHP='Puerta|GateKioskTest|GateVerdictTest|QueryMaskTest|FichaPuertaTest|WaiverGateTest|MixedPartyParkSurfacesTest|PanelSecretPathTest|SurveyInPersonStepsTest|QuestionSchemaTest|SurveyVisitFactsTest|SurveysReportTest|SurveySendTest|SurveyResourceTest'
 
 TMP="$(mktemp -d)"
 FICHEROS=(
     app/Domain/Platform/Services/Surveys/SurveyResponses.php
+    app/Domain/Platform/Services/Surveys/QuestionSchema.php
+    app/Domain/Identity/Services/CustomerVisitFacts.php
+    app/Domain/Booking/Services/PaidVisitsReader.php
+    app/Filament/Analytics/SurveysReport.php
+    app/Filament/Resources/Surveys/Concerns/GuardsSurveyForm.php
+    app/Console/Commands/SendExternalSurveys.php
     app/Livewire/Admin/Puerta/GateVerdict.php
     app/Livewire/Admin/Puerta/QueryMask.php
     app/Livewire/Admin/Puerta/FichaPuerta.php
@@ -184,11 +190,9 @@ mutar "encuesta · completa una de otro día" "$RESPUESTAS" \
 mutar "encuesta · el primer toque no sella" "$RESPUESTAS" \
   "\$answers, \$answers === null ? null : \$userId)->getKey();" "\$answers, null)->getKey();"
 mutar "encuesta · manda la copia del navegador" "$COMPONENTE" \
-  "        \$questions = \$survey->questionList();
-        \$index = array_search(" "        \$questions = array_values((array) (\$this->survey['questions'] ?? []));
-        \$index = array_search("
+  "        \$saved = \$survey->questionList();" "        \$saved = array_values((array) (\$this->survey['questions'] ?? []));"
 mutar "encuesta · un valor imposible se guarda" "$COMPONENTE" \
-  "            if (! QuestionSchema::accepts(\$question, \$typed[\$key])) {" "            if (false) {"
+  "                if (! QuestionSchema::accepts(\$question, \$typed[\$key])) {" "                if (false) {"
 mutar "encuesta · «Ahora no» con algo contestado declina" "$COMPONENTE" \
   "        if (\$this->surveyResponseId !== null) {
             \$this->survey['state'] = 'answered';
@@ -198,11 +202,62 @@ mutar "encuesta · «Ahora no» con algo contestado declina" "$COMPONENTE" \
 
         if (app(SurveyResponses::class)->declineInPerson(" "        if (app(SurveyResponses::class)->declineInPerson("
 mutar "encuesta · no pasa a la siguiente" "$COMPONENTE" \
-  "\$this->survey['step'] = \$index + 1;" "\$this->survey['step'] = \$index;"
+  "\$this->survey['step'] = \$step + 1;" "\$this->survey['step'] = \$step;"
 mutar "encuesta · se pinta también en ámbar" "$VISTA" \
   "\$conEncuesta = \$survey !== null && \$verdict['tone'] === \\App\\Livewire\\Admin\\Puerta\\GateVerdict::VERDE;" "\$conEncuesta = \$survey !== null;"
 mutar "encuesta · el aviso del anonimato en cada pregunta" "$VISTA" \
-  "                                @if (\$paso === 0)" "                                @if (true)"
+  "                                    @if (\$paso === 0)" "                                    @if (true)"
+
+# ── La P1b, robusta (el owner, 02-10: la «recarga» y la de varias que las marcaba todas) ─────────────────────────────
+mutar "encuesta · contesta una pregunta que no está en pantalla (el doble toque)" "$COMPONENTE" \
+  "        if ((\$this->survey['questions'][\$step]['key'] ?? null) !== \$key) {" "        if (false) {"
+mutar "encuesta · la tarjeta no está bloqueada" "$COMPONENTE" \
+  "    #[Locked]
+    public ?array \$survey = null;" "    public ?array \$survey = null;"
+mutar "encuesta · un carné tecleado en un texto se guarda" "$COMPONENTE" \
+  "            \$card = self::cardIn(\$value);" "            \$card = null;"
+mutar "encuesta · un texto con forma de carné se busca" "$COMPONENTE" \
+  "            if (CardToken::isWellFormed(\$candidate)) {" "            if (CardToken::looksLike(\$candidate)) {"
+mutar "encuesta · la de varias guarda cada opción las veces que llegue" "app/Domain/Platform/Services/Surveys/QuestionSchema.php" \
+  "array_values(array_unique(array_filter(\$value, 'is_string')))" "array_values(array_filter(\$value, 'is_string'))"
+mutar "lectura · no sube con cada búsqueda" "$COMPONENTE" \
+  "        \$this->lectura++;
+" ""
+mutar "vista · la clave de la ficha lleva el reloj (cada toque la rehace)" "$VISTA" \
+  "wire:key=\"ficha-{{ \$lectura }}-{{ \$profile['user_id'] }}\"" "wire:key=\"ficha-{{ \$lectura }}-{{ \$profile['user_id'] }}-{{ \$profile['expires_at'] }}\""
+mutar "ficha · «Dar por firmado» deja un «Resultado para» en blanco" "$COMPONENTE" \
+  "\$this->stateFor(\$customer, is_string(\$eco) ? \$eco : null);" "\$this->stateFor(\$customer, (string) (\$eco ?? ''));"
+mutar "vista · el veredicto no vuelve a entrar al cambiar de tono" "$VISTA" \
+  "wire:key=\"veredicto-{{ \$lectura }}-{{ \$verdict['tone'] }}\"" "wire:key=\"veredicto-{{ \$lectura }}\""
+
+# ── La P1c: a quién y «Ahora no» (`#819`) ────────────────────────────────────────────────────────────────────────────
+# ⚠️ Sin mutante, a propósito: la FECHA en la clave de «Ahora no» y su caducidad al acabar el día son dos seguros de lo
+# mismo (la fecha es la regla; la caducidad, la limpieza): quitar uno solo deja el otro y el mutante sería equivalente.
+mutar "a quién · la puerta no mira la primera visita" "$RESPUESTAS" \
+  "        if (\$survey->onlyFirstVisit() && ! \$this->visits->isFirstVisit(\$userId, \$today)) {" "        if (false) {"
+mutar "a quién · el correo no mira la primera visita" "app/Console/Commands/SendExternalSurveys.php" \
+  "                if (\$survey->onlyFirstVisit() && ! \$visits->isFirstVisit((int) \$user->getKey(), \$yesterday)) {" "                if (false) {"
+mutar "a quién · la tasa cuenta todas las visitas" "app/Filament/Analytics/SurveysReport.php" \
+  "\$survey['audience'] === Survey::AUDIENCE_FIRST_VISIT ? \$this->firstVisitsAmong(\$visits) : \$visits->count();" "\$visits->count();"
+mutar "a quién · el primer día no mira los días cobrados" "app/Domain/Identity/Services/CustomerVisitFacts.php" \
+  "        foreach (\$this->paid->firstPaidDays(\$ids) as \$userId => \$day) {" "        foreach ([] as \$userId => \$day) {"
+mutar "a quién · el primer día no es el menor" "app/Domain/Identity/Services/CustomerVisitFacts.php" \
+  "            if (! isset(\$first[\$userId]) || \$day < \$first[\$userId]) {" "            if (! isset(\$first[\$userId]) || \$day > \$first[\$userId]) {"
+mutar "a quién · un día cobrado incluye lo que no se pagó" "app/Domain/Booking/Services/PaidVisitsReader.php" \
+  "                ->paidScheduledPrincipal()
+                ->whereHas('order', static fn (\$query) => \$query->whereIn('user_id', \$chunk))" "                ->whereHas('order', static fn (\$query) => \$query->whereIn('user_id', \$chunk))"
+mutar "a quién · con respuestas se puede cambiar" "app/Filament/Resources/Surveys/Concerns/GuardsSurveyForm.php" \
+  "            \$data['audience'] = \$record->audience;
+" ""
+mutar "a quién · un valor forjado entra" "app/Filament/Resources/Surveys/Concerns/GuardsSurveyForm.php" \
+  "in_array(\$data['audience'] ?? null, Survey::AUDIENCES, true) ? \$data['audience'] : Survey::AUDIENCE_ALL;" "\$data['audience'] ?? Survey::AUDIENCE_ALL;"
+mutar "ahora no · escribe la fila «no preguntar»" "$COMPONENTE" \
+  "        app(SurveyResponses::class)->postponeInPerson(\$survey, (int) \$customer->getKey());" "        app(SurveyResponses::class)->declineInPerson(\$survey, (int) \$customer->getKey(), null);"
+mutar "ahora no · la tarjeta se queda" "$COMPONENTE" \
+  "        app(SurveyResponses::class)->postponeInPerson(\$survey, (int) \$customer->getKey());
+        \$this->forgetSurvey();" "        app(SurveyResponses::class)->postponeInPerson(\$survey, (int) \$customer->getKey());"
+mutar "ahora no · vuelve a salir el mismo día" "$RESPUESTAS" \
+  "        if (Cache::has(self::postponedKey((int) \$survey->getKey(), \$userId, \$today))) {" "        if (false) {"
 
 echo
 echo "$muerden/$total muerden"
