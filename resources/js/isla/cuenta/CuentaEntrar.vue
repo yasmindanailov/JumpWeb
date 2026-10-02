@@ -1,22 +1,19 @@
 <script setup>
 /**
- * **Mi cuenta sin sesión: Entra** (`paginas/mi-cuenta/cuenta.jsx`, la vista `entrar`; T5a de §4.13). Es LA MISMA
- * pantalla que la compra (`compra/PantallaEntrar.vue`: solo correo, `#695`; su código al correo —A3 del acceso con
- * código, `#849`— y Google), y debajo del correo, «¿Es tu primera vez? Crea tu cuenta». Arriba, el aviso de una vuelta
- * de Google que no salió (T5e·2, `#779`) o el del correo que ya tenía cuenta, con su tono.
+ * **Mi cuenta sin sesión: «Entra o crea tu cuenta»** (`paginas/mi-cuenta/cuenta.jsx`, la vista `entrar`; T5a de §4.13 y la
+ * Z6g·1 de §4.27). Es LA MISMA pantalla que la compra (`compra/PantallaEntrar.vue`: solo correo, `#695`; su código al
+ * correo —A3 del acceso con código, `#849`— y Google). Sin «¿Es tu primera vez?» desde el zip (6): el mismo camino sirve
+ * para las dos cosas —un correo sin cuenta sigue a «Crea tu cuenta»—. Arriba, el aviso de una vuelta de Google que no
+ * salió (T5e·2, `#779`) o el del correo que ya tenía cuenta, con su tono.
  */
-import { useTextos } from '../piezas/textos.js';
-import { CUENTA } from './estilos.js';
-import PantallaEntrar from '../compra/PantallaEntrar.vue';
 import AvisoCuenta from './AvisoCuenta.vue';
-import EnlaceSistema from '../ui/EnlaceSistema.vue';
+import PantallaEntrar from '../compra/PantallaEntrar.vue';
 
 const props = defineProps({
     pantalla: { type: Object, required: true },
     aviso: { type: Object, default: null },
 });
-const emit = defineEmits(['cambiar', 'otro', 'proveedor', 'crear']);
-const { t } = useTextos();
+const emit = defineEmits(['cambiar', 'otro', 'proveedor', 'completo', 'correo']);
 </script>
 
 <template>
@@ -29,16 +26,12 @@ const { t } = useTextos();
         />
         <PantallaEntrar
             v-bind="props.pantalla"
+            cuenta
             @cambiar="(campo, valor) => emit('cambiar', campo, valor)"
             @otro="emit('otro')"
             @proveedor="(via) => emit('proveedor', via)"
+            @completo="emit('completo')"
+            @correo="emit('correo')"
         />
-        <p
-            v-if="props.pantalla.paso === 'id'"
-            :style="[CUENTA.cuerpo, { maxWidth: '520px', width: '100%', margin: '0 auto' }]"
-        >{{ `${t('mi_cuenta_alta.primera_vez')} ` }}<EnlaceSistema
-            underline="always"
-            @click="emit('crear')"
-        >{{ t('mi_cuenta_alta.crear_enlace') }}</EnlaceSistema></p>
     </div>
 </template>

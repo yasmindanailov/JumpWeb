@@ -50,7 +50,7 @@ async function codigoDelBuzon(desde) {
     const url = `${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:"${CLIENTE.email}"`)}&limit=1`;
     for (let i = 0; i < 60; i += 1) {
         const ultimo = (await fetch(url).then((r) => r.json()).catch(() => null))?.messages?.[0];
-        const cifras = /(\d{3}) (\d{3}) /.exec(ultimo?.Subject ?? '');
+        const cifras = /(\d{3})-(\d{3}) /.exec(ultimo?.Subject ?? '');
         if (cifras && Date.parse(ultimo.Created) >= desde - 2000) return `${cifras[1]}${cifras[2]}`;
         await new Promise((listo) => setTimeout(listo, 250));
     }

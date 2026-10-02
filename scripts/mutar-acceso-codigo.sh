@@ -310,8 +310,17 @@ mutar "reenviar no tiene techo por hora (el buzón de un tercero, lleno)" "$PROF
   " || RateLimiter::tooManyAttempts(\$hourKey, EmailCodeLogin::MAX_PER_EMAIL_PER_HOUR)" ""
 
 mutar "la copia del registro guarda el código del correo nuevo" "$PENDINGMAIL" \
-  "        return [\$this->shown()];" \
+  "        return [LoginCodes::shown(\$this->code)];" \
   "        return [];"
+
+# ── Z6g·1a · «482-913»: una sola forma de enseñar el código, y la que el servidor acepta (`#867`) ────────────
+mutar "los correos enseñan el código sin guion (el aviso del móvil dice «482 913»)" "$CODES" \
+  "        return substr(\$code, 0, 3).'-'.substr(\$code, 3);" \
+  "        return substr(\$code, 0, 3).' '.substr(\$code, 3);"
+
+mutar "el guion de los correos no se acepta al escribirlo" "$CODES" \
+  "preg_replace('/[\\s\\-]+/u', '', \$code)" \
+  "preg_replace('/[\\s]+/u', '', \$code)"
 
 # ── A5c · el mostrador, sin contraseña (`#869`) ───────────────────────────────────────────────────
 mutar "el mostrador vuelve a fabricar una contraseña (la que viajaba en claro en la bienvenida)" "$COUNTER" \

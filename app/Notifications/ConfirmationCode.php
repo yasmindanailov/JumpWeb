@@ -40,7 +40,7 @@ class ConfirmationCode extends Notification implements HidesSecretsInCopy, Shoul
 
     public function toMail(object $notifiable): MailMessage
     {
-        $code = $this->shown();
+        $code = LoginCodes::shown($this->code);
 
         return (new BrandedMailMessage($this))
             ->subject(__('emails.confirmation_code.subject', ['code' => $code]))
@@ -53,12 +53,6 @@ class ConfirmationCode extends Notification implements HidesSecretsInCopy, Shoul
     /** @return list<string> */
     public function secretsInCopy(): array
     {
-        return [$this->shown()];
-    }
-
-    /** «482 913»: el código tal como se enseña. */
-    private function shown(): string
-    {
-        return substr($this->code, 0, 3).' '.substr($this->code, 3);
+        return [LoginCodes::shown($this->code)];
     }
 }

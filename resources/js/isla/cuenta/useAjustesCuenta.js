@@ -198,8 +198,17 @@ export function useAjustesCuenta({ textos, props, locale, proxima, contexto, dec
         return hacer(s.f.codigo.trim());
     }
 
-    /** El «no» de una acción con código, en el paso: el del código bajo su campo; el resto, arriba. */
-    const colocarConCodigo = (store, campos = {}) => colocar(store, { codigo: 'code', ...campos });
+    /**
+     * El «no» de una acción con código, en el paso: el del código bajo su campo —y sus casillas, vacías, para escribir el
+     * bueno: el diseño, como el cajón—; el resto, arriba.
+     */
+    function colocarConCodigo(store, campos = {}) {
+        const r = colocar(store, { codigo: 'code', ...campos });
+
+        if (s.errores.codigo) s.f.codigo = '';
+
+        return r;
+    }
 
     /**
      * «Enviarme el código» y después «Enviar el código al correo nuevo»: el código de CONFIRMAR va al correo de la cuenta,

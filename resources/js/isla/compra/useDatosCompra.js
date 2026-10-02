@@ -41,7 +41,8 @@ export function useDatosCompra({ flow, props, textos, esFiesta = () => false }) 
      * (`datos.js::entradaVacia`); `token`, el del anti-bot; `google`, el perfil que espera en la sesión tras volver de
      * Google sin cuenta (`{ name, email }`, `#785`).
      */
-    const estado = reactive({ f: datosVacios(), errores: {}, aviso: '', nota: '', vista: null, ent: entradaVacia(), token: '', google: null });
+    // `nueva`: el correo que llegó de «Entra» sin cuenta (Z6g·1: «Tus datos» dice por qué está aquí y «Entra con ese»).
+    const estado = reactive({ f: datosVacios(), errores: {}, aviso: '', nueva: '', vista: null, ent: entradaVacia(), token: '', google: null });
     const aviso = (clave) => t(props.messages, clave);
 
     // Con sesión manda la sesión; sin ella, el alta que vuelve de Google o lo que diga el alta («nueva», o «existe»).
@@ -57,7 +58,7 @@ export function useDatosCompra({ flow, props, textos, esFiesta = () => false }) 
 
     /** Al llegar desde la pantalla 0: el formulario en blanco y el texto del descargo pedido ya. */
     function preparar() {
-        Object.assign(estado, { f: datosVacios(), errores: {}, aviso: '', nota: '', vista: null, ent: entradaVacia(), google: null });
+        Object.assign(estado, { f: datosVacios(), errores: {}, aviso: '', nueva: '', vista: null, ent: entradaVacia(), google: null });
         waiverStore.ensureLegal();
     }
 
@@ -210,6 +211,7 @@ export function useDatosCompra({ flow, props, textos, esFiesta = () => false }) 
 
     /** «Tus datos» con una cuenta que YA EXISTE: su código va de camino (o acaba de ir) y se pide aquí mismo. */
     async function aSuCodigo(r) {
+        Object.assign(estado, { nueva: '' });
         estado.f.cuenta = 'existe';
         estado.f.codigo = '';
 
@@ -256,13 +258,15 @@ export function useDatosCompra({ flow, props, textos, esFiesta = () => false }) 
         return fallar(errores, resto[0] ?? (Object.keys(errores).length ? '' : e?.summary?.[0] ?? ''));
     }
 
-    /** «Esta cuenta ya existe»: entra con el código que le llegó. */
+    /** «Esta cuenta ya existe»: entra con el código que le llegó. Con un «no» del código, sus casillas se vacían. */
     async function entrar() {
         const { ok, r } = await entrarConCodigo(estado.f.correo, estado.f.codigo, estado.f.recordar);
 
         if (ok) return trasIdentificarse();
 
         const { errores, aviso: texto } = await noDelCodigo(r);
+
+        if ((await acceso()).esNoDelCodigo(r)) estado.f.codigo = '';
 
         return fallar(errores, texto);
     }
@@ -293,7 +297,7 @@ export function useDatosCompra({ flow, props, textos, esFiesta = () => false }) 
 
         if (Object.keys(errores).length) return fallar(errores);
 
-        Object.assign(estado, { errores: {}, aviso: '', nota: '' });
+        Object.assign(estado, { errores: {}, aviso: '' });
         if (f.cuenta === 'dentro') return deDentro();
         if (f.cuenta === 'google') return altaGoogle();
 
@@ -347,9 +351,10 @@ export function useDatosCompra({ flow, props, textos, esFiesta = () => false }) 
             if (siguiente === 'code') {
                 Object.assign(estado.ent, { paso: 'codigo', codigo: '', error: '' });
             } else if (siguiente === 'register') {
-                // Una nota NEUTRA, no un error: no ha hecho nada mal, solo aún no tiene cuenta.
+                // Sin error: no ha hecho nada mal, solo aún no tiene cuenta. «Tus datos» dice por qué está ahí, con ese
+                // correo, y la salida a quien esperaba entrar (`nueva`, el zip (6)).
                 const correo = estado.ent.valor.trim();
-                Object.assign(estado, { vista: null, ent: entradaVacia(), errores: {}, aviso: '', nota: t(textos, 'compra.datos.nueva') });
+                Object.assign(estado, { vista: null, ent: entradaVacia(), errores: {}, aviso: '', nueva: correo });
                 Object.assign(estado.f, { correo, cuenta: 'nueva' });
             } else {
                 estado.ent.error = (await acceso()).errorDeEntrar(r, textos, aviso('errors.try_later'));
@@ -361,12 +366,16 @@ export function useDatosCompra({ flow, props, textos, esFiesta = () => false }) 
         const { ok, r } = await entrarConCodigo(estado.ent.valor, estado.ent.codigo, estado.ent.recordar);
 
         if (! ok) {
-            estado.ent.error = (await acceso()).errorDeEntrar(r, textos, aviso('errors.try_later'));
+            const { errorDeEntrar, esNoDelCodigo } = await acceso();
+
+            // Un «no» del código vacía sus casillas, para escribir el bueno (el diseño); el foco vuelve a ellas.
+            Object.assign(estado.ent, { error: errorDeEntrar(r, textos, aviso('errors.try_later')), ...(esNoDelCodigo(r) ? { codigo: '' } : {}) });
+            enfocarElPrimero();
 
             return false;
         }
 
-        Object.assign(estado, { vista: null, ent: entradaVacia() });
+        Object.assign(estado, { vista: null, ent: entradaVacia(), nueva: '' });
         await trasIdentificarse();
 
         return true;

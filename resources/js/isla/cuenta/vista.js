@@ -11,6 +11,7 @@
  *   · **Sin sesión, Mi cuenta abre Entrar**, en la misma capa.
  */
 import { t as texto } from '../../sidebar/i18n.js';
+import { CODE_LENGTH, codeDigits } from '../../sidebar/code-input.js';
 import { diaCorto, horaCorta } from '../compra/vista.js';
 
 /** «Sáb 26»: el día corto de la compra (`diaCorto`), con mayúscula, como lo escribe el diseño. */
@@ -142,13 +143,14 @@ export function ckDeCuenta(e) {
     }
 
     // Entra, en sus dos pasos (A3 del acceso con código, `#849`), como en la compra: con el correo, pedir el código; con el
-    // código, entrar, y su flecha vuelve al correo (otra clave: la isla anima el cambio).
+    // código, entrar —apagada hasta las seis cifras: la sexta ya entra sola (Z6g·1, `#867`)—, y su flecha vuelve al correo
+    // (otra clave: la isla anima el cambio). El rótulo, el titular de cada paso (el diseño: «Entra o crea tu cuenta»).
     if (e.vista === VISTA.ENTRAR) {
         const conCodigo = e.entrada?.paso === 'codigo';
-        const lleno = Boolean(String((conCodigo ? e.entrada?.codigo : e.entrada?.valor) ?? '').trim());
+        const lleno = conCodigo ? codeDigits(e.entrada?.codigo).length === CODE_LENGTH : Boolean(String(e.entrada?.valor ?? '').trim());
 
         return {
-            ...base, key: `${base.key}${conCodigo ? '-codigo' : ''}`, step: t('compra.entrar.titular'), onBack: conCodigo ? acciones.aCorreo : delMenu,
+            ...base, key: `${base.key}${conCodigo ? '-codigo' : ''}`, step: t(conCodigo ? 'compra.entrar.codigo_titular' : 'compra.entrar.titular_cuenta'), onBack: conCodigo ? acciones.aCorreo : delMenu,
             action: {
                 label: t(conCodigo ? 'compra.entrar.entrar' : 'compra.entrar.continuar'), onClick: acciones.entrar, disabled: ! lleno,
                 loading: e.ocupado === 'entrar' ? t(conCodigo ? 'compra.entrar.cargando' : 'compra.entrar.enviando') : false,

@@ -1109,7 +1109,12 @@ class SidebarBundleBudgetTest extends TestCase
     // compra, ésta pasaba de su techo (166,46): va aquí, y la compra lo pide con `import()` de este trozo. El techo, a 46.
     // `#857`/`#858` (el owner): «— o —» bajo Google y «Mantener la sesión iniciada» en el código de «Entra» y de «ya
     // existe». Medido 45,94 → 46,51 (base: el `HEAD` `1436ea60`, construido aparte). El techo, a 47.
-    private const ISLA_PASOS_CHUNK_MAX_KB = 47;
+    // Z6g·1 (`#867`, el zip (6)): el código en SEIS CASILLAS que entra con la sexta (`ui/CampoCodigo.vue`, su regla de las
+    // casillas en `ui/codigo.js`, `ui/TextoConCorreo.vue`), «Revisa tu correo», «ya existe» y «No hay ninguna cuenta con…»
+    // del diseño (sin la nota de antes), todo en el trozo común con Mi cuenta (26,79 → 31,47); `sidebar/code-input.js` ya
+    // viaja con el motor. Medido 45,87 → 50,66 (base: el `HEAD` `c912d4de`, construido aparte en un `git worktree`). El
+    // techo, a 52: a 51 quedaban 0,34, un cable trampa.
+    private const ISLA_PASOS_CHUNK_MAX_KB = 52;
 
     // T5b (`#775`): MI CUENTA de la isla, trozo diferido del motor que se pide a la primera apertura de la cuenta. Su
     // descarga, sobre lo que ya tiene quien la abre (el motor y la compra, que la isla monta con el motor). Medido el
@@ -1151,7 +1156,10 @@ class SidebarBundleBudgetTest extends TestCase
     // techo, a 120: a 119 quedaban 0,13 de margen, un cable trampa.
     // `#858` (el owner): «Mantener la sesión iniciada» en el código de Entra (lo común con los pasos). Medido 119,74 →
     // 120,34 (base: el `HEAD` `1436ea60`, con la A3b dentro: 118,87 → 119,74). El techo, a 121.
-    private const ISLA_CUENTA_CHUNK_MAX_KB = 121;
+    // Z6g·1 (`#867`): el código en seis casillas de Entra y de los pasos de Ajustes (lo común con los pasos: +4,68) y
+    // «Entra o crea tu cuenta» sin «¿Es tu primera vez?». Medido 119,94 → 124,57 (base: el `HEAD` `c912d4de`, construido
+    // aparte). El techo, a 126: a 125 quedaban 0,43.
+    private const ISLA_CUENTA_CHUNK_MAX_KB = 126;
 
     // T5e (`#778`): los AJUSTES de Mi cuenta, su trozo —el bloque y su lógica, pedidos al pintar el inicio—, sobre lo que ya
     // tiene quien abre Mi cuenta. Medido: 26,92 (el bloque 12,70, la lógica 6,56, `ajustes.js` 3,44, el interruptor que

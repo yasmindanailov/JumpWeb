@@ -42,13 +42,18 @@ const props = defineProps(PROPS_MOTOR);
 const {
     abierta, textos, e, ck, inicio, vistaQr, social, firma, authStore, waiverStore, rotulosGoogle, tx, sinQr,
     pantallaEntrar, avisoEntrar, google, abrirQr, aInicio, renovarQr, otroCodigo, aGoogle, guardarQr, pedirRenovar, cambiarEntrada,
-    cambiarAlta, aCrear, leerDescargo, cambiarGoogle, irAlBloque, abrirReserva, aCambiar, masHistorial, reservaAbierta,
+    cambiarAlta, leerDescargo, cambiarGoogle, irAlBloque, abrirReserva, aCambiar, masHistorial, reservaAbierta,
     cambiarVista, antesAbierta, hacerTarea, pantallaHijos, fichaHijo, abrirHijos, abrirHijo, cambiarHijo, otroHijo,
     quitarFicha, casillaHijos, casillaHijo, preguntarQuitar, quitarHijo, alternarAjuste, datoAjuste, guardarDatos, pasoAjuste,
     vincular, interruptor, descargarDatos, masRecibos, salir, pasoDeAjuste, cambiarPaso, otroCodigoAjuste,
     cancelarCorreo, borrarCuenta, hacerAviso, hacerAnalitica, otraVez, primeraVisita, red, reintentar,
 } = useSeccionCuenta(props);
 const proveedor = (via) => via === 'google' && aGoogle();
+// La sexta cifra de un código hace lo que haría el botón naranja de su paso (Z6g·1, `#867`): entrar, cerrar las otras
+// sesiones, desvincular, el correo. Borrar la cuenta no tiene acción en la isla (va en el contenido): ahí no hace nada.
+const alCompletar = () => ck.value.action?.onClick?.();
+// «Cambiar» (el correo del código) y «Entra con ese» (Crea tu cuenta): lo mismo que la flecha del paso.
+const atras = () => ck.value.onBack?.();
 </script>
 
 <template>
@@ -102,6 +107,7 @@ const proveedor = (via) => via === 'google' && aGoogle();
                 :paso="pasoDeAjuste"
                 @cambiar="cambiarPaso"
                 @otro="otroCodigoAjuste"
+                @completo="alCompletar"
                 @cancelar="cancelarCorreo"
                 @descargo="leerDescargo"
                 @borrar="borrarCuenta"
@@ -169,7 +175,8 @@ const proveedor = (via) => via === 'google' && aGoogle();
                 @cambiar="cambiarEntrada"
                 @otro="otroCodigo"
                 @proveedor="proveedor"
-                @crear="aCrear"
+                @completo="alCompletar"
+                @correo="atras"
             />
             <PantallaDatos
                 v-else-if="e.vista === VISTA.CREAR"
@@ -180,11 +187,12 @@ const proveedor = (via) => via === 'google' && aGoogle();
                 :firmado="! firma"
                 :errores="e.errores"
                 :aviso="e.avisoAlta"
-                :nota="e.nota"
+                :nueva="e.nueva"
                 v-bind="social"
                 @cambiar="cambiarAlta"
                 @descargo="leerDescargo"
                 @proveedor="proveedor"
+                @entrar="atras"
             >
                 <template #antibot>
                     <CajaAntiBot

@@ -2338,7 +2338,7 @@ fuente de cada punto es su `readme.md` (la sección entre comillas) y su compone
 | Z6d | **La firma** de la cabecera (logo y nota de Google juntos, `--scrim-firma`), las garantías del móvil en lista, `Sticker` y `ProofChip`, el filo del gris (`--edge-subtle`) | «La cabecera · la firma», «Las garantías en el móvil», «Las pegatinas», «La prueba de los cuidados» | `VideoHero`, `ReassuranceBand`, `ProofList` |
 | Z6e | Cumpleaños **«Todo resuelto» (6a)** y **las dos horas repartidas** (90 min saltando y 30 de merienda: la cabecera, la pieza 3, el selector, las dudas, la hora extra) | «Rehecha el 29-09», «Las dos horas, repartidas (28-09)» | `IncludedList`, `AfterBookingPanel` |
 | Z6f | **El pie** rehecho: dos zonas y un filete, claro y en tarjeta | «Rehecho el 29-09: dos zonas y un solo filete» | `SiteFooter.jsx` (318) |
-| Z6g | La compra y Mi cuenta: **`CodeInput`** (6 casillas, se comprueba con la sexta, «Reenviar» a los 30 s), **«Quién firma el descargo»** (Tus datos, Listo con «Añadir menores», Mi cuenta), el acceso en Ajustes; y lo que cambia en Normas, Visítanos, Colegios y Entradas | «La cuenta sin contraseña (30-09)», «Quién firma el descargo (30-09)» | `compra/entrar.jsx`, `compra.jsx` |
+| Z6g (·1 ✅ `#871`) | La compra y Mi cuenta: **`CodeInput`** (6 casillas, se comprueba con la sexta, «Reenviar» a los 30 s; ·1, abajo), **«Quién firma el descargo»** (Tus datos, Listo con «Añadir menores», Mi cuenta), el acceso en Ajustes; y lo que cambia en Normas, Visítanos, Colegios y Entradas | «La cuenta sin contraseña (30-09)», «Quién firma el descargo (30-09)» | `compra/entrar.jsx`, `compra.jsx` |
 
 **Del otro carril (SPA), por buzón:** la **Puerta** (el mostrador, `paginas/puerta/` y su brief), **`LinkIsland`** en la
 invitación, la lista y la autorización (fuera `RsvpBar` y `SaveBar`), los **correos** (el 8, «482-913 es tu código para
@@ -2627,6 +2627,40 @@ mejor que la isla cuente lo suyo, como el cajón con `expose()`): `isla/medir.js
 variante ASIGNADA, que por eso viaja en `data-isla-experimento`) e `isla_accion`, `isla_panel` e `isla_razon` con las props del
 diseño (`medir.test.js`, mutado). El peso final, la isla de la página 192,04 → 195,66 (techo 196), la compra 183,82 → 187,44
 (188), la barra 4,16 aparte (5), con la base `318fec68`. **Queda la Z6c·3, del SPA**: los nombres en su contrato y su informe.
+
+#### La Z6g·1, el acceso con código — ✅ `[DECIDIDO]` 2026-10-02, `#871` (la lista del owner en `#867`: «su página, crear cuenta, el código XXX-XXX en el asunto, continuar al escribir el último dígito, también en el authenticator del panel»; vista por él en vivo)
+El zip (6) («La cuenta sin contraseña», `compra/entrar.jsx`, `CodeInput`), con lo que el owner ya decidió por encima del
+diseño: el código no sale a un correo NUEVO —va a crear la cuenta, `#849`—, recordar es la casilla —no «un año», `#858`—,
+Google y Apple ARRIBA (`#857`) y el código como el cajón: «Pedir otro código» a mano con la espera del servidor, un solo «no»
+y sin decir cuánto dura (`#811`, `#812`). Lo que queda de Z6g («Quién firma el descargo», el acceso en Ajustes y lo de Normas,
+Visítanos, Colegios y Entradas) va con los retoques del zip (6).
+- **Las seis casillas** (`ui/CampoCodigo.vue`, con la regla del cajón `sidebar/code-input.js` y la de cada casilla en
+  `ui/codigo.js`): un campo de verdad invisible (`one-time-code`, pegar «482-913»), el guion entre grupos, el cursor
+  (`isla-caret`), y **la sexta hace lo del botón naranja de su paso** (`ck.action`): Entra (compra y Mi cuenta), «ya existe» de
+  Tus datos (entra y, sin nada que pedir, pasa a Pagar, `#785`) y los pasos de Ajustes con código; borrar no, va con su casilla
+  y su botón (`#813`). «Entrar» apagado hasta las seis. Un «no» DEL código vacía las casillas y el foco vuelve a ellas
+  (`acceso.js::esNoDelCodigo`; el limitador o la red no las tocan); comprobando, las de Entra esperan apagadas.
+- **Su página**: «Entra o crea tu cuenta» en Mi cuenta, «Entras con un código a tu correo. Sin contraseña.» (✱ el diseño
+  dice «Te enviamos un código»: con `#849` un correo nuevo no recibe ninguno), «Tu correo»; «Revisa tu correo» con «Te hemos
+  enviado un código de 6 cifras a **…**. Cambiar» y la pista **«Te llega de {negocio}. Si no lo ves, mira en el correo no
+  deseado.»** —el remitente de la bandeja (`Setting::businessName()`), ya puesto en el arranque (`SidebarBoot::islaTexts()`)—.
+  El foco va al campo de cada paso (`data-isla-foco`: el correo, el código, el nombre), no al titular; el paso se anuncia igual.
+- **Crear cuenta**: fuera «¿Es tu primera vez?» —el correo decide—. Llegando de Entra sin cuenta, en Mi cuenta y en la compra,
+  «No hay ninguna cuenta con **…**. La creas ahora, en un minuto.» y «¿Ya tienes una con otro correo? Entra con ese» (la nota
+  de antes, fuera); el correo no se vuelve a teclear y no se ofrece otra vez Google. Listo: «… Para entrar, te enviamos un
+  código: sin contraseña.».
+- **«482-913» en el asunto** y como titular de los tres correos con código (`LoginCodes::shown()`, la forma única; fuera las
+  tres copias privadas); el servidor acepta las dos formas. El diseño del correo 8 (DM Mono, el bloque `codigo`) es del SPA.
+- **El authenticator del panel continúa con la sexta** (`App\Filament\Auth\PanelAppAuthentication`): el de Filament, igual en
+  todo, con su campo del reto enviando el formulario; se escucha en CAPTURA (Filament para el `input` de cada casilla) y solo
+  por un gesto, nunca al pintarse.
+- **Medido**: el trozo común de los pasos y Mi cuenta, 26,79 → 31,47 kB; pasos 45,87 → 50,66 (techo 52) y Mi cuenta 119,94 →
+  124,57 (126), base `c912d4de` en un `git worktree`. CE-6: la regla de las casillas, fuera del componente. **Guardas**:
+  `codigo.test.js`, `datos.test.js`, `pasos.test.js`, `vista.test.js`, `SidebarBootTest` (la pista, con control),
+  `LoginCodesTest`, `AuthCodeTest`, `PanelAppAuthenticationTest`; arneses `mutar-codigo-isla.sh` 9/9,
+  `mutar-acceso-codigo.sh` 54/54, `mutar-panel-authenticator.sh` 11/11. **Sin sonda** (el owner lo mira en vivo, 02-10).
+  ⚠️ `sonda-isla`, `sonda-cuenta`, `sonda-conversion` y `sonda-inventario-cookies` pulsan el enlace retirado o «Entrar» tras
+  la sexta: se adaptan en la verificación final (`#768`); ya leen «482-913».
 
 ## 5. Impacto en invariantes
 

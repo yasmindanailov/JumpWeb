@@ -179,8 +179,8 @@ class MailPreviewsTest extends TestCase
         $pintado = MailPreviews::pintar('verify_pending_email', 'es', [], User::factory()->create());
 
         // El que sale lleva el código (`#856`): en el asunto y como titular. La versión sin él ya no se envía.
-        $this->assertStringContainsString('482 913', $pintado['asunto'] ?? '');
-        $this->assertStringContainsString('482 913', $pintado['html'] ?? '');
+        $this->assertStringContainsString('482-913', $pintado['asunto'] ?? '');
+        $this->assertStringContainsString('482-913', $pintado['html'] ?? '');
     }
 
     public function test_the_signed_copy_is_previewed_in_the_language_of_the_tab(): void

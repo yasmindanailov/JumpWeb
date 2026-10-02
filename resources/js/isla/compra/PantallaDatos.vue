@@ -7,7 +7,7 @@
  * que de verdad falta: el teléfono en un cumpleaños si entró con Google o Apple, y la casilla si esa cuenta nunca la firmó. «Esta cuenta ya existe» pide
  * el CÓDIGO que le acaba de llegar; sale al ENVIAR, no al teclear (`#688`). Con errores, un resumen arriba que se lee primero.
  * ▶ Sin CONTRASEÑA desde la A3 del acceso con código (`#848`/`#849`; con las piezas de la isla, a la espera del diseño,
- * `#857`): la cuenta nace sin ella. `nota`, una nota NEUTRA arriba (el correo de «Entra» que aún no tiene cuenta).
+ * `#857`): la cuenta nace sin ella.
  *
  * Pinta y avisa (`cambiar(campo, valor)`, `entrar(modo)`, `descargo`, `proveedor(via)`, `hora(valor)`): quién es,
  * qué falta y si la hora se llenó lo decide quien lleva la compra.
@@ -19,6 +19,10 @@
  * formulario, sin «¿Ya has venido? Entra» (`entrar` apagado) porque se llega desde Entrar.
  * `cuenta: 'google'` (`#785`): la cuenta NUEVA que vuelve de Google completa aquí su alta, sin salir de la compra: su
  * correo de Google a la vista (`correoGoogle`, no se teclea), su nombre —el que da Google, corregible— y la casilla.
+ * ▶ **El zip (6), Z6g·1** (`specs/isla-y-landing-nueva.md` §4.27): «ya existe» dice qué hace el código y lo pide en sus seis
+ * casillas (`CampoCodigo`); con la sexta avisa (`completo`) y quien la pinta hace lo de «Continuar al pago». `nueva`: el
+ * correo con el que se llega de Entra sin cuenta, en la compra y en Mi cuenta —arriba, por qué está aquí y «Entra con
+ * ese»; el correo no se vuelve a teclear (sí, si el servidor le pone un «no») ni se ofrece otra vez Google—.
  */
 import { computed } from 'vue';
 import { useTextos } from '../piezas/textos.js';
@@ -28,10 +32,12 @@ import PasoCompra from './PasoCompra.vue';
 import IconoLucide from '../ui/IconoLucide.vue';
 import EnlaceSistema from '../ui/EnlaceSistema.vue';
 import CampoSistema from '../ui/CampoSistema.vue';
+import CampoCodigo from '../ui/CampoCodigo.vue';
 import CasillaSistema from '../ui/CasillaSistema.vue';
 import AvisoDestacado from '../ui/AvisoDestacado.vue';
 import SelectorHoras from '../ui/SelectorHoras.vue';
 import AccesoSocial from '../ui/AccesoSocial.vue';
+import TextoConCorreo from '../ui/TextoConCorreo.vue';
 
 const props = defineProps({
     cuenta: { type: String, default: 'nueva' },
@@ -46,7 +52,6 @@ const props = defineProps({
     horaNueva: { type: String, default: null },
     enApp: { type: Boolean, default: null },
     aviso: { type: String, default: '' },
-    nota: { type: String, default: '' },
     entrar: { type: Boolean, default: true },
     social: { type: Boolean, default: true },
     // T3e·4 (`#695`): Apple, apagado hasta que exista (`#683`); y la «G» del botón de Google.
@@ -54,8 +59,9 @@ const props = defineProps({
     marcaGoogle: { type: String, default: '' },
     titulo: { type: String, default: '' },
     correoGoogle: { type: String, default: '' },
+    nueva: { type: String, default: '' },
 });
-const emit = defineEmits(['cambiar', 'entrar', 'descargo', 'proveedor', 'hora']);
+const emit = defineEmits(['cambiar', 'entrar', 'descargo', 'proveedor', 'hora', 'completo']);
 const { t, tp } = useTextos();
 
 const fallos = computed(() => Object.values(props.errores).filter(Boolean).length);
@@ -65,8 +71,26 @@ const cambiar = (campo) => (valor) => emit('cambiar', campo, valor);
 
 <template>
     <PasoCompra :titulo="titulo || (cuenta === 'dentro' ? tp('compra.datos.hola', { nombre: nombrePila }) : t('compra.datos.titular'))">
+        <!-- Llegando de Entra sin cuenta (en la compra y en Mi cuenta): por qué está aquí y la salida a quien esperaba
+             entrar, que hace de «¿Ya has venido? Entra» (así no nacen cuentas repetidas). -->
         <template
-            v-if="cuenta !== 'dentro' && cuenta !== 'google' && entrar"
+            v-if="nueva"
+            #antes
+        >
+            <div :style="{ display: 'grid', gap: '6px' }">
+                <p :style="PASO.cuerpo"><TextoConCorreo
+                    :texto="t('mi_cuenta_alta.nueva')"
+                    :correo="nueva"
+                /></p>
+                <p :style="PASO.pista">{{ `${t('mi_cuenta_alta.otra')} ` }}<EnlaceSistema
+                    size="sm"
+                    underline="always"
+                    @click="emit('entrar', 'id')"
+                >{{ t('mi_cuenta_alta.otra_enlace') }}</EnlaceSistema></p>
+            </div>
+        </template>
+        <template
+            v-else-if="cuenta !== 'dentro' && cuenta !== 'google' && entrar"
             #antes
         >
             <p :style="PASO.cuerpo">{{ `${t('compra.datos.ya')} ` }}<EnlaceSistema
@@ -86,18 +110,6 @@ const cambiar = (campo) => (valor) => emit('cambiar', campo, valor);
                 :size="18"
             /></template>
         </AvisoDestacado>
-        <AvisoDestacado
-            v-else-if="nota"
-            tone="neutral"
-            size="sm"
-            role="status"
-            :title="nota"
-        >
-            <template #icono><IconoLucide
-                name="circle-user-round"
-                :size="18"
-            /></template>
-        </AvisoDestacado>
         <template v-if="cuenta !== 'dentro'">
             <AvisoDestacado
                 v-if="cuenta === 'google'"
@@ -112,7 +124,7 @@ const cambiar = (campo) => (valor) => emit('cambiar', campo, valor);
             </AvisoDestacado>
             <!-- «— o —» antes de los campos (el owner, 30-09, `#857`): Google no es el botón que envía lo de debajo. -->
             <AccesoSocial
-                v-else-if="social"
+                v-else-if="social && ! nueva"
                 separador
                 :in-app="enApp"
                 :apple="apple"
@@ -126,12 +138,13 @@ const cambiar = (campo) => (valor) => emit('cambiar', campo, valor);
                     id="pjc-nombre"
                     :label="t('compra.datos.nombre')"
                     autocomplete="name"
+                    :data-isla-foco="nueva ? '' : undefined"
                     :model-value="valores.nombre"
                     :error="errores.nombre || ''"
                     @update:model-value="cambiar('nombre')($event)"
                 />
                 <CampoSistema
-                    v-if="cuenta !== 'google'"
+                    v-if="cuenta !== 'google' && (! nueva || errores.correo)"
                     id="pjc-correo"
                     :label="t('compra.datos.correo')"
                     type="email"
@@ -152,28 +165,24 @@ const cambiar = (campo) => (valor) => emit('cambiar', campo, valor);
                         name="circle-user-round"
                         :size="18"
                     /></template>
-                    <div :style="{ display: 'grid', gap: '4px', marginTop: '10px' }">
-                        <CampoSistema
+                    <div :style="{ display: 'grid', gap: '14px' }">
+                        <p :style="{ margin: 0 }">{{ t('compra.datos.existe_codigo') }}</p>
+                        <CampoCodigo
                             id="pjc-codigo-e"
                             :label="t('compra.datos.codigo')"
-                            inputmode="numeric"
-                            autocomplete="one-time-code"
-                            maxlength="7"
-                            :hint="tp('compra.datos.codigo_enviado', { correo: valores.correo })"
+                            :hint="t('compra.entrar.codigo_pista')"
                             :model-value="valores.codigo"
                             :error="errores.codigo || ''"
+                            :otro="t('compra.datos.otro_codigo')"
                             @update:model-value="cambiar('codigo')($event)"
+                            @completo="emit('completo')"
+                            @otro="emit('entrar', 'otro')"
                         />
-                        <EnlaceSistema
-                            :style="{ justifySelf: 'start' }"
-                            @click="emit('entrar', 'otro')"
-                        >{{ t('compra.datos.otro_codigo') }}</EnlaceSistema>
                         <!-- Es entrar con el código: recordar el dispositivo, solo si se pide (`#858`). -->
                         <CasillaSistema
                             id="pjc-recordar-e"
                             :label="t('compra.datos.recordar')"
                             :model-value="valores.recordar"
-                            :style="{ marginTop: '8px' }"
                             @update:model-value="cambiar('recordar')($event)"
                         />
                     </div>

@@ -86,12 +86,14 @@ describe('la descripción de cada paso', () => {
         assert.equal(lista.onBack(), 'volver');
     });
 
-    test('«Entra» con el CÓDIGO: «Entrar», apagado sin código, con su espera', () => {
+    test('«Entra» con el CÓDIGO: «Entrar», apagado hasta las SEIS cifras (Z6g·1), con su espera', () => {
         const sin = ck('datos', { vista: 'entrar', entrada: { paso: 'codigo', valor: 'ana@correo.es', codigo: ' ' } });
 
         assert.equal(sin.action.label, 'Entrar');
         assert.equal(sin.action.disabled, true);
         assert.equal(sin.key, 'datosentrarcodigo');
+        assert.equal(ck('datos', { vista: 'entrar', entrada: { paso: 'codigo', codigo: '48291' } }).action.disabled, true, 'cinco cifras no bastan');
+        assert.equal(ck('datos', { vista: 'entrar', entrada: { paso: 'codigo', codigo: '482-913' } }).action.disabled, false, 'el guion del correo no cuenta');
 
         const con = ck('datos', { vista: 'entrar', entrada: { paso: 'codigo', valor: 'ana@correo.es', codigo: '482913' }, ocupado: 'entrar' });
 

@@ -7,6 +7,7 @@
  * banco recarga la página y aterriza en su desenlace. Los de antes («cuando», «datos», «pagar») son de la isla.
  */
 import { STEPS, isOutcome } from '../../sidebar/machine.js';
+import { CODE_LENGTH, codeDigits } from '../../sidebar/code-input.js';
 import { t as texto, tp as textoCon } from '../../sidebar/i18n.js';
 import { diaDelPlazo } from './vista.js';
 
@@ -99,14 +100,15 @@ export function ckDelPaso(e) {
     if (e.paso === 'datos') {
         const entrada = e.entrada ?? {};
         // «Entra» lleva su propia acción (`PjcEntrar`), en sus dos pasos: con el correo, pedir el código; con el código,
-        // entrar (A3, `#849`). El descargo, ninguna: se vuelve con la flecha.
+        // entrar (A3, `#849`), apagada hasta tener las seis cifras (la sexta ya entra sola: Z6g·1, `#867`). El descargo,
+        // ninguna: se vuelve con la flecha.
         const entrando = e.vista === 'entrar';
         const conCodigo = entrada.paso === 'codigo';
         const action = entrando
             ? {
                 label: t(conCodigo ? 'compra.entrar.entrar' : 'compra.entrar.continuar'),
                 onClick: a.entrar,
-                disabled: conCodigo ? ! String(entrada.codigo ?? '').trim() : ! String(entrada.valor ?? '').trim(),
+                disabled: conCodigo ? codeDigits(entrada.codigo).length < CODE_LENGTH : ! String(entrada.valor ?? '').trim(),
                 loading: e.ocupado === 'entrar' ? t(conCodigo ? 'compra.entrar.cargando' : 'compra.entrar.enviando') : false,
             }
             : (e.vista ? null : { label: t('compra.datos.continuar'), onClick: a.continuar, loading: e.ocupado === 'datos' ? t('compra.datos.cargando') : false });

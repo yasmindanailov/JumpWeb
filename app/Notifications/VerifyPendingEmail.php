@@ -47,7 +47,7 @@ class VerifyPendingEmail extends Notification implements ChoosesRecipient, Hides
 
     public function toMail(object $notifiable): MailMessage
     {
-        $code = $this->shown();
+        $code = LoginCodes::shown($this->code);
 
         return (new BrandedMailMessage($this))
             ->subject(__('emails.verify_pending_email_code.subject', ['code' => $code]))
@@ -60,12 +60,6 @@ class VerifyPendingEmail extends Notification implements ChoosesRecipient, Hides
     /** @return list<string> */
     public function secretsInCopy(): array
     {
-        return [$this->shown()];
-    }
-
-    /** «482 913»: el código tal como se enseña. */
-    private function shown(): string
-    {
-        return substr($this->code, 0, 3).' '.substr($this->code, 3);
+        return [LoginCodes::shown($this->code)];
     }
 }

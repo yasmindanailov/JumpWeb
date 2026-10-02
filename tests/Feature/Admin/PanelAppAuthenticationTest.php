@@ -5,6 +5,7 @@ namespace Tests\Feature\Admin;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\AuditLog;
+use App\Filament\Auth\PanelAppAuthentication;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Filament\Auth\Pages\Login;
@@ -86,6 +87,23 @@ class PanelAppAuthenticationTest extends TestCase
 
         $login->set('data.multiFactor.app.code', (new Google2FA)->getCurrentOtp($secret))->call('authenticate');
         $this->assertTrue(Auth::guard('admin')->check(), 'con el código de su app, entra');
+    }
+
+    /**
+     * `#867`: el código de la app CONTINÚA con su última cifra (`PanelAppAuthentication`), sin tocar «Entrar». Lo que se
+     * mira aquí es el enganche que pinta el servidor; que el navegador envíe, lo ve el owner al entrar.
+     */
+    public function test_the_code_of_the_app_continues_with_its_last_digit(): void
+    {
+        $admin = $this->withRole('admin', (new Google2FA)->generateSecretKey());
+        // Filament lo pinta tal cual (`merge(…, escape: false)` de sus atributos de Alpine): por eso no lleva comillas dobles.
+        $enganche = PanelAppAuthentication::SUBMIT_ON_LAST_DIGIT;
+
+        $login = Livewire::test(Login::class);
+        $login->assertDontSeeHtml($enganche);
+
+        $login->fillForm(['email' => $admin->email, 'password' => 'password'])->call('authenticate');
+        $login->assertSeeHtml('x-on:input.capture="'.$enganche.'"');
     }
 
     public function test_the_secret_is_encrypted_hidden_and_forgotten_with_the_account(): void

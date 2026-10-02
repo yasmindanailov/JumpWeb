@@ -54,7 +54,7 @@ class AuthCodeTest extends ApiTestCase
         $sent = Notification::sent($user, LoginCodeMail::class)->last();
         $this->assertInstanceOf(LoginCodeMail::class, $sent, 'no salió ningún código a esa cuenta');
 
-        preg_match('/(\d{3}) (\d{3})/', (string) $sent->toMail($user)->subject, $m);
+        preg_match('/(\d{3})-(\d{3})/', (string) $sent->toMail($user)->subject, $m);
 
         return $m[1].$m[2];
     }
@@ -360,16 +360,17 @@ class AuthCodeTest extends ApiTestCase
 
         $sent = $this->lastSentEmail();
         $this->assertNotNull($sent);
-        $this->assertSame(1, preg_match('/(\d{3}) (\d{3})/', (string) $sent->getSubject(), $m), 'el código viaja en el asunto');
-        $shown = $m[0];
+        // «482-913 es tu código para entrar» (`#867`): el código, lo PRIMERO del asunto y con guion, como lo enseña el aviso.
+        $this->assertSame(1, preg_match('/^(\d{3})-(\d{3}) /', (string) $sent->getSubject(), $m), 'el código viaja en el asunto');
+        $shown = trim($m[0]);
         $this->assertStringContainsString($shown, (string) $sent->getHtmlBody(), 'y como titular del correo');
 
         $row = EmailSend::query()->sole();
         $this->assertSame('login_code', $row->mail_key);
         $this->assertStringNotContainsString($shown, (string) $row->subject);
         $this->assertStringNotContainsString($shown, (string) $row->html);
-        $this->assertStringContainsString('••• •••', (string) $row->subject);
-        $this->assertStringContainsString('••• •••', (string) $row->html);
+        $this->assertStringContainsString('•••••••', (string) $row->subject);
+        $this->assertStringContainsString('•••••••', (string) $row->html);
     }
 
     public function test_the_trail_carries_neither_the_email_nor_the_code(): void

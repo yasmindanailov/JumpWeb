@@ -4,7 +4,7 @@ import {
     cuentaQueYaExiste, datosVacios, entradaVacia, erroresDelServidor, firmaPendiente, formularioDeAlta, hayQuePedir,
     nacimientoDeAlta, revisarDatos,
 } from './datos.js';
-import { entrar, errorDeEntrar, erroresDelCodigo } from './acceso.js';
+import { entrar, errorDeEntrar, erroresDelCodigo, esNoDelCodigo } from './acceso.js';
 
 /**
  * «Tus datos» de la compra de la isla (T3e·3 de `specs/isla-y-landing-nueva.md` §4.10): qué falta antes de preguntar,
@@ -100,6 +100,17 @@ describe('los «no» del servidor', () => {
         assert.equal(errorDeEntrar(campo, textos), 'Correo no válido.');
         assert.equal(errorDeEntrar({ ok: false, skipped: true }, textos), '', 'un doble clic no inventa un error');
         assert.deepEqual(entradaVacia('ana@correo.es'), { paso: 'id', valor: 'ana@correo.es', codigo: '', recordar: false, error: '', reenvios: 0 });
+    });
+
+    test('las casillas se vacían solo con un «no» DEL código: el limitador, un campo ajeno o la red no lo tiran (Z6g·1)', () => {
+        const codigoMalEscrito = { ok: false, status: 422, error: { code: 'validation_failed', fields: { code: ['Son 6 cifras.'] } } };
+
+        assert.equal(esNoDelCodigo(credenciales), true);
+        assert.equal(esNoDelCodigo(codigoMalEscrito), true);
+        assert.equal(esNoDelCodigo(limite), false);
+        assert.equal(esNoDelCodigo(campo), false);
+        assert.equal(esNoDelCodigo({ ok: false, error: null, offline: true }), false);
+        assert.equal(esNoDelCodigo({ ok: true }), false);
     });
 });
 

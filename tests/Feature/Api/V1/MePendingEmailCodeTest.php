@@ -60,7 +60,7 @@ class MePendingEmailCodeTest extends ApiTestCase
     {
         $sent = Notification::sent($user, VerifyPendingEmail::class)->last();
         $this->assertInstanceOf(VerifyPendingEmail::class, $sent);
-        preg_match('/(\d{3}) (\d{3})/', (string) $sent->toMail($user->fresh())->subject, $m);
+        preg_match('/(\d{3})-(\d{3})/', (string) $sent->toMail($user->fresh())->subject, $m);
 
         return $m[1].$m[2];
     }
@@ -274,7 +274,7 @@ class MePendingEmailCodeTest extends ApiTestCase
 
         $row = EmailSend::query()->where('mail_key', 'verify_pending_email')->sole();
         $this->assertSame(self::NEW, $row->recipient);
-        $this->assertSame(0, preg_match('/\d{3} \d{3}/', (string) $row->subject.' '.$row->html), 'ni en el asunto ni en la copia');
-        $this->assertStringContainsString('••• •••', (string) $row->subject);
+        $this->assertSame(0, preg_match('/\d{3}-\d{3}/', (string) $row->subject.' '.$row->html), 'ni en el asunto ni en la copia');
+        $this->assertStringContainsString('•••••••', (string) $row->subject);
     }
 }

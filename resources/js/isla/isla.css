@@ -281,6 +281,8 @@
 /* Lo que la isla deja de decir (Z6a, `pj-island-swap-out`): se desenfoca y se va mientras lo nuevo entra con isla-swap. */
 @keyframes isla-swap-out { from { opacity: 1; transform: none; filter: blur(0); } to { opacity: 0; transform: scale(1.03); filter: blur(6px); } }
 @keyframes isla-fade-in { from { opacity: 0; } to { opacity: 1; } }
+/* El cursor de la casilla del código (`ui/CampoCodigo.vue`; `pj-caret` del diseño). */
+@keyframes isla-caret { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 @keyframes isla-pop { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
 @keyframes isla-sheen { from { background-position: -140% 0; } to { background-position: 240% 0; } }
 @keyframes isla-outcome-pop { 0% { transform: scale(0.3); opacity: 0; } 60% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); } }

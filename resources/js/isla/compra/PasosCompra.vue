@@ -21,11 +21,15 @@ import FormularioPasarela from './FormularioPasarela.vue';
 import CabeceraDesenlace from '../ui/CabeceraDesenlace.vue';
 
 const {
-    paso, esperando, authStore, outcomeStore, datos, pantallaDatos, pantallaEntrar, aGoogle, pago, listo, recibo, fallido,
+    ck, paso, esperando, authStore, outcomeStore, datos, pantallaDatos, pantallaEntrar, aGoogle, pago, listo, recibo, fallido,
     perdida, elegirNueva,
 } = inject(COMPRA);
 // Apple sigue de corchete apagado (`#683`): su botón no se pinta, así que solo Google llega aquí.
 const proveedor = (via) => via === 'google' && aGoogle();
+// La sexta cifra del código hace lo que haría el botón naranja (Z6g·1, `#867`): en Entra, entrar; en «ya existe», continuar
+// al pago (entra y, sin nada que pedir, pasa a «Pagar», `#785`). «Cambiar», lo mismo que la flecha: al correo.
+const alCompletar = () => ck.value.action?.onClick?.();
+const alCorreo = () => ck.value.onBack?.();
 </script>
 
 <template>
@@ -40,6 +44,8 @@ const proveedor = (via) => via === 'google' && aGoogle();
             @cambiar="datos.cambiarEntrada"
             @otro="datos.otroCodigo"
             @proveedor="proveedor"
+            @completo="alCompletar"
+            @correo="alCorreo"
         />
         <PantallaDatos
             v-else
@@ -48,6 +54,7 @@ const proveedor = (via) => via === 'google' && aGoogle();
             @descargo="datos.estado.vista = 'descargo'"
             @entrar="datos.abrirEntrar"
             @proveedor="proveedor"
+            @completo="alCompletar"
         >
             <template
                 v-if="authStore.signupSiteKey && pantallaDatos.cuenta === 'nueva'"

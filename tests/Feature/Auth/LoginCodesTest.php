@@ -182,4 +182,13 @@ class LoginCodesTest extends TestCase
 
         $this->assertTrue($this->consume(substr($code, 0, 3).' '.substr($code, 3)), '«482 913» es el mismo código, y el correo el mismo en minúsculas');
     }
+
+    /** Lo que ENSEÑAN los correos (`#867`: «482-913») es lo que el servidor acepta: copiarlo del aviso del móvil entra. */
+    public function test_the_shown_form_is_the_dashed_one_and_it_is_accepted(): void
+    {
+        $code = $this->issue();
+
+        $this->assertSame(substr($code, 0, 3).'-'.substr($code, 3), LoginCodes::shown($code));
+        $this->assertTrue($this->consume(LoginCodes::shown($code)));
+    }
 }

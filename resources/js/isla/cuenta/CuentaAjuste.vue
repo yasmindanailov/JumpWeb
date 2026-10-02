@@ -30,7 +30,9 @@ defineProps({
     vista: { type: String, required: true },
     paso: { type: Object, required: true },
 });
-const emit = defineEmits(['cambiar', 'otro', 'cancelar', 'descargo', 'borrar', 'volver']);
+// `completo`: la sexta cifra de un código, que hace la acción del paso (Z6g·1). Borrar no la avisa: va con su casilla y su
+// botón, lo único irreversible (`#813`).
+const emit = defineEmits(['cambiar', 'otro', 'completo', 'cancelar', 'descargo', 'borrar', 'volver']);
 const { t, tp } = useTextos();
 const cambiar = (campo, valor) => emit('cambiar', campo, valor);
 </script>
@@ -68,6 +70,7 @@ const cambiar = (campo, valor) => emit('cambiar', campo, valor);
                 :error="paso.errores.codigo"
                 @update:model-value="(v) => cambiar('codigo', v)"
                 @otro="emit('otro')"
+                @completo="emit('completo')"
             />
             <EnlaceSistema
                 variant="quiet"
@@ -98,6 +101,7 @@ const cambiar = (campo, valor) => emit('cambiar', campo, valor);
                 :error="paso.errores.codigo"
                 @update:model-value="(v) => cambiar('codigo', v)"
                 @otro="emit('otro')"
+                @completo="emit('completo')"
             />
         </template>
 
@@ -111,6 +115,7 @@ const cambiar = (campo, valor) => emit('cambiar', campo, valor);
                 :error="paso.errores.codigo"
                 @update:model-value="(v) => cambiar('codigo', v)"
                 @otro="emit('otro')"
+                @completo="emit('completo')"
             />
         </template>
 
@@ -124,6 +129,7 @@ const cambiar = (campo, valor) => emit('cambiar', campo, valor);
                 :error="paso.errores.codigo"
                 @update:model-value="(v) => cambiar('codigo', v)"
                 @otro="emit('otro')"
+                @completo="emit('completo')"
             />
         </template>
 

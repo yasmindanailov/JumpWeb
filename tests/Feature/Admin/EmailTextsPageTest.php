@@ -225,10 +225,11 @@ class EmailTextsPageTest extends TestCase
             ->test(EmailTexts::class)
             ->set('textos.es.emails.login_code.subject', 'Entra con {code}')
             ->call('verVista', 'es')
-            ->assertSet('vistaAsunto', 'Entra con 482 913')
+            // El código, como lo enseñan los correos (`LoginCodes::shown()`, «482-913»: `#867`).
+            ->assertSet('vistaAsunto', 'Entra con 482-913')
             ->assertSet('vistaAdelanto', 'Escríbelo donde lo pediste. Si no lo has pedido tú, ignora este correo.')
             ->assertSeeHtml('data-email-texts-subject')
-            ->assertSee('Entra con 482 913');
+            ->assertSee('Entra con 482-913');
     }
 
     public function test_bold_in_a_block_the_mail_paints_as_is_is_refused_in_its_field(): void

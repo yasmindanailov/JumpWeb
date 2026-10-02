@@ -1,7 +1,8 @@
 /**
  * LA COMPRA, ACCESIBLE (`ParkIsland.jsx`, bloques «Con la capa grande abierta» y «La capa grande, accesible»).
  * Es un diálogo: con ella abierta la página de detrás no se mueve (el scroll es solo del paso); el foco va al
- * titular de cada paso y se anuncia («Paso 2 de 2 · Pagar. Repasa y paga»); y al cerrar vuelve a quien la abrió.
+ * titular de cada paso —o a su campo, si lo marca: Entra y «Crea tu cuenta»— y se anuncia («Paso 2 de 2 · Pagar. Repasa
+ * y paga»); y al cerrar vuelve a quien la abrió.
  * Escape la cierra sin perder nada, igual que la X (`useCapa`).
  */
 import { onMounted, ref, watch } from 'vue';
@@ -41,7 +42,10 @@ export function useCompraCapa({ islandRef, inCheckout, clave, bloquea = () => tr
             const caja = islandRef.value?.querySelector('[data-isla-scroll]');
             if (! caja) return;
             const titular = caja.querySelector('h1');
-            (titular || caja).focus({ preventScroll: true });
+            // «El foco, donde se escribe» (zip (6), Z6g·1): el paso que marca su campo (`data-isla-foco`: el correo y el
+            // código de Entra, el nombre de «Crea tu cuenta») lo recibe; los demás, su titular. Se anuncia igual.
+            const campo = caja.querySelector('[data-isla-foco]:not([disabled])');
+            (campo || titular || caja).focus({ preventScroll: true });
             const paso = islandRef.value.querySelector('#isla-compra-paso')?.textContent || '';
             const tt = titular ? titular.textContent : '';
             anuncio.value = paso && tt && paso.includes(tt) ? paso : [paso, tt].filter(Boolean).join('. ');

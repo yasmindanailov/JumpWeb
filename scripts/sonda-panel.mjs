@@ -95,9 +95,9 @@ try {
     const codigo = a.page.locator('input[autocomplete="one-time-code"], input[id*="multiFactor"]').first();
     await codigo.waitFor({ timeout: 15000 });
     ok('P3: con la contraseña sola, el administrador NO entra: le pide el código de su app', new URL(a.page.url()).pathname.endsWith('/login'), a.page.url());
-    await codigo.fill(totp(SECRETO));
-    await Promise.all([a.page.waitForURL((u) => ! u.pathname.endsWith('/login'), { timeout: 20000 }), a.page.click('button[type="submit"]')]);
-    ok('y con el código de su app, entra', new URL(a.page.url()).pathname.startsWith(`/${PANEL}`) && ! a.page.url().endsWith('/login'), a.page.url());
+    // La sexta cifra envía sola (Z6g·1, `#867`, `PanelAppAuthentication`): rellenar basta, sin tocar «Entrar».
+    await Promise.all([a.page.waitForURL((u) => ! u.pathname.endsWith('/login'), { timeout: 20000 }), codigo.fill(totp(SECRETO))]);
+    ok('y con el código de su app, entra al escribir la última cifra', new URL(a.page.url()).pathname.startsWith(`/${PANEL}`) && ! a.page.url().endsWith('/login'), a.page.url());
     const me = await a.page.evaluate(async () => (await fetch('/api/v1/me', { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })).status);
     ok('su sesión NO abre la web (`/api/v1/me`)', me === 401, `HTTP ${me}`);
 

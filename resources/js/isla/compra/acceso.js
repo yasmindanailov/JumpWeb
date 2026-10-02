@@ -56,6 +56,16 @@ export function erroresDelCodigo(r, textos = {}, generico = '') {
     return { errores, aviso: Object.keys(errores).length ? '' : (e?.message || generico) };
 }
 
+/**
+ * ¿El «no» es del CÓDIGO —malo, caducado, gastado o mal escrito—? Entonces sus casillas se VACÍAN para escribir otro (el
+ * diseño; como el cajón, `stores/auth.js`). El limitador o un corte de red no lo tocan: ese código aún puede valer.
+ */
+export function esNoDelCodigo(r) {
+    const e = r?.error ?? null;
+
+    return e?.code === INVALID_CREDENTIALS || Boolean(e?.fields?.code);
+}
+
 /** El mismo «no», en la ÚNICA línea de error de «Entra» (bajo su campo, como la pinta el diseño). */
 export function errorDeEntrar(r, textos = {}, generico = '') {
     const { errores, aviso } = erroresDelCodigo(r, textos, generico);

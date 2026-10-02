@@ -16,7 +16,8 @@ MW=app/Http/Middleware/RequiresAdminAppAuthentication.php
 RUTAS=routes/web.php
 USER=app/Domain/Identity/Models/User.php
 CMD=app/Console/Commands/RemovePanelAuthenticator.php
-FICHEROS=("$PANEL" "$MW" "$RUTAS" "$USER" "$CMD")
+MFA=app/Filament/Auth/PanelAppAuthentication.php
+FICHEROS=("$PANEL" "$MW" "$RUTAS" "$USER" "$CMD" "$MFA")
 
 TMP="$(mktemp -d)"
 copia() { echo "$TMP/${1//\//__}"; }
@@ -58,8 +59,17 @@ mutar() {
 }
 
 mutar "el panel no lo exige (isRequired apagado)" "$PANEL" \
-  "->multiFactorAuthentication([AppAuthentication::make()->recoverable()->codeWindow(2)], isRequired: true)" \
-  "->multiFactorAuthentication([AppAuthentication::make()->recoverable()->codeWindow(2)], isRequired: false)"
+  "->multiFactorAuthentication([PanelAppAuthentication::make()->recoverable()->codeWindow(2)], isRequired: true)" \
+  "->multiFactorAuthentication([PanelAppAuthentication::make()->recoverable()->codeWindow(2)], isRequired: false)"
+
+# `#867`: el reto continúa con la última cifra (`PanelAppAuthentication`).
+mutar "el panel vuelve al authenticator de Filament (el código no continúa solo)" "$PANEL" \
+  "[PanelAppAuthentication::make()->recoverable()" \
+  "[\\Filament\\Auth\\MultiFactor\\App\\AppAuthentication::make()->recoverable()"
+
+mutar "el reto sin el envío con la última cifra" "$MFA" \
+  "\$component->extraAlpineAttributes(['x-on:input.capture' => self::SUBMIT_ON_LAST_DIGIT], merge: true);" \
+  ""
 
 mutar "el middleware de Filament en vez del nuestro (lo exige a todos)" "$PANEL" \
   "->multiFactorAuthenticationRequiredMiddlewareName(RequiresAdminAppAuthentication::class)" \

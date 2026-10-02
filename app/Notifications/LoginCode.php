@@ -21,7 +21,8 @@ use Illuminate\Notifications\Notification;
  * seguro; el envío inmediato es una decisión del flujo que lo pide, escrita allí.
  *
  * ⚠️ El código viaja en el asunto (se lee en el aviso del móvil sin abrir el correo: la cola de la puerta) y como titular,
- * PARTIDO en dos grupos de tres para dictarlo y copiarlo; el servidor acepta los dos (`LoginCodes::consume()`). En la
+ * PARTIDO en dos grupos de tres con guion, «482-913», para dictarlo y copiarlo (`LoginCodes::shown()`, la forma de los
+ * tres correos con código); el servidor acepta las dos (`LoginCodes::consume()`). En la
  * copia del registro de correos salientes va tapado ({@see HidesSecretsInCopy}).
  */
 class LoginCode extends Notification implements HidesSecretsInCopy, ShouldQueue
@@ -40,7 +41,7 @@ class LoginCode extends Notification implements HidesSecretsInCopy, ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $code = $this->shown();
+        $code = LoginCodes::shown($this->code);
 
         return (new BrandedMailMessage($this))
             ->subject(__('emails.login_code.subject', ['code' => $code]))
@@ -58,12 +59,6 @@ class LoginCode extends Notification implements HidesSecretsInCopy, ShouldQueue
      */
     public function secretsInCopy(): array
     {
-        return [$this->shown()];
-    }
-
-    /** «482 913»: el código tal como se enseña. */
-    private function shown(): string
-    {
-        return substr($this->code, 0, 3).' '.substr($this->code, 3);
+        return [LoginCodes::shown($this->code)];
     }
 }

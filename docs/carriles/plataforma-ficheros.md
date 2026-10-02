@@ -24,7 +24,9 @@ A2b** (`#856`): `Identity\Contracts\EmailChangeOutcome`, `Notifications\Support\
 `Admin\Users\SendPanelPasswordActionTest` y `scripts/mutar-contrasena-panel.sh` (y, AVISANDO, del SPA: `EmailUtm`, `MailTextCatalogTest`) ·
 **y la A5b** (`#869`; retiró `Reconfirmation`, `EmailChangeController` y lo de la contraseña del cliente): `tests/Support/IssuesCodes.php`
 y `Auth\{LoginGate,CustomerPasswordRetired}Test` · **y la A5d** (`#869`): la migración `erase_customer_passwords`,
-`Auth\CustomerPasswordsErasedMigrationTest` y `scripts/mutar-contrasenas-clientes.sh` ·
+`Auth\CustomerPasswordsErasedMigrationTest` y `scripts/mutar-contrasenas-clientes.sh` · **y la Z6g·1** (`#871`):
+`App\Filament\Auth\PanelAppAuthentication`, `isla/ui/{CampoCodigo.vue,codigo.js,TextoConCorreo.vue}` y
+`scripts/mutar-codigo-isla.sh` ·
 **EL SEO** (`specs/seo.md`): la spec, `scripts/{sonda-seo.mjs,mutar-seo.sh}`, `RobotsController`, `MapsEmbed::coordinates()`,
 `VenueAddress::parts()` y el grafo de `StructuredData` (y, AVISANDO, `components/{pagina,layout}.blade.php` y `deploy.sh`) ·
 **LA POLÍTICA DE COOKIES de producción** (`#858`/`#859`): su spec, `App\Http\Legal\CookieInventory`, la migración
@@ -68,6 +70,7 @@ dueño es el carril de la web/reseñas—) ·
 > Mudado VERBATIM del buzón del carril el 30-09 (`#861`: el carril no cabía en sus 32 KB). Era el aviso al SPA del 25→26-09
 > y es un registro vivo: si el SPA cambia algo de aquí, avisa. (Su «Mapa y reseñas (Google)» ya dice «Mapa (Google)»: `#859`.)
 
+- Z6g·1 (`#871`): la regla de las casillas del código, `sidebar/code-input.js` (la isla la importa; mismo código, dos carcasas).
 - `#773`: Mi cuenta en la isla (spec `isla-y-landing-nueva.md` §4.13: cada tanda dice lo tocado). De lo tuyo:
   `Sidebar.vue` (+3 líneas: con la isla monta `isla/SeccionCuenta.vue`) y `carcasa.js::superficieDe`; tus stores y
   `account/*.js`, leídos sin tocar. Contratos míos: 1.33.0 (T5a) y 1.34.0 (T5b).

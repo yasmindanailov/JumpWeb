@@ -533,8 +533,8 @@ export function useSeccionCompra(props) {
         pedirTelefono: datos.pedirTelefono.value,
         errores: datos.estado.errores,
         aviso: datos.estado.aviso,
-        // La nota NEUTRA de «Entra» con un correo nuevo: «aún no tienes cuenta: rellena tus datos» (A3, `#849`).
-        nota: datos.estado.nota,
+        // El correo de «Entra» que aún no tiene cuenta (A3, `#849`; la frase del zip (6), Z6g·1): «No hay ninguna cuenta con…».
+        nueva: datos.estado.nueva,
         // Lo de después de pagar (los hijos, los adultos) solo tiene sentido si la instalación firma dentro y viene más gente.
         lineaMenores: (datos.contexto.context?.waiver?.mode ?? datos.waiverStore.legal?.mode) === 'interno' && (compra.pedido?.n ?? 0) > 1,
         // El alta que vuelve de Google (`#785`): su correo, a la vista.
@@ -549,7 +549,7 @@ export function useSeccionCompra(props) {
     const pantallaEntrar = computed(() => {
         const { paso: pasoEntrada, valor, codigo, recordar, error, reenvios } = datos.estado.ent;
 
-        return { paso: pasoEntrada, valor, codigo, recordar, error, reenvios, ...social.value };
+        return { paso: pasoEntrada, valor, codigo, recordar, error, reenvios, ocupado: compra.ocupado === 'entrar', ...social.value };
     });
 
     const listo = computed(() => pantallaListo({

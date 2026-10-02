@@ -4,12 +4,12 @@
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
 > **820–849 AGOTADA con `#849`** → sigue en **850–879** (del owner, 29-09; centena `decisiones/800-899.md`) · Último usado:
-> **`#870`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **`#871`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-10-02**
 > (el acceso con código: A1–A3 ✅ `#853`→`#857`; la A4 del SPA en `main`, `#813`; `/cookies` ✅ `#858`→`#860`; el zip (6) y
 > el reparto, `#861`; el SEO, `specs/seo.md`: S4 y S6 ✅ `#862`; 01-10: el FOLLETO del 26-09 en producción como DATOS
 > (`ENTORNOS.md` §6), los textos legales para el owner (`#863`→`#865`), **la Z6a de la isla ✅** y, por la noche, **la
-> Z6b ✅** (`#866`, `#867`) y sus tres usos de los banners ✅ (02-10), con su visto bueno; 02-10: **la A5 ✅**).
+> Z6b ✅** (`#866`, `#867`) y sus tres usos de los banners ✅ (02-10), con su visto bueno; 02-10: **la A5 ✅** y **la Z6g·1 ✅**).
 > ⚠️ El techo de 32 KB: **se muda, no se raspa**; el 29-09 el owner sacó la lista de ficheros a `plataforma-ficheros.md`
 > (`#852`) y NO subió el techo. Si vuelve a apretar tres veces seguidas, llévaselo con la medida.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -56,9 +56,9 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
    `?isla=b3` y la flecha naranja, `#868`; lo hecho y lo medido, en §4.27). La Z6c·3, la MEDIDA, es del SPA (avisado en mi
    buzón). ⚠️ El experimento se CREA en el panel al desplegar (clave `isla`, variantes `hoy` y `b3`, 50/50) y corre con el
    vídeo de verdad, dos semanas como mínimo. **SIGUE, en el orden de `#867`**: (1) ~~la A5~~ ✅ 02-10 (`acceso-con-codigo.md`
-   §4.12; la migración de la A5d corre en producción SOLO con la v2.0.0, medida: `ENTORNOS.md` §6) · (2) el
-   acceso con código (su página, crear cuenta, «XXX-XXX» en el asunto, continuar al escribir el último dígito, también en el
-   authenticator del panel; mucho es la Z6g) · (3) los retoques del zip (6) (Z6d–Z6f, colores, secciones; la cabecera sin
+   §4.12; la migración de la A5d corre en producción SOLO con la v2.0.0, medida: `ENTORNOS.md` §6) · (2) ~~el acceso con
+   código~~ ✅ 02-10 (la Z6g·1, `#871`, §4.27; ⚠️ cuatro sondas y `sonda-panel`, adaptadas o por adaptar, se pasan en la
+   verificación final) · (3) los retoques del zip (6) (Z6d–Z6f, el resto de la Z6g, colores, secciones; la cabecera sin
    precio salvo Colegios, la regla del owner en `instancias/playjump/docs/estrategia/2026-09-30/Web.md`) · (4) la isla en un
    móvil de verdad, **en STAGING al terminarlo todo**. `isla_razon` y la imagen de la INVITACIÓN son del SPA (`#861`). ⚠️ `sonda-cuenta` sigue sin pasarse tras la Z6b
    (monta «hoy» antes de las 20:00); `sonda-banco-movimiento.mjs` sigue con los casos del 27-09: se rehace en la
@@ -225,6 +225,14 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
 
 ## Buzón
 
+### ❗ Para el SPA (emisor: plataforma, 2026-10-02) — la Z6g·1 EN `main`: el código «482-913» y las casillas de la isla (`#871`)
+- **«482-913»** en el asunto y como titular de los tres correos con código: una sola forma, `LoginCodes::shown()` (para tu
+  correo 8). Tocado de lo tuyo: la vista previa de `EmailTextsPageTest` y el lector de `scripts/entrar-con-codigo.mjs`
+  (`(\d{3})-(\d{3})`, lo usa tu `sonda-cajon-a4b`). La copia del registro lo tapa entero (`•••••••`).
+- La isla usa tu `sidebar/code-input.js` (la regla de las casillas): si cambias su forma, avísame. Su código ya hace lo de tu
+  cajón (`#812`) y suma, del zip (6): «Revisa tu correo», «Te hemos enviado un código de 6 cifras a … · Cambiar» y la pista
+  «Te llega de {negocio}…» (`isla.compra.entrar.codigo_pista`, ya puesta por `SidebarBoot`). Por si el cajón la quiere.
+
 ### ❗ Para el SPA (emisor: plataforma, 2026-10-02) — la A5 (fuera la contraseña del cliente) toca lo tuyo de los correos
 - **Hecho, A5a (`#870`)**: un correo nuevo AL PERSONAL, `PanelPasswordLink` (la contraseña del panel, desde la ficha): lo
   declaran del equipo `EmailUtm::NOT_TO_CUSTOMERS` y `DEL_EQUIPO` de `MailTextCatalogTest`.
@@ -256,15 +264,6 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
   T4a·1, llevan ahora ESPACIO DURO entre cifra y unidad («24 h», «1,30 m»), en es/en/fr, con su guarda en `CatalogTest`.
   Las de altura (`zones.height_*`) tienen la misma pega y son tuyas: no las toco. ▶ 26-09 (`#775`): dos más, mías y
   aditivas, `products.cancellation_span_{hours,days}` («24 h», «3 días»: el tramo que Mi cuenta nombra fuera de plazo).
-
-### Para el carril de la WEB (emisor: plataforma, 2026-09-23) — dos huecos de contenido: MUDADOS el 29-09
-- A `specs/contenido-y-copys.md` §5, P7 (las fichas de las excursiones en en/fr y su «Horario» contradictorio), para la revisión
-  final del owner: la landing es hoy de este carril (`#681`) y la web no se mueve desde el 13-09.
-
-### Para el carril de la WEB (emisor: plataforma, 18→21-09; los CUATRO avisos) — RETIRADOS el 29-09
-- Su sujeto, la web vieja, se retiró en la T6f (`#843`) y la web no se mueve desde el 13-09 (la landing es de este carril,
-  `#681`). Lo accionable, mudado: la prosa con importes (`contenido-y-copys.md` §5, P8), `LandingAddonPresenter::unique()`
-  (ya en `DEUDA.md`, `#659`) y los mutantes viejos de `mutar-cabecera.py`/`mutar-bandas.py` (`DEUDA.md`). El texto, en git.
 
 ### Atendido
 - **SPA 02-10, su respuesta a mi aviso previo del B3**: la isla cuenta lo suyo por `JumpWeb.track` (su forma): hecho, arriba.

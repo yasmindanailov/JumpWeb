@@ -100,6 +100,9 @@ secreto y los códigos, cifrados (`encrypted`), ocultos (`Hidden`) y fuera de la
 vale para todo el panel o para nadie. Se enciende para el panel y `RequiresAdminAppAuthentication` ocupa el sitio de su
 middleware (`multiFactorAuthenticationRequiredMiddlewareName`) y lo exige solo a `admin`; va también en las trece rutas
 del personal (alias `panel_mfa`). `AppAuthentication::make()->recoverable()->codeWindow(2)` (±1 min; la de Filament, ±4).
+▶ Desde la Z6g·1 (`#867`, el owner) es `App\Filament\Auth\PanelAppAuthentication`: la de Filament, con su reto que continúa
+con la sexta cifra (`isla-y-landing-nueva.md` §4.27; `PanelAppAuthenticationTest`, arnés 11/11). `sonda-panel` ya entra solo
+rellenando (sin pulsar «Entrar»): adaptada y SIN correr; se pasa en la verificación final (`#768`).
 `User` implementa `HasAppAuthentication(+Recovery)`; migración con las dos columnas; `anonymize()` las borra (el censo de
 `RGPD-01`, `AnonymizeCoversEveryUserColumnTest`, lo exigió: SCRUBBED). `panel.admin_mfa` = `true`, **sin `.env`**: medido,
 con el requisito encendido **132** pruebas del panel caían (entran como administrador sin app); `TestCase` lo apaga y

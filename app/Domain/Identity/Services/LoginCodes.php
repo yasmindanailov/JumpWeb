@@ -35,6 +35,16 @@ class LoginCodes
     public const MAX_ATTEMPTS = 5;
 
     /**
+     * **«482-913»: el código tal como se ENSEÑA**, en el asunto y como titular de los tres correos que lo llevan: dos grupos
+     * de tres con guion, para leerlo en el aviso del móvil y dictarlo (el diseño, zip (6), correo 8; el owner, `#867`). Las
+     * casillas de la isla y del cajón pintan el mismo guion sin que se escriba, y {@see consume()} acepta las dos formas.
+     */
+    public static function shown(string $code): string
+    {
+        return substr($code, 0, 3).'-'.substr($code, 3);
+    }
+
+    /**
      * Emite un código nuevo para (correo, propósito) y anula los anteriores. Devuelve el código EN CLARO: su único
      * destino es el correo, y quien llama no lo guarda en ninguna parte.
      */

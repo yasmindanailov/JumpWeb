@@ -267,6 +267,26 @@ class SidebarBootTest extends ApiTestCase
     }
 
     /**
+     * **La pista del código dice QUIÉN lo manda** (Z6g·1 de `specs/isla-y-landing-nueva.md` §4.27, el zip (6)): el nombre
+     * del negocio, el remitente que se ve en la bandeja (`Setting::businessName()`, `ApplyBusinessSender`), ya puesto en la
+     * API y en el layout. Control: con otro nombre, otra pista; y nunca el `:remitente` sin sustituir.
+     */
+    public function test_the_code_hint_names_the_business_that_sends_it(): void
+    {
+        Setting::updateOrCreate(['key' => ShellSettings::KEY], ['value' => ShellSettings::ISLA, 'group' => 'theme']);
+        Setting::updateOrCreate(['key' => 'business.name'], ['value' => 'Parque Uno', 'group' => 'business']);
+
+        $pista = $this->getJson(self::ROOT.'/sidebar/boot?lang=es')->json('isla.compra.entrar.codigo_pista');
+        $this->assertSame('Te llega de Parque Uno. Si no lo ves, mira en el correo no deseado.', $pista);
+        $this->assertSame($pista, $this->layoutBoot($this->get('/')->assertOk())['isla']['compra']['entrar']['codigo_pista'] ?? null, 'el layout, igual');
+
+        Setting::updateOrCreate(['key' => 'business.name'], ['value' => 'Parque Dos']);
+        $otra = $this->getJson(self::ROOT.'/sidebar/boot?lang=fr')->json('isla.compra.entrar.codigo_pista');
+        $this->assertStringContainsString('Parque Dos', (string) $otra, 'control: el nombre es el del ajuste, no uno escrito');
+        $this->assertStringNotContainsString(':remitente', (string) $otra);
+    }
+
+    /**
      * **Los textos de MI CUENTA en la isla viajan SOLO con sesión** (T5a de `specs/isla-y-landing-nueva.md` §4.13,
      * `DECISIONES #773`): sin ella nadie los pinta —Mi cuenta abre Entrar, cuyos textos sí viajan para todos—, y
      * mandarlos a cada visitante sería pagar sus bytes en cada página (`PERF-02`). Con sesión llegan dentro del MISMO

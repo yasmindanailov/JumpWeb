@@ -5,6 +5,7 @@ namespace App\Http\Sidebar;
 use App\Domain\Content\Services\ShellSettings;
 use App\Domain\Identity\Services\GoogleAuth;
 use App\Domain\Payments\Services\MarcasDePago;
+use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Analytics\Experiments;
 use App\Domain\Platform\Services\SiteLocales;
 use Illuminate\Support\Arr;
@@ -305,8 +306,24 @@ final class SidebarBoot
             //   para cazar (`SidebarMountTest`).
             // ⚠️ **Sin `mi_cuenta`** (T5, `DECISIONES #773`): los textos de Mi cuenta solo los pinta quien ha
             //   entrado, así que viajan en {@see personal()}, con sesión — la misma regla que los del área del cajón.
-            ...(ShellSettings::shell() === ShellSettings::ISLA ? ['isla' => Arr::except(__('isla'), [self::ISLA_CON_SESION])] : []),
+            ...(ShellSettings::shell() === ShellSettings::ISLA ? ['isla' => self::islaTexts()] : []),
         ];
+    }
+
+    /**
+     * El grupo `isla` sin lo de Mi cuenta, con la pista del código ya puesta: dice QUIÉN lo manda (Z6g·1 de
+     * `isla-y-landing-nueva.md` §4.27, el zip (6)) —el remitente de los correos, `Setting::businessName()`, el nombre que se
+     * ve en la bandeja (`ApplyBusinessSender`)—. Viaja ya interpolada, como `terms_link` con su URL: la isla no sabe cómo
+     * se llama el negocio, y no hace falta mandarlo aparte para una frase.
+     *
+     * @return array<string, mixed>
+     */
+    private static function islaTexts(): array
+    {
+        $isla = Arr::except(__('isla'), [self::ISLA_CON_SESION]);
+        Arr::set($isla, 'compra.entrar.codigo_pista', __('isla.compra.entrar.codigo_pista', ['remitente' => Setting::businessName()]));
+
+        return $isla;
     }
 
     /**

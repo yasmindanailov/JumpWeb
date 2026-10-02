@@ -113,8 +113,11 @@ return [
     // Mi cuenta SIN sesión (T5a, `isla-y-landing-nueva.md` §4.13): crear la cuenta desde Entrar. Viaja con la isla a
     // todo visitante, porque es justo quien no ha entrado quien la ve (`paginas/mi-cuenta/datos.js`, su `propuesta`).
     'mi_cuenta_alta' => [
-        'primera_vez' => '¿Es tu primera vez?',
-        'crear_enlace' => 'Crea tu cuenta',
+        // Llegando de «Entra» con un correo sin cuenta, en la compra y en Mi cuenta (Z6g·1, el zip (6)): por qué está aquí, y
+        // la salida para quien esperaba entrar. Ya no hay «¿Es tu primera vez?» en Entra: el correo decide (`#849`).
+        'nueva' => 'No hay ninguna cuenta con :correo. La creas ahora, en un minuto.',
+        'otra' => '¿Ya tienes una con otro correo?',
+        'otra_enlace' => 'Entra con ese',
         'crear_titulo' => 'Crea tu cuenta',
         'crear_boton' => 'Crear mi cuenta',
         'creando' => 'Creando tu cuenta',
@@ -275,14 +278,15 @@ return [
             'google' => 'Continuar con Google',
             'apple' => 'Continuar con Apple',
             'existe' => 'Esta cuenta ya existe.',
-            // El acceso con código (A3, `#848`/`#849`): la cuenta que ya existe entra con el código que le llega al correo.
-            'codigo' => 'Código',
+            // El acceso con código (A3, `#848`/`#849`): la cuenta que ya existe entra con el código que le llega al correo. Sus
+            // seis casillas (Z6g·1) y, en «ya existe», lo que hace el código (el zip (6)).
+            'codigo' => 'Código de 6 cifras',
+            'existe_codigo' => 'Te hemos enviado un código a tu correo: con él entras y no rellenas nada más.',
             'codigo_enviado' => 'Te hemos enviado un código a :correo.',
             'codigo_otro_enviado' => 'Te hemos enviado otro código a :correo.',
             'otro_codigo' => 'Pedir otro código',
             // Recordar el dispositivo, SOLO si se pide (`#858`, el owner): la cookie persistente no está exenta de consentimiento.
             'recordar' => 'Mantener la sesión iniciada en este dispositivo',
-            'nueva' => 'Aún no tienes cuenta con ese correo: rellena tus datos y entras al momento.',
             'casilla' => 'He leído y acepto el descargo de responsabilidad.',
             'leer' => 'Leer el descargo de responsabilidad',
             'pista_descargo' => 'Es la hoja que firma todo el que entra a saltar: normas y responsabilidad. La firmas una vez y vale siempre.',
@@ -311,14 +315,24 @@ return [
         ],
         'entrar' => [
             'titular' => 'Entra',
-            // `#695` `[DECIDIDO owner]`: solo correo. El diseño decía «correo o teléfono»; el acceso no admite teléfono.
-            'texto' => 'Escribe tu correo.',
+            // Mi cuenta sin sesión (el zip (6), Z6g·1): el mismo camino entra o crea la cuenta; el correo decide (`#849`).
+            'titular_cuenta' => 'Entra o crea tu cuenta',
+            // `#695` `[DECIDIDO owner]`: solo correo. ⚠️ El diseño dice «Te enviamos un código a tu correo»; con `#849` un correo
+            // nuevo no recibe ninguno (va a crear la cuenta), así que se dice cómo se entra, con las palabras de Ajustes.
+            'texto' => 'Entras con un código a tu correo. Sin contraseña.',
+            'correo' => 'Tu correo',
             'continuar' => 'Continuar',
-            // Con el código (A3, `#849`): con el correo se pide; con el código, se entra.
+            // Con el código (A3, `#849`): con el correo se pide; con el código, se entra. Su paso, del zip (6) (Z6g·1): a
+            // quién se envió y QUIÉN lo manda —`:remitente` llega ya puesto: el nombre del negocio, el de la bandeja—, sin
+            // decir cuánto dura (`#812`).
+            'codigo_titular' => 'Revisa tu correo',
+            'codigo_texto' => 'Te hemos enviado un código de 6 cifras a :correo.',
+            'codigo_otro' => 'Te hemos enviado otro código a :correo. El anterior ya no vale.',
+            'codigo_pista' => 'Te llega de :remitente. Si no lo ves, mira en el correo no deseado.',
             'entrar' => 'Entrar',
             'enviando' => 'Enviando el código',
-            'google' => 'Entrar con Google',
-            'apple' => 'Entrar con Apple',
+            'google' => 'Continuar con Google',
+            'apple' => 'Continuar con Apple',
             'cargando' => 'Entrando',
         ],
         'pagar' => [
@@ -365,7 +379,7 @@ return [
             'fiesta_invitacion' => 'Comparte la invitación por WhatsApp: los padres confirman y firman ellos.',
             'fiesta_formulario' => 'Rellenar el formulario',
             'fiesta_compartir' => 'Compartir la invitación',
-            'cuenta' => 'Tu cuenta ya está creada con tu correo.',
+            'cuenta' => 'Tu cuenta ya está creada con tu correo. Para entrar, te enviamos un código: sin contraseña.',
             'mi_qr' => 'Ir a Mi QR',
             'otra' => 'Hacer otra reserva',
         ],

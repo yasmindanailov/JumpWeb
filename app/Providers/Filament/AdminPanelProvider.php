@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Domain\Content\Services\ThemeSettings;
 use App\Domain\Platform\Models\Setting;
+use App\Filament\Auth\PanelAppAuthentication;
 use App\Filament\Auth\PanelPassword;
 use App\Filament\Pages\AdminSettingsHub;
 use App\Filament\Pages\Dashboard;
@@ -16,7 +17,6 @@ use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetAdminLocale;
 use App\Http\PanelPath;
 use Filament\Actions\Action;
-use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -117,8 +117,8 @@ class AdminPanelProvider extends PanelProvider
             // El AUTHENTICATOR (P3, `#851`): obligatorio SOLO para los administradores. Filament decide «obligatorio» al
             // registrar las rutas, sin usuario: se activa para el panel y `RequiresAdminAppAuthentication` ocupa el sitio de
             // su middleware para exigirlo por rol. Recuperable (ocho códigos, con hash); ventana de ±1 min (la de Filament,
-            // ±4, es holgada para un reloj con NTP).
-            ->multiFactorAuthentication([AppAuthentication::make()->recoverable()->codeWindow(2)], isRequired: true)
+            // ±4, es holgada para un reloj con NTP). El de Filament, con su reto que continúa con la sexta cifra (`#867`).
+            ->multiFactorAuthentication([PanelAppAuthentication::make()->recoverable()->codeWindow(2)], isRequired: true)
             ->multiFactorAuthenticationRequiredMiddlewareName(RequiresAdminAppAuthentication::class)
             // Avatar LOCAL (data-URI) en vez del ui-avatars.com externo, que la CSP bloquea.
             ->defaultAvatarProvider(InitialsAvatarProvider::class)

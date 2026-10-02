@@ -156,7 +156,7 @@ por buzón) · **A5** la retirada y las contraseñas de §4.6 · **A6** staging:
   y gastar: HMAC con la clave de la app sobre propósito, correo y código; intento y uso CONDICIONADOS) ·
   `Services\EmailCodeLogin` (la puerta y verificar) · `Services\LoginGate` (el núcleo `guarded()` de `PasswordLogin`,
   movido tal cual: los dos cubos de `SEC-06` los comparten la contraseña y el código) · `Notifications\LoginCode` (el
-  código en el asunto y como titular, «482 913»). Límites: IP 10/min (todas las peticiones de la puerta); correo 1/min y
+  código en el asunto y como titular; «482-913» desde la Z6g·1, `LoginCodes::shown()`). Límites: IP 10/min (todas las peticiones de la puerta); correo 1/min y
   5/h (solo cuando se envía).
 - **El envío**: `sendNow()` dentro de `defer()`, tras la respuesta. La notificación sigue `ShouldQueue` (`PAY-14`): quien
   la notificara por el camino normal la encolaría. En local, el correo está en Mailpit a los ~300 ms de la petición; en

@@ -7,7 +7,13 @@ import { VISTA, ckDeCuenta, lineaProxima, vistaDeApertura } from './vista.js';
 const textos = {
     mi_cuenta: { titulo: 'Mi cuenta', qr: { titulo: 'Tu QR' } },
     mi_cuenta_alta: { crear_titulo: 'Crea tu cuenta', crear_boton: 'Crear mi cuenta', creando: 'Creando tu cuenta' },
-    compra: { entrar: { titular: 'Entra', continuar: 'Continuar', entrar: 'Entrar', cargando: 'Entrando', enviando: 'Enviando el código' }, datos: {} },
+    compra: {
+        entrar: {
+            titular: 'Entra', titular_cuenta: 'Entra o crea tu cuenta', codigo_titular: 'Revisa tu correo', continuar: 'Continuar', entrar: 'Entrar',
+            cargando: 'Entrando', enviando: 'Enviando el código',
+        },
+        datos: {},
+    },
 };
 const acciones = {
     cerrar: () => 'cerrar', alMenu: () => 'menu', aInicio: () => 'inicio', aEntrar: () => 'entrar', aCorreo: () => 'correo',
@@ -165,11 +171,14 @@ describe('la banda de cada vista', () => {
         assert.equal(ck({ vista: VISTA.ENTRAR, entrada: { paso: 'id', valor: 'a@b.es' }, ocupado: 'entrar' }).action.loading, 'Enviando el código');
     });
 
-    test('Entrar con el CÓDIGO: «Entrar» apagado hasta escribirlo, «Entrando» mientras, y la flecha vuelve al correo', () => {
+    test('Entrar con el CÓDIGO: «Entrar» apagado hasta las SEIS cifras, «Entrando» mientras, y la flecha vuelve al correo', () => {
         const sin = ck({ vista: VISTA.ENTRAR, entrada: { paso: 'codigo', valor: 'a@b.es', codigo: ' ' }, desde: 'menu' });
         assert.equal(sin.action.disabled, true, 'el correo lleno no basta: falta el código');
         assert.equal(sin.action.label, 'Entrar');
         assert.equal(sin.onBack(), 'correo', 'desde el menú también: primero, a corregir el correo');
+        assert.equal(sin.step, 'Revisa tu correo', 'el rótulo, el titular del paso (Z6g·1)');
+        assert.equal(ck({ vista: VISTA.ENTRAR, entrada: { paso: 'codigo', codigo: '12345' } }).action.disabled, true, 'cinco cifras no bastan');
+        assert.equal(ck({ vista: VISTA.ENTRAR, entrada: { paso: 'id', valor: 'a@b.es' } }).step, 'Entra o crea tu cuenta');
 
         const con = ck({ vista: VISTA.ENTRAR, entrada: { paso: 'codigo', valor: 'a@b.es', codigo: '123456' } });
         assert.equal(con.action.disabled, false);
