@@ -2336,7 +2336,7 @@ fuente de cada punto es su `readme.md` (la sección entre comillas) y su compone
 | Z6b ✅ | **Banners «Da la razón»**: con un botón de la página a la vista, la razón en vez del naranja (razón · vivo · espera · hecho), la compra que no corta al cerrar, el aviso a isla entera, `isla_razon`; y la frase de cada pieza (`#866`) | «La isla · banners, opción C (29-09)» | `explorations/isla-banners` (las razones de cada página) |
 | Z6c | **Experimento B3** contra la isla de hoy, con `Experiments` (asigna el servidor por visitante; `variante` en los eventos) y las frases cortas de cada página | «Experimento B3 (29-09)» | la cabecera sin botón en la primera pantalla del móvil |
 | Z6d ✅ `#872` | **La firma** de la cabecera (logo y nota de Google juntos, `--scrim-firma`), las garantías del móvil en lista, `Sticker` y `ProofChip`, el filo del gris (`--edge-subtle`) | «La cabecera · la firma», «Las garantías en el móvil», «Las pegatinas», «La prueba de los cuidados» | `VideoHero`, `ReassuranceBand`, `ProofList` |
-| Z6e | Cumpleaños **«Todo resuelto» (6a)** y **las dos horas repartidas** (90 min saltando y 30 de merienda: la cabecera, la pieza 3, el selector, las dudas, la hora extra) | «Rehecha el 29-09», «Las dos horas, repartidas (28-09)» | `IncludedList`, `AfterBookingPanel` |
+| Z6e ✅ `#873` | Cumpleaños **«Todo resuelto» (6a)** y **las dos horas repartidas** (90 min saltando y 30 de merienda: la cabecera, la pieza 3, el selector, las dudas, la hora extra) | «Rehecha el 29-09», «Las dos horas, repartidas (28-09)» | `IncludedList`, `AfterBookingPanel` |
 | Z6f ✅ | **El pie** rehecho: dos zonas y un filete, claro y en tarjeta | «Rehecho el 29-09: dos zonas y un solo filete» | `SiteFooter.jsx` (318) |
 | Z6g (·1 ✅ `#871`) | La compra y Mi cuenta: **`CodeInput`** (6 casillas, se comprueba con la sexta, «Reenviar» a los 30 s; ·1, abajo), **«Quién firma el descargo»** (Tus datos, Listo con «Añadir menores», Mi cuenta), el acceso en Ajustes; y lo que cambia en Normas, Visítanos, Colegios y Entradas | «La cuenta sin contraseña (30-09)», «Quién firma el descargo (30-09)» | `compra/entrar.jsx`, `compra.jsx` |
 
@@ -2746,7 +2746,7 @@ selector de planes (portada y Visítanos), en es/en/fr; en el producto, en el `p
 **En el árbol (02-10)**, instancia `b359e30`: lo de arriba, en es/en/fr y sin marcadores sueltos (la rama sin reparto, medida
 con un pack de 30 min); además, los regalos llevan también su icono por palabra (en local, calcetines y cono son REGALOS del
 pack, no «lo que incluye»: salen en su caja lima). `sonda-entradas` mira ya «90 minutos saltando» (la merienda, tecleada).
-Falta el ojo del owner en vivo.
+**✅ Con el visto bueno del owner en vivo (02-10).**
 
 ## 5. Impacto en invariantes
 

@@ -9,7 +9,7 @@
 > (el acceso con código: A1–A3 ✅ `#853`→`#857`; la A4 del SPA en `main`, `#813`; `/cookies` ✅ `#858`→`#860`; el zip (6) y
 > el reparto, `#861`; el SEO, `specs/seo.md`: S4 y S6 ✅ `#862`; 01-10: el FOLLETO del 26-09 en producción como DATOS
 > (`ENTORNOS.md` §6), los textos legales para el owner (`#863`→`#865`), **la Z6a de la isla ✅** y, por la noche, **la
-> Z6b ✅** (`#866`, `#867`) y sus tres usos de los banners ✅ (02-10), con su visto bueno; 02-10: **la A5 ✅**, **la Z6g·1 ✅**, **la Z6d ✅**, **la Z6f ✅** y **la Z6e 🟦**).
+> Z6b ✅** (`#866`, `#867`) y sus tres usos de los banners ✅ (02-10), con su visto bueno; 02-10: **la A5 ✅**, **la Z6g·1 ✅**, **la Z6d ✅**, **la Z6f ✅** y **la Z6e ✅**).
 > ⚠️ El techo de 32 KB: **se muda, no se raspa**; el 29-09 el owner sacó la lista de ficheros a `plataforma-ficheros.md`
 > (`#852`) y NO subió el techo. Si vuelve a apretar tres veces seguidas, llévaselo con la medida.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -59,10 +59,11 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
    §4.12; la migración de la A5d corre en producción SOLO con la v2.0.0, medida: `ENTORNOS.md` §6) · (2) ~~el acceso con
    código~~ ✅ 02-10 (la Z6g·1, `#871`, §4.27; ⚠️ cuatro sondas y `sonda-panel`, adaptadas o por adaptar, se pasan en la
    verificación final) · (3) los retoques del zip (6): ~~Z6d~~ ✅ 02-10 (la firma, la cabecera sin precio salvo Colegios,
-   garantías, chapas y el filo; `#872`) · ~~Z6f~~ ✅ 02-10 (el pie, sin decisión nueva; instancia `5b92bd8`) · **Z6e 🟦**
-   02-10, EN EL ÁRBOL y falta el ojo del owner en vivo (§4.27: «Lo que incluye» con pegatinas, la lista de invitados con la
-   invitación a un toque y las dos horas repartidas, 90 + 30, `#873`) · ❗ **ANTES, el defecto de `#771`** que midió el SPA
-   (su buzón, 02-10): una reseña copiada que Google enseñaba traducida sale como palabras del autor · **SIGUE** el resto de la Z6g, medido y escrito «al
+   garantías, chapas y el filo; `#872`) · ~~Z6f~~ ✅ 02-10 (el pie, sin decisión nueva; instancia `5b92bd8`) · ~~Z6e~~ ✅
+   02-10, con el visto bueno del owner (§4.27: «Lo que incluye» con pegatinas, la lista de invitados con la invitación a un
+   toque y las dos horas repartidas, 90 + 30, `#873`; instancia `b359e30`) · ❗ **ANTES, el defecto de `#771`** que midió el
+   SPA (su buzón, 02-10): una reseña copiada que Google enseñaba traducida saldría como palabras del autor (LATENTE: en la copia
+   curada, 1 de 191 y fuera de las 18 publicadas) · **SIGUE** el resto de la Z6g, medido y escrito «al
    detalle» en §4.27 ANTES de codificar contra el `git diff` del zip (6) en la instancia (`3b0956d`): «Quién firma el
    descargo», el acceso en Ajustes, Normas, Visítanos, Colegios y Entradas · (4) la isla en un
    móvil de verdad, **en STAGING al terminarlo todo**. `isla_razon` y la imagen de la INVITACIÓN son del SPA (`#861`). ⚠️ `sonda-cuenta` sigue sin pasarse tras la Z6b
