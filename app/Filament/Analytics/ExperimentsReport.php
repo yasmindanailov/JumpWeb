@@ -5,6 +5,7 @@ namespace App\Filament\Analytics;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Platform\Models\Experiment;
 use App\Domain\Platform\Services\Analytics\AttributionContext;
+use App\Domain\Platform\Services\Analytics\Device;
 use App\Domain\Platform\Services\Analytics\Reports\SqlJson;
 use App\Domain\Platform\Services\Analytics\Reports\Window;
 use Carbon\CarbonImmutable;
@@ -32,9 +33,24 @@ use Illuminate\Support\Facades\DB;
  *
  * **El intervalo** es Wilson al 95 %: con veinte expuestos y dos compras, un «10 %» a pelo engaña; el intervalo
  * (2,8 %–30,1 %) dice lo que de verdad se sabe. Dos variantes cuyos intervalos se solapan no se distinguen aún.
+ *
+ * **Un GESTO como medida principal** (la Z6c·3, `specs/analitica.md` §4.4; B3-2): el experimento de la isla (clave `isla`,
+ * la de `isla/medir.js`) se decide, por lo que fijó el owner, con `isla_accion` POR VISITA EN MÓVIL: por variante, las
+ * sesiones limpias de móvil expuestas (una con dos variantes no cuenta) y cuántas tocaron la isla en esa MISMA sesión y
+ * después de su primera exposición. La conversión de siempre queda de control.
  */
 final class ExperimentsReport
 {
+    /**
+     * Los experimentos con un gesto como medida principal: su clave → el hecho que cuenta y el dispositivo de la visita.
+     *
+     * @var array<string, array{event: string, device: string}>
+     */
+    public const GESTURES = ['isla' => ['event' => 'isla_accion', 'device' => Device::MOBILE]];
+
+    /** Cuántas sesiones por consulta al buscar sus gestos (un `IN` con miles de ids no cabe en todos los motores). */
+    private const CHUNK = 1000;
+
     public const CACHE_SECONDS = 300;
 
     /** z de la normal para el 95 % (dos colas). */
@@ -47,7 +63,7 @@ final class ExperimentsReport
     private const WEB_CHANNELS = [AttributionContext::CHANNEL_WEB, AttributionContext::CHANNEL_APP];
 
     /**
-     * @return array{experiments: list<array{key: string, name: string, variants: list<array{variant: string, exposed: int, converted: int, rate_bp: int, low_bp: int, high_bp: int}>, contaminated_visitors: int, contaminated_users: int}>}
+     * @return array{experiments: list<array{key: string, name: string, variants: list<array{variant: string, exposed: int, converted: int, rate_bp: int, low_bp: int, high_bp: int}>, contaminated_visitors: int, contaminated_users: int, gestures: array{event: string, device: string, variants: list<array{variant: string, visits: int, acted: int, rate_bp: int, low_bp: int, high_bp: int}>}|null}>}
      */
     public static function for(Window $window): array
     {
@@ -56,7 +72,8 @@ final class ExperimentsReport
 
     public static function cacheKey(Window $window): string
     {
-        return 'analytics:experiments:report:v1:'.$window->timezone.':'.$window->dateFrom().':'.$window->dateTo();
+        // `v2`: desde la Z6c·3 el informe lleva la medida por gesto; una entrada `v1` en la caché no la tendría.
+        return 'analytics:experiments:report:v2:'.$window->timezone.':'.$window->dateFrom().':'.$window->dateTo();
     }
 
     /** @return array{experiments: list<array<string, mixed>>} */
@@ -110,6 +127,7 @@ final class ExperimentsReport
                 'variants' => $list,
                 'contaminated_visitors' => $contaminated,
                 'contaminated_users' => (int) ($contaminatedUsers[$key] ?? 0),
+                'gestures' => isset(self::GESTURES[$key]) ? $this->gestures($window, (string) $key, self::GESTURES[$key]) : null,
             ];
         }
 
@@ -141,6 +159,76 @@ final class ExperimentsReport
             'low_bp' => (int) round(max(0.0, $centre - $half) * 10000),
             'high_bp' => (int) round(min(1.0, $centre + $half) * 10000),
         ];
+    }
+
+    /**
+     * **La medida por gesto** (B3-2): por variante, las VISITAS (sesiones) limpias del dispositivo expuestas a ella —una
+     * sesión con dos variantes no cuenta en ninguna— y cuántas tuvieron el gesto en esa misma sesión DESPUÉS de su primera
+     * exposición, con su Wilson. Todo dentro del periodo, por `received_at` como las exposiciones.
+     *
+     * @param  array{event: string, device: string}  $medida
+     * @return array{event: string, device: string, variants: list<array{variant: string, visits: int, acted: int, rate_bp: int, low_bp: int, high_bp: int}>}
+     */
+    private function gestures(Window $window, string $experimentKey, array $medida): array
+    {
+        $key = SqlJson::string('e.props', '$.key');
+        $variant = SqlJson::string('e.props', '$.variant');
+
+        $exposed = DB::table('analytics_events as e')
+            ->join('analytics_sessions as s', 's.id', '=', 'e.session_id')
+            ->where('e.name', 'experiment_exposed')
+            ->where('e.received_at', '>=', $window->utcFrom())
+            ->where('e.received_at', '<', $window->utcTo())
+            ->where('s.is_bot', false)
+            ->where('s.is_internal', false)
+            ->where('s.device', $medida['device'])
+            ->whereRaw("{$key} = ?", [$experimentKey])
+            ->whereRaw("{$variant} IS NOT NULL")
+            ->selectRaw("e.session_id, {$variant} AS v, MIN(e.received_at) AS first_at")
+            ->groupByRaw("e.session_id, {$variant}")
+            ->get();
+
+        // Por sesión: qué variantes vio y cuándo la primera vez.
+        $bySession = [];
+        foreach ($exposed as $row) {
+            $bySession[(int) $row->session_id][(string) $row->v] = CarbonImmutable::parse((string) $row->first_at, 'UTC');
+        }
+        $clean = array_filter($bySession, static fn (array $seen): bool => count($seen) === 1);
+
+        // El último gesto de cada una de esas sesiones en el periodo: si es posterior a la exposición, la tocó.
+        $lastGesture = [];
+        foreach (array_chunk(array_keys($clean), self::CHUNK) as $ids) {
+            $rows = DB::table('analytics_events')
+                ->where('name', $medida['event'])
+                ->whereIn('session_id', $ids)
+                ->where('received_at', '>=', $window->utcFrom())
+                ->where('received_at', '<', $window->utcTo())
+                ->selectRaw('session_id, MAX(received_at) AS last_at')
+                ->groupBy('session_id')
+                ->get();
+            foreach ($rows as $row) {
+                $lastGesture[(int) $row->session_id] = CarbonImmutable::parse((string) $row->last_at, 'UTC');
+            }
+        }
+
+        $variants = [];
+        foreach ($clean as $sessionId => $seen) {
+            $variantKey = (string) array_key_first($seen);
+            $variants[$variantKey] ??= ['visits' => 0, 'acted' => 0];
+            $variants[$variantKey]['visits']++;
+            $gesture = $lastGesture[$sessionId] ?? null;
+            if ($gesture !== null && $gesture->gte($seen[$variantKey])) {
+                $variants[$variantKey]['acted']++;
+            }
+        }
+        ksort($variants);
+
+        $list = [];
+        foreach ($variants as $variantKey => $counts) {
+            $list[] = ['variant' => (string) $variantKey] + $counts + self::wilson($counts['acted'], $counts['visits']);
+        }
+
+        return ['event' => $medida['event'], 'device' => $medida['device'], 'variants' => $list];
     }
 
     /**

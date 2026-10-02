@@ -58,6 +58,13 @@ final class Contract
         'consent_updated' => ['source' => self::CLIENT, 'props' => ['categories']],
         'batch_dropped' => ['source' => self::CLIENT, 'props' => ['count', 'status']],
         'experiment_exposed' => ['source' => self::CLIENT, 'props' => ['key', 'variant']],
+        // ── La isla (`isla/medir.js`; la Z6c·3, `specs/analitica.md` §4.4: la medida del experimento B3) ─────────
+        // Los gestos de la isla, con la `variante` que se veía. Sus valores son CONTENIDO de la página (la situación, la
+        // etiqueta del botón, el texto del banner), no de personas; la guarda de datos personales los vigila igual. ⚠️ Los
+        // nombres no siguen `objeto_verbo`: ya los emitía la isla, acordados en el buzón el 02-10, y se respetan.
+        'isla_accion' => ['source' => self::CLIENT, 'props' => ['situacion', 'etiqueta', 'tono', 'cara', 'pagina', 'variante']],
+        'isla_panel' => ['source' => self::CLIENT, 'props' => ['panel', 'situacion', 'variante']],
+        'isla_razon' => ['source' => self::CLIENT, 'props' => ['situacion', 'tipo', 'razon', 'pagina', 'variante']],
         // ── Los hechos del servidor: solo el `Recorder`, desde su fuente real (spec §4.1) ─────────
         'order_created' => ['source' => self::SERVER, 'props' => ['total_cents', 'channel']],
         'order_paid' => ['source' => self::SERVER, 'props' => ['paid_cents', 'total_cents', 'channel']],

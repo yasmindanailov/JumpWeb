@@ -116,6 +116,25 @@ class AnalyticsEventsTest extends ApiTestCase
     }
 
     /**
+     * **Los gestos de la isla llegan al libro** (la Z6c·3, `specs/analitica.md` §4.4; contrato 1.60.0): la isla manda
+     * `isla_accion`, `isla_panel` e `isla_razon` con las `props` del diseño, y hasta hoy el servidor los rechazaba uno a uno.
+     * Entran con las suyas; una de más se cae (el contrato las cierra por evento).
+     */
+    public function test_the_island_gestures_reach_the_book_with_their_props_and_no_others(): void
+    {
+        $accion = ['situacion' => 'hoy', 'etiqueta' => 'Reservar', 'tono' => 'naranja', 'cara' => 'barra', 'pagina' => 'entradas', 'variante' => 'b3'];
+        $this->lote([
+            $this->event('isla_accion', $accion + ['de_mas' => 'x'], '/entradas'),
+            $this->event('isla_panel', ['panel' => 'horario', 'situacion' => 'hoy', 'variante' => 'b3'], '/entradas'),
+            $this->event('isla_razon', ['situacion' => 'hoy', 'tipo' => 'razon', 'razon' => 'Quedan pocas plazas hoy', 'pagina' => 'entradas', 'variante' => 'hoy'], '/entradas'),
+        ])->assertStatus(202)->assertValidRequest()->assertExactJson(['accepted' => 3, 'rejected' => []]);
+
+        $this->assertSame($accion, AnalyticsEvent::query()->where('name', 'isla_accion')->sole()->props);
+        $this->assertSame('horario', AnalyticsEvent::query()->where('name', 'isla_panel')->sole()->props['panel'] ?? null);
+        $this->assertSame('Quedan pocas plazas hoy', AnalyticsEvent::query()->where('name', 'isla_razon')->sole()->props['razon'] ?? null);
+    }
+
+    /**
      * **Por evento, no por lote** (spec §7.1, producto-3): lo válido entra, lo inválido vuelve con su
      * índice y su motivo, y el `page_viewed` con la campaña sobrevive a un rótulo mal escrito a su lado.
      */

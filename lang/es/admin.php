@@ -798,7 +798,12 @@ return [
                 'exposed' => 'Expuestos',
                 'converted' => 'Compraron',
                 'rate' => 'Conversión (IC 95 %)',
+                // La Z6c·3 (`specs/analitica.md` §4.4): la medida principal de la isla, por visita en móvil.
+                'visits' => 'Visitas en móvil',
+                'acted' => 'Tocaron la isla',
+                'acted_rate' => 'Tasa (IC 95 %)',
             ],
+            'gestures_heading' => ':name · la medida: visitas en móvil que tocaron la isla después de verla (dos semanas como mínimo antes de decidir)',
         ],
         // Los segmentos (`specs/analitica.md` §4.6, T4b): cuántas personas hay en cada grupo, desde los PEDIDOS y el libro.
         // Solo recuentos: la exportación se retiró con la TP·3b (`#793`, el público es anónimo).

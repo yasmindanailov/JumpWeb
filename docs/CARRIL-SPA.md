@@ -398,6 +398,13 @@ ver el turno de `#910` al refrescar), que `OJO=desmontar` quita; y las palabras 
 «Irene» y «equipo», que se quedan (`firstOrCreate`: no pisa lo que escriba el owner). ⚠️ El Perfil de Empresa de la local
 tiene las 7 reseñas FALSAS del doble de la T2, y va delante: con «monitor» sale la suya («Celebramos aquí…», sin autor).
 
+(28) **De la Z6c·3, la medida del B3 (02-10, `analitica.md` §4.4)**: `ojo-b3.php` (en la carpeta de auditoría) crea el
+experimento `isla` («Isla B3 (prueba)») **APAGADO** —encendido, la landing local repartiría el B3; el informe cuenta las
+exposiciones igual— y 103 visitas de PRUEBA del 29-09 al 01-10 (`entry_route = '/ojo-b3'`): en móvil, hoy 40 (9 tocaron la
+isla) y b3 40 (16); 20 de escritorio y 3 con las dos variantes, que no cuentan. Se ven en «Analítica → Marketing», con
+«Esta semana». `OJO=desmontar` quita las visitas, el experimento de prueba y la caché del informe. **Desmontado el 02-10**
+tras el visto bueno (medido: 0 visitas de prueba, 0 experimentos `isla`, 0 `isla_accion`).
+
 ## 9 · La foto vieja del carril (mudada VERBATIM de `carriles/spa.md` el 2026-09-29, su techo)
 
 - ✅ **27-09, TODO EN `main` Y APROBADO POR EL OWNER**: **F7** (`#752`, la exención de quien cumple: la lista y su

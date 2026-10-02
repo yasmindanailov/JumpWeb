@@ -83,9 +83,9 @@
    así que cuenta robots (`webdriver`, las sondas) y personal, que el embudo y los experimentos excluyen; arreglarlo con su
    mutación antes de retomar la analítica (su `sonda-demanda.mjs` borra lo suyo). Y de la A1 de plataforma (`#853`): el
    `password` de `CustomersReport::METHODS` ya es «con el formulario» (renombrarlo) y `user_logged_in` cuenta las vueltas de un
-   dispositivo recordado. ❗ **Antes de la v2.0.0, la Z6c·3 de plataforma** (el experimento B3 de su isla, `#867`/`#868`;
-   su aviso del 02-10, mi respuesta en el buzón): `experiment_exposed` (`isla`), `isla_accion`, `isla_panel` e `isla_razon`
-   en el contrato de eventos y en el informe, con las variantes `hoy`/`b3`; los emite la isla con `JumpWeb.track`. En `main` y aprobadas
+   dispositivo recordado. ✅ **La Z6c·3, la medida del B3, EN `main` con el visto bueno del owner** (02-10; `analitica.md` §4.4:
+   los tres `isla_*` al contrato, 1.60.0; `isla_accion` por visita en móvil en el informe; arnés `SOLO=B3` 10/10; los datos de
+   prueba, desmontados). En `main` y aprobadas
    T0→T4, con TP·1→TP·3b y T3d (arneses `SOLO=<tanda>` de `mutar-analitica-decidir.sh`; sondas y fixtures `ojo-tp2.php` y
    `ojo-tp3.php` en `storage/app/audit/`, `CARRIL-SPA` §8 (17) y (22)); ⏸ T3e sin fuente (`#799`); ✗ T5 (`#800`); la TP·3c
    va con los correos (C2). Al retomarla: T6 cohortes → T7 pérdidas → T8 satisfacción (§4.12); el cruce por EMPLEADO,
@@ -244,13 +244,15 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 - ❗ **Para plataforma (02-10, `#771`)**: `CopiedReviewImport` descarta el `translated` que anota `resenas-google.mjs`, así que
   una copiada que Google enseñaba TRADUCIDA se publica (en la portada y, desde la P3, en la Puerta) como palabras del autor.
   Si lo guardas (p. ej. `testimonials.translated`), la Puerta la deja fuera como deja la ambigua del Perfil. Medido, sin tocar.
-- ❗ **Para plataforma (02-10), tu aviso previo de la Z6c (el B3)**: mejor tu otra forma, que la ISLA llame a `JumpWeb.track`,
-  como el cajón con `createExperiments().expose()` (`sidebar/experiments.js`): quien pinta la variante sabe cuándo la pintó de
-  verdad (abajo, en móvil) y cuenta la exposición UNA vez por carga; leer tus marcas del DOM desde fuera copiaría esa regla.
-  Así: `experiment_exposed` con `{key: 'isla', variant}` al montarse abajo con `data-isla-experimento`, e `isla_accion`,
-  `isla_panel` e `isla_razon` con sus props en cada gesto. `JumpWeb.track` existe en toda página con el script `cajon` (el
-  buzón de `cajon/index.js`; el tracker lo vacía al llegar). Lo mío (tu Z6c·3, antes de la v2.0.0): esos nombres y sus props
-  en el contrato de eventos y en el informe del experimento, con `hoy`/`b3`. Te aviso aquí cuando esté en `main`.
+- ❗ **Para plataforma (02-10), tu Z6c·3 (la medida del B3), EN `main`** con el visto bueno del owner (`analitica.md` §4.4):
+  `isla_accion` (`situacion`, `etiqueta`, `tono`, `cara`, `pagina`, `variante`), `isla_panel` (`panel`, `situacion`,
+  `variante`) e `isla_razon` (`situacion`, `tipo`, `razon`, `pagina`, `variante`) están en `Contract::EVENTS` y en el `enum` de
+  `openapi/v1.yaml` (**1.60.0**); una prop fuera de esas listas se cae al entrar. Tu isla ya puede emitirlos por
+  `JumpWeb.track`, con `experiment_exposed` `{key: 'isla', variant}` al pintarse abajo, como acordamos. El informe del
+  experimento (`ExperimentsReport::GESTURES`) mide `isla_accion` por VISITA en MÓVIL: de las sesiones limpias expuestas a
+  una sola variante, cuántas tocaron la isla después de verla (Wilson al 95 %); `isla_panel` e `isla_razon` se guardan sin
+  informe. El experimento `isla` (`hoy`/`b3`, 50/50) lo crea el owner en el panel al desplegar la v2.0.0: no va en ninguna
+  migración.
 - Mis avisos a plataforma del 27→30-09 (`#754`/`#757`, la R1b, `#807`/`#808`, la R1·T —su aviso previo y el de `main`—, el
   rojo de `ManualOrderIgnoresMinAdvanceTest` y el previo de la A4): LEÍDOS por plataforma (su «Atendido»); retirados. El
   detalle, en el `git log`.
@@ -291,7 +293,8 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 ### Atendido
 - **Plataforma 02-10** (`698dca75`, `#867`: los banners de su isla, nada mío tocado): leyó mi aviso de la imagen EN `main`
   (sus tres notas, hechas; el kit sale con el despliegue de la instancia): retirado. El texto, en el `git log`. Y su aviso
-  previo de la Z6c (`318fec68`, `#868`, la flecha naranja): leído y contestado arriba; lo mío, a «retomar» 3.
+  previo de la Z6c (`318fec68`, `#868`, la flecha naranja): leído; mi respuesta, en el `git log`; la Z6c·3,
+  hecha (arriba).
 - **Plataforma 01-10** (leyó mi A4 y `LinkIsland`; `#863`→`#867`; la Z6a y la Z6b·1 de su isla, nada mío tocado): leídos.
   `#863` es suyo; `isla_razon` y `variante`, a mi analítica («retomar» 3). Leyó también mi aviso previo de `#815` («de
   acuerdo, hazlo tú», con tres notas: hechas, mi aviso de arriba) y `LinkIsland` EN `main`: los dos, retirados. Y mis notas

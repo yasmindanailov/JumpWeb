@@ -53,6 +53,27 @@ class ExperimentsWidget extends Widget
                 ], $experiment['variants']),
                 'wide' => true,
             ];
+
+            // La medida principal de un experimento con gesto (la Z6c·3, B3-3): la del B3, por visita en móvil; la
+            // conversión de arriba queda de control.
+            if (($experiment['gestures'] ?? null) !== null) {
+                $tables[] = [
+                    'heading' => __('admin.analytics.experiments.gestures_heading', ['name' => $experiment['name']]),
+                    'columns' => [
+                        __('admin.analytics.experiments.col.variant'),
+                        __('admin.analytics.experiments.col.visits'),
+                        __('admin.analytics.experiments.col.acted'),
+                        __('admin.analytics.experiments.col.acted_rate'),
+                    ],
+                    'rows' => array_map(static fn (array $v): array => [
+                        $v['variant'],
+                        (string) $v['visits'],
+                        (string) $v['acted'],
+                        self::percent($v['rate_bp']).' ('.self::percent($v['low_bp']).'–'.self::percent($v['high_bp']).')',
+                    ], $experiment['gestures']['variants']),
+                    'wide' => true,
+                ];
+            }
         }
 
         if ($tables === []) {

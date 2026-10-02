@@ -736,7 +736,11 @@ return [
                 'exposed' => '曝光',
                 'converted' => '购买',
                 'rate' => '转化率（95% 置信区间）',
+                'visits' => '手机访问',
+                'acted' => '点击了浮岛',
+                'acted_rate' => '比率（95% 置信区间）',
             ],
+            'gestures_heading' => ':name · 指标：看到后点击了浮岛的手机访问（决定前至少两周）',
         ],
         'segments' => [
             'heading' => '客户分群',

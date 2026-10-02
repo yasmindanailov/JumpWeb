@@ -52,16 +52,37 @@ class ExperimentsReportTest extends TestCase
     }
 
     /** Una sesión limpia del libro (`session()` es de `TestCase`: el nombre está cogido). */
-    private function visit(?string $visitor = null, bool $bot = false): AnalyticsSession
+    private function visit(?string $visitor = null, bool $bot = false, ?string $device = null): AnalyticsSession
     {
         return AnalyticsSession::create([
             'visitor_id' => $visitor ?? Visitor::mint(),
-            'started_at' => now()->subHours(3),
+            'started_at' => now()->subHours(4),
             'last_seen_at' => now()->subHours(2),
             'surface' => 'web',
+            'device' => $device,
             'is_bot' => $bot,
             'is_internal' => false,
         ]);
+    }
+
+    /** Un toque a la isla en una sesión (la Z6c·3). */
+    private function gesture(AnalyticsSession $session, Carbon $at): void
+    {
+        AnalyticsEvent::create([
+            'event_id' => Visitor::mint(),
+            'session_id' => $session->id,
+            'visitor_id' => $session->visitor_id,
+            'name' => 'isla_accion',
+            'route' => '/',
+            'props' => ['situacion' => 'hoy', 'cara' => 'barra', 'variante' => 'b3'],
+            'occurred_at' => $at,
+            'received_at' => $at,
+        ]);
+    }
+
+    private function island(): Experiment
+    {
+        return Experiment::create(['key' => 'isla', 'name' => 'Isla B3', 'active' => true, 'variants' => [['key' => 'hoy', 'weight' => 1], ['key' => 'b3', 'weight' => 1]]]);
     }
 
     private function exposure(AnalyticsSession $session, string $key, string $variant, ?Carbon $at = null, ?int $userId = null): void
@@ -188,6 +209,71 @@ class ExperimentsReportTest extends TestCase
         $this->exposure($this->visit(), 'shell', 'isla');
         $this->assertSame([], ExperimentsReport::for($this->today())['experiments'], 'cinco minutos de caché por ventana');
         $this->assertCount(1, (new ExperimentsReport)->compute($this->today())['experiments']);
+    }
+
+    /**
+     * LA MEDIDA DEL B3 (la Z6c·3, `specs/analitica.md` §4.4, B3-2): por variante, las visitas en MÓVIL expuestas y cuántas
+     * tocaron la isla en esa MISMA visita y DESPUÉS de verla. Cada regla con su caso: otro dispositivo, un robot, la visita con
+     * dos variantes, el toque de antes y el de otra visita del mismo visitante no cuentan; otro experimento no tiene esta medida.
+     */
+    public function test_the_island_is_measured_by_mobile_visits_that_touched_it_after_seeing_it(): void
+    {
+        $this->island();
+        $this->shell();
+
+        $toco = $this->visit(device: 'mobile');                     // hoy: la vio y la tocó después
+        $this->exposure($toco, 'isla', 'hoy', now()->subHours(2));
+        $this->gesture($toco, now()->subHour());
+        $this->exposure($this->visit(device: 'mobile'), 'isla', 'hoy'); // hoy: la vio y no la tocó
+
+        $antes = $this->visit(device: 'mobile');                    // b3: la tocó ANTES de verla
+        $this->gesture($antes, now()->subHours(3));
+        $this->exposure($antes, 'isla', 'b3', now()->subHours(2));
+        $b3 = $this->visit(device: 'mobile');                       // b3: la vio y la tocó
+        $this->exposure($b3, 'isla', 'b3', now()->subHours(2));
+        $this->gesture($b3, now()->subHour());
+        $otraVisita = $this->visit(device: 'mobile');               // b3: la tocó, pero en OTRA visita suya
+        $this->exposure($otraVisita, 'isla', 'b3', now()->subHours(2));
+        $this->gesture($this->visit($otraVisita->visitor_id, device: 'mobile'), now()->subHour());
+
+        $escritorio = $this->visit(device: 'desktop');              // otro dispositivo: fuera
+        $this->exposure($escritorio, 'isla', 'b3');
+        $this->gesture($escritorio, now()->subHour());
+        $robot = $this->visit(bot: true, device: 'mobile');         // un robot: fuera
+        $this->exposure($robot, 'isla', 'b3');
+        $this->gesture($robot, now()->subHour());
+        $dos = $this->visit(device: 'mobile');                      // dos variantes en la misma visita: fuera de las dos
+        $this->exposure($dos, 'isla', 'hoy');
+        $this->exposure($dos, 'isla', 'b3');
+        $this->gesture($dos, now()->subHour());
+        $this->exposure($this->visit(device: 'mobile'), 'shell', 'isla'); // otro experimento
+
+        $report = (new ExperimentsReport)->compute($this->today());
+        $isla = collect($report['experiments'])->firstWhere('key', 'isla');
+
+        $this->assertNull(collect($report['experiments'])->firstWhere('key', 'shell')['gestures'], 'otro experimento no tiene esta medida');
+        $this->assertSame(['isla_accion', 'mobile'], [$isla['gestures']['event'], $isla['gestures']['device']]);
+        $this->assertSame([
+            ['variant' => 'b3', 'visits' => 3, 'acted' => 1] + ExperimentsReport::wilson(1, 3),
+            ['variant' => 'hoy', 'visits' => 2, 'acted' => 1] + ExperimentsReport::wilson(1, 2),
+        ], $isla['gestures']['variants']);
+    }
+
+    public function test_the_widget_paints_the_island_measure_under_its_experiment(): void
+    {
+        $this->island();
+        $visita = $this->visit(device: 'mobile');
+        $this->exposure($visita, 'isla', 'b3', now()->subHours(2));
+        $this->gesture($visita, now()->subHour());
+
+        $admin = User::factory()->create();
+        $admin->roles()->sync([Role::where('name', 'admin')->value('id')]);
+
+        Livewire::actingAs($admin)
+            ->test(ExperimentsWidget::class)
+            ->assertSee('Isla B3 · la medida: visitas en móvil que tocaron la isla después de verla (dos semanas como mínimo antes de decidir)')
+            ->assertSee('Visitas en móvil')
+            ->assertSee('Tocaron la isla');
     }
 
     public function test_the_widget_paints_each_experiment_with_its_interval(): void

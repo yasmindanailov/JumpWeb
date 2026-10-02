@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.59.0
+  version: 1.60.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -4722,8 +4722,8 @@ components:
                 example: 01J8Z0K2QW7X3Y4M5N6P7R8S9T
               name:
                 type: string
-                description: 'Un nombre de CLIENTE del contrato de eventos. Un hecho de servidor se rechaza.'
-                enum: [page_viewed, section_viewed, call_clicked, whatsapp_clicked, map_clicked, contact_form_started, drawer_opened, step_entered, product_chosen, date_chosen, availability_missing, time_chosen, line_added, line_removed, identify_started, identified, email_verification_pending, pay_started, drawer_closed, request_failed, client_error, consent_shown, consent_updated, batch_dropped, experiment_exposed]
+                description: 'Un nombre de CLIENTE del contrato de eventos. Un hecho de servidor se rechaza. Desde 1.60.0, los gestos de la isla (`isla_*`, la medida del experimento B3).'
+                enum: [page_viewed, section_viewed, call_clicked, whatsapp_clicked, map_clicked, contact_form_started, drawer_opened, step_entered, product_chosen, date_chosen, availability_missing, time_chosen, line_added, line_removed, identify_started, identified, email_verification_pending, pay_started, drawer_closed, request_failed, client_error, consent_shown, consent_updated, batch_dropped, experiment_exposed, isla_accion, isla_panel, isla_razon]
               route:
                 type: string
                 description: 'La ruta como PATRÓN: sin query ni tokens. El servidor la vuelve a normalizar.'

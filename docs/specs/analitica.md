@@ -491,6 +491,55 @@ instalación en `/sidebar/boot`, la variante por visitante en `/sidebar/session`
 compra, y `carcasa.js` es del carril de la plataforma (por buzón; `isla-y-landing-nueva.md`); espera a que la isla
 compre entera.
 
+#### La Z6c·3 al detalle: la medida del experimento B3 de la isla (medido el 02-10, antes del código)
+
+El B3 es el primer experimento real (`isla-y-landing-nueva.md` §4.27, `#867`/`#868`): la isla de hoy contra la del B3, con
+el reparto 50/50 por visitante y **la medida que fijó el owner: `isla_accion` por visita en MÓVIL, con las reservas
+terminadas de control y dos semanas como mínimo** (§4.27; la `#867` que cita no lo dice: se apunta aquí). Lo crea el owner
+en el panel al desplegar la v2.0.0 (clave `isla`, variantes `hoy` y `b3`).
+
+**Lo medido.**
+- **La exposición ya entra**: `experiment_exposed` (`key`, `variant`) está en el contrato desde la T5a, y la isla la manda una
+  vez por carga, al montarse abajo y solo con variante asignada (`isla/medir.js`, `Http\Instancia\VarianteDeIsla`).
+- **Los gestos se pierden**: `isla_accion` (`situacion`, `etiqueta`, `tono`, `cara`, `pagina`, `variante`), `isla_panel`
+  (`panel`, `situacion`, `variante`) e `isla_razon` (`situacion`, `tipo`, `razon`, `pagina`, `variante`) no están en
+  `Contract::EVENTS`: el servidor los descarta uno a uno (202, sin error en la consola: lo dice plataforma en su buzón).
+  Sus valores son CONTENIDO de la página (la situación, la etiqueta del botón, el texto del banner), no de personas; la
+  guarda de datos personales del contrato los vigila igual.
+- **El informe ya tiene el control**: `ExperimentsReport` da, por variante, los visitantes expuestos y los que compraron
+  DESPUÉS (por el sello del pedido), con Wilson al 95 %, y los contaminados. Le falta la medida principal.
+- **«Por visita en móvil» se puede contar sin tocar tablas**: cada sesión guarda su `device` (`mobile`|`tablet`|`desktop`,
+  del agente al ingerir: `Analytics\Device`), y la sesión es la visita. Los nombres no siguen el `objeto_verbo` del
+  contrato, pero ya los emite la isla (se acordaron así en el buzón): se respetan.
+- **Añadir eventos de cliente cambia el `enum` de `openapi/v1.yaml`** (`AnalyticsContractTest` lo compara): sube el contrato.
+
+**Lo que se decide aquí** (contra el objetivo del owner: decidir el B3 con datos limpios, sin inventar medidas):
+- **B3-1 · Los tres gestos, al contrato** como hechos de CLIENTE con sus `props` (las que manda la isla, ni una más); el
+  contrato, a **1.60.0** (solo añade).
+- **B3-2 · La medida principal, en el informe**: para el experimento de la isla (clave `isla`, la de `isla/medir.js`), por
+  variante, las **visitas en móvil expuestas** (sesiones limpias —ni robot ni internas— con `device = mobile` y una
+  exposición a esa variante; una sesión con dos variantes no cuenta) y **cuántas tocaron la isla** (con un `isla_accion` en
+  esa MISMA sesión y después de su primera exposición), con Wilson al 95 %. El control, la conversión de siempre.
+- **B3-3 · En el widget**, bajo la tabla de conversión del experimento, la suya: «Visitas en móvil · Tocaron la isla ·
+  Tasa», y en la nota, «dos semanas como mínimo antes de decidir» (el owner).
+- **B3-4 · `isla_panel` e `isla_razon` entran en el libro pero no en el informe**: no son la medida que decidió el owner;
+  quedan para leerlas cuando haga falta (`analytics_events`), sin otra tabla.
+
+**Lo que cambia**: `Contract::EVENTS` (+3), `openapi/v1.yaml` (el `enum` y 1.60.0), `ExperimentsReport` (la medida por visita
+en móvil; su caché, a `v2`) y `ExperimentsWidget` (su tabla), con sus textos `es` y `zh_CN`. **Lo que no**: la isla, la
+asignación, la exposición, la ingesta ni el libro. **Pruebas, cada guarda con su mutación**: los tres eventos entran por
+`/events` con sus `props` (y una de más se cae); la medida (solo móvil, solo sesiones limpias, el toque en la misma sesión y
+después de la exposición, la sesión con dos variantes fuera, Wilson); el widget con su tabla y su nota.
+
+**Z6c·3 ✅ EN `main`** (02-10, con el visto bueno del owner sobre `ojo-b3.php` en el panel; los datos de prueba, desmontados
+y medidos a cero): `Contract::EVENTS` +3 y el contrato en **1.60.0**;
+`ExperimentsReport::GESTURES` (`isla` → `isla_accion` en `mobile`) y su `gestures()` (las sesiones, por trozos de 1.000 para
+el `IN`), la caché a `v2`; la tabla del widget con su título («dos semanas como mínimo antes de decidir»). Pruebas:
+`AnalyticsEventsTest` +1 (los tres gestos entran, la prop de más se cae) y `ExperimentsReportTest` +2 (la medida, con un caso
+por regla, y el widget). Arnés `mutar-analitica-decidir.sh`, la tanda nueva `SOLO=B3`: **10/10** con su control. ⚠️ **Tras el
+arnés, los dos bundles** (`npm run build` y `build:ssr`): restaura con `touch` ficheros del cajón y `SidebarDomContractTest`
+dio 38 rojos con el bundle desfasado (medido: ninguno cambió de contenido). Para el ojo, `ojo-b3.php` (`CARRIL-SPA` §8 (28)).
+
 ### 4.5 El cuadro de mando en el panel (T2) — ampliado el 24-09 (`#735`, carril del SPA)
 
 ▶ **27-09, `[DECIDIDO owner]` `#755`**: el cuadro se REORDENA en siete pestañas por pregunta, con una anatomía común de

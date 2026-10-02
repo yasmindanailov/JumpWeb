@@ -24,6 +24,7 @@ declare -A FILTRO_DE=(
     [TP3]='AudienceReportTest|SegmentsReportTest|AnalyticsPageTest|AccessI18nParityTest'
     [T3d]='ExplainerTest|MetricTest|ChangesTest|AnalyticsPageTest'
     [T4]='BookedReportTest|ExplainerTest|AnalyticsTabsTest|AnalyticsCensusTest'
+    [B3]='ExperimentsReportTest|AnalyticsEventsTest|AnalyticsContractTest'
 )
 SOLO="${SOLO:-}"
 SECCION=''
@@ -100,6 +101,9 @@ FICHEROS=(
     app/Filament/Analytics/BookedReport.php
     app/Filament/Analytics/Metrics/BookedMetrics.php
     app/Filament/Widgets/Analytics/BookedChart.php
+    app/Filament/Analytics/ExperimentsReport.php
+    app/Filament/Widgets/Analytics/ExperimentsWidget.php
+    app/Domain/Platform/Services/Analytics/Contract.php
 )
 # La copia de cada fichero, por su RUTA entera (T3a): por su nombre, `lang/es/admin.php` y `lang/zh_CN/admin.php` chocaban.
 copia() { echo "$TMP/$(echo "$1" | tr '/' '_')"; }
@@ -1215,6 +1219,44 @@ if [[ -z "$SOLO" || "$SOLO" == T4 ]]; then
       'Las semanas del gráfico: la de hoy y las 12 siguientes (~90 días).' \
       'Las semanas del gráfico: la de hoy y las doce siguientes (~90 días).'
 fi
+
+# ── B3 · LA MEDIDA DEL EXPERIMENTO DE LA ISLA (la Z6c·3, `specs/analitica.md` §4.4): `isla_accion` por visita en móvil ─────
+SECCION=B3
+ER=app/Filament/Analytics/ExperimentsReport.php
+EW=app/Filament/Widgets/Analytics/ExperimentsWidget.php
+CT=app/Domain/Platform/Services/Analytics/Contract.php
+mutar "B3 · una visita de otro dispositivo cuenta" "$ER" \
+  "            ->where('s.device', \$medida['device'])
+" ""
+mutar "B3 · los robots y el tráfico interno cuentan en la medida" "$ER" \
+  "            ->where('s.is_bot', false)
+            ->where('s.is_internal', false)
+            ->where('s.device', \$medida['device'])" \
+  "            ->where('s.device', \$medida['device'])"
+mutar "B3 · la visita con dos variantes cuenta" "$ER" \
+  '$clean = array_filter($bySession, static fn (array $seen): bool => count($seen) === 1);' \
+  '$clean = $bySession;'
+mutar "B3 · un toque de antes de verla cuenta" "$ER" \
+  'if ($gesture !== null && $gesture->gte($seen[$variantKey])) {' \
+  'if ($gesture !== null) {'
+mutar "B3 · la isla sin su medida" "$ER" \
+  "public const GESTURES = ['isla' => ['event' => 'isla_accion', 'device' => Device::MOBILE]];" \
+  'public const GESTURES = [];'
+mutar "B3 · cuenta otro gesto" "$ER" \
+  "['isla' => ['event' => 'isla_accion'," \
+  "['isla' => ['event' => 'isla_panel',"
+mutar "B3 · la tasa sin su intervalo" "$ER" \
+  "self::wilson(\$counts['acted'], \$counts['visits'])" \
+  "self::wilson(0, \$counts['visits'])"
+mutar "B3 · el widget sin la tabla de la medida" "$EW" \
+  "if ((\$experiment['gestures'] ?? null) !== null) {" \
+  'if (false) {'
+mutar "B3 · el contrato sin el toque de la isla" "$CT" \
+  "        'isla_accion' => ['source' => self::CLIENT, 'props' => ['situacion', 'etiqueta', 'tono', 'cara', 'pagina', 'variante']],
+" ""
+mutar "B3 · el toque admite una prop de más" "$CT" \
+  "'cara', 'pagina', 'variante']]," \
+  "'cara', 'pagina', 'variante', 'de_mas']],"
 
 # ── El CONTROL: tocar un comentario no puede poner nada en rojo ─────────────────────────────────
 control "un comentario de Window" "$W" \
