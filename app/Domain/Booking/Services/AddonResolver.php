@@ -3,6 +3,7 @@
 namespace App\Domain\Booking\Services;
 
 use App\Domain\Booking\Exceptions\ReservationException;
+use App\Domain\Booking\Models\AddonChoiceGroup;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\ProductAddon;
 use App\Domain\Booking\Models\TicketType;
@@ -49,20 +50,49 @@ class AddonResolver
      * ⚠️ La fase `booking` NO se re-valida: los 29 enganches de hoy tienen que quedar **idénticos por
      * construcción**, que es el criterio de éxito 1 de la spec.
      *
+     * ▶ Los GRUPOS DE OPCIONES (`#914`): una opción incluida, por niño o de grupo solo es sana si su grupo tiene fila en
+     * `addon_choice_groups`. Esas filas se leen aquí UNA vez para todas las opciones —y solo si alguna de la lista lleva
+     * grupo—: preguntarlo por opción pagaría una consulta por complemento en la página de todo cliente.
+     *
      * @param  Collection<int, TicketType>  $offered
      * @return Collection<int, TicketType>
      */
     public static function forStage(Collection $offered, string $stage): Collection
     {
-        return $offered->filter(function (TicketType $addon) use ($stage): bool {
+        $groups = $stage === ProductAddon::STAGE_POSTFORM ? self::postFormGroupKeys($offered) : [];
+
+        return $offered->filter(function (TicketType $addon) use ($stage, $groups): bool {
             $pivot = $addon->pivot;
             if (! $pivot instanceof ProductAddon || $pivot->saleStage() !== $stage) {
                 return false;
             }
+            if ($stage !== ProductAddon::STAGE_POSTFORM) {
+                return true;
+            }
+            $group = $pivot->choiceGroup();
 
-            return $stage !== ProductAddon::STAGE_POSTFORM
-                || ProductAddon::postFormProblem($pivot, $addon) === null;
+            return ProductAddon::postFormProblem($pivot, $addon, $group !== null && isset($groups[(int) $pivot->product_id][$group])) === null;
         })->values();
+    }
+
+    /**
+     * Las claves de grupo con fila de los productos de estas opciones de venta posterior (`#914`), o nada sin consultar si
+     * ninguna lleva grupo.
+     *
+     * @param  Collection<int, TicketType>  $offered
+     * @return array<int, array<string, true>>
+     */
+    private static function postFormGroupKeys(Collection $offered): array
+    {
+        $productIds = [];
+        foreach ($offered as $addon) {
+            $pivot = $addon->addonPivot();
+            if ($pivot !== null && $pivot->isPostFormStage() && $pivot->choiceGroup() !== null) {
+                $productIds[(int) $pivot->product_id] = true;
+            }
+        }
+
+        return AddonChoiceGroup::keysByProduct(array_keys($productIds));
     }
 
     /**

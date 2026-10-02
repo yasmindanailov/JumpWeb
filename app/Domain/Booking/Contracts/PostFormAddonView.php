@@ -44,7 +44,7 @@ final readonly class PostFormAddonView
         public int $quantity,
         /** El tope del enganche, obligatorio en esta fase: la deuda máxima la declara el parque. */
         public int $maxQuantity,
-        /** `quantity × unitPriceCents`. */
+        /** Lo que se cobra: `(quantity − gratis) × unitPriceCents` — una opción INCLUIDA vale 0 aunque tenga tarifa (`#914`). */
         public int $chargedCents,
         /** `true` si no se puede ni añadir ni quitar. */
         public bool $closed,
@@ -61,6 +61,14 @@ final readonly class PostFormAddonView
         public string $family = '',
         public ?string $block = null,
         public ?string $imageUrl = null,
+        /**
+         * Los GRUPOS DE OPCIONES (`[DECIDIDO owner]` `#914`): si es INCLUIDA (sus unidades son gratis: se dice «Incluida»,
+         * no su tarifa), si va POR NIÑO (su cantidad es la de la reserva, no la elige nadie) y la clave de su grupo
+         * (`null` = suelta). El grupo entero —título, si hay que elegir, cuál está elegida— es {@see PostFormChoiceGroupView}.
+         */
+        public bool $included = false,
+        public bool $perGuest = false,
+        public ?string $group = null,
     ) {}
 
     public const REASON_CUTOFF = 'cutoff';

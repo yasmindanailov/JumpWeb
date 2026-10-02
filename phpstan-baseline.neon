@@ -781,12 +781,6 @@ parameters:
 			path: app/Domain/Booking/Services/PackAvailability.php
 
 		-
-			message: '#^Access to an undefined property App\\Domain\\Booking\\Models\\TicketType\:\:\$pivot\.$#'
-			identifier: property.notFound
-			count: 6
-			path: app/Domain/Booking/Services/PostFormAddons.php
-
-		-
 			message: '#^Parameter \#1 \$array \(list\<array\{addon_id\: int, reason\: string\}\>\) of array_values is already a list, call has no effect\.$#'
 			identifier: arrayValues.list
 			count: 1

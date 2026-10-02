@@ -191,6 +191,11 @@ class ProductAddon extends Pivot
      *     adultos*: un número equivocado con aspecto de correcto.
      *  4. Un grupo excluyente **siempre tiene un elegido** y post-venta el estado normal es «ninguno»,
      *     que un grupo no sabe expresar.
+     *     ▶ **2, 3 y 4 se abren para la opción de un GRUPO DE OPCIONES** (`[DECIDIDO owner]` `#914`, `AddonChoiceGroup`):
+     *     un grupo de la tabla SÍ sabe decir «ninguno» (sin marcada de serie; «hay que elegir» o «No, gracias»); por niño
+     *     es su número correcto (la merienda, una para cada niño), y lo incluido no rompe la igualdad porque el
+     *     reconciliador cuenta el delta por `chargedSubtotalCents()`, que ya descuenta lo gratis. Fuera de un grupo de la
+     *     tabla, las tres siguen cerradas.
      *  5. Un complemento que OCUPA aforo exigiría el lock de zona/día y la franja de aterrizaje: esta
      *     feature no toca aforo, y esa es la mitad de su coste.
      *  6. Un requisito de OTRA fase nunca estaría en la selección de ésta → el dependiente quedaría
@@ -203,31 +208,51 @@ class ProductAddon extends Pivot
      *  8. `max_qty` es OBLIGATORIO (D3): el enlace del post-form se reenvía, así que la deuda máxima
      *     que un tercero puede crear tiene que estar declarada por el parque — y el tope de 20 que
      *     parece existir vive en `AddonResolver::viewModel()` como pista de UI, no como autoridad.
+     *     ▶ Salvo por niño (`#914`): esa cantidad no la elige nadie —es la de la reserva— y
+     *     `AddonResolver::effectiveQuantity()` sale por `per_guest` antes de mirar el tope; el freno es el `max_qty` del pack.
      *  9. ~~El plazo es OBLIGATORIO (D10)~~ — desde `#912` el plazo es el de la LISTA (`postformCutoffHours()`), que siempre
      *     existe y nunca hereda el cierre torcido de §4.9: ya no hay un plazo por enganche que pueda faltar.
+     *
+     * @param  bool|null  $inDefinedGroup  ¿su clave tiene fila en `addon_choice_groups`? `null` = preguntarlo aquí (una
+     *                                     consulta: la escritura). El cinturón de lectura la trae ya resuelta para todas
+     *                                     las opciones de una vez ({@see AddonChoiceGroup::keysByProduct()}).
      */
-    public static function postFormProblem(self $pivot, ?TicketType $addon): ?string
+    public static function postFormProblem(self $pivot, ?TicketType $addon, ?bool $inDefinedGroup = null): ?string
     {
+        $group = $pivot->choiceGroup();
+        $inGroup = $group !== null && ($inDefinedGroup ?? $pivot->hasDefinedChoiceGroup());
+
         if ($pivot->is_mandatory) {
             return 'is_mandatory';
         }
-        if ($pivot->is_included) {
+        if ($pivot->is_included && ! $inGroup) {
             return 'is_included';
         }
-        if ($pivot->isPerGuest()) {
+        if ($pivot->isPerGuest() && ! $inGroup) {
             return 'per_guest';
         }
-        if ($pivot->choiceGroup() !== null) {
+        if ($group !== null && ! $inGroup) {
             return 'choice_group';
         }
         if ($addon !== null && $addon->occupiesAfterParent()) {
             return 'occupies_after_parent';
         }
-        if ($pivot->max_qty === null || (int) $pivot->max_qty < 1) {
+        if (! $pivot->isPerGuest() && ($pivot->max_qty === null || (int) $pivot->max_qty < 1)) {
             return 'missing_max_qty';
         }
 
         return null;
+    }
+
+    /** ¿Su clave de grupo tiene fila en `addon_choice_groups` para su producto? (`#914`.) */
+    public function hasDefinedChoiceGroup(): bool
+    {
+        $group = $this->choiceGroup();
+
+        return $group !== null && AddonChoiceGroup::query()
+            ->where('product_id', $this->product_id)
+            ->where('key', $group)
+            ->exists();
     }
 
     /**
@@ -299,8 +324,8 @@ class ProductAddon extends Pivot
             }
         });
 
-        // La FASE de venta (`specs/complementos-post-reserva.md` §4.3, `#413`): las nueve reglas de
-        // {@see postFormProblem} en su cara dura. La amable —esconder lo prohibido en el formulario—
+        // La FASE de venta (`specs/complementos-post-reserva.md` §4.3, `#413`; las 2–4, abiertas a los grupos de `#914`): las
+        // reglas de {@see postFormProblem} en su cara dura. La amable —esconder lo prohibido en el formulario—
         // la pone `AddonsRelationManager`, porque esto es una `InvalidArgumentException` y el
         // catálogo de Filament no la captura: llegar aquí desde la pantalla sería un error feo.
         static::saving(function (self $pivot): void {
@@ -344,6 +369,30 @@ class ProductAddon extends Pivot
                         .'invisible sin fallar (`specs/complementos-post-reserva.md` §4.3·6).'
                     );
                 }
+            }
+        });
+
+        // LOS GRUPOS DE OPCIONES (`#914`): todas las opciones de un grupo se venden en la MISMA fase. Medio grupo al reservar
+        // y medio en la lista no es un grupo: al reservar ya habría una marcada de serie (`AddonResolver::groupDefault()`) y
+        // la lista ofrecería otra encima — dos meriendas para la misma fiesta.
+        static::saving(function (self $pivot): void {
+            $group = $pivot->choiceGroup();
+            if ($group === null) {
+                return;
+            }
+
+            $otherStage = self::query()
+                ->where('product_id', $pivot->product_id)
+                ->where('choice_group', $group)
+                ->when($pivot->exists, fn ($query) => $query->whereKeyNot($pivot->getKey()))
+                ->get()
+                ->contains(fn (self $member): bool => $member->saleStage() !== $pivot->saleStage());
+
+            if ($otherStage) {
+                throw new \InvalidArgumentException(
+                    "Las opciones del grupo «{$group}» se venden en la misma fase: todas al reservar o todas en la lista "
+                    .'(`DECISIONES #914`).'
+                );
             }
         });
 

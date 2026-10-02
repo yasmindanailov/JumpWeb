@@ -27,6 +27,7 @@ return [
     'count_error_title' => 'The guest count hasn’t changed',
     'saved' => 'Form saved. Thank you! You can edit it again anytime.',
     'extras_closed_sold' => 'You chose this when booking — call us to change it',
+    'extras_included' => 'Included',
     'extras_blocked' => 'Your details were saved, but one of the extras could not be changed: its deadline may have passed. Call us if you need to.',
     'extras_stale' => 'Your details were saved, but the extras were not: the booking changed while you had this page open. Reload it and check them.',
 

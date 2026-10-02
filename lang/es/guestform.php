@@ -42,6 +42,8 @@ return [
     // Los EXTRAS de venta posterior (`specs/complementos-post-reserva.md`, `#413`): lo que se
     // puede añadir DESPUÉS de reservar y se paga en el parque.
     'extras_closed_sold' => 'Lo elegiste al reservar — llámanos para cambiarlo',
+    // `#914`: la nota de precio de una opción INCLUIDA (sus unidades son gratis), en vez de su tarifa o de «0,00 €».
+    'extras_included' => 'Incluido',
     'extras_blocked' => 'Tus datos se han guardado, pero alguno de los extras no se ha podido cambiar: puede que ya haya pasado su plazo. Llámanos si lo necesitas.',
     'extras_stale' => 'Tus datos se han guardado, pero los extras no: la reserva ha cambiado mientras tenías esta página abierta. Vuelve a cargarla y revísalos.',
 

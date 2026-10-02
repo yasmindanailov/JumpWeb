@@ -31,8 +31,9 @@
   por la precisión de segundo. La fiesta pasada CIERRA los extras, no los esconde.
 - **La puerta es `acceptsGuestForm()`, no `isPack()`** (`[owner]`) · dos limitadores (IP y `guest-form`
   por reserva) · orden de locks del subsistema: `orders → order_items → hijas` (el interbloqueo se reprodujo).
-- Tres listas blancas del panel entre el formulario y la fila, y las tres callan al olvidarse (§8).
-- **Desde `#912` el plazo es el de la LISTA**: `postformCutoffHours()` lee su ajuste y `postform_cutoff_hours` queda sin uso.
+- Tres listas blancas del panel (§8): las tres callan al olvidarse.
+- **`#912`**: el plazo es el de la LISTA (`postform_cutoff_hours`, sin uso). **`#914`**: grupos de opciones
+  (`addon_choice_groups`): las reglas 2–4 se abren SOLO para sus opciones; «elige una» vive en `settleChoices()`.
 - Anexo al final con la fila del enrutador.
 
 ## 0. En una frase

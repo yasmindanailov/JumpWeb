@@ -1279,6 +1279,21 @@ UNA respuesta, sin marcada de serie, «No, gracias» si no es obligatoria y «Fa
 entre opciones del mismo grupo, y el título sigue sin existir; (C) la familia como grupo: la familia es del complemento en
 todo el catálogo y la regla es de cada pack (la trampa de `#485`, presentación usada como regla).
 
+**🟦 P3·1 · el dominio — HECHA (02-10 noche, en `wip/p3-grupos-de-opciones`; sin pantalla todavía)**. La tabla y su modelo
+(`AddonChoiceGroup`: clave recortada, no se borra con opciones, `appliesToSaleAt()`, `keysByProduct()`); `TicketType::
+choiceGroups()`; `ProductAddon::postFormProblem()` abre 2–4 solo dentro de un grupo de la tabla (y la regla 8 no se exige a lo
+por niño) y un guard nuevo: todas las opciones de un grupo, en la misma fase; el cinturón (`AddonResolver::forStage()`) lee los
+grupos en UNA consulta y solo si alguna opción lleva grupo. En `PostFormAddons`: las opciones de un grupo creado tras la venta,
+fuera (`forThisSale()`); «elige una» bajo el lock (`settleChoices()`: elegir quita las demás aunque no vengan, dos a la vez →
+`choice_conflict`, obligatoria no se vacía → `choice_required`, con una comprada al reservar el grupo es del parque); primero
+se quita y luego se pone; la UNIDAD de una línea vendida sale de su SELLO (`soldQuantityUnit`, también al calcular lo gratis),
+y «no elegida» de una opción por niño es 0; una incluida sin tarifa es gratis (`unitFor()`, punto único de lectura y
+escritura); la vista cobra lo cobrado (gratis descontado), dice «Incluido» y trae `included`/`perGuest`/`group`; y
+`choiceGroupsFor()` da el grupo entero (título, obligatoria, elegida, pendiente). Verificación: `PostFormChoiceGroupsTest`
+**16** casos, cada uno con su control; 909 vecinos; suite entera 6844 verde; Larastan (la línea base ENCOGE: los seis `->pivot`
+dinámicos del servicio, por `addonPivot()`), Pint, docs-check. Arnés de mutación y verificadores: al empujar a `main`, con el
+permiso del owner (`CRITICAL_RE`).
+
 ## 5. Impacto en invariantes
 
 | ID | Cómo |

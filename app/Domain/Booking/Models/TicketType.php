@@ -659,6 +659,17 @@ class TicketType extends Model
     }
 
     /**
+     * Los GRUPOS DE OPCIONES de este producto (`#914`): lo que es de cada grupo —título, si hay que elegir, orden—, una vez.
+     * Sus opciones son los enganches que llevan su clave en `product_addons.choice_group`.
+     *
+     * @return HasMany<AddonChoiceGroup, $this>
+     */
+    public function choiceGroups(): HasMany
+    {
+        return $this->hasMany(AddonChoiceGroup::class, 'product_id')->orderBy('position')->orderBy('id');
+    }
+
+    /**
      * Los complementos de este producto que se venden **AL RESERVAR** (`#413` §4.4).
      *
      * Es `AddonResolver::forStage($this->addons, STAGE_BOOKING)` con nombre propio, y existe por una

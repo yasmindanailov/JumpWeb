@@ -127,7 +127,10 @@ gratis en un pack y de pago en una entrada):
 - `is_mandatory` — auto-inyectado por el servidor, no se puede quitar.
 - `quantity_mode` — `fixed` | `per_guest` (la cantidad sigue al nº de invitados).
 - `allow_extra` — permite unidades extra de pago sobre lo incluido (solo `fixed`).
-- `choice_group` — grupo excluyente tipo radio (Menú A ⊻ Menú B); índice `(product_id, choice_group)`.
+- `choice_group` — grupo excluyente tipo radio (Menú A ⊻ Menú B); índice `(product_id, choice_group)`. Desde `#914`
+  la clave une las opciones con SU GRUPO en `addon_choice_groups` (título, «hay que elegir», orden): opcional al
+  reservar, **obligatorio en `postform`** (sin su fila, la opción ni se guarda ni se ofrece). Todas las opciones de un
+  grupo, en la misma fase (guard de `ProductAddon`).
 - `max_qty` nullable — tope por reserva (solo `fixed`; cap duro global 20 aparte).
 - `show_in_invitation` — bool default `false` (2026-09-17, `specs/celebracion-e-invitacion.md` §4.4 D12,
   `DECISIONES #573`): **qué complemento es «el menú»** que la invitación digital enseña. Es una casilla
@@ -141,10 +144,9 @@ gratis en un pack y de pago en una entrada):
   VENDE**, no dónde se ve. Un `postform` **no nace nunca con el pedido** —tampoco en el alta manual—,
   y de eso vive la propiedad de que quitarlo sea neutro en dinero. Lista cerrada en
   `ProductAddon::STAGES`; el default deja los enganches existentes idénticos.
-- `postform_cutoff_hours` nullable — el plazo de corte **por complemento**, en horas antes del inicio
-  de la franja («tapas 48», «cubo 2»). ⚠️ **`0` es un valor válido** («hasta que empiece») y distinto
-  de `null`: nulable en el esquema porque un enganche `booking` no tiene plazo, y **obligatorio en
-  `postform`** por guard, no por columna.
+- `postform_cutoff_hours` nullable — ⚠️ **SIN LECTORES desde `#912`**: fue el plazo de corte por complemento; hoy
+  el de un `postform` es el de su LISTA (`GuestCountPolicy`, ajuste `packs.guest_count_cutoff_hours`). Se queda
+  hasta una migración que la retire (decisión del owner, `DEUDA.md`).
 - `postform_block` varchar(20) nullable (2026-09-26, `fiesta-sistema-nuevo.md` §4.11, `#749`) — en qué
   BLOQUE de la lista de invitados va un enganche `postform`: `cake` (la pregunta de la tarta, con «Sin
   tarta» y «Añadir otra») · `adults` (para los padres, por familias) · `null` (la rejilla de siempre).
@@ -154,9 +156,19 @@ gratis en un pack y de pago en una entrada):
 ⚠️ Las nueve reglas de un enganche `postform` viven en **UN** sitio,
 `ProductAddon::postFormProblem()`, que comparten el guard del modelo y el **cinturón** de
 `AddonResolver::forStage()` — los eventos no ven `Query\Builder::update()` ni los tres seeders que
-escriben este pivote.
+escriben este pivote. Las 2–4 (incluido, por niño, grupo) se abren desde `#914` SOLO para las opciones
+de un grupo de `addon_choice_groups`.
 
 Unique `(product_id, addon_id)`.
+
+### `addon_choice_groups` — grupo de opciones de un producto (AddonChoiceGroup) · `#914`
+2026-10-02 (`fiesta-sistema-nuevo.md` §4.21). «Elige una» entre los enganches del producto que llevan su clave
+(`product_addons.choice_group`): lo que es del GRUPO, una vez —`title` json traducible («¿Qué merienda?»),
+`is_required` («hay que elegir»: sin elegida, la lista dice «Falta elegir…» y el parque «sin elegir») y
+`position`—; lo de cada opción sigue en su enganche (incluida o de pago, por niño o fija, su fase).
+`product_id` FK → `ticket_types` (cascade) · `key` varchar(50) · unique `(product_id, key)` · timestamps:
+`created_at` decide qué fiestas lo deben (una vendida ANTES de crearlo no lo ve, «No se les pide»). Borrar un
+grupo con opciones se rechaza (quedarían huérfanas y, en `postform`, invisibles en silencio).
 
 ### `promotions` — oferta con fecha o regalo (Promotion) · `#770`
 `kind` (`offer` | `gift`) · `text` JSON i18n (una frase; una OFERTA sin texto en un idioma no sale en él, un regalo

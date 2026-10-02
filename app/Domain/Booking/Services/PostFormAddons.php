@@ -3,6 +3,8 @@
 namespace App\Domain\Booking\Services;
 
 use App\Domain\Booking\Contracts\PostFormAddonView;
+use App\Domain\Booking\Contracts\PostFormChoiceGroupView;
+use App\Domain\Booking\Models\AddonChoiceGroup;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\ProductAddon;
@@ -169,9 +171,85 @@ final class PostFormAddons
             return collect();
         }
 
-        return AddonResolver::forStage($type->addons, ProductAddon::STAGE_POSTFORM)
-            ->filter(fn (TicketType $addon): bool => self::isWithinWindow($principal, $addon->pivot))
+        return $this->forThisSale($principal, AddonResolver::forStage($type->addons, ProductAddon::STAGE_POSTFORM))
+            ->filter(function (TicketType $addon) use ($principal): bool {
+                $pivot = $addon->addonPivot();
+
+                return $pivot !== null && self::isWithinWindow($principal, $pivot);
+            })
             ->keyBy('id');
+    }
+
+    /**
+     * Los GRUPOS DE OPCIONES de esta reserva (`[DECIDIDO owner]` `#914`): «¿Qué merienda?», con sus opciones, si hay que
+     * elegir y cuál está elegida. Lo que leen la lista («Falta elegir…»), el parque («sin elegir») y la API.
+     *
+     * @param  list<PostFormAddonView>|null  $rows  las de {@see viewFor()} si ya se tienen (la lista las pinta igual)
+     * @return list<PostFormChoiceGroupView>
+     */
+    public function choiceGroupsFor(OrderItem $principal, ?array $rows = null): array
+    {
+        $rows ??= $this->viewFor($principal);
+        $members = [];
+        foreach ($rows as $row) {
+            if ($row->group !== null) {
+                $members[$row->group][] = $row;
+            }
+        }
+        if ($members === []) {
+            return [];
+        }
+
+        $groups = [];
+        foreach ($this->groupsOf($principal) as $key => $group) {
+            $options = $members[$key] ?? [];
+            if ($options === []) {
+                continue;
+            }
+            $chosen = collect($options)->first(fn (PostFormAddonView $o): bool => $o->quantity > 0);
+            $groups[] = new PostFormChoiceGroupView(
+                key: $key,
+                title: trim((string) ($group->tr('title') ?? '')),
+                required: $group->is_required,
+                chosenAddonId: $chosen?->productId,
+                addonIds: array_map(static fn (PostFormAddonView $o): int => $o->productId, $options),
+                open: collect($options)->contains(fn (PostFormAddonView $o): bool => ! $o->closed),
+            );
+        }
+
+        return $groups;
+    }
+
+    /**
+     * Fuera las opciones de un grupo que esta reserva NO debe (`[DECIDIDO owner]` `#914`, «No se les pide»): el grupo se
+     * creó DESPUÉS de venderla, así que lo vendido se rige por la configuración con la que se vendió —la merienda de antes
+     * se eligió con el Menú al reservar— y lo lleva el parque. Sin opciones de grupo, ni una consulta.
+     *
+     * @param  Collection<int, TicketType>  $addons
+     * @return Collection<int, TicketType>
+     */
+    private function forThisSale(OrderItem $principal, Collection $addons): Collection
+    {
+        if (! $addons->contains(fn (TicketType $addon): bool => $addon->addonPivot()?->choiceGroup() !== null)) {
+            return $addons;
+        }
+
+        $groups = $this->groupsOf($principal);
+        $soldAt = $principal->order?->created_at;
+
+        return $addons->filter(function (TicketType $addon) use ($groups, $soldAt): bool {
+            $key = $addon->addonPivot()?->choiceGroup();
+
+            return $key === null || ($groups->get($key)?->appliesToSaleAt($soldAt) ?? false);
+        })->values();
+    }
+
+    /** @return Collection<string, AddonChoiceGroup> los grupos del producto de la reserva, por clave (una consulta) */
+    private function groupsOf(OrderItem $principal): Collection
+    {
+        $type = $principal->ticketType;
+
+        return $type === null ? collect() : $type->loadMissing('choiceGroups')->choiceGroups->keyBy('key');
     }
 
     /**
@@ -216,23 +294,42 @@ final class PostFormAddons
             }
         }
 
+        $offered = $this->forThisSale($principal, AddonResolver::forStage($type->addons, ProductAddon::STAGE_POSTFORM));
+
+        // Un GRUPO con una opción comprada AL RESERVAR se cierra entero (`#914`): esa línea es del parque (R0), y dejar
+        // elegir otra opción dejaría dos vivas en un grupo de «elige una».
+        $frozenGroups = [];
+        foreach ($offered as $addon) {
+            $line = $lines[(int) $addon->getKey()] ?? null;
+            $key = $addon->addonPivot()?->choiceGroup();
+            if ($key !== null && $line !== null && $order !== null && LineFacts::forItem($order, $line)->birthValue() !== 0) {
+                $frozenGroups[$key] = true;
+            }
+        }
+
         $rows = [];
-        foreach (AddonResolver::forStage($type->addons, ProductAddon::STAGE_POSTFORM) as $addon) {
+        foreach ($offered as $addon) {
+            $pivot = $addon->addonPivot();
+            if ($pivot === null) {
+                continue; // inalcanzable: `forStage()` solo deja pasar enganches con su pivote
+            }
             $id = (int) $addon->getKey();
             $line = $lines[$id] ?? null;
-            $bornWithOrder = $line !== null && $order !== null
-                && LineFacts::forItem($order, $line)->birthValue() !== 0;
+            $group = $pivot->choiceGroup();
+            $bornWithOrder = ($line !== null && $order !== null && LineFacts::forItem($order, $line)->birthValue() !== 0)
+                || ($group !== null && isset($frozenGroups[$group]));
 
             // R2 en la lectura: si ya hay línea manda SU precio, que es el comunicado. Sin línea,
             // el del catálogo **del día de la VISITA** (`#415`) — y si ese día no tiene tarifa, el
-            // extra no se puede ofrecer.
-            $unit = $line !== null ? (int) $line->unit_price : $this->rates->priceCents($addon, self::pricingDate($principal));
+            // extra no se puede ofrecer (salvo INCLUIDO, que sin tarifa es gratis: {@see unitFor}).
+            $unit = $this->unitFor($principal, $addon, $pivot, $line);
             if ($unit === null) {
                 continue;
             }
 
-            $withinWindow = self::isWithinWindow($principal, $addon->pivot);
+            $withinWindow = self::isWithinWindow($principal, $pivot);
             $quantity = $line !== null ? (int) $line->quantity : 0;
+            $included = (bool) $pivot->is_included;
 
             $rows[] = new PostFormAddonView(
                 productId: $id,
@@ -240,8 +337,8 @@ final class PostFormAddons
                 unitPriceCents: $unit,
                 // El importe se formatea con el servicio del dominio y no a mano: el
                 // `number_format(...).' €'` quemado del embudo tiene ficha propia en `DEUDA.md`, y
-                // una superficie nueva no puede nacer heredándolo.
-                note: Money::format($unit, $principal->order?->currency ?? 'EUR'),
+                // una superficie nueva no puede nacer heredándolo. Una INCLUIDA dice «Incluido», no su tarifa (`#914`).
+                note: $included ? __('guestform.extras_included') : Money::format($unit, $principal->order?->currency ?? 'EUR'),
                 // El «Más info» del catálogo (`#416`), traducido y saneado a lista de textos: es el
                 // mismo dato que la landing enseña, y aquí decide una compra.
                 features: array_values(array_filter(array_map(
@@ -250,25 +347,48 @@ final class PostFormAddons
                 ), static fn (string $f): bool => $f !== '')),
                 gifts: $addon->giftLines(),
                 quantity: $quantity,
-                maxQuantity: (int) ($addon->pivot->max_qty ?? 0),
-                chargedCents: $quantity * $unit,
+                maxQuantity: (int) ($pivot->max_qty ?? 0),
+                // Lo que se COBRA, gratis descontado (`chargedSubtotalCents()`, la misma cuenta que el libro): una incluida
+                // por niño son 14 unidades a 0 €, no 14 por su tarifa.
+                chargedCents: $line?->chargedSubtotalCents() ?? 0,
                 closed: $bornWithOrder || ! $withinWindow,
                 closedReason: match (true) {
                     $bornWithOrder => PostFormAddonView::REASON_SOLD_AT_BOOKING,
                     ! $withinWindow => PostFormAddonView::REASON_CUTOFF,
                     default => null,
                 },
-                closesAt: self::deadlineFor($principal, $addon->pivot)?->toIso8601String(),
+                closesAt: self::deadlineFor($principal, $pivot)?->toIso8601String(),
                 // F5 (`#749`): lo que la lista de invitados necesita para PINTARLO (la tarta, lo de los padres, «Para 6
                 // adultos», la foto). Presentación: nada de esto entra en `reconcile()` ni en el precio.
                 serves: $addon->peopleServed(),
                 family: trim((string) ($addon->tr('family') ?? '')),
-                block: $addon->addonPivot()?->postformBlock(),
+                block: $pivot->postformBlock(),
                 imageUrl: $addon->imageUrl(),
+                included: $included,
+                // Una línea ya vendida dice su unidad por su SELLO; una que aún no existe, por el enganche de hoy (`#448`).
+                perGuest: ($line !== null ? AddonResolver::soldQuantityUnit($line, $pivot) : $pivot->quantityUnit()) === ProductAddon::MODE_PER_GUEST,
+                group: $group,
             );
         }
 
         return $rows;
+    }
+
+    /**
+     * El unitario de un extra en esta reserva: el de su LÍNEA si ya la tiene (R2, el comunicado); si no, el del catálogo del
+     * día de la VISITA (`#415`). `null` = no se puede tarificar, salvo INCLUIDO: incluido sin tarifa es gratis, como al
+     * reservar (`AddonResolver::resolve()`). Punto ÚNICO de la lectura y la escritura: si divergieran, la pantalla
+     * enseñaría un precio y se cobraría otro.
+     */
+    private function unitFor(OrderItem $principal, TicketType $addon, ProductAddon $pivot, ?OrderItem $line): ?int
+    {
+        if ($line !== null) {
+            return (int) $line->unit_price;
+        }
+
+        $price = $this->rates->priceCents($addon, self::pricingDate($principal));
+
+        return $price ?? ($pivot->is_included ? 0 : null);
     }
 
     /**
@@ -355,14 +475,20 @@ final class PostFormAddons
         }
 
         $moves = [];
-        $blocked = [];
         $delta = 0;
+        [$desired, $blocked] = $this->settleChoices($item, $offerable, $desired, $governedLines, $frozenLines);
+
+        // Lo que SE QUITA, antes de lo que se pone: cambiar de opción en un grupo es cancelar una y crear otra en este
+        // mismo guardado, y así no hay un instante con dos vivas.
+        $desired = array_filter($desired, static fn ($qty): bool => (int) $qty <= 0)
+            + array_filter($desired, static fn ($qty): bool => (int) $qty > 0);
 
         foreach ($desired as $addonId => $rawQty) {
             $addonId = (int) $addonId;
             $addon = $offerable->get($addonId);
+            $pivot = $addon?->addonPivot();
 
-            if ($addon === null) {
+            if ($addon === null || $pivot === null) {
                 // No ofrecido, fuera de plazo o de otra fase: no se toca y se DICE.
                 $blocked[] = ['addon_id' => $addonId, 'reason' => 'not_offerable'];
 
@@ -375,17 +501,24 @@ final class PostFormAddons
                 continue;
             }
 
-            $pivot = $addon->pivot;
             $current = $governedLines[$addonId] ?? null;
-            // La MISMA autoridad de cantidad que la compra: tope del enganche incluido.
-            $target = AddonResolver::effectiveQuantity($pivot, max(0, (int) $rawQty), (int) $item->quantity);
+            $requested = max(0, (int) $rawQty);
+            // La UNIDAD: la del SELLO si la línea ya existe —lo vendido no lo reinterpreta el catálogo de mañana (`#448`)—, la
+            // del enganche si nace ahora.
+            $quantityUnit = $current !== null ? AddonResolver::soldQuantityUnit($current, $pivot) : $pivot->quantityUnit();
+            // La MISMA autoridad de cantidad que la compra: tope del enganche incluido. ⚠️ Salvo «no elegida» de una opción
+            // POR NIÑO (`#914`): esa autoridad devuelve los invitados SIEMPRE —al reservar el grupo nunca está vacío—, y aquí
+            // 0 es «esta no», que se tiene que poder decir.
+            $target = $quantityUnit === ProductAddon::MODE_PER_GUEST && $requested === 0
+                ? 0
+                : AddonResolver::effectiveQuantityForUnit($pivot, $quantityUnit, $requested, (int) $item->quantity);
             $from = $current !== null ? (int) $current->quantity : 0;
 
             if ($target === $from) {
                 continue; // R4: idempotente.
             }
 
-            $moved = $this->write($item, $order, $addon, $current, $from, $target, $actor);
+            $moved = $this->write($item, $order, $addon, $pivot, $quantityUnit, $current, $from, $target, $actor);
             if ($moved === null) {
                 $blocked[] = ['addon_id' => $addonId, 'reason' => 'unpriced'];
 
@@ -400,6 +533,79 @@ final class PostFormAddons
     }
 
     /**
+     * «ELIGE UNA», bajo el lock (`[DECIDIDO owner]` `#914`): lo que el cuerpo pide de cada GRUPO DE OPCIONES, llevado a lo
+     * que el grupo admite. Esta es la autoridad; la lista solo lo pinta (una pregunta de una respuesta).
+     *
+     *  · elegir una QUITA las demás, las mande el cuerpo o no: un cliente de la API puede mandar solo la nueva, y dos vivas
+     *    serían dos meriendas para la misma fiesta;
+     *  · dos elegidas a la vez no mueven nada del grupo, y se DICE (`choice_conflict`);
+     *  · un grupo con «hay que elegir» no se vacía: la elegida se cambia, no se quita (`choice_required`);
+     *  · con una opción comprada AL RESERVAR, el grupo es del parque (`sold_at_booking`, R0).
+     *
+     * Un grupo que el cuerpo no menciona no se toca (D5, como cualquier extra omitido).
+     *
+     * @param  Collection<int, TicketType>  $offerable
+     * @param  array<int,int>  $desired
+     * @param  array<int, OrderItem>  $governed
+     * @param  array<int, OrderItem>  $frozen
+     * @return array{0: array<int,int>, 1: list<array{addon_id:int, reason:string}>}
+     */
+    private function settleChoices(OrderItem $item, Collection $offerable, array $desired, array $governed, array $frozen): array
+    {
+        $members = [];
+        foreach ($offerable as $id => $addon) {
+            $key = $addon->addonPivot()?->choiceGroup();
+            if ($key !== null) {
+                $members[$key][] = (int) $id;
+            }
+        }
+        if ($members === []) {
+            return [$desired, []];
+        }
+
+        $groups = $this->groupsOf($item);
+        $blocked = [];
+        foreach ($members as $key => $ids) {
+            $sent = array_values(array_filter($ids, static fn (int $id): bool => array_key_exists($id, $desired)));
+            if ($sent === []) {
+                continue;
+            }
+            $refuse = static function (string $reason) use (&$desired, &$blocked, $sent): void {
+                foreach ($sent as $id) {
+                    unset($desired[$id]);
+                    $blocked[] = ['addon_id' => $id, 'reason' => $reason];
+                }
+            };
+
+            if (array_intersect($ids, array_keys($frozen)) !== []) {
+                $refuse('sold_at_booking');
+
+                continue;
+            }
+            $chosen = array_values(array_filter($sent, static fn (int $id): bool => (int) $desired[$id] > 0));
+            if (count($chosen) > 1) {
+                $refuse('choice_conflict');
+
+                continue;
+            }
+            if ($chosen === []) {
+                if ((bool) $groups->get($key)?->is_required && array_intersect($ids, array_keys($governed)) !== []) {
+                    $refuse('choice_required');
+                }
+
+                continue;
+            }
+            foreach ($ids as $id) {
+                if ($id !== $chosen[0]) {
+                    $desired[$id] = 0;
+                }
+            }
+        }
+
+        return [$desired, $blocked];
+    }
+
+    /**
      * Escribe UN gesto y devuelve el delta en céntimos, o `null` si no se pudo tarificar.
      *
      * ⚠️ **La fila y su hecho son una escritura INDIVISIBLE**: separarlos es exactamente el modo de
@@ -410,18 +616,17 @@ final class PostFormAddons
      * complemento ofrecido no tiene precio ese día, y aquí eso tumbaría el guardado entero del
      * post-form —edades y nombres incluidos— por un hueco de tarifas. `MixedPartySurcharge` ya
      * resolvió esto al revés y lo dejó escrito: *no poder tarificar es una AUSENCIA*. Lo que sí se
-     * comparte es la autoridad de la cantidad (`effectiveQuantity`) y la de lo gratis (`freeUnits`).
+     * comparte es la autoridad de la cantidad (`effectiveQuantityForUnit`) y la de lo gratis (`freeUnitsForUnit`), las dos con
+     * la unidad de la línea: su SELLO si ya existe (`#448`), la del enganche si nace.
      */
-    private function write(OrderItem $item, Order $order, TicketType $addon, ?OrderItem $current, int $from, int $target, User $actor): ?int
+    private function write(OrderItem $item, Order $order, TicketType $addon, ProductAddon $pivot, string $quantityUnit, ?OrderItem $current, int $from, int $target, User $actor): ?int
     {
         // R2 · la línea conserva su `unit_price`: subir de 2 a 3 cobra la tercera al precio de la
         // LÍNEA, no al de hoy. Solo una línea NUEVA se tarifica, y con el día de la VISITA (`#415`,
         // que revisa §4.11 de la hora extra: la regla pasó a ser el día de la línea, no el de la
         // compra). Tiene que dar el MISMO número que la lectura de {@see viewFor}, o la pantalla
         // enseñaría un precio y se cobraría otro.
-        $unit = $current !== null
-            ? (int) $current->unit_price
-            : $this->rates->priceCents($addon, self::pricingDate($item));
+        $unit = $this->unitFor($item, $addon, $pivot, $current);
 
         if ($unit === null) {
             return null;
@@ -447,7 +652,8 @@ final class PostFormAddons
             return -$charged;
         }
 
-        $free = AddonResolver::freeUnits($addon->pivot, $target);
+        // Lo gratis, con la unidad de la LÍNEA (el sello): una incluida por niño lo es entera, sea cual sea el número.
+        $free = AddonResolver::freeUnitsForUnit($pivot, $quantityUnit, $target);
         $newCharged = max(0, $target - $free) * $unit;
 
         if ($current === null) {
@@ -461,12 +667,10 @@ final class PostFormAddons
                 'free_quantity' => $free,
                 'unit_price' => $unit,
                 'seats' => 0,
-                // El SELLO DEL MODO (`specs/hora-extra.md` §12, `#448`). Aquí sale SIEMPRE `fixed`
-                // porque `per_guest` está prohibido en esta fase (§4.3·3: ataría el extra de los
-                // ADULTOS al número de NIÑOS), y se escribe igual en vez de darlo por supuesto: si
-                // esa prohibición cayera algún día, esta línea seguiría diciendo con qué unidad se
-                // vendió. Su caso es de CONTROL en el arnés de mutación.
-                'addon_quantity_mode' => $addon->pivot->quantityUnit(),
+                // El SELLO DEL MODO (`specs/hora-extra.md` §12, `#448`). Desde `#914` también `per_guest`: la opción
+                // POR NIÑO de un grupo (la merienda). El sello es lo que lee `GuestCountAdjuster` para que la línea siga
+                // al número de niños, y lo que impide que el catálogo de mañana la reinterprete.
+                'addon_quantity_mode' => $quantityUnit,
                 'event_data' => null,
             ]);
             $this->recordMove($order, $child, $newCharged, $addon, 0, $target, $actor);

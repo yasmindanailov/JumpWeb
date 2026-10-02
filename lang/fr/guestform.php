@@ -27,6 +27,7 @@ return [
     'count_error_title' => 'Le nombre d’invités n’a pas changé',
     'saved' => 'Formulaire enregistré. Merci ! Vous pouvez le modifier à tout moment.',
     'extras_closed_sold' => 'Vous l’avez choisi à la réservation — appelez-nous pour le modifier',
+    'extras_included' => 'Inclus',
     'extras_blocked' => 'Vos informations ont été enregistrées, mais l’un des extras n’a pas pu être modifié : son délai est peut-être dépassé. Appelez-nous si besoin.',
     'extras_stale' => 'Vos informations ont été enregistrées, mais pas les extras : la réservation a changé pendant que cette page était ouverte. Rechargez-la et vérifiez-les.',
 

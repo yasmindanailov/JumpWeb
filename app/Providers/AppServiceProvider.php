@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Domain\Booking\Contracts\HonoreeWaivers;
 use App\Domain\Booking\Contracts\ReservationPlacesTaken;
 use App\Domain\Booking\Contracts\SignedInvitationReplies;
+use App\Domain\Booking\Models\AddonChoiceGroup;
 use App\Domain\Booking\Models\InvitationReply;
 use App\Domain\Booking\Models\OpeningHour;
 use App\Domain\Booking\Models\Order;
@@ -314,6 +315,8 @@ class AppServiceProvider extends ServiceProvider
         // types_to_aliases); el fallback de lectura de Laravel resuelve FQCN legacy igualmente.
         // ⚠️ Modelo NUEVO ⇒ añadir aquí su alias (lo exige `MorphMapTest`).
         Relation::enforceMorphMap([
+            // Los grupos de opciones de un producto (`#914`): sin relaciones polimórficas hoy, pero todo modelo lleva alias.
+            'addon_choice_group' => AddonChoiceGroup::class,
             'attraction' => Attraction::class,
             'audit_log' => AuditLog::class,
             // El libro de eventos (`#678`): sin relaciones polimórficas hoy, pero todo modelo lleva alias.
