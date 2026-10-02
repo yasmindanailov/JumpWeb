@@ -9,6 +9,7 @@ use App\Filament\Resources\Catalog\Pages\CreateCatalog;
 use App\Filament\Resources\Catalog\Pages\EditCatalog;
 use App\Filament\Resources\Catalog\Pages\ListCatalog;
 use App\Filament\Resources\Catalog\RelationManagers\AddonsRelationManager;
+use App\Filament\Resources\Catalog\RelationManagers\ChoiceGroupsRelationManager;
 use App\Filament\Resources\Catalog\Schemas\CatalogForm;
 use App\Filament\Resources\Catalog\Tables\CatalogTable;
 use BackedEnum;
@@ -95,6 +96,8 @@ class CatalogResource extends Resource
         return [
             // Pivote `product_addons`: qué complementos aplican a este producto (solo entry/pack).
             AddonsRelationManager::class,
+            // `#914`: sus grupos de opciones («¿Qué merienda?», si hay que elegir); las opciones se eligen en «Complementos».
+            ChoiceGroupsRelationManager::class,
         ];
     }
 

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin\Catalog;
 
+use App\Domain\Booking\Models\AddonChoiceGroup;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\Role;
@@ -200,6 +201,8 @@ class CatalogAddonsRelationManagerTest extends TestCase
     {
         $entry = $this->makeEntry();
         $addon = $this->makeAddon('Menú 1');
+        // Desde `#914` el grupo se CREA antes («Grupos de opciones») y en el enganche se elige: ya no se teclea.
+        AddonChoiceGroup::create(['product_id' => $entry->id, 'key' => 'menu', 'title' => ['es' => '¿Qué menú?']]);
 
         Livewire::actingAs($this->userWithRole('admin'))
             ->test(AddonsRelationManager::class, ['ownerRecord' => $entry, 'pageClass' => EditCatalog::class])
@@ -298,6 +301,8 @@ class CatalogAddonsRelationManagerTest extends TestCase
             ['product_id' => $entry->id, 'addon_id' => $tarta->id, 'position' => 0, 'requires_addon_id' => null],
             ['product_id' => $entry->id, 'addon_id' => $menu->id, 'position' => 1, 'requires_addon_id' => null],
         ]);
+        // Desde `#914` el grupo se CREA antes y en el enganche se elige.
+        AddonChoiceGroup::create(['product_id' => $entry->id, 'key' => 'menu', 'title' => ['es' => '¿Qué menú?']]);
 
         Livewire::actingAs($this->userWithRole('admin'))
             ->test(AddonsRelationManager::class, ['ownerRecord' => $entry, 'pageClass' => EditCatalog::class])

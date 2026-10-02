@@ -83,6 +83,10 @@ class AuditLog extends Model
         'catalog.addon_attached',
         'catalog.addon_configured',
         'catalog.addon_detached',
+        // `#914`: los grupos de opciones de un producto.
+        'catalog.choice_group_created',
+        'catalog.choice_group_updated',
+        'catalog.choice_group_deleted',
         'catalog.created',
         'catalog.delete_blocked',
         'catalog.deleted',

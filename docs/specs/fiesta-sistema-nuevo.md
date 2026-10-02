@@ -1294,6 +1294,15 @@ escritura); la vista cobra lo cobrado (gratis descontado), dice «Incluido» y t
 dinámicos del servicio, por `addonPivot()`), Pint, docs-check. Arnés de mutación y verificadores: al empujar a `main`, con el
 permiso del owner (`CRITICAL_RE`).
 
+**🟦 P3·2 · el panel — HECHA (02-10 noche, en su rama)**. En la ficha del producto, «Grupos de opciones»
+(`ChoiceGroupsRelationManager`): la clave (única por producto e INMUTABLE: es la unión con sus opciones), la pregunta
+es/en/fr, «Hay que elegir» y el orden; con opciones no se borra (lo dice). En «Complementos», el grupo se ELIGE de la lista
+(ya no se teclea: una tilde partía un grupo en dos); al reservar, también las claves de siempre sin fila (el Menú de producción),
+para no perderlas al guardar. En venta posterior, «Incluido» y «Una por invitado» aparecen SOLO con grupo, y sin grupo se
+apagan (el formulario y el saneo). Tres acciones de auditoría nuevas, catalogadas. Verificación: `ChoiceGroupsPanelTest` 6 (con
+sus controles: suelta no se incluye, la clave no se repite ni se mueve, sin opciones sí se borra); 501 del catálogo, la lista y
+el post-form; Larastan y Pint. Dos casos viejos re-apuntados: el grupo se crea antes de elegirlo.
+
 ## 5. Impacto en invariantes
 
 | ID | Cómo |

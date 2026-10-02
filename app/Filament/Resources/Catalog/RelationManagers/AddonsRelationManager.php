@@ -15,6 +15,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Support\Exceptions\Halt;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -307,9 +308,9 @@ class AddonsRelationManager extends RelationManager
                 ->helperText(__('admin.catalog.addons.is_included_hint'))
                 ->default(false)
                 ->live()
-                // §4.3·2: un incluido da unidades gratis, y `free_quantity > 0` rompe la igualdad
-                // `chargedSubtotalCents == Δ` de la que vive la propiedad de §1.3.
-                ->visible(fn (Get $get): bool => ! $postForm($get)),
+                // §4.3·2: en venta posterior, solo dentro de un GRUPO DE OPCIONES (`#914`: la merienda incluida); suelto,
+                // la regla sigue cerrada y el guard de `ProductAddon` lo rechazaría.
+                ->visible(fn (Get $get): bool => ! $postForm($get) || filled($get('choice_group'))),
 
             Select::make('quantity_mode')
                 ->label(__('admin.catalog.addons.quantity_mode'))
@@ -322,9 +323,9 @@ class AddonsRelationManager extends RelationManager
                     $extendingAddon($get) => __('admin.catalog.addons.quantity_mode_stay_hint'),
                     default => __('admin.catalog.addons.quantity_mode_hint'),
                 })
-                // §4.3·3: `per_guest` ataría la cantidad al nº de INVITADOS (los niños) y el caso del
-                // owner es *para los adultos* — un número equivocado con aspecto de correcto.
-                ->options(fn (Get $get): array => ($occupyingAddon($get) || $postForm($get))
+                // §4.3·3: suelto en venta posterior, `per_guest` ataría la cantidad al nº de INVITADOS (los niños) y el
+                // caso del owner era *para los adultos*. Dentro de un GRUPO DE OPCIONES sí (`#914`: una merienda por niño).
+                ->options(fn (Get $get): array => ($occupyingAddon($get) || ($postForm($get) && blank($get('choice_group'))))
                     ? [ProductAddon::MODE_FIXED => __('admin.catalog.addons.mode_fixed')]
                     : [
                         ProductAddon::MODE_FIXED => __('admin.catalog.addons.mode_fixed'),
@@ -378,16 +379,25 @@ class AddonsRelationManager extends RelationManager
                 // dehidrata y `sanitizePivotData` lo deja en `false`, que es lo único que el guard admite.
                 ->visible(fn (Get $get): bool => ! $occupyingAddon($get) && ! $postForm($get)),
 
-            TextInput::make('choice_group')
+            // El GRUPO DE OPCIONES (`#914`): se ELIGE de los grupos del producto («Grupos de opciones», más abajo), ya no se
+            // escribe — una clave tecleada partía un grupo en dos con una tilde. Al reservar, también las claves de siempre
+            // que aún no tienen fila (el Menú de producción), para no perderlas al guardar; en la lista, solo los de la
+            // tabla, que es lo que el guard admite.
+            Select::make('choice_group')
                 ->label(__('admin.catalog.addons.choice_group'))
                 ->helperText(__('admin.catalog.addons.choice_group_hint'))
-                ->maxLength(50)
-                // Reactivo: al marcar el complemento como miembro de grupo se oculta «Requiere».
-                ->live(onBlur: true)
-                // §4.3·4: un grupo excluyente SIEMPRE tiene un elegido, y post-venta el estado normal
-                // es «ninguno», que un grupo no sabe expresar.
-                ->visible(fn (Get $get): bool => ! $postForm($get))
-                ->dehydrateStateUsing(fn (?string $state): ?string => filled($state) ? trim($state) : null),
+                ->options(fn (Get $get): array => $this->choiceGroupOptions(! $postForm($get)))
+                ->placeholder(__('admin.catalog.addons.choice_group_none'))
+                // Reactivo: con grupo se oculta «Requiere» y, en la lista, aparecen «Incluido» y «Una por invitado».
+                ->live()
+                // Sin grupo en la lista, «Incluido» y «Una por invitado» vuelven a estar cerrados: se apagan aquí para que el
+                // guardado no se encuentre un estado que el guard rechaza.
+                ->afterStateUpdated(function (Get $get, Set $set, ?string $state): void {
+                    if ($get('stage') === ProductAddon::STAGE_POSTFORM && blank($state)) {
+                        $set('is_included', false);
+                        $set('quantity_mode', ProductAddon::MODE_FIXED);
+                    }
+                }),
 
             // Dependencia «requiere»: este complemento solo es seleccionable si el indicado ya está
             // elegido (p. ej. «Segunda tarta» requiere «Tarta»). Solo cantidad fija; opciones = los
@@ -476,6 +486,13 @@ class AddonsRelationManager extends RelationManager
             : ProductAddon::STAGE_BOOKING;
         $postForm = $stage === ProductAddon::STAGE_POSTFORM;
 
+        // `#914`: en la lista, «incluido» y «una por invitado» solo dentro de un GRUPO DE OPCIONES; un suelto los lleva
+        // cerrados (el guard de `ProductAddon` lo rechazaría), así que se apagan aquí aunque el formulario los mande.
+        $looseInList = $postForm && $group === null;
+        if ($looseInList) {
+            $mode = ProductAddon::MODE_FIXED;
+        }
+
         return [
             'stage' => $stage,
             // D12 (`#574`): «el menú» que la invitación digital enseña. Segunda lista blanca — sin
@@ -485,7 +502,7 @@ class AddonsRelationManager extends RelationManager
             'postform_block' => ($postForm && in_array($data['postform_block'] ?? null, ProductAddon::POSTFORM_BLOCKS, true))
                 ? $data['postform_block']
                 : null,
-            'is_included' => (bool) ($data['is_included'] ?? false),
+            'is_included' => ! $looseInList && (bool) ($data['is_included'] ?? false),
             'included_quantity' => max(1, (int) ($data['included_quantity'] ?? 1)),
             'is_mandatory' => (bool) ($data['is_mandatory'] ?? false),
             'quantity_mode' => $mode,
@@ -502,6 +519,38 @@ class AddonsRelationManager extends RelationManager
                 : null,
             'position' => max(0, (int) ($data['position'] ?? 0)),
         ];
+    }
+
+    /**
+     * Los grupos del producto para el selector (`#914`): «Título (clave)», en su orden. Con `$withLegacy` (al reservar),
+     * también las claves que sus enganches ya usan SIN fila —el Menú de siempre—, para que «Configurar» no las borre al
+     * guardar ni las rechace por no estar entre las opciones.
+     *
+     * @return array<string, string>
+     */
+    private function choiceGroupOptions(bool $withLegacy): array
+    {
+        $owner = $this->getOwnerRecord();
+        if (! $owner instanceof TicketType) {
+            return [];
+        }
+
+        $options = [];
+        foreach ($owner->choiceGroups()->get() as $group) {
+            $title = trim((string) ($group->tr('title') ?? ''));
+            $options[$group->key] = $title === '' ? $group->key : "{$title} ({$group->key})";
+        }
+        if ($withLegacy) {
+            $legacy = ProductAddon::query()->where('product_id', $owner->getKey())->whereNotNull('choice_group')->pluck('choice_group');
+            foreach ($legacy as $key) {
+                $key = trim((string) $key);
+                if ($key !== '' && ! isset($options[$key])) {
+                    $options[$key] = $key;
+                }
+            }
+        }
+
+        return $options;
     }
 
     /**
