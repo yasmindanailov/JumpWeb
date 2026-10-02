@@ -17,6 +17,7 @@ const textos = {
         pagar: { banda: 'Pagar', tarjeta: 'Pagar :importe con tarjeta', saliendo_boton: 'Continuar al pago' },
         fallido: { tarjeta: 'Volver a intentar con tarjeta' },
         perdida: { boton: 'Elegir esta hora' },
+        falta: { correo: 'Escribe tu correo para continuar', codigo: 'Escribe las :n cifras del código', hora_libre: 'Elige una de estas horas para continuar' },
         listo: {
             mi_qr: 'Ir a Mi QR',
             firmas: { titulo: 'Todos los que saltan…', menores: 'Menores a tu cargo:', menores_texto: 'si aún no están…', adultos: 'Otros adultos:', adultos_texto: 'cada uno el suyo…', boton: 'Añadir menores' },
@@ -74,33 +75,37 @@ describe('la descripción de cada paso', () => {
         assert.equal(ck('datos', { vista: 'descargo' }).key, 'datosdescargo');
     });
 
-    test('«Entra» con el CORREO (A3, `#849`): «Continuar» pide el código; apagado sin correo, con su espera', () => {
+    test('«Entra» con el CORREO (A3, `#849`): «Continuar» pide el código; sin correo NO se apaga: el pie dice qué falta (`#881`)', () => {
         const vacia = ck('datos', { vista: 'entrar', entrada: { paso: 'id', valor: '  ' } });
 
         assert.equal(vacia.action.label, 'Continuar');
-        assert.equal(vacia.action.disabled, true);
+        assert.equal(vacia.action.disabled, false, 'un botón muerto no dice nada; éste lleva a lo que falta');
+        assert.equal(vacia.note, 'Escribe tu correo para continuar');
+        assert.equal(vacia.onNote(), 'entrar', 'la nota hace lo mismo que el botón');
         assert.equal(vacia.key, 'datosentrarid');
 
         const lista = ck('datos', { vista: 'entrar', entrada: { paso: 'id', valor: 'ana@correo.es' }, ocupado: 'entrar' });
 
-        assert.equal(lista.action.disabled, false, 'basta el correo: ya no hay contraseña');
+        assert.equal(lista.action.disabled, undefined, 'basta el correo: ya no hay contraseña');
+        assert.equal(lista.note, null, 'con el correo, nada que decir');
         assert.equal(lista.action.onClick(), 'entrar');
         assert.equal(lista.action.loading, 'Enviando el código');
         assert.equal(lista.onBack(), 'volver');
     });
 
-    test('«Entra» con el CÓDIGO: «Entrar», apagado hasta las SEIS cifras (Z6g·1), con su espera', () => {
+    test('«Entra» con el CÓDIGO: «Entrar»; sin las SEIS cifras (Z6g·1) el pie lo dice, y el botón no se apaga (`#881`)', () => {
         const sin = ck('datos', { vista: 'entrar', entrada: { paso: 'codigo', valor: 'ana@correo.es', codigo: ' ' } });
 
         assert.equal(sin.action.label, 'Entrar');
-        assert.equal(sin.action.disabled, true);
+        assert.equal(sin.action.disabled, false);
+        assert.equal(sin.note, 'Escribe las 6 cifras del código');
         assert.equal(sin.key, 'datosentrarcodigo');
-        assert.equal(ck('datos', { vista: 'entrar', entrada: { paso: 'codigo', codigo: '48291' } }).action.disabled, true, 'cinco cifras no bastan');
-        assert.equal(ck('datos', { vista: 'entrar', entrada: { paso: 'codigo', codigo: '482-913' } }).action.disabled, false, 'el guion del correo no cuenta');
+        assert.equal(ck('datos', { vista: 'entrar', entrada: { paso: 'codigo', codigo: '48291' } }).note, 'Escribe las 6 cifras del código', 'cinco cifras no bastan');
+        assert.equal(ck('datos', { vista: 'entrar', entrada: { paso: 'codigo', codigo: '482-913' } }).note, null, 'el guion del correo no cuenta');
 
         const con = ck('datos', { vista: 'entrar', entrada: { paso: 'codigo', valor: 'ana@correo.es', codigo: '482913' }, ocupado: 'entrar' });
 
-        assert.equal(con.action.disabled, false);
+        assert.equal(con.note, null);
         assert.equal(con.action.onClick(), 'entrar');
         assert.equal(con.action.loading, 'Entrando');
     });
@@ -133,18 +138,20 @@ describe('la descripción de cada paso', () => {
         assert.equal(ck('verificando').action, null);
     });
 
-    test('la hora se llenó al pagar (T3e·6): banda de «Pagar», sin flecha, y «Elegir esta hora» apagado hasta elegir', () => {
+    test('la hora se llenó al pagar (T3e·6): banda de «Pagar», sin flecha, y sin hora elegida el pie lo dice (`#881`)', () => {
         const sin = ck('perdida');
 
         assert.equal(`${sin.stepStrong}${sin.step}`, 'Paso 2 de 2 · Pagar');
         assert.equal(sin.onBack, null);
         assert.equal(sin.action.label, 'Elegir esta hora');
-        assert.equal(sin.action.disabled, true);
+        assert.equal(sin.action.disabled, false, 'no se apaga: al pulsar, se marca lo que falta');
+        assert.equal(sin.note, 'Elige una de estas horas para continuar');
+        assert.equal(sin.onNote(), 'elegirHora');
         assert.equal(sin.summary, resumen.summary, 'el resumen sigue debajo: la línea que se estaba pagando');
 
         const con = ck('perdida', { horaNueva: '18:00', ocupado: 'perdida' });
 
-        assert.equal(con.action.disabled, false);
+        assert.equal(con.note, null);
         assert.equal(con.action.onClick(), 'elegirHora');
         assert.equal(con.action.loading, 'Cargando');
         assert.equal(direccion(rango('pagar'), rango('perdida')), 'fwd');
@@ -157,7 +164,7 @@ describe('la descripción de cada paso', () => {
         assert.deepEqual(c.progress, [1, 2]);
         assert.equal(c.onBack(), 'volver');
         assert.equal(c.action.label, 'Elegir esta hora');
-        assert.equal(c.action.disabled, true, 'apagado hasta elegir una');
+        assert.equal(c.note, 'Elige una de estas horas para continuar', 'hasta elegir una, el pie lo dice');
         assert.equal(ck('perdida', { alEntrar: true, horaNueva: '18:00' }).action.onClick(), 'elegirHora');
     });
 

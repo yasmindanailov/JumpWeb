@@ -225,6 +225,16 @@ return [
             'unidad' => 'unit',
             'unidades' => 'units',
         ],
+        'falta' => [
+            'zona' => 'Choose the zone to continue',
+            'dia' => 'Choose the day to continue',
+            'hora' => 'Choose the time to continue',
+            'edad' => 'Choose how old they are turning to continue',
+            'datos' => 'Fill in the booking details to continue',
+            'correo' => 'Enter your email to continue',
+            'codigo' => 'Enter the :n digits of the code',
+            'hora_libre' => 'Choose one of these times to continue',
+        ],
         'datos' => [
             'banda' => 'Your details',
             'titular' => 'Your details',

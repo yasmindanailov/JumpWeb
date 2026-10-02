@@ -1013,7 +1013,10 @@ class SidebarBundleBudgetTest extends TestCase
     // 194,66 (`FilaMejora` arrastraba el trozo que comparte con la calculadora de la fiesta). Medido 187,17 → 190,66 (base:
     // el `HEAD` `351870b9`, construido en este árbol con mis ficheros devueltos a `HEAD`, el mismo cálculo). El techo, a 191.
     // ⚠️ La compra viaja con la isla en CADA página: su peso es el primer sitio que mira la M4 (la carga, `#880`).
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 191;
+    // M2 de `#880` (`#881`, el owner): lo que falta para continuar, dicho —la frase de cada cosa y su marca
+    // (`compra/falta.js`), la marca en la compra y en `PreguntaCompra`, y la nota del pie que se toca (`CompraIsla`)—.
+    // Medido 190,66 → 192,50 (base: la medida de la M1, `4f3a6fee`; `7292089d` es solo doc). El techo, a 193.
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 193;
 
     // T4d·4 (`specs/isla-y-landing-nueva.md` §4.12): la CALCULADORA de una página, entrada propia que la página pide
     // (`scripts` de `<x-pagina>`) y se monta al acercarse su pieza. Su DESCARGA entera, como la mide el navegador que

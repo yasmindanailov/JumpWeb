@@ -13,6 +13,8 @@ export const PASO = {
     pregunta: { margin: 0, fontFamily: 'var(--font-ui)', fontWeight: 'var(--fw-bold)', fontSize: 'var(--fs-body)', lineHeight: 1.3, color: 'var(--text-strong)' },
     cuerpo: { margin: 0, fontFamily: 'var(--font-ui)', fontSize: 'var(--fs-body-sm)', lineHeight: 1.5, color: 'var(--text-body)', textWrap: 'pretty' },
     pista: { margin: 0, fontFamily: 'var(--font-ui)', fontSize: 'var(--fs-caption)', lineHeight: 1.5, color: 'var(--text-muted)', textWrap: 'pretty' },
+    // Lo que falta, marcado al pulsar (`falta.js`, `#881`): el error de un campo (`CampoSistema`), con su icono.
+    falta: { display: 'flex', alignItems: 'center', gap: '6px', margin: 0, fontFamily: 'var(--font-ui)', fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-semibold)', lineHeight: 1.4, color: 'var(--text-danger)' },
     hueco: { padding: '12px 14px', border: '1px dashed var(--control-border)', borderRadius: 'var(--r-sm)', font: 'var(--type-mono)', color: 'var(--text-muted)' },
 };
 

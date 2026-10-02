@@ -14,7 +14,7 @@
  * ⚠️ Los stores del motor se comparten con el cajón (una sola app, un solo Pinia), y con la isla como carcasa el
  * cajón no monta su compra: aquí se usan sin pasar por sus pasos (`selectProduct()` borraría día y hora).
  */
-import { computed, inject, onMounted, reactive, watch } from 'vue';
+import { computed, inject, onMounted, provide, reactive, ref, watch } from 'vue';
 import { usePurchaseFlow } from '../../sidebar/usePurchaseFlow.js';
 import { TEXTOS_ISLA } from '../../sidebar/carcasa.js';
 import { cajonHost } from '../../sidebar/host-bridge.js';
@@ -29,6 +29,7 @@ import { borradorDeIntencion, sigueSola } from './intencion.js';
 import { euros, horasCercanas, horasDelSelector } from './vista.js';
 import { meterLinea, pedidoDe } from './linea.js';
 import { alPrincipio, irA } from './ir-a.js';
+import { FALTA, PERDIDA, conFalta, faltaDeEntrada, faltaDePerdida, marcaDe, sigueLaMarca } from './falta.js';
 import { lineaListo, marcasDe, reciboDe, resumenDeLaCesta, resumenDelPedido } from './recibo.js';
 import { ckDelPaso, direccion, empiezaOtra, pantallaListo, pasoDelMotor, rango, volverDeLaPantallaCero } from './pasos.js';
 import { pistaDelDescargo } from './datos.js';
@@ -109,6 +110,24 @@ export function useSeccionCompra(props) {
 
     /** El paso que se ve: el que manda la máquina (el cobro y los desenlaces) o el de la isla. */
     const paso = computed(() => pasoDelMotor(store.step) ?? compra.paso);
+
+    /**
+     * **Lo que falta, marcado** (M2, `#881`, `falta.js`): `{ id, texto }` de la pregunta que se intentó saltar, en rojo hasta
+     * que se contesta. La pintan las preguntas (`PreguntaCompra`) y la hora llena por su `id`. Se va al contestar su
+     * pregunta, al cambiar de paso y al elegir la hora nueva; la siguiente que falte no se marca sola, solo al pulsar.
+     */
+    const marca = ref(null);
+
+    provide(FALTA, marca);
+    watch(() => vista.value.falta, (falta) => { if (marca.value?.id !== PERDIDA && ! sigueLaMarca(marca.value, falta)) marca.value = null; });
+    watch(paso, () => { marca.value = null; });
+    watch(() => compra.horaNueva, (hora) => { if (hora && marca.value?.id === PERDIDA) marca.value = null; });
+
+    /** Pulsar sin estar listo: la caja va a lo que falta (`ir-a.js`) y lo marca. */
+    function aLoQueFalta(falta) {
+        marca.value = marcaDe(falta, textos);
+        irA(falta);
+    }
 
     /**
      * La intención de la landing (`index.js` la deja en la cola de la máquina): se toma una vez y, si el catálogo aún
@@ -307,6 +326,10 @@ export function useSeccionCompra(props) {
      */
     async function entrarDatos() {
         if (compra.ocupado) return;
+        // Sin correo o sin las seis cifras (M2, `#881`): su campo lo dice y la caja va a él; el botón ya no se apaga.
+        const falta = faltaDeEntrada(datos.estado.ent, textos);
+
+        if (falta) { datos.estado.ent.error = falta.texto; irA(falta.id); return; }
         compra.ocupado = 'entrar';
 
         try {
@@ -353,7 +376,11 @@ export function useSeccionCompra(props) {
      * otra vez.
      */
     async function elegirHora() {
-        if (compra.ocupado || ! compra.horaNueva) return;
+        if (compra.ocupado) return;
+        // Sin hora elegida (M2, `#881`): se marca encima de las cercanas, que es donde se elige.
+        const falta = faltaDePerdida(compra.horaNueva, textos);
+
+        if (falta) { marca.value = falta; irA(falta.id); return; }
         compra.ocupado = 'perdida';
 
         try {
@@ -490,16 +517,18 @@ export function useSeccionCompra(props) {
 
             // Nacida en Mi cuenta (T5f), la flecha vuelve a ella, al mismo punto; nacida del selector (`#831`), lo reabre; si
             // no, no hay nada detrás: solo la X.
-            // Sin estar lista, «Continuar» no es un botón muerto: lleva la capa a lo que falta (el owner, 28-09, `ir-a.js`).
+            // Sin estar lista, «Continuar» no es un botón muerto: lleva la capa a lo que falta (el owner, 28-09, `ir-a.js`) y
+            // lo marca; y mientras falte, el pie lo dice encima del botón (M2, `#881`).
             const falta = vista.value.falta;
-
-            return {
+            const pantalla = {
                 ...c, dir: compra.dir, onBack: volverDeLaPantallaCero(compra.desde, { aLaCuenta, alSelector }), onClose: cerrar,
                 action: {
-                    ...c.action, disabled: Boolean(c.action.disabled) && ! falta, onClick: vista.value.listo ? continuar : () => irA(falta),
+                    ...c.action, disabled: Boolean(c.action.disabled) && ! falta, onClick: vista.value.listo ? continuar : () => aLoQueFalta(falta),
                     loading: compra.ocupado === 'cuando' ? t(textos, 'pieza.cargando') : false,
                 },
             };
+
+            return vista.value.listo ? pantalla : conFalta(pantalla, marcaDe(falta, textos), () => aLoQueFalta(falta));
         }
 
         return {

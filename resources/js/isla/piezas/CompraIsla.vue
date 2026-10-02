@@ -9,7 +9,8 @@
  *
  * `ck` es la descripción del paso que da quien lleva la compra: `key` (cambia con el paso), `dir` (`fwd` · `back`),
  * `stepStrong` y `step` («Paso 1 de 2» en negrita y « · Tus datos»), `progress` ([hecho, total]), `onBack`,
- * `onClose`, `summary`, `total`, `today`, `note` y `action` ({ label, onClick, disabled, loading }).
+ * `onClose`, `summary`, `total`, `today`, `note` (con `noteIcon` y, si es lo que falta, `onNote`) y `action` ({ label,
+ * onClick, disabled, loading }).
  * ▶ El movimiento (Z3, `#782`): al avanzar, el tramo de la barra se LLENA de izquierda a derecha (se ve el avance) y el
  * total RUEDA hasta su valor (`NumeroRodante`).
  * ▶ **El teclado del móvil** (zip del 26-09, §4.16; `useTeclado.js`): con él abierto, la capa mide lo que se ve —la
@@ -103,13 +104,19 @@ const { alIntro } = useIntro({ cajaRef, accion: () => props.ck.action, kb: () =>
                     >{{ ck.today }}</small>
                 </span>
             </div>
-            <div
+            <!-- La nota, con su icono (el reloj, de serie). Con `onNote` es LO QUE FALTA (M2, `#881`): se toca y hace lo mismo
+                 que el botón, como el «Elige la hora para ver el total» de la calculadora de la página. -->
+            <component
+                :is="ck.onNote ? 'button' : 'div'"
                 v-if="ck.note && !kb"
-                :style="{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 6px', fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: 'var(--fw-semibold)', color: 'var(--isla-foco)' }"
+                :type="ck.onNote ? 'button' : undefined"
+                aria-live="polite"
+                :style="{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0, padding: '0 6px', border: 0, background: 'none', textAlign: 'left', fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: 'var(--fw-semibold)', color: 'var(--isla-foco)', cursor: ck.onNote ? 'pointer' : 'auto' }"
+                @click="ck.onNote?.()"
             ><IconoLucide
-                name="clock"
+                :name="ck.noteIcon || 'clock'"
                 :size="16"
-            />{{ ck.note }}</div>
+            />{{ ck.note }}</component>
             <BotonAccion
                 v-if="ck.action"
                 big

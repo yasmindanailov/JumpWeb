@@ -269,6 +269,18 @@ return [
             'unidad' => 'unidad',
             'unidades' => 'unidades',
         ],
+        // M2 de `#880` (`#881`): lo que falta para continuar, encima del botón mientras falte y, al pulsar, en rojo en su
+        // pregunta (`compra/falta.js`). Una frase por cosa, la misma en los dos sitios.
+        'falta' => [
+            'zona' => 'Elige la zona para continuar',
+            'dia' => 'Elige el día para continuar',
+            'hora' => 'Elige la hora para continuar',
+            'edad' => 'Elige cuántos años cumple para continuar',
+            'datos' => 'Rellena los datos de la reserva para continuar',
+            'correo' => 'Escribe tu correo para continuar',
+            'codigo' => 'Escribe las :n cifras del código',
+            'hora_libre' => 'Elige una de estas horas para continuar',
+        ],
         'datos' => [
             'banda' => 'Tus datos',
             'titular' => 'Tus datos',

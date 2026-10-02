@@ -225,6 +225,16 @@ return [
             'unidad' => 'unité',
             'unidades' => 'unités',
         ],
+        'falta' => [
+            'zona' => 'Choisissez la zone pour continuer',
+            'dia' => 'Choisissez le jour pour continuer',
+            'hora' => 'Choisissez l’heure pour continuer',
+            'edad' => 'Choisissez l’âge qu’il ou elle va avoir pour continuer',
+            'datos' => 'Remplissez les informations de la réservation pour continuer',
+            'correo' => 'Saisissez votre e-mail pour continuer',
+            'codigo' => 'Saisissez les :n chiffres du code',
+            'hora_libre' => 'Choisissez l’une de ces heures pour continuer',
+        ],
         'datos' => [
             'banda' => 'Vos coordonnées',
             'titular' => 'Vos coordonnées',

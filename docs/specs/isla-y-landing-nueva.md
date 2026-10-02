@@ -2898,6 +2898,18 @@ total»); en la isla, la nota del pie (`ck.note`, hoy vacía en la pantalla 0). 
 también sin fila elegida, que hoy apaga el botón), «Entra» (sin correo; con el código a medias, aunque la sexta cifra ya
 entra sola) y la hora llena («Elegir esta hora» sin hora). «Tus datos» ya pinta sus errores: no cambia. Sin servidor.
 
+**M2, hecha (02-10 noche).** `compra/falta.js` (puro): la frase de cada cosa que falta (`compra.falta.*`, es/en/fr: una por cosa,
+la misma en el pie y en la pregunta), la pregunta que se marca (un dato de la reserva de un pack marca su bloque y la caja va al
+campo) y el pie (`conFalta`: la nota con su icono, que se TOCA —hace lo mismo que el botón— y el botón nunca apagado). La marca
+`{ id, texto }` la da la compra (`provide(FALTA)`) y la pintan `PreguntaCompra` y `PantallaPerdida` por su `id`: ninguna
+pantalla cambió de props. Se va al contestar su pregunta, al cambiar de paso o al elegir la hora nueva; la siguiente no se
+marca sola. «Entra» sin correo o con el código a medias pone el error en su campo (`ent.error`). `CompraIsla`: la nota acepta su
+icono y, con `onNote`, es un botón. **Medido**: `falta.test.js` (9) y `pasos.test.js` reescrito donde afirmaba los botones
+apagados (1.738 de JS en verde); ESLint; `SidebarBundleBudgetTest` (la compra 190,66 → 192,50, a 193) y las guardas de
+componentes y textos; una sonda desechable a 390 y 1280, 13/13 (la nota, el botón vivo, la marca roja en `#ff9aa6` —el rojo
+de la isla oscura— y su fin al contestar; la nota que se toca; «Entra» sin correo; sin errores de consola). La hora llena,
+solo por sus pruebas: provocarla en el navegador exige llenar una franja. **Visto por el owner en vivo** (02-10 noche: «me vale»).
+
 ## 5. Impacto en invariantes
 
 - `PAY-*`: solo si entra Bizum; entonces `VERIFY_CONC=1` y la lista del `CRITICAL_RE`.

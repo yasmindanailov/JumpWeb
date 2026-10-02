@@ -142,7 +142,8 @@ try {
     ok('al continuar: «Paso 1 de 2 · Tus datos», no «Pagar»', /Paso 1 de 2/.test(await paso()) && /Tus datos/.test(await paso()), await paso());
     ok('«Esa hora ya no está libre.» y «Estas sí:», SIN «No se ha cobrado nada»', /Estas sí:/.test(texto) && ! /No se ha cobrado nada/.test(texto), texto.slice(0, 120));
     ok('las horas cercanas del día (hasta cuatro, sin la llena)', cercanas.length > 0 && cercanas.length <= 4 && ! cercanas.some((h) => h.startsWith(llena?.hora ?? '--')), `${llena?.hora} → ${cercanas.map((h) => h.slice(0, 5)).join(', ')}`);
-    ok('«Elegir esta hora», apagado hasta elegir una', await accion(/^Elegir esta hora$/).isDisabled());
+    // M2 de `#880` (`#881`): sin hora elegida el botón NO se apaga; el pie dice qué falta (y, al pulsar, se marca).
+    ok('«Elegir esta hora» sin hora: no se apaga y el pie dice qué falta', ! await accion(/^Elegir esta hora$/).isDisabled() && /Elige una de estas horas/.test(await page.locator('[data-isla] button[aria-live="polite"]').innerText().catch(() => '')));
     ok('con su flecha a la pantalla 0', (await page.locator('[data-isla] button[aria-label="Volver"]').count()) === 1);
     ok('debajo, lo que se estaba eligiendo', /entrada/.test(await debajo()), await debajo());
     await foto('1-hora-llena-al-continuar');

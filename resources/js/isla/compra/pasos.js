@@ -7,9 +7,9 @@
  * banco recarga la página y aterriza en su desenlace. Los de antes («cuando», «datos», «pagar») son de la isla.
  */
 import { STEPS, isOutcome } from '../../sidebar/machine.js';
-import { CODE_LENGTH, codeDigits } from '../../sidebar/code-input.js';
 import { t as texto, tp as textoCon } from '../../sidebar/i18n.js';
 import { diaDelPlazo } from './vista.js';
+import { conFalta, faltaDeEntrada, faltaDePerdida } from './falta.js';
 
 /**
  * ¿Una apertura empieza una compra NUEVA? Con intención (la landing pidió una zona o un producto), sí, aunque la
@@ -100,25 +100,26 @@ export function ckDelPaso(e) {
     if (e.paso === 'datos') {
         const entrada = e.entrada ?? {};
         // «Entra» lleva su propia acción (`PjcEntrar`), en sus dos pasos: con el correo, pedir el código; con el código,
-        // entrar (A3, `#849`), apagada hasta tener las seis cifras (la sexta ya entra sola: Z6g·1, `#867`). El descargo,
-        // ninguna: se vuelve con la flecha.
+        // entrar (A3, `#849`; la sexta cifra ya entra sola: Z6g·1, `#867`). Sin correo o sin las seis cifras, el botón NO se
+        // apaga: el pie dice qué falta y, al pulsar, se marca en su campo (M2, `#881`). El descargo, ninguna: se vuelve con
+        // la flecha.
         const entrando = e.vista === 'entrar';
         const conCodigo = entrada.paso === 'codigo';
         const action = entrando
             ? {
                 label: t(conCodigo ? 'compra.entrar.entrar' : 'compra.entrar.continuar'),
                 onClick: a.entrar,
-                disabled: conCodigo ? codeDigits(entrada.codigo).length < CODE_LENGTH : ! String(entrada.valor ?? '').trim(),
                 loading: e.ocupado === 'entrar' ? t(conCodigo ? 'compra.entrar.cargando' : 'compra.entrar.enviando') : false,
             }
             : (e.vista ? null : { label: t('compra.datos.continuar'), onClick: a.continuar, loading: e.ocupado === 'datos' ? t('compra.datos.cargando') : false });
-
-        return {
+        const paso = {
             ...ck, ...pasoN(1, t('compra.datos.banda')),
             key: `datos${e.vista ?? ''}${e.vista === 'entrar' ? entrada.paso ?? '' : ''}`,
             onBack: a.volver ?? null,
             action,
         };
+
+        return entrando ? conFalta(paso, faltaDeEntrada(entrada, e.textos), a.entrar) : paso;
     }
 
     if (e.paso === 'pagar') {
@@ -140,13 +141,14 @@ export function ckDelPaso(e) {
 
     // La hora se llenó al pagar (T3e·6, `PjcPerdida`): no se cobró nada, y «Elegir esta hora» vuelve a «Pagar» con la
     // línea rehecha. Sin flecha, como el diseño: la salida es elegir otra hora o cerrar. Si se llenó al CONTINUAR de la
-    // pantalla 0 (`alEntrar`, `#822`): el paso 1, con su flecha a la pantalla 0, como «Tus datos» del diseño.
+    // pantalla 0 (`alEntrar`, `#822`): el paso 1, con su flecha a la pantalla 0, como «Tus datos» del diseño. Sin hora
+    // elegida, el botón no se apaga: el pie dice que falta y, al pulsar, se marca (M2, `#881`).
     if (e.paso === 'perdida') {
-        return {
+        return conFalta({
             ...ck, ...(e.alEntrar ? pasoN(1, t('compra.datos.banda')) : pasoN(2, t('compra.pagar.banda'))),
             onBack: e.alEntrar ? a.volver ?? null : null,
-            action: { label: t('compra.perdida.boton'), onClick: a.elegirHora, disabled: ! e.horaNueva, loading: e.ocupado === 'perdida' ? t('pieza.cargando') : false },
-        };
+            action: { label: t('compra.perdida.boton'), onClick: a.elegirHora, loading: e.ocupado === 'perdida' ? t('pieza.cargando') : false },
+        }, faltaDePerdida(e.horaNueva, e.textos), a.elegirHora);
     }
 
     if (e.paso === 'listo') return { ...ck, summary: null, total: null, today: null, action: { label: t('compra.listo.mi_qr'), onClick: a.miQr } };
