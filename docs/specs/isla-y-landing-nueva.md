@@ -2337,7 +2337,7 @@ fuente de cada punto es su `readme.md` (la sección entre comillas) y su compone
 | Z6c | **Experimento B3** contra la isla de hoy, con `Experiments` (asigna el servidor por visitante; `variante` en los eventos) y las frases cortas de cada página | «Experimento B3 (29-09)» | la cabecera sin botón en la primera pantalla del móvil |
 | Z6d ✅ `#872` | **La firma** de la cabecera (logo y nota de Google juntos, `--scrim-firma`), las garantías del móvil en lista, `Sticker` y `ProofChip`, el filo del gris (`--edge-subtle`) | «La cabecera · la firma», «Las garantías en el móvil», «Las pegatinas», «La prueba de los cuidados» | `VideoHero`, `ReassuranceBand`, `ProofList` |
 | Z6e | Cumpleaños **«Todo resuelto» (6a)** y **las dos horas repartidas** (90 min saltando y 30 de merienda: la cabecera, la pieza 3, el selector, las dudas, la hora extra) | «Rehecha el 29-09», «Las dos horas, repartidas (28-09)» | `IncludedList`, `AfterBookingPanel` |
-| Z6f | **El pie** rehecho: dos zonas y un filete, claro y en tarjeta | «Rehecho el 29-09: dos zonas y un solo filete» | `SiteFooter.jsx` (318) |
+| Z6f ✅ | **El pie** rehecho: dos zonas y un filete, claro y en tarjeta | «Rehecho el 29-09: dos zonas y un solo filete» | `SiteFooter.jsx` (318) |
 | Z6g (·1 ✅ `#871`) | La compra y Mi cuenta: **`CodeInput`** (6 casillas, se comprueba con la sexta, «Reenviar» a los 30 s; ·1, abajo), **«Quién firma el descargo»** (Tus datos, Listo con «Añadir menores», Mi cuenta), el acceso en Ajustes; y lo que cambia en Normas, Visítanos, Colegios y Entradas | «La cuenta sin contraseña (30-09)», «Quién firma el descargo (30-09)» | `compra/entrar.jsx`, `compra.jsx` |
 
 **Del otro carril (SPA), por buzón:** la **Puerta** (el mostrador, `paginas/puerta/` y su brief), **`LinkIsland`** en la
@@ -2693,6 +2693,24 @@ nota ni el logo que cedían; fuera el precio de la portada, Kids, Jump y Cumplea
 medida (sin consumidor) y los textos y cifras que solo servían ahí; `sticker` (y las garantías en lista), `proof-chip` (en
 `proof-list`) y el filo en `pj-rp`, `pj-rg--suave`, `pj-ps--suave` y `pj-sp`. «Lo que incluye» con la pegatina va con la
 Z6e (el zip rehízo esa pieza entera). Las siete páginas, 200 en local.
+
+#### La Z6f al detalle — el pie ✅ 2026-10-02, con el visto bueno del owner en vivo (medido contra `SiteFooter.jsx` del zip (6))
+Todo en la INSTANCIA (`site-footer`, `opening-hours`, `entradas.css`); el producto no cambia (solo la sonda que lo fotografía).
+- **Dos zonas y un filete.** La FICHA (dónde · horario · contacto; en cada bloque rótulo · 12 · dato · 20 · acción) y la
+  FIRMA (el logotipo al frente de las páginas, la letra pequeña debajo, el copyright cerrando). Tres tamaños (20 el
+  teléfono, 15 la ficha y las páginas, 13 lo pequeño); cian solo en «Cómo llegar» y WhatsApp. El horario, sin filetes por
+  fuera (`opening-hours :edges="false"`). Claro, en tarjeta, con el filo del gris (la Z6d·4).
+- **Se mide la tarjeta** (`@container pj-pie` en una caja de fuera: un contenedor no se consulta a sí mismo). Los cortes del
+  diseño son de ancho útil; pasados a ancho de tarjeta: aire 48 desde 900 px, 40 desde 600, 32 × 24 debajo; ficha en tres
+  desde 840, en dos (dónde · horario con contacto) desde 742, en uno debajo; firma en una fila desde 1076, a media
+  (logotipo con copyright, páginas debajo) desde 720, y en el móvil en dos columnas con el copyright al final. Logotipo
+  48 · 44 · 40 (el de la cabecera).
+- **Dos desvíos del diseño, medidos.** (1) Los cortes se midieron con SU dirección; la nuestra es más larga y a 1024 px el
+  contacto se salía 48 px: «dónde» encoge (parte renglón) y el resto no se parte. (2) El idioma, texto con su globo y SIN
+  flecha: el producto no tiene selector (la isla lo pinta igual); un control que no abre nada prometería lo que no hay.
+**Verificación**: capturas a 360, 768, 830, 920, 1024 y 1440 con lo que se sale de la tarjeta medido (0 px en los seis) y
+el owner en vivo. `sonda-compra-directa` fotografiaba `.pj-pie__base` (ya no existe): ahora `.pj-pie__letra` (SIN correr:
+en la verificación final). **Hecho (02-10)**: instancia `5b92bd8`; las ocho páginas con pie, 200 en local.
 
 ## 5. Impacto en invariantes
 

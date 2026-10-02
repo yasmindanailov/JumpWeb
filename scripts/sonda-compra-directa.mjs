@@ -156,7 +156,7 @@ try {
     ok('el pie: las formas de pago del sitio, en su orden, cargadas y en lugar de la frase', pie.hechos.length > 0 && JSON.stringify(pie.hechos) === JSON.stringify(pie.vistas) && pie.frase === 0, JSON.stringify(pie));
     await a.page.locator('.pj-pie__marcas').scrollIntoViewIfNeeded();
     await a.page.waitForTimeout(600);
-    await a.page.locator('.pj-pie__base').screenshot({ path: `${SALIDA}/directa-${ANCHO}-0-pie.png` }).catch(() => {});
+    await a.page.locator('.pj-pie__letra').screenshot({ path: `${SALIDA}/directa-${ANCHO}-0-pie.png` }).catch(() => {});
 
     await reservarDesdeLaCalculadora(a.page);
     await h.hastaPaso('Tus datos');

@@ -9,7 +9,7 @@
 > (el acceso con código: A1–A3 ✅ `#853`→`#857`; la A4 del SPA en `main`, `#813`; `/cookies` ✅ `#858`→`#860`; el zip (6) y
 > el reparto, `#861`; el SEO, `specs/seo.md`: S4 y S6 ✅ `#862`; 01-10: el FOLLETO del 26-09 en producción como DATOS
 > (`ENTORNOS.md` §6), los textos legales para el owner (`#863`→`#865`), **la Z6a de la isla ✅** y, por la noche, **la
-> Z6b ✅** (`#866`, `#867`) y sus tres usos de los banners ✅ (02-10), con su visto bueno; 02-10: **la A5 ✅**, **la Z6g·1 ✅** y **la Z6d ✅**).
+> Z6b ✅** (`#866`, `#867`) y sus tres usos de los banners ✅ (02-10), con su visto bueno; 02-10: **la A5 ✅**, **la Z6g·1 ✅**, **la Z6d ✅** y **la Z6f ✅**).
 > ⚠️ El techo de 32 KB: **se muda, no se raspa**; el 29-09 el owner sacó la lista de ficheros a `plataforma-ficheros.md`
 > (`#852`) y NO subió el techo. Si vuelve a apretar tres veces seguidas, llévaselo con la medida.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -59,8 +59,10 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
    §4.12; la migración de la A5d corre en producción SOLO con la v2.0.0, medida: `ENTORNOS.md` §6) · (2) ~~el acceso con
    código~~ ✅ 02-10 (la Z6g·1, `#871`, §4.27; ⚠️ cuatro sondas y `sonda-panel`, adaptadas o por adaptar, se pasan en la
    verificación final) · (3) los retoques del zip (6): ~~Z6d~~ ✅ 02-10 (la firma, la cabecera sin precio salvo Colegios,
-   garantías, chapas y el filo; `#872`) · **sigue la Z6f, el pie** (el owner, 02-10) y después la Z6e y el resto de la Z6g
-   (§4.27) · (4) la isla en un
+   garantías, chapas y el filo; `#872`) · ~~Z6f~~ ✅ 02-10 (el pie, sin decisión nueva; instancia `5b92bd8`) · **SIGUE LA
+   Z6e** (Cumpleaños «Todo resuelto» con la pegatina en `IncludedList`, y las dos horas repartidas: 90 + 30), medida y
+   escrita «al detalle» en §4.27 ANTES de codificar contra el `git diff` del zip (6) en la instancia (`3b0956d`), y después
+   el resto de la Z6g («Quién firma el descargo», el acceso en Ajustes, Normas, Visítanos, Colegios y Entradas) · (4) la isla en un
    móvil de verdad, **en STAGING al terminarlo todo**. `isla_razon` y la imagen de la INVITACIÓN son del SPA (`#861`). ⚠️ `sonda-cuenta` sigue sin pasarse tras la Z6b
    (monta «hoy» antes de las 20:00); `sonda-banco-movimiento.mjs` sigue con los casos del 27-09: se rehace en la
    verificación final (`#768`).
@@ -110,7 +112,7 @@ sigue 🟦 por lo del owner: el MATERIAL de los vídeos (en LOCAL, una muestra W
 dobles); el aviso de los calcetines, «se devuelve la señal» y el TRAMO DE EDAD de cada entrada (`#825`); `payment.marks` (en
 LOCAL, `bizum,visa,mastercard`). BD LOCAL con los valores de `#699`/`#761`.
 ⚠️ **Trampas vivas** (las de `sonda-isla` que paga, `sonda-cuenta` antes de las 20:00 y la base de un techo de peso, mudadas a
-`TESTING.md` §2.octies el 29-09): (b) el tracker, a ~180 B de su techo (16 KB): el 01-10 se llevó la línea de F2 a su marcador
+`TESTING.md` §2.octies el 29-09): (b) el tracker, a 17 B de su techo (16 KB, 02-10): el 01-10 se llevó la línea de F2 a su marcador
 (antes, F4 y F5; el detalle vive en sus specs); la próxima vez, otra cerrada;
 (d) Vue 3.5 reevalúa un `computed` fuera del `try` de quien lo lee: se protege DENTRO (`seguro.js`, §4.13); (f) un texto de la isla que
 use la COMPRA tiene que estar en un grupo que la compra recibe (`mi_cuenta.*` no le llega: §4.24); (g) `isla/hoja/montar.js` NO
