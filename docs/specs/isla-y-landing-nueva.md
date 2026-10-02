@@ -2335,7 +2335,7 @@ fuente de cada punto es su `readme.md` (la sección entre comillas) y su compone
 | Z6a ✅ | La isla en **tres huecos** (menú · acción · cuenta), la frase siempre, la acción siempre (a secundaria con un botón de la página a la vista), la cuenta con el QR y su punto, 13/14 fuera de la barra, el menú reordenado, «¿Lo hablamos?», **cristal 82 %** y **morph** en cada cambio, sin `compact` | «La isla · tres huecos, cristal y morph (28-09)» | `ParkIsland.jsx` (822 líneas cambiadas) |
 | Z6b ✅ | **Banners «Da la razón»**: con un botón de la página a la vista, la razón en vez del naranja (razón · vivo · espera · hecho), la compra que no corta al cerrar, el aviso a isla entera, `isla_razon`; y la frase de cada pieza (`#866`) | «La isla · banners, opción C (29-09)» | `explorations/isla-banners` (las razones de cada página) |
 | Z6c | **Experimento B3** contra la isla de hoy, con `Experiments` (asigna el servidor por visitante; `variante` en los eventos) y las frases cortas de cada página | «Experimento B3 (29-09)» | la cabecera sin botón en la primera pantalla del móvil |
-| Z6d | **La firma** de la cabecera (logo y nota de Google juntos, `--scrim-firma`), las garantías del móvil en lista, `Sticker` y `ProofChip`, el filo del gris (`--edge-subtle`) | «La cabecera · la firma», «Las garantías en el móvil», «Las pegatinas», «La prueba de los cuidados» | `VideoHero`, `ReassuranceBand`, `ProofList` |
+| Z6d ✅ `#872` | **La firma** de la cabecera (logo y nota de Google juntos, `--scrim-firma`), las garantías del móvil en lista, `Sticker` y `ProofChip`, el filo del gris (`--edge-subtle`) | «La cabecera · la firma», «Las garantías en el móvil», «Las pegatinas», «La prueba de los cuidados» | `VideoHero`, `ReassuranceBand`, `ProofList` |
 | Z6e | Cumpleaños **«Todo resuelto» (6a)** y **las dos horas repartidas** (90 min saltando y 30 de merienda: la cabecera, la pieza 3, el selector, las dudas, la hora extra) | «Rehecha el 29-09», «Las dos horas, repartidas (28-09)» | `IncludedList`, `AfterBookingPanel` |
 | Z6f | **El pie** rehecho: dos zonas y un filete, claro y en tarjeta | «Rehecho el 29-09: dos zonas y un solo filete» | `SiteFooter.jsx` (318) |
 | Z6g (·1 ✅ `#871`) | La compra y Mi cuenta: **`CodeInput`** (6 casillas, se comprueba con la sexta, «Reenviar» a los 30 s; ·1, abajo), **«Quién firma el descargo»** (Tus datos, Listo con «Añadir menores», Mi cuenta), el acceso en Ajustes; y lo que cambia en Normas, Visítanos, Colegios y Entradas | «La cuenta sin contraseña (30-09)», «Quién firma el descargo (30-09)» | `compra/entrar.jsx`, `compra.jsx` |
@@ -2661,6 +2661,38 @@ Visítanos, Colegios y Entradas) va con los retoques del zip (6).
   `mutar-acceso-codigo.sh` 54/54, `mutar-panel-authenticator.sh` 11/11. **Sin sonda** (el owner lo mira en vivo, 02-10).
   ⚠️ `sonda-isla`, `sonda-cuenta`, `sonda-conversion` y `sonda-inventario-cookies` pulsan el enlace retirado o «Entrar» tras
   la sexta: se adaptan en la verificación final (`#768`); ya leen «482-913».
+
+#### La Z6d al detalle — ✅ `[DECIDIDO owner]` 2026-10-02, `#872` (medido el 02-10, antes de codificar, contra el `git diff` del zip (6) en la instancia, `3b0956d`)
+Todo en la INSTANCIA (`web/components`, `publico/instancia/{css,js}`, `lang`); el producto no cambia. Cuatro tandas:
+- **Z6d·1 · La firma y la regla del precio.** `VideoHero` monta UNA pieza arriba a la izquierda en todas las pantallas:
+  logo · filete (`--border-inverse`) · la nota corta (`RatingSummary sm`, sin «sobre 5»: «4,9 en Google» y «155 reseñas»
+  enlazado). Logo a 48 px (44 en la compacta; 40 apilada, que cede hasta 28 px en tarjetas de 320–345 con
+  `clamp(28px, (100cqw − 164px) × 0,377, 40px)`): la nota nunca parte. Sobre el vídeo apilado, `--scrim-firma` (128 px). La
+  fila del botón queda para la acción y su enlace: fuera la nota de ahí, su `proof-sigue` y `proofAbove` (la portada); lo
+  que cede en pantallas bajas es solo el enlace. Sobre la foto, el texto deja sitio a la firma (nunca se montan). Va en la
+  portada, Cumpleaños, Kids, Jump, Colegios y Normas; Visítanos, solo el logo. ⚠️ **Choca con `#821`** (el owner, 27-09: el
+  logo a 64 px, cediendo hasta 40): el zip (6) es posterior (29-09) y reduce el logo PORQUE logo y nota saturaban; se sigue
+  el zip con el tamaño en una variable y se le pregunta al owner al verlo. **La regla del precio** (el owner, 30-09,
+  `estrategia/2026-09-30/Web.md`; manda sobre el zip): fuera el precio de la cabecera de la portada, Kids, Jump y
+  Cumpleaños —«a un toque», su enlace al precio se queda—; Colegios lo conserva.
+- **Z6d·2 · Las garantías en el móvil y la pegatina.** `ReassuranceBand` en lista (variante 4a): un renglón por garantía
+  con filete, la pegatina de 36 px arriba a la altura del titular, el titular en `pretty`, 14 px arriba y abajo y 16 a los
+  lados; la barra de escritorio no cambia. `Sticker` (cian, lima, magenta, amarillo por posición; icono en tinta; nunca
+  naranja), la MISMA en `IncludedList` (Cumpleaños y Colegios).
+- **Z6d·3 · La prueba de los cuidados en chapas.** `ProofChip` (la chapa de `Tag`: gris suave con su filo, 36 px, píldora;
+  lo que se cuenta en negrita —mono tabular si es cifra— y lo que significa en mono, en tinta de texto) en `ProofList`; en
+  el móvil bajan de fila y la nota larga baja dentro de su chapa (radio 20). Portada, Cumpleaños, Kids, Jump y Colegios.
+- **Z6d·4 · El filo del gris** (`--edge-subtle`, ya en `saltia.css`): `--bg-subtle` va siempre con él donde el zip lo puso
+  —`Tag`, `ReviewPanel`, `RuleGrid` suave, `PromoSplit` suave, `StepsPanel`, `FeatureHighlight`, `StatBand`—; el pie, con la
+  Z6f.
+**Verificación**: el owner, en vivo (sin sondas, `#768`); `sonda-primera-pantalla` y las de página, en la verificación final.
+**Hecho (02-10), con el visto bueno del owner en vivo** —el logo a 48 (el zip, sobre `#821`) y la nota de la firma sin la
+«G» de Google (`mark="none"`; la estrella se queda), `#872`—: la firma en `video-hero` (una vez, en el medio; `pj-vh--con-firma`,
+`--pj-firma-logo`, `pj-vh__velo-firma`), `rating-summary max=""` («en :fuente», `piezas.nota.en`), `cabecera.js` sin la
+nota ni el logo que cedían; fuera el precio de la portada, Kids, Jump y Cumpleaños, y con él `day-rates`, `price-group` y su
+medida (sin consumidor) y los textos y cifras que solo servían ahí; `sticker` (y las garantías en lista), `proof-chip` (en
+`proof-list`) y el filo en `pj-rp`, `pj-rg--suave`, `pj-ps--suave` y `pj-sp`. «Lo que incluye» con la pegatina va con la
+Z6e (el zip rehízo esa pieza entera). Las siete páginas, 200 en local.
 
 ## 5. Impacto en invariantes
 
