@@ -376,6 +376,15 @@ borra el rol y el empleado; los textos que se guarden en `mail_texts` se quedan 
 y el MEDIDOR `medir-r1t-bloques.php [es|en|fr]` (`TODOS=1` lista todos): pinta los 29 correos con una marca por bloque y dice
 cuáles salen, con negrita o con asteriscos. Solo lee (cada pintado, en una transacción que se deshace).
 
+(27) **De la P1a de la Puerta nueva (02-10, `puerta-nueva.md` §4.4)**: `ojo-puerta.php` (en la carpeta de auditoría) monta
+nueve clientes `ojo-puerta-<ficha>@jumpweb.test` (las fichas de `datos.js`: ana, mostrador, carlos, marta, elena, jorge,
+irene, tomas, david) con sus pedidos de hoy `JW-OJO-P-*`, sus menores (el «sin descargo» es un menor HEREDADO: en modo
+interno el producto no deja declararlo) y su carné; escribe los códigos en `ojo-puerta.json` (al lado). Y el empleado
+`ojo-puerta-empleado@jumpweb.test` / `Sonda-puerta-2026!` con `staff` (el admin está obligado a los dos pasos y el rol
+`puerta` no está sembrado en la local). `OJO=desmontar` quita pedidos, carnés, visitas y las franjas que creara; las
+CUENTAS se quedan (sus firmas van encadenadas). La sonda, `scripts/sonda-puerta-p1.mjs` (necesita `socat` en `:8081` dentro
+del contenedor, la skill `/sonda`).
+
 ## 9 · La foto vieja del carril (mudada VERBATIM de `carriles/spa.md` el 2026-09-29, su techo)
 
 - ✅ **27-09, TODO EN `main` Y APROBADO POR EL OWNER**: **F7** (`#752`, la exención de quien cumple: la lista y su

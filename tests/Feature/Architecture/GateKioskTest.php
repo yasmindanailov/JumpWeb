@@ -36,6 +36,15 @@ class GateKioskTest extends TestCase
         return $m[1];
     }
 
+    /**
+     * La regla `$selector` lleva la declaración `$declaracion` como LÍNEA ENTERA. ⚠️ Una subcadena no basta:
+     * «min-height: 100dvh;» CONTIENE «height: 100dvh;», y así sobrevivió el mutante que hacía desplazarse la pantalla.
+     */
+    private function declara(string $selector, string $declaracion, string $porque = ''): void
+    {
+        $this->assertMatchesRegularExpression('/^\s*'.preg_quote($declaracion, '/').'$/m', $this->regla($selector), $porque !== '' ? $porque : "«{$selector}» ya no declara «{$declaracion}».");
+    }
+
     public function test_the_panel_theme_imports_the_gate_sheet(): void
     {
         $this->assertStringContainsString("@import './puerta.css';", $this->fichero(self::TEMA), 'La Puerta se quedó sin hoja: el tema del panel ya no la importa.');
@@ -45,12 +54,11 @@ class GateKioskTest extends TestCase
     /** La pantalla ENTERA es el kiosco: tres alturas (buscador, cuerpo, pie) y la página no se desplaza; lo hacen sus columnas. */
     public function test_the_screen_fills_the_tablet_and_the_page_never_scrolls(): void
     {
-        $this->assertStringContainsString('height: 100dvh;', $this->regla('.gate-shell'));
+        $this->declara('.gate-shell', 'height: 100dvh;', 'la pantalla dejó de medir la tablet: se desplaza como un documento');
 
-        $ppu = $this->regla('.ppu');
-        $this->assertStringContainsString('container-type: size;', $ppu, 'la pieza se mide contra su CAJA (el mockup): sin esto no hay vertical ni escritorio');
-        $this->assertStringContainsString('grid-template-rows: auto minmax(0, 1fr) auto;', $ppu);
-        $this->assertStringContainsString('overflow: hidden;', $ppu);
+        $this->declara('.ppu', 'container-type: size;', 'la pieza se mide contra su CAJA (el mockup): sin esto no hay vertical ni escritorio');
+        $this->declara('.ppu', 'grid-template-rows: auto minmax(0, 1fr) auto;');
+        $this->declara('.ppu', 'overflow: hidden;');
     }
 
     /**
@@ -85,8 +93,8 @@ class GateKioskTest extends TestCase
     /** Dos columnas que se desplazan SOLAS (el mockup): a la izquierda lo que se hace, a la derecha el contexto. */
     public function test_the_body_is_two_columns_that_scroll_on_their_own(): void
     {
-        $this->assertStringContainsString('grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);', $this->regla('.ppu-cuerpo'));
-        $this->assertStringContainsString('overflow-y: auto;', $this->regla('.ppu-col'));
+        $this->declara('.ppu-cuerpo', 'grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);');
+        $this->declara('.ppu-col', 'overflow-y: auto;');
 
         $vista = $this->fichero(self::VISTA);
         $this->assertStringContainsString('data-gate-col="main"', $vista);
@@ -116,10 +124,10 @@ class GateKioskTest extends TestCase
      */
     public function test_touch_targets_are_at_least_44px_at_every_width(): void
     {
-        $this->assertStringContainsString('min-height: 44px;', $this->regla('.ppu-boton'));
-        $this->assertStringContainsString('min-height: 58px;', $this->regla('.ppu-boton--buscar'));
-        $this->assertStringContainsString('min-height: 48px;', $this->regla('.gate-q__btn'));
-        $this->assertStringContainsString('height: 58px;', $this->regla('.ppu-campo__input'));
+        $this->declara('.ppu-boton', 'min-height: 44px;');
+        $this->declara('.ppu-boton--buscar', 'min-height: 58px;');
+        $this->declara('.gate-q__btn', 'min-height: 48px;');
+        $this->declara('.ppu-campo__input', 'height: 58px;');
     }
 
     /** ▶ **La doble lectura** del lector (el mockup): el mismo código en menos de 3 s se corta ANTES que el `wire:submit`. */

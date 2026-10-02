@@ -53,10 +53,12 @@ class FichaPuertaTest extends TestCase
             $this->fila(['order_code' => 'R-JUMP', 'zone_name' => 'Jump', 'zone_slug' => 'jump', 'quantity' => 1, 'minors_only' => false, 'product' => 'Jump · 1 hora']),
             $this->fila(['order_code' => 'R-K1', 'minors' => [['name' => 'Vera', 'age' => 6, 'waiver' => 'current'], ['name' => 'Leo', 'age' => 3, 'waiver' => 'current']], 'addons' => ['1 × Tarta', '2 × Calcetines']]),
             $this->fila(['order_code' => 'R-K2', 'quantity' => 1]),
+            $this->fila(['order_code' => 'R-K18', 'quantity' => 1, 'start_time' => '18:00']),
             $this->fila(['order_code' => 'R-FIESTA', 'product' => 'Pack Cumpleaños KIDS', 'is_party' => true, 'quantity' => 10, 'duration_minutes' => 120, 'minors_only' => false, 'paid_cents' => 10000, 'balance_kind' => 'pay_at_park', 'balance_cents' => 9000]),
         ]), $this->now());
 
-        $this->assertSame([['Kids', 3, false], ['Jump', 1, false], ['Kids', 10, true]], array_map(fn (array $g): array => [$g['zona'], $g['cifra'], $g['fiesta']], $f['filas']), 'Kids primero; el cumpleaños, su propia fila aunque coincida en zona y hora');
+        $this->assertSame([['Kids', 3, false], ['Kids', 1, false], ['Jump', 1, false], ['Kids', 10, true]], array_map(fn (array $g): array => [$g['zona'], $g['cifra'], $g['fiesta']], $f['filas']), 'Kids primero y por hora (otra hora es otra fila: otro color en la P2); el cumpleaños, su propia fila aunque coincida en zona y hora');
+        $this->assertSame(['R-K18'], array_column($f['filas'][1]['reservas'], 'codigo'));
 
         $kids = $f['filas'][0]['reservas'];
         $this->assertSame(['R-K1', 'R-K2'], array_column($kids, 'codigo'));
@@ -64,9 +66,9 @@ class FichaPuertaTest extends TestCase
         $this->assertSame('Vera · Leo', $kids[0]['quien']);
         $this->assertSame('+ 1 × Tarta · + 2 × Calcetines', $kids[0]['complementos']);
         $this->assertNull($kids[1]['quien'], 'sin menores asignados, sin «quién»');
-        $this->assertSame('Jump · 1 hora · 1 persona', $f['filas'][1]['reservas'][0]['linea'], 'con adultos: «personas»');
+        $this->assertSame('Jump · 1 hora · 1 persona', $f['filas'][2]['reservas'][0]['linea'], 'con adultos: «personas»');
 
-        $fiesta = $f['filas'][2]['reservas'][0];
+        $fiesta = $f['filas'][3]['reservas'][0];
         $this->assertSame('Pack Cumpleaños KIDS · 10 niños', $fiesta['linea'], 'un cumpleaños cuenta niños');
         $this->assertNull($fiesta['pagado'], 'un cumpleaños no cuenta su dinero en la Puerta (D6)');
         $this->assertNull($fiesta['dinero']);

@@ -45,9 +45,12 @@ class LedgerSingleSourceTest extends TestCase
         'app/Notifications/OrderItemRefunded.php',
         'app/Notifications/OrderRefunded.php',
         'app/Notifications/MixedPartySurchargeChanged.php',
-        // Fase 6 · subsistema A: la PUERTA pasa a ser una superficie del ledger (`identidad-qr-puerta.md` §4.7).
+        // Fase 6 · subsistema A: la PUERTA pasa a ser una superficie del ledger (`identidad-qr-puerta.md` §4.7). Desde la
+        // Puerta nueva (`specs/puerta-nueva.md` §4.4, la P1) su dinero lo compone `FichaPuerta` —por clase del libro— y lo
+        // pinta la vista: el parcial de la reserva se retiró.
         'app/Domain/Booking/Services/GateReservationsReader.php',
-        'resources/views/livewire/admin/puerta/partials/reservation.blade.php',
+        'app/Livewire/Admin/Puerta/FichaPuerta.php',
+        'resources/views/livewire/admin/puerta/validar.blade.php',
         // T3·2 del LIBRO (`specs/desglose-libro.md` §6.3.2): los lectores del panel que componían
         // por su cuenta —tres fórmulas para el mismo dinero— pasan a pedirle el libro a `OrderBook`.
         'resources/views/filament/orders/items-list.blade.php',

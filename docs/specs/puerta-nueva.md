@@ -1,7 +1,7 @@
 # [SPEC] La Puerta nueva — el mostrador del zip (6), sobre las garantías de la de hoy
 
-> Estado: 🟦 **MEDIDA el 2026-10-02 y con las cuatro respuestas del owner (`#817`)**; sin código: sigue el «al detalle»
-> de la P1 · Última actualización: 2026-10-02 · Decisión: `#817` · Carril: 🧩 **SPA** (`#861`, el reparto del
+> Estado: 🟦 **la P1a (la pantalla) HECHA en `wip/puerta-p1`, al ojo del owner**; quedan la P1b (la encuesta), la P2 y la
+> P3 · Última actualización: 2026-10-02 · Decisiones: `#817`, `#818` · Carril: 🧩 **SPA** (`#861`, el reparto del
 > zip (6), `isla-y-landing-nueva.md` §4.27) · Fuente: `instancias/playjump/diseno/playjump-design-system/paginas/puerta/`
 > y la sección «La Puerta · el mostrador (27-09)» de su `readme.md` (manda el mockup, `#767`); referencia, el brief
 > COMPLETO `uploads/brief-puerta-playjump (1).md` · La pantalla de hoy y sus garantías: `identidad-qr-puerta.md`.
@@ -20,6 +20,8 @@
 - **El owner ya contestó** (`#817`): «Nueva búsqueda» se queda en el pie, los invitados en una línea sin nombres, la
   encuesta pregunta a pregunta y la reseña del día por palabras. Tandas en §4.4: cada una en `wip/…`, con su «al
   detalle» medido aquí ANTES del código, su arnés, su sonda a 1080 × 810 y el ojo del owner en la tablet.
+- **Estado (02-10)**: la P1a (la pantalla) hecha en `wip/puerta-p1`, al ojo del owner; D9 → `#818`. Su montaje y su sonda,
+  en §4.4 («P1a · la pantalla, HECHA»).
 - No toca el `CRITICAL_RE` (medido). Sí RGPD (lo que ve la cola): `INVARIANTES.md` §3 antes de la P1.
 
 ## 1. Contexto y problema (medido el 2026-10-02)
@@ -132,6 +134,9 @@ HAY = el producto ya lo sabe (dónde) · FALTA = hay que construirlo · CHOCA = 
 - **D7 · El aviso del anonimato de la encuesta se QUEDA** (`#754`; el owner lo vio y lo aprobó en la puerta, `#757`): el
   mockup no lo dibuja; va en su voz, sobre la pregunta.
 - **D8 · Los menores invitados fuera de un cumpleaños se quedan con su nombre** (§4.4, la P1 al detalle, punto b).
+- **D9 · Un descargo de una versión ANTERIOR deja pasar** —`[DECIDIDO owner]` `#818`, al ver la P1 en vivo—: verde y la línea
+  de siempre (`admin.waiver.gate_outdated`: la firma nueva, en su próxima compra, no en el mostrador). El mockup pedía firmar
+  el nuevo en la puerta.
 
 ### 4.3 Los mecanismos nuevos (lo de PlayJump, como DATO)
 
@@ -265,6 +270,31 @@ tras buscar, tocar y volver, y ningún correo ni teléfono enteros en el HTML.
 - **e · La palabra «pulseras»** es de PlayJump. ▶ En la P1 la fila dice la cifra y la zona («2 KIDS»); el rótulo de la
   pulsera («pulseras lilas») llega en la P2 con la rueda, y lo escribe el parque.
 
+**P1a · la pantalla, HECHA** (02-10, en `wip/puerta-p1`; al ojo del owner en la tablet; D9 → `#818`). La P1 se parte en
+dos: la **P1a**, la pantalla, y la **P1b**, la encuesta pregunta a pregunta y solo en verde (`#817`).
+- **Servidor**: `GateReservation` gana la zona, la duración, la hora de inicio, si es un pack y el tope de edad
+  (`guestAgeMax`: la mayoría de edad la decide Identity, `minors_only`), con UN lote más (`ticketType.zone`; el presupuesto de
+  la ficha, medido, de 28 a 29). `GateVerdict` sustituye a `GateSemaphore` (sin ficha conserva las líneas del semáforo: la
+  fecha del descargo, «tiene cuenta», «pásale la tablet»). `QueryMask` enmascara el eco; tras un escaneo y con lo tecleado
+  mal, sin eco. `FichaPuerta` es el presentador puro de lo que se pinta.
+- **La línea de cada reserva nombra el producto ENTERO**, como el catálogo («Kids · 1 hora · 2 niños»), sin componerlo: lo
+  dice el readme del mockup («el producto se nombra entero») y es lo data-driven.
+- **La vista y su hoja** `resources/css/filament/admin/puerta.css` (`ppu-*`, los tokens del panel), importada por el tema;
+  el bloque `gate-*` viejo, fuera del tema. Solo modo claro; el sonido y la doble lectura en Alpine (`puertaPantalla`, en el
+  layout); «Dar por firmado» con la confirmación DENTRO de la ficha (fuera el `wire:confirm`). Retirados `GateSemaphore`,
+  su prueba y el parcial de la reserva; `LedgerSingleSourceTest` cuenta `FichaPuerta` y la vista como superficies del libro.
+- **Pruebas**: `GateVerdictTest`, `QueryMaskTest` y `FichaPuertaTest`, nuevas; las que miraban el HTML viejo, re-apuntadas
+  con su porqué; `GateKioskTest`, rehecha contra la hoja, con cada declaración como LÍNEA ENTERA (una subcadena dejó vivo al
+  mutante de «min-height: 100dvh»). Suite 6739 / 46729.
+- **Arnés** `scripts/mutar-puerta-p1.sh` 34/34 (dos supervivientes en la primera vuelta: dos casos que faltaban). **Sonda**
+  `scripts/sonda-puerta-p1.mjs` 196/196 en 1080 × 810, 1194 × 834, 1366 × 1024 y 390, con el montaje fuera de git
+  (`ojo-puerta.php`, en la carpeta de auditoría: nueve fichas con carné y un `staff` local, `ojo-puerta-empleado@jumpweb.test`; el admin
+  está obligado a los dos pasos y el rol `puerta` no está sembrado en la local). Destapó un solape a 390 («Sus hijos» encima
+  de la reserva): arreglado, y la guarda vista fallar sin el arreglo (189/196).
+- **No visto**: el sonido (Web Audio; una sonda no oye), el lector real en un iPad y «Falta pagar» con un pedido de señal de
+  verdad (el montaje da «no cuadra»: la misma pieza con otro texto, cubierta por las pruebas). Dato de la local: su Kids no
+  tiene tope de edad y su línea dice «personas»; se arregla en el panel.
+
 ## 5. Impacto en invariantes
 
 - **RGPD** (`INVARIANTES.md` §3, lo que ve la cola): más estricto, con «Resultado para» enmascarado; sin apellidos de menores
@@ -291,3 +321,5 @@ tras buscar, tocar y volver, y ningún correo ni teléfono enteros en el HTML.
   palabras, «profesional y robusto». D1–D6 quedan como los decidió el agente. Sigue el «al detalle» de la P1.
 - 2026-10-02 · el «al detalle» de la P1, escrito y MEDIDO (§4.4), con D7 (el aviso del anonimato se queda) y D8 (los
   menores invitados fuera de una fiesta, con su nombre). Sigue el código de la P1, en `wip/puerta-p1`.
+- 2026-10-02 · la P1a, hecha (§4.4) y en vivo para el owner; contesta D9 (`#818`: un descargo de una versión anterior
+  deja pasar). Espera su visto bueno para ir a `main`; después, la P1b.
