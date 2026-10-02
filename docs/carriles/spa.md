@@ -52,9 +52,9 @@ filas 4 y 8), ANTES que la R1c («tus puntos primero»).
   local; el owner eligió (02-10) el KIDS (105) igual, montado con `ojo-kids.php` y medido con su sonda a 390 y 1280 (`CARRIL-SPA`
   §8 (29)). ▶ Falta su OJO en vivo. En producción, con la v2.0.0: la receta, `fiesta-sistema-nuevo.md` §4.17 «K3».
 - 🟦 **Fila 8, las altas en casa y en el parque** (la TA, `analitica-para-decidir.md` §4.15): HECHA en `wip/ta-altas-por-origen`
-  con la TA·0 (los robots fuera de la demanda sin hueco); sonda del cartel 10/10. ▶ Espera el sí de `#911` (`[PENDIENTE: owner]`:
-  la campaña en el alta sin consentimiento), el arnés `SOLO=TA` con la local quieta y el ojo. ⚠️ v1.1.0 no tiene ni la
-  analítica ni `#mi-cuenta`: un QR impreso hoy abre la portada y no cuenta nada hasta la v2.0.0. El ancla del arnés, arreglada.
+  con la TA·0 (los robots fuera de la demanda sin hueco); `#911` decidida por el owner («como el pedido»); arnés `SOLO=TA` 18/18,
+  sonda del cartel 10/10, suite verde. ▶ Falta su OJO en «Analítica → Clientes»; después, *fast-forward* a `main`. ⚠️ v1.1.0
+  no tiene ni la analítica ni `#mi-cuenta`: un QR impreso hoy abre la portada y no cuenta nada hasta la v2.0.0.
 
 0. ✅ **LOS COMPLEMENTOS DE LA FIESTA** (`#806`→`#808`, `fiesta-sistema-nuevo.md` §4.17): K1 y K2 en `main`; K3 es DATO del
    panel (la receta, en §4.17 «K3»): lo configura el parque en SU panel al desplegar (merienda, calcetines, cono, tartas). ▶
@@ -249,6 +249,13 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
+- ❗ **Para plataforma (02-10 noche), la fila 8 de tu reparto (`#876`), HECHA en `wip/ta-altas-por-origen`** (`analitica-para-decidir.md`
+  §4.15): «Clientes» cuenta las altas por la campaña de su visita, el mostrador (del rastro de «Crear pedido») y el resto. Tu
+  enlace del cartel, VERIFICADO de punta a punta en la local y sin consentimiento (`scripts/sonda-cartel.mjs`, 10/10). Tus
+  `SelfSignup`/`GoogleSignup`, intactos: la campaña la pone el `Recorder` por la marca del contrato. ❗ **`#911` (owner): el
+  alta guarda su campaña aunque no haya «análisis», como el pedido**. Tu punto 16 de `/privacidad` (`textos-legales.md`) dice
+  que sin «análisis» no se vincula la navegación a la cuenta: tiene que nombrar que el pedido y el alta guardan de qué campaña
+  llegaron, sin saber quién navegó (con la asesoría, antes de publicarlo). `RGPD-07` (2), ya al día.
 - ❗ **Para plataforma (02-10), tu Z6c·3 (la medida del B3), EN `main`** con el visto bueno del owner (`analitica.md` §4.4):
   `isla_accion` (`situacion`, `etiqueta`, `tono`, `cara`, `pagina`, `variante`), `isla_panel` (`panel`, `situacion`,
   `variante`) e `isla_razon` (`situacion`, `tipo`, `razon`, `pagina`, `variante`) están en `Contract::EVENTS` y en el `enum` de
@@ -278,22 +285,9 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 - Los dos avisos al carril de CORREOS (29-09 y 19→26-09; hoy los correos son de este carril, `#789`): mudados verbatim a
   `CARRIL-SPA.md` §9 (30-09).
 
-### ❗❗ Para el carril de la WEB (emisor: SPA, 24-09) — LA T3 DE LA ANALÍTICA tocó lo tuyo
-- **La T3 entera está en `main` (24-09)** y tocó lo tuyo; el detalle por tanda, en `analitica.md` §4.3 y §4.9.
-  En una línea: `layout.blade.php` (los `data-cookie-*` desde `CookieConsent::OPTIONAL`, `data-analytics-*`,
-  `data-pixel-*`), `app.js` (el almacén `cookies` → `ui/cookie-consent.js`), `site/cookie-banner.blade.php` (un
-  toggle por categoría), `lang/{es,en,fr}/cookies.php`, `Content\Services\{CookiePolicyContent,LegalContent}`
-  (tres migraciones quirúrgicas), `SecurityHeaders.php` (orígenes del driver y de los píxeles), `Filament/Pages/
-  Settings.php` (dos secciones), `anfitrion/legal.blade.php` (`/cookies` nombra la herramienta y los píxeles
-  activos), `bootstrap/app.php` (`_fbp`/`_fbc`/`_ttp` sin cifrar), `openapi/v1.yaml` → **1.21.0**,
-  `AccountHomeZone.vue`, `stores/accountContext.js`, `cajon/track.js` y `cajon/controller.js`. **`POLICY_VERSION`
-  = `2026-09-24`**: todo visitante vuelve a decidir. **El owner vio el banner, `/cookies` y `/privacidad` en vivo
-  el 24-09 («perfecto»)**. ❗ **Tuyo y a la vista**: el «[PENDIENTE: confirmar adhesión…]» del proveedor del FEED
-  SOCIAL en el párrafo de transferencias de `/cookies` (`#592`) sigue publicado; yo no lo toco.
-- ▶ **Me llevé `google-business-profile.md` (`#524`)**, tuya de banda; la numero desde la mía. Tocado en la T2·8
-  (`#734`): `public/css/landing.css` (el bloque `.rev*`), `lang/{es,en,fr}/landing.php` (`reviews.*`),
-  `ReviewCardTest`, `public/css/cajon.css` regenerada. ❗ `google-reviews.md` dice «umbral de 10 reseñas» y el
-  código `MIN_REVIEWS = 1` (`#494`): no la toco yo.
+- El aviso al carril de la WEB (24-09: la T3 de la analítica tocó lo suyo; me llevé `#524`), sin su «atendido» —la web duerme
+  desde el 16-09—: mudado verbatim a `CARRIL-SPA.md` §9 (02-10). Lo vivo, de quien lleve la landing (hoy plataforma): el
+  pendiente del feed social en `/cookies` (`#592`) y `MIN_REVIEWS = 1` contra el «umbral de 10» de `google-reviews.md`.
 
 ### Atendido
 - **Plataforma 02-10 tarde** (`#876`, la lista del owner; y tres avisos suyos del 02-10 sin acuse aquí: la A5 `#869`/`#870`, la

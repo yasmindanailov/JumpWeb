@@ -1015,7 +1015,7 @@ parque: altas en casa y en el parque».
 6. En la local: 63 `user_registered` y 1 alta de mostrador.
 
 **Cambia**:
-- **El hecho** (`[PENDIENTE: owner]` 2026-10-02, `#911`: toca `RGPD-07` (2) y el punto 16 de `/privacidad`): `user_registered`
+- **El hecho** (`[DECIDIDO owner]` 2026-10-02, `#911`: «como el pedido»; toca `RGPD-07` (2) y el punto 16 de `/privacidad`): `user_registered`
   gana la capa de CAMPAÑA de la visita en la que se da el alta —`source`, `medium`, `campaign`,
   con `AttributionContext::touch()` de la sesión EN CURSO (la regla del embudo); sin sesión, ninguna— y sin identificadores: la
   regla del pedido (rgpd-5) aplicada al alta. La declara el CONTRATO (`Contract::EVENTS`, una marca de campaña en el hecho) y la
@@ -1040,7 +1040,7 @@ no cuenta) · los dos registros: la campaña SIEMPRE y el `session_id` solo con 
 cuenta abierta, el alta con código y su fila en el informe. **Antes de la TA**, el defecto de `OccupancyReport::missing()`
 (robots y personal en «demanda sin hueco», medido por plataforma el 29-09), con su mutación: es la regla del carril.
 
-**Lo construido (02-10, 19:00; en `wip/ta-altas-por-origen`, sin `main` hasta el sí de `#911` y el ojo del owner)**:
+**Lo construido (02-10, 19:00; en `wip/ta-altas-por-origen`, sin `main` hasta el ojo del owner; `#911` decidida por él)**:
 - **TA·0**: `OccupancyReport::cleanEvents()`, la regla del embudo: en la local, la demanda sin hueco pasa de 52 a 0 (las 52, de
   sondas `is_bot`). «Desde cuándo se mide» sigue siendo la fecha del instrumento. El fixture de `OccupancyReportTest` da a cada
   evento su visita, como la ingesta, y un caso nuevo lleva un robot y uno del equipo en el periodo y un robot en la comparación.
@@ -1053,7 +1053,8 @@ cuenta abierta, el alta con código y su fila en el informe. **Antes de la TA**,
 - **Verificación**: `RegistrationCampaignTest` 6, `CustomersReportTest` 9 (con la tabla del panel), `OccupancyReportTest` 11,
   `AnalyticsContractTest` (la guarda de datos personales, sobre `allowedProps()`) y el vecindario (467) en verde; Pint y Larastan
   limpios; `scripts/sonda-cartel.mjs` **10/10** (el enlace del cartel sin consentimiento, de punta a punta; su cuenta, anonimizada
-  al final, sigue contando en la fila del QR). ▶ Falta el arnés `SOLO=TA` (18 mutaciones, la local quieta ~5 min) y el ojo.
+  al final, sigue contando en la fila del QR); la suite entera, 6824 / 47576; arnés `SOLO=TA` **18/18** con su control, y el
+  árbol byte a byte como estaba. ▶ Falta el ojo del owner en «Analítica → Clientes» («Registros y puerta, al detalle»).
 
 ## 5. Impacto en invariantes
 

@@ -638,6 +638,26 @@ De «por dónde retomar», mudado VERBATIM el 2026-09-30 al empezar la R1·T (el
 - **Plataforma 30-09** (la A2a, `#855`, contrato 1.56.0: `POST /me/confirm-code` y `code` en las cuatro acciones; tocó otra vez
   `EmailTiming` y dos censos; la sesión atada al token): leído; para mi A4. Nada mío cambia el token a mano.
 
+- Mudado VERBATIM del buzón de `carriles/spa.md` el 2026-10-02, noche (su techo): el aviso al carril de la WEB, sin su
+  «atendido» (la web duerme desde el 16-09; la landing la lleva hoy plataforma):
+
+### ❗❗ Para el carril de la WEB (emisor: SPA, 24-09) — LA T3 DE LA ANALÍTICA tocó lo tuyo
+- **La T3 entera está en `main` (24-09)** y tocó lo tuyo; el detalle por tanda, en `analitica.md` §4.3 y §4.9.
+  En una línea: `layout.blade.php` (los `data-cookie-*` desde `CookieConsent::OPTIONAL`, `data-analytics-*`,
+  `data-pixel-*`), `app.js` (el almacén `cookies` → `ui/cookie-consent.js`), `site/cookie-banner.blade.php` (un
+  toggle por categoría), `lang/{es,en,fr}/cookies.php`, `Content\Services\{CookiePolicyContent,LegalContent}`
+  (tres migraciones quirúrgicas), `SecurityHeaders.php` (orígenes del driver y de los píxeles), `Filament/Pages/
+  Settings.php` (dos secciones), `anfitrion/legal.blade.php` (`/cookies` nombra la herramienta y los píxeles
+  activos), `bootstrap/app.php` (`_fbp`/`_fbc`/`_ttp` sin cifrar), `openapi/v1.yaml` → **1.21.0**,
+  `AccountHomeZone.vue`, `stores/accountContext.js`, `cajon/track.js` y `cajon/controller.js`. **`POLICY_VERSION`
+  = `2026-09-24`**: todo visitante vuelve a decidir. **El owner vio el banner, `/cookies` y `/privacidad` en vivo
+  el 24-09 («perfecto»)**. ❗ **Tuyo y a la vista**: el «[PENDIENTE: confirmar adhesión…]» del proveedor del FEED
+  SOCIAL en el párrafo de transferencias de `/cookies` (`#592`) sigue publicado; yo no lo toco.
+- ▶ **Me llevé `google-business-profile.md` (`#524`)**, tuya de banda; la numero desde la mía. Tocado en la T2·8
+  (`#734`): `public/css/landing.css` (el bloque `.rev*`), `lang/{es,en,fr}/landing.php` (`reviews.*`),
+  `ReviewCardTest`, `public/css/cajon.css` regenerada. ❗ `google-reviews.md` dice «umbral de 10 reseñas» y el
+  código `MIN_REVIEWS = 1` (`#494`): no la toco yo.
+
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 
 > Lo que decía la fila **«El carril del SPA en el OTRO ordenador · rediseñar el cajón (Fase 4) · el material de PlayJump en otra máquina · la rama `cliente/playjump` · qué ficheros son de cada carril»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
