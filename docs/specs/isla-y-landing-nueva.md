@@ -2852,6 +2852,23 @@ tarta»), por DATOS del enganche (`configurableAddons`); fuera tipo, lista y por
 bloque «tarta» (K3 del SPA, dato del panel al desplegar): su columna sale vacía. **Medido**: `DailySummaryTest` (38),
 `scripts/mutar-resumen.sh` 12/12 y la hoja de la semana generada con los datos locales y vista en imagen.
 
+### 4.29 La lista del owner del 02-10 (noche): el censo y el orden (`#880`)
+
+`[DECIDIDO owner, 2026-10-02 noche]` (`#880`): cuatro puntos, dados en el chat, y su orden: «los cortos primero». Medido en el
+código, en la API y en la BD LOCAL antes de tocar nada (02-10 noche):
+
+| # | El punto (resumido) | Lo medido | Tanda |
+|---|---|---|---|
+| 1 | «Los complementos siempre deben mostrarse. Los que sean. Si son en el producto y no complemento de la lista de invitados» (empezó por la hora extra del cumpleaños: en la calculadora sale; en la isla, no) | `POST /catalog/products/{id}/addons` ya devuelve SOLO los que se venden al reservar (`stage = booking`; `ResolvedAddonsResource`: grupos y sueltos con `can_toggle`, `can_increase`, `available`, `note`…), y el cajón viejo los pinta todos (`TimeStep.vue`). La isla pinta TRES a mano: los calcetines de una entrada (`oferta.js::calcetinDe`: el PRIMERO con su forma; la hora extra de entrada la comparte salvo el tope, y pierde solo por `position`), el menú de una fiesta y la hora extra de la fiesta SOLO si llega de la calculadora (`b.extras`); el hueco [Hora extra] de `PantallaCuando` no lo rellena nadie (`pantalla-cuando.js`: `horaExtra: false`) y `PantallaCuandoFiesta` ni lo tiene. Así, en LOCAL, no salen: la hora extra de las entradas de 2 h (139 y 140; «Una hora más en Kids», 5 € el sábado 3-10 a las 11:00 y a las 17:00; sin precio en la tarifa normal, entre semana no se ofrece), los calcetines de los packs 105/106 (2 €) y la hora extra de sala (316/317; 3 € un martes). En producción hay dos horas extra, de entrada y de sala (`ENTORNOS.md` §6, sin volver a medir allí). Desde la L3, «Reservar» abre la fiesta sin calculadora: por eso se vio | M1 |
+| 2 | Al pulsar «Continuar» sin haber elegido algo, decir qué falta | En la pantalla 0 el botón lleva la caja a lo que falta (`ir-a.js`, el owner el 28-09) pero no lo DICE: si ya está a la vista, parece muerto (`useSeccionCompra.js`, `falta`); sin fila elegida, apagado. Apagados sin más: «Entra» sin correo y con el código a medias (`pasos.js`) y «Elegir esta hora» de la hora llena. «Tus datos» ya pinta sus errores y su resumen | M2 |
+| 3 | Sin cuenta, primero el CORREO: «Entra o crea tu cuenta» tras elegir el producto (Google · o · correo); sin cuenta, el resto de campos. El texto: «Entras con un código a tu correo. Sin contraseña. Si no tienes cuenta, la creas en 1 minuto con el correo que pongas aquí.» | Hoy, sin sesión, «Tus datos» pide todo (nombre, correo, teléfono en un pack, nacimiento, descargo) con «¿Ya has venido? Entra» encima, y la cuenta se descubre al ENVIAR («Esta cuenta ya existe», con su código). Las piezas existen: `PantallaEntrar` con `cuenta` (la de Mi cuenta) y `PantallaDatos` con `nueva` (el correo de Entra, sin volver a teclearlo); `#849`: un correo sin cuenta va al alta, sin código. Se aparta del mockup (`PjcDatos`, los campos primero) | M3 |
+| 4 | Que todo cargue rápido, sobre todo la isla; el hero «deja bordes cuadrados» —en ORDENADOR, la portada: al bajar y volver a subir, las esquinas IZQUIERDAS cuadradas—; transiciones, cambios y estados sin ningún salto | Se solapa con el S3 de `seo.md` (el logotipo de 115 KB, la foto de la cabecera por tamaños, `cajon.css` bloqueante, el CLS 0,07 de la cabecera). La tarjeta (`entradas.css` de la instancia): `.pj-vh` con `overflow: hidden`, `isolation` y radio; su vídeo, `will-change: transform` (sospecha SIN verificar: esa capa sin recortar). Se mide antes de tocar: abrir la compra en un móvil con red lenta, las llamadas en cadena, lo que salta y los fotogramas | M4 |
+
+**El orden** (`[DECIDIDO owner]`): **M1** los complementos → **M2** «Continuar» que avisa → **M3** el correo primero → el código de
+la L2 (`otra-zona.md`) → **M4** el pulido con el S3 de `seo.md`, cuando las pantallas ya no cambien (si no, las transiciones se
+pulen dos veces) → lo demás, como en `#876` y `#789`. M1 no toca el servidor: el precio y el aforo los pone él, por el mismo
+camino que ya usa la calculadora (`CE-4`, `PAY-12`); ningún fichero del `CRITICAL_RE`. Cada tanda se enseña en vivo antes del commit.
+
 ## 5. Impacto en invariantes
 
 - `PAY-*`: solo si entra Bizum; entonces `VERIFY_CONC=1` y la lista del `CRITICAL_RE`.

@@ -42,7 +42,7 @@ cada uno se conservan, adyacentes.
 
 | Carril | Banda | Máquina |
 |---|---|---|
-| Plataforma · producto e instancias | 610–639 **agotada** (`#639`) · 640–669 **agotada el 21-09** (`#669`) · 670–699 **agotada el 24-09** (`#699`) · 760–789 **agotada el 27-09** (`#789`) · 820–849 **agotada el 29-09** (`#849`) · 850–879 **agotada el 02-10** (`#879`) · la siguiente, **a pedir al owner** | este ordenador |
+| Plataforma · producto e instancias | 610–639 **agotada** (`#639`) · 640–669 **agotada el 21-09** (`#669`) · 670–699 **agotada el 24-09** (`#699`) · 760–789 **agotada el 27-09** (`#789`) · 820–849 **agotada el 29-09** (`#849`) · 850–879 **agotada el 02-10** (`#879`) · sigue en **880–909** (del owner, 02-10 noche) | este ordenador |
 | Diseño de la web | 580–609 | este ordenador |
 | Diseño del SPA (el cajón) | 550–579 **agotada el 18-09** · 700–729 **agotada el 20-09** (`#729`) · 730–759 **agotada el 28-09** (`#759`) · 790–819 **agotada el 02-10** (`#819`) · sigue en **910–939** (del owner, 02-10) | el otro ordenador |
 | Correos | 500–519 | este ordenador |
