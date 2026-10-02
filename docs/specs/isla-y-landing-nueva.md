@@ -2338,7 +2338,7 @@ fuente de cada punto es su `readme.md` (la sección entre comillas) y su compone
 | Z6d ✅ `#872` | **La firma** de la cabecera (logo y nota de Google juntos, `--scrim-firma`), las garantías del móvil en lista, `Sticker` y `ProofChip`, el filo del gris (`--edge-subtle`) | «La cabecera · la firma», «Las garantías en el móvil», «Las pegatinas», «La prueba de los cuidados» | `VideoHero`, `ReassuranceBand`, `ProofList` |
 | Z6e ✅ `#873` | Cumpleaños **«Todo resuelto» (6a)** y **las dos horas repartidas** (90 min saltando y 30 de merienda: la cabecera, la pieza 3, el selector, las dudas, la hora extra) | «Rehecha el 29-09», «Las dos horas, repartidas (28-09)» | `IncludedList`, `AfterBookingPanel` |
 | Z6f ✅ | **El pie** rehecho: dos zonas y un filete, claro y en tarjeta | «Rehecho el 29-09: dos zonas y un solo filete» | `SiteFooter.jsx` (318) |
-| Z6g (·1 ✅ `#871` · ·2 🟦 `#875`) | La compra y Mi cuenta: **`CodeInput`** (6 casillas, se comprueba con la sexta, «Reenviar» a los 30 s; ·1, abajo), **«Quién firma el descargo»** (Tus datos, Listo con «Añadir menores», Mi cuenta), el acceso en Ajustes; y lo que cambia en Normas, Visítanos, Colegios y Entradas | «La cuenta sin contraseña (30-09)», «Quién firma el descargo (30-09)» | `compra/entrar.jsx`, `compra.jsx` |
+| Z6g ✅ (`#871`, `#875`) | La compra y Mi cuenta: **`CodeInput`** (6 casillas, se comprueba con la sexta, «Reenviar» a los 30 s; ·1, abajo), **«Quién firma el descargo»** (Tus datos, Listo con «Añadir menores», Mi cuenta), el acceso en Ajustes; y lo que cambia en Normas, Visítanos, Colegios y Entradas | «La cuenta sin contraseña (30-09)», «Quién firma el descargo (30-09)» | `compra/entrar.jsx`, `compra.jsx` |
 
 **Del otro carril (SPA), por buzón:** la **Puerta** (el mostrador, `paginas/puerta/` y su brief), **`LinkIsland`** en la
 invitación, la lista y la autorización (fuera `RsvpBar` y `SaveBar`), los **correos** (el 8, «482-913 es tu código para
@@ -2778,7 +2778,9 @@ Google en el cierre de Normas («El cierre también lleva la nota»).
 **Fuera**: los correos 1 y 3 y el cajón (del SPA; aviso en el buzón). Sigue «por decidir» del readme: si vuelve «sin
 contraseña» a las notas de venta. **Verificación**: `node --test` (Listo, la pista), `IslaTextosTest` (las tres lenguas),
 el peso con su base y el ojo del owner en vivo.
-**En el árbol (02-10)**, falta el ojo del owner: `datos.js::pistaDelDescargo` (la pista: la compone `useSeccionCompra.js`
+**✅ Hecha el 02-10, con el visto bueno del owner en vivo** (y, en la misma ronda, el defecto que vio: Mi cuenta abierta
+desde «Mi QR» no traía los Ajustes ni «Cerrar sesión» —`aInicio` no cargaba el inicio—; guarda en `sonda-cuenta` §5):
+`datos.js::pistaDelDescargo` (la pista: la compone `useSeccionCompra.js`
 con entradas y firma dentro, y `PantallaDatos.vue` solo la pinta —su techo de 40 líneas de código, `SidebarComponentBudgetTest`,
 cazó el `import` en el componente—), la tarjeta `firmas` de `pasos.js::pantallaListo` con sus `lineas` (`PantallaListo.vue`; `#875`: en toda
 compra de entradas) y su botón a los menores de la cuenta (`usePagoCompra.js`), la fila «Entras con un código a tu correo»

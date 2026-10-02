@@ -6,10 +6,8 @@
 > **820–849 AGOTADA con `#849`** → sigue en **850–879** (del owner, 29-09; centena `decisiones/800-899.md`) · Último usado:
 > **`#875`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-10-02**
-> (el acceso con código: A1–A3 ✅ `#853`→`#857`; la A4 del SPA en `main`, `#813`; `/cookies` ✅ `#858`→`#860`; el zip (6) y
-> el reparto, `#861`; el SEO, `specs/seo.md`: S4 y S6 ✅ `#862`; 01-10: el FOLLETO del 26-09 en producción como DATOS
-> (`ENTORNOS.md` §6), los textos legales para el owner (`#863`→`#865`), **la Z6a de la isla ✅** y, por la noche, **la
-> Z6b ✅** (`#866`, `#867`) y sus tres usos de los banners ✅ (02-10), con su visto bueno; 02-10: **la A5 ✅**, **la Z6g·1 ✅**, **la Z6d ✅**, **la Z6f ✅** y **la Z6e ✅**).
+> (todo con el visto bueno del owner: **el zip (6) de este carril, ENTERO** —Z6a→Z6g, `#866`→`#875`; la Z6c·3 es del SPA—,
+> la A5 (`#869`/`#870`), las reseñas traducidas (`#874`) y Mi cuenta desde «Mi QR»; lo anterior, en `git log -p` de este fichero).
 > ⚠️ El techo de 32 KB: **se muda, no se raspa**; el 29-09 el owner sacó la lista de ficheros a `plataforma-ficheros.md`
 > (`#852`) y NO subió el techo. Si vuelve a apretar tres veces seguidas, llévaselo con la medida.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -51,25 +49,16 @@ normas, la T6f (301 y la web vieja fuera, `#843`), `#844`, la T6h (las legales) 
 Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,entradas}.mjs`), la web entera (`sonda-web.mjs`,
 17/17) y la compra (`sonda-isla.mjs`).
 ▶▶▶▶ **LO SIGUIENTE, EN ORDEN** (actualizado el 02-10; el reparto con el SPA, `#861`, `isla-y-landing-nueva.md` §4.27):
-0. ▶▶▶ **LA Z6b ✅, SUS TRES USOS ✅ Y EL B3 (Z6c·1·2) ✅** (01→02-10, con el visto bueno del owner en vivo: la Z6b·1, `#866`; la
-   Z6b·2, el aviso a isla entera; «Sigue con tu reserva», «Preparando tu reserva» y «¡Reservado!», `#867`; el B3 con
-   `?isla=b3` y la flecha naranja, `#868`; lo hecho y lo medido, en §4.27). La Z6c·3, la MEDIDA, es del SPA (avisado en mi
-   buzón). ⚠️ El experimento se CREA en el panel al desplegar (clave `isla`, variantes `hoy` y `b3`, 50/50) y corre con el
-   vídeo de verdad, dos semanas como mínimo. **SIGUE, en el orden de `#867`**: (1) ~~la A5~~ ✅ 02-10 (`acceso-con-codigo.md`
-   §4.12; la migración de la A5d corre en producción SOLO con la v2.0.0, medida: `ENTORNOS.md` §6) · (2) ~~el acceso con
-   código~~ ✅ 02-10 (la Z6g·1, `#871`, §4.27; ⚠️ cuatro sondas y `sonda-panel`, adaptadas o por adaptar, se pasan en la
-   verificación final) · (3) los retoques del zip (6): ~~Z6d~~ ✅ 02-10 (la firma, la cabecera sin precio salvo Colegios,
-   garantías, chapas y el filo; `#872`) · ~~Z6f~~ ✅ 02-10 (el pie, sin decisión nueva; instancia `5b92bd8`) · ~~Z6e~~ ✅
-   02-10, con el visto bueno del owner (§4.27: «Lo que incluye» con pegatinas, la lista de invitados con la invitación a un
-   toque y las dos horas repartidas, 90 + 30, `#873`; instancia `b359e30`) · ~~el defecto de `#771`~~ ✅ 02-10 (`#874`: una
-   copiada que Google enseñaba traducida no se publica nunca; `google-reviews.md` §9) · **Z6g·2 🟦** 02-10, EN EL ÁRBOL y
-   falta el ojo del owner (§4.27: «Quién firma el descargo» en Tus datos, «¡Reservado!» y Mi cuenta, `#875`; «Entras con un
-   código a tu correo» en Ajustes; la nota en el cierre de Normas). Con ella se cierra el zip (6) de este carril: lo de
-   Visítanos, Colegios y Entradas ya entró con la Z6a–Z6e · ✅ 02-10, lo que vio el owner: Mi cuenta abierta desde «Mi QR»
-   no traía los Ajustes ni «Cerrar sesión» (`aInicio` no cargaba; guarda nueva en `sonda-cuenta` §5, sin correr) · (4) la isla en un
-   móvil de verdad, **en STAGING al terminarlo todo**. `isla_razon` y la imagen de la INVITACIÓN son del SPA (`#861`). ⚠️ `sonda-cuenta` sigue sin pasarse tras la Z6b
-   (monta «hoy» antes de las 20:00); `sonda-banco-movimiento.mjs` sigue con los casos del 27-09: se rehace en la
-   verificación final (`#768`).
+0. ✅ **EL ZIP (6) DE ESTE CARRIL, CERRADO** (01→02-10, cada tanda con el visto bueno del owner en vivo; su detalle, en §4.27):
+   Z6a, Z6b y sus tres usos (`#866`, `#867`), el B3 (`#868`; su MEDIDA, la Z6c·3, es del SPA), Z6d (`#872`), Z6e (`#873`,
+   instancia `b359e30`), Z6f, Z6g (`#871`, `#875`; instancia `0089699`) y, por el camino, las reseñas traducidas (`#874`) y
+   Mi cuenta desde «Mi QR» (`aInicio` no cargaba los Ajustes ni «Cerrar sesión»). ⚠️ El experimento B3 se CREA en el panel al
+   desplegar (clave `isla`, `hoy`/`b3`, 50/50) y corre con el vídeo de verdad, dos semanas como mínimo. ⚠️ **Sondas para la
+   verificación final** (`#768`): `sonda-cuenta` (sin pasar desde la Z6b; monta «hoy» antes de las 20:00; con el paso nuevo de
+   su §5), las cuatro de la Z6g·1 y `sonda-panel`, `sonda-banco-movimiento` (casos del 27-09) y `sonda-entradas` (ya lee «90
+   minutos saltando»). **Queda de la isla**: probarla en un móvil de verdad, en STAGING al terminarlo todo; `isla_razon` y la
+   imagen de la INVITACIÓN son del SPA (`#861`).
+   ▶▶▶ **SIGUE AQUÍ, en el 1** (el owner, 02-10: «seguiremos en el siguiente chat»).
 1. ▶▶ **EL SEO** (`specs/seo.md`, 🟦; el owner: «IMPORTANTÍSIMO»). Investigado y medido (§1–§2: la marca ya está en el 1 y
    **cumpleaños no existe para Google**). HECHO el 01-10: **S4** (`robots.txt` con `Sitemap:`; JSON-LD con `geo`, `priceRange` y
    la dirección por campos; `mutar-seo.sh` 14/14; `52e6557e`), **S6** (`#862`: los titulares se quedan; Kids y Jump dicen «en
@@ -116,12 +105,13 @@ sigue 🟦 por lo del owner: el MATERIAL de los vídeos (en LOCAL, una muestra W
 dobles); el aviso de los calcetines, «se devuelve la señal» y el TRAMO DE EDAD de cada entrada (`#825`); `payment.marks` (en
 LOCAL, `bizum,visa,mastercard`). BD LOCAL con los valores de `#699`/`#761`.
 ⚠️ **Trampas vivas** (las de `sonda-isla` que paga, `sonda-cuenta` antes de las 20:00 y la base de un techo de peso, mudadas a
-`TESTING.md` §2.octies el 29-09): (b) el tracker, a 17 B de su techo (16 KB, 02-10): el 01-10 se llevó la línea de F2 a su marcador
-(antes, F4 y F5; el detalle vive en sus specs); la próxima vez, otra cerrada;
+`TESTING.md` §2.octies el 29-09): (b) el tracker, a ~140 B de su techo (16 KB, 02-10): el detalle de una línea cerrada se MUDA
+a su spec (el 02-10, F3 a `producto-e-instancias.md` §4.6; antes, F2, F4 y F5); la próxima vez, otra cerrada;
 (d) Vue 3.5 reevalúa un `computed` fuera del `try` de quien lo lee: se protege DENTRO (`seguro.js`, §4.13); (f) un texto de la isla que
 use la COMPRA tiene que estar en un grupo que la compra recibe (`mi_cuenta.*` no le llega: §4.24); (g) `isla/hoja/montar.js` NO
-importa nada compartido (`#841`); tras la Z6a, la calculadora va a 187,81 de 188, la de la fiesta a 194,27 de 195, la compra a
-171,58 de 172 y la isla de la página a 178,01 de 179 (`#846`: un `import()` suma el `preload-helper` al cálculo por entrada); un
+importa nada compartido (`#841`); los pesos, medidos el 02-10 (tras la Z6g·2, con los métodos de `SidebarBundleBudgetTest`): la
+compra 186,98 de 188, los pasos 50,79 de 52, Mi cuenta 124,43 de 126, sus Ajustes 29,82 de 30, la isla de la página 194,70 de 196,
+la calculadora 186,79 de 188 y la de la fiesta 193,25 de 195 (`#846`: un `import()` suma el `preload-helper` al cálculo por entrada); un
 icono que solo usa una pieza se registra en SU trozo (`registrarIconos`, como `piezas/iconos-menu.js`): en el común, las
 calculadoras crecían +0,94 sin llevar la isla; (h) toda página nueva usa `video-hero` SIN `height` y entra
 en `sonda-primera-pantalla.mjs`; (i) tras tocar `instancias/playjump/publico/`, copiarlo a `public/instancia`; (j) `sonda-primera-pantalla`
