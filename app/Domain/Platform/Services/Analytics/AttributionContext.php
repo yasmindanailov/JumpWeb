@@ -165,6 +165,19 @@ class AttributionContext
         return $this->session?->id;
     }
 
+    /**
+     * La fuente, el medio y la campaña de la visita EN CURSO ({@see touch()}), o `null` sin visita (consola, cola, el panel o
+     * una petición sin la cookie del visitante). Es la capa de CAMPAÑA: va sin consentimiento, como la del sello (rgpd-5).
+     *
+     * @return array{source: string, medium: string, campaign: ?string}|null
+     */
+    public function currentTouch(): ?array
+    {
+        $this->resolve();
+
+        return $this->session === null ? null : self::touch($this->session);
+    }
+
     /** ¿Consintió el visitante esta categoría? Sin sesión (o sin foto de consentimiento), no. */
     public function consented(string $category): bool
     {

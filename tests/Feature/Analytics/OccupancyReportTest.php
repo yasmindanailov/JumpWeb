@@ -10,8 +10,10 @@ use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Enums\ReportPeriod;
+use App\Domain\Platform\Models\AnalyticsSession;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Analytics\Reports\Window;
+use App\Domain\Platform\Services\Analytics\Visitor;
 use App\Filament\Analytics\OccupancyReport;
 use App\Filament\Widgets\Analytics\OccupancyBreakdownWidget;
 use App\Filament\Widgets\Analytics\OccupancyHeatmapWidget;
@@ -46,6 +48,8 @@ class OccupancyReportTest extends TestCase
 
     private Zone $cumple;
 
+    private TicketType $entry;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -70,7 +74,7 @@ class OccupancyReportTest extends TestCase
         $this->slot($this->jump, '2026-06-10', '17:00', 10, closed: true);
         $this->slot($this->jump, '2026-06-30', '18:00', 10);
 
-        $entry = TicketType::create(['name' => ['es' => 'Entrada 1 h'], 'zone_id' => $this->jump->id, 'type' => TicketType::TYPE_ENTRY, 'duration_min' => 60, 'is_sellable' => true, 'is_active' => true, 'seats_per_unit' => 1, 'position' => 1]);
+        $entry = $this->entry = TicketType::create(['name' => ['es' => 'Entrada 1 h'], 'zone_id' => $this->jump->id, 'type' => TicketType::TYPE_ENTRY, 'duration_min' => 60, 'is_sellable' => true, 'is_active' => true, 'seats_per_unit' => 1, 'position' => 1]);
         $pack = TicketType::create(['name' => ['es' => 'Cumpleaños'], 'zone_id' => $this->cumple->id, 'type' => TicketType::TYPE_PACK, 'duration_min' => 90, 'prep_before_min' => 0, 'prep_after_min' => 0, 'min_qty' => 1, 'max_qty' => 30, 'is_sellable' => true, 'is_active' => true, 'seats_per_unit' => 1, 'position' => 2]);
 
         $this->sold($entry, $this->jump, '2026-06-10', '15:00:00', 10, '2026-06-05 10:00:00');
@@ -102,10 +106,15 @@ class OccupancyReportTest extends TestCase
         $order->items()->create(['ticket_type_id' => $product->id, 'slot_id' => $slot->id, 'quantity' => $seats, 'unit_price' => 1000, 'seats' => $seats]);
     }
 
-    private function missing(string $receivedUtc, int $product, string $month): void
+    /** Un `availability_missing` como lo escribe la ingesta: con su VISITA, limpia salvo que se diga (robot o personal). */
+    private function missing(string $receivedUtc, int $product, string $month, bool $bot = false, bool $internal = false): void
     {
+        $visitor = Visitor::mint();
+        $session = AnalyticsSession::query()->create([
+            'visitor_id' => $visitor, 'started_at' => $receivedUtc, 'last_seen_at' => $receivedUtc, 'is_bot' => $bot, 'is_internal' => $internal,
+        ]);
         DB::table('analytics_events')->insert([
-            'event_id' => (string) Str::ulid(), 'visitor_id' => (string) Str::uuid(), 'name' => 'availability_missing',
+            'event_id' => (string) Str::ulid(), 'session_id' => $session->id, 'visitor_id' => $visitor, 'name' => 'availability_missing',
             'props' => json_encode(['product' => (string) $product, 'month' => $month]), 'occurred_at' => $receivedUtc, 'received_at' => $receivedUtc,
         ]);
     }
@@ -234,6 +243,24 @@ class OccupancyReportTest extends TestCase
         $this->assertSame('2026-05-20', $r['missing']['since'], 'desde el primero que se midió');
         $this->assertSame([['product' => 'Entrada 1 h', 'month' => '2026-06', 'n' => 2]], $r['missing']['by_product_month']);
         $this->assertSame(1, $r['previous']['missing'], 'mayo, en la comparación');
+    }
+
+    /**
+     * Los robots y el personal NO son demanda: la regla del embudo y de los experimentos (medido por plataforma el 29-09, y
+     * el 02-10 en la local: 52 de 52, todos de las sondas). Uno de cada en junio y un robot en mayo, y nada se mueve.
+     */
+    public function test_the_missing_demand_leaves_out_robots_and_staff(): void
+    {
+        $this->seedJune();
+        $this->missing('2026-06-14 10:00:00', $this->entry->id, '2026-06', bot: true);
+        $this->missing('2026-06-15 10:00:00', $this->entry->id, '2026-06', internal: true);
+        $this->missing('2026-05-21 10:00:00', $this->entry->id, '2026-05', bot: true);
+
+        $r = (new OccupancyReport)->compute($this->june());
+
+        $this->assertSame(2, $r['missing']['count'], 'ni el robot ni el personal de junio');
+        $this->assertSame([['product' => 'Entrada 1 h', 'month' => '2026-06', 'n' => 2]], $r['missing']['by_product_month']);
+        $this->assertSame(1, $r['previous']['missing'], 'ni el robot de mayo, en la comparación');
     }
 
     /** El mapa de calor: el miércoles a las 15 h (15:00 y 15:30) al 100 %, a las 16 h al 30 %; el % escrito en la celda. */

@@ -25,6 +25,7 @@ declare -A FILTRO_DE=(
     [T3d]='ExplainerTest|MetricTest|ChangesTest|AnalyticsPageTest'
     [T4]='BookedReportTest|ExplainerTest|AnalyticsTabsTest|AnalyticsCensusTest'
     [B3]='ExperimentsReportTest|AnalyticsEventsTest|AnalyticsContractTest'
+    [TA]='OccupancyReportTest|CustomersReportTest|RegistrationCampaignTest|AnalyticsContractTest'
 )
 SOLO="${SOLO:-}"
 SECCION=''
@@ -104,6 +105,10 @@ FICHEROS=(
     app/Filament/Analytics/ExperimentsReport.php
     app/Filament/Widgets/Analytics/ExperimentsWidget.php
     app/Domain/Platform/Services/Analytics/Contract.php
+    app/Domain/Platform/Services/Analytics/Recorder.php
+    app/Domain/Platform/Services/Analytics/AttributionContext.php
+    app/Filament/Widgets/Analytics/CustomersBreakdownWidget.php
+    app/Filament/Widgets/Analytics/SourcesWidget.php
 )
 # La copia de cada fichero, por su RUTA entera (T3a): por su nombre, `lang/es/admin.php` y `lang/zh_CN/admin.php` chocaban.
 copia() { echo "$TMP/$(echo "$1" | tr '/' '_')"; }
@@ -877,8 +882,8 @@ mutar "Mi cuenta no valida la fecha" "app/Domain/Identity/Services/AccountProfil
   "            'born_on' => ['sometimes', 'nullable'],"
 
 mutar "Mi cuenta BORRA la fecha cuando no viaja (cada guardado de la isla)" "app/Http/Controllers/Api/V1/MeProfileController.php" \
-  "        ] + array_intersect_key(\$data, ['born_on' => true]), \$data['current_password'] ?? null, (string) \$request->ip());" \
-  "        ] + ['born_on' => \$data['born_on'] ?? null], \$data['current_password'] ?? null, (string) \$request->ip());"
+  "        ] + array_intersect_key(\$data, ['born_on' => true]), \$emailChanges ? \$data['code'] : null, (string) \$request->ip());" \
+  "        ] + ['born_on' => \$data['born_on'] ?? null], \$emailChanges ? \$data['code'] : null, (string) \$request->ip());"
 
 mutar "el mostrador no la guarda" "app/Domain/Identity/Services/CustomerRegistrar.php" \
   "                'born_on' => \$bornOn," \
@@ -1257,6 +1262,68 @@ mutar "B3 · el contrato sin el toque de la isla" "$CT" \
 mutar "B3 · el toque admite una prop de más" "$CT" \
   "'cara', 'pagina', 'variante']]," \
   "'cara', 'pagina', 'variante', 'de_mas']],"
+
+# ── TA · Las altas por origen (`#876`, la fila 8 de la lista del owner; `analitica-para-decidir.md` §4.15) ──────
+# TA·0, el defecto de la «demanda sin hueco» (contaba robots y personal: el embudo no); la TA, la campaña de su visita en el
+# alta —siempre, y la visita solo con «análisis»—, el informe por origen (la web, el mostrador y el resto) y su tabla.
+SECCION=TA
+RC=app/Domain/Platform/Services/Analytics/Recorder.php
+AC=app/Domain/Platform/Services/Analytics/AttributionContext.php
+CBW=app/Filament/Widgets/Analytics/CustomersBreakdownWidget.php
+mutar "TA·0 · la demanda sin hueco cuenta los robots" "$OP" \
+  "            ->where('s.is_bot', false)
+" ""
+mutar "TA·0 · la demanda sin hueco cuenta al personal" "$OP" \
+  "            ->where('s.is_internal', false);" \
+  "            ;"
+mutar "TA·0 · el periodo vuelve a contarlo todo" "$OP" \
+  "\$rows = \$this->cleanEvents('availability_missing')" \
+  "\$rows = DB::table('analytics_events as e')->where('e.name', 'availability_missing')"
+mutar "TA·0 · la comparación vuelve a contarlo todo" "$OP" \
+  "'missing' => (int) \$this->cleanEvents('availability_missing')" \
+  "'missing' => (int) DB::table('analytics_events as e')->where('e.name', 'availability_missing')"
+mutar "TA · el alta sin la marca de campaña" "$CT" \
+  "'user_registered' => ['source' => self::SERVER, 'props' => ['method'], 'campaign' => true]," \
+  "'user_registered' => ['source' => self::SERVER, 'props' => ['method']],"
+mutar "TA · el contrato no admite la campaña" "$CT" \
+  "return self::carriesCampaign(\$name) ? [...\$props, ...self::CAMPAIGN_PROPS] : \$props;" \
+  "return \$props;"
+mutar "TA · el Recorder no pone la campaña" "$RC" \
+  "\$props += \$this->campaign();" \
+  "\$props += [];"
+mutar "TA · la campaña solo con «análisis»" "$RC" \
+  "\$touch = \$this->context->currentTouch() ?? [];" \
+  "\$touch = \$this->linksToVisitor() ? (\$this->context->currentTouch() ?? []) : [];"
+mutar "TA · una campaña con pinta de dato personal viaja" "$RC" \
+  " && ! Contract::looksLikePii(\$value)" \
+  ""
+mutar "TA · la visita viaja sin «análisis»" "$RC" \
+  "return \$this->context->consented('analytics');" \
+  "return true;"
+mutar "TA · sin la visita en curso" "$AC" \
+  "return \$this->session === null ? null : self::touch(\$this->session);" \
+  "return null;"
+mutar "TA · el informe no reparte por origen" "$CR" \
+  "\$origins = ['web' => \$facts['by_origin'], 'counter' => \$trail['counter']];" \
+  "\$origins = ['web' => [], 'counter' => \$trail['counter']];"
+mutar "TA · el mostrador no cuenta" "$CR" \
+  "'counter' => (int) (\$row->counter ?? 0)" \
+  "'counter' => 0"
+mutar "TA · «sin dato» no descuenta el mostrador" "$CR" \
+  "array_sum(array_column(\$origins['web'], 'n')) - \$origins['counter']);" \
+  "array_sum(array_column(\$origins['web'], 'n')));"
+mutar "TA · un alta sin campaña sale como fila" "$CR" \
+  "if (! is_string(\$row->source) || \$row->source === '') {" \
+  "if (false) {"
+mutar "TA · el método se pierde al juntar las consultas" "$CR" \
+  "\$byMethod[\$key] += \$n;" \
+  "\$byMethod[\$key] = \$n;"
+mutar "TA · la tabla sin la fila del mostrador" "$CBW" \
+  "        \$rows[] = [__('admin.analytics.customers.origin.counter'), '—', '—', (string) \$origins['counter']];
+" ""
+mutar "TA · la pestaña sin la tabla de las altas" "$CBW" \
+  "                \$this->origins(\$report['registrations']['by_origin']),
+" ""
 
 # ── El CONTROL: tocar un comentario no puede poner nada en rojo ─────────────────────────────────
 control "un comentario de Window" "$W" \

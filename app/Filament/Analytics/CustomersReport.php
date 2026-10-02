@@ -31,7 +31,10 @@ use stdClass;
  * las búsquedas, las encontradas y no encontradas, los CLIENTES DISTINTOS buscados, las fichas, las visitas
  * y la distribución por hora del parque. ❌ Un evento nuevo como única fuente habría nacido vacío.
  *
- * ⚠️ Solo agregados: el `payload` de la auditoría no se lee y ningún nombre sale. Diez consultas por periodo.
+ * **De dónde llegan las altas** (TA, `#876`): las de la web por la campaña de su visita y las del mostrador por su rastro.
+ *
+ * ⚠️ Solo agregados: el `payload` de la auditoría no se lee y ningún nombre sale. Un número FIJO de consultas por periodo, que
+ * no crece con las filas (su presupuesto, en `CustomersReportTest`): el método y el origen salen de las mismas filas del libro.
  */
 final class CustomersReport
 {
@@ -50,6 +53,9 @@ final class CustomersReport
 
     /** Una visita sin origen dicho (las del botón retirado en `#234`). */
     public const VISIT_SOURCE_UNKNOWN = 'unknown';
+
+    /** El rastro de un alta en el MOSTRADOR: «Crear pedido» del panel (`CustomerRegistrar::register()`), desde v1.x. */
+    public const ACTION_COUNTER_REGISTERED = 'orders.customer_registered';
 
     /** Los tramos de «cada cuánto vuelven» (días desde la visita anterior): una semana, un mes, tres meses, más. */
     public const GAP_WEEK = 'week';
@@ -73,7 +79,7 @@ final class CustomersReport
 
     public static function cacheKey(Window $window, Window $baseline): string
     {
-        return 'analytics:customers:v3:'.$window->timezone.':'.$window->dateFrom().':'.$window->dateTo().':'.$baseline->dateFrom().':'.$baseline->dateTo();
+        return 'analytics:customers:v4:'.$window->timezone.':'.$window->dateFrom().':'.$window->dateTo().':'.$baseline->dateFrom().':'.$baseline->dateTo();
     }
 
     /** @param  Window|null  $baseline  con qué se compara; sin ella, el periodo anterior */
@@ -88,8 +94,12 @@ final class CustomersReport
         $visits = $this->visitsByBucket($window);
 
         $total = self::sumOf($registrations, 'n');
-        $methods = $this->methods($window);
+        $facts = $this->registrationFacts($window);
+        $trail = $this->trailCounts($window);
+        $methods = $facts['by_method'];
         $methods[self::METHOD_UNKNOWN] = max(0, $total - array_sum($methods));
+        $origins = ['web' => $facts['by_origin'], 'counter' => $trail['counter']];
+        $origins['unknown'] = max(0, $total - array_sum(array_column($origins['web'], 'n')) - $origins['counter']);
 
         $lookupsTotal = self::sumOf($lookups, 'n');
         $typed = self::sumOf($lookups, 'typed');
@@ -107,6 +117,7 @@ final class CustomersReport
                 'verified' => self::sumOf($registrations, 'verified'),
                 'buyers' => self::sumOf($registrations, 'buyers'),
                 'by_method' => $methods,
+                'by_origin' => $origins,
             ],
             'gate' => [
                 'lookups' => $lookupsTotal,
@@ -115,7 +126,7 @@ final class CustomersReport
                 'found' => $found,
                 'not_found' => $lookupsTotal - $found,
                 'customers' => $customers,
-                'profile_views' => $this->profileViews($window),
+                'profile_views' => $trail['profile_views'],
                 'visits' => array_sum($visits),
                 'visitors' => $this->visitors($window),
             ],
@@ -148,31 +159,50 @@ final class CustomersReport
     }
 
     /**
-     * Cómo se registraron, desde el libro (`user_registered`, T1): contraseña o Google.
+     * **Las altas de la web, desde el libro** (`user_registered`), en UNA consulta y por las dos caras de cada una:
+     *  - **cómo** se registraron (T1, `props.method`): con el formulario o con Google;
+     *  - **de dónde** llegaron (TA, `specs/analitica-para-decidir.md` §4.15, `#876`: «altas en casa y en el parque»): la campaña
+     *    de la visita en la que se dieron (`props.source/medium/campaign`, que el `Recorder` pone siempre desde la TA: un QR con
+     *    `utm_source=parque` sale como su fila). Un alta sin campaña (de antes de medirla, o sin visita) no tiene fila: es del
+     *    resto, «sin dato», que pone {@see compute()} junto al mostrador.
      *
-     * @return array<string, int>
+     * @return array{by_method: array<string, int>, by_origin: list<array{source: string, medium: string, campaign: ?string, n: int}>}
      */
-    private function methods(Window $window): array
+    private function registrationFacts(Window $window): array
     {
         $method = SqlJson::string('props', '$.method');
+        $source = SqlJson::string('props', '$.source');
+        $medium = SqlJson::string('props', '$.medium');
+        $campaign = SqlJson::string('props', '$.campaign');
 
         $rows = DB::table('analytics_events')
-            ->selectRaw("{$method} AS method, COUNT(*) AS n")
+            ->selectRaw("{$method} AS method, {$source} AS source, {$medium} AS medium, {$campaign} AS campaign, COUNT(*) AS n")
             ->where('name', 'user_registered')
             ->where('received_at', '>=', $window->utcFrom())
             ->where('received_at', '<', $window->utcTo())
-            ->groupByRaw($method)
+            ->groupByRaw("{$method}, {$source}, {$medium}, {$campaign}")
             ->get();
 
-        $out = array_fill_keys(self::METHODS, 0);
+        $byMethod = array_fill_keys(self::METHODS, 0);
+        $byOrigin = [];
         foreach ($rows as $row) {
+            $n = (int) $row->n;
             $key = (string) $row->method;
             if (in_array($key, self::METHODS, true)) {
-                $out[$key] += (int) $row->n;
+                $byMethod[$key] += $n;
             }
+            if (! is_string($row->source) || $row->source === '') {
+                continue;
+            }
+            $campaignOf = is_string($row->campaign) && $row->campaign !== '' ? $row->campaign : null;
+            $origin = $row->source."\0".$row->medium."\0".$campaignOf;
+            $byOrigin[$origin] ??= ['source' => $row->source, 'medium' => (string) ($row->medium ?? ''), 'campaign' => $campaignOf, 'n' => 0];
+            $byOrigin[$origin]['n'] += $n;
         }
+        $byOrigin = array_values($byOrigin);
+        usort($byOrigin, static fn (array $a, array $b): int => [$b['n'], $a['source'], $a['medium'], (string) $a['campaign']] <=> [$a['n'], $b['source'], $b['medium'], (string) $b['campaign']]);
 
-        return $out;
+        return ['by_method' => $byMethod, 'by_origin' => $byOrigin];
     }
 
     // ─── La puerta ───────────────────────────────────────────────────────────────────────────────
@@ -238,11 +268,23 @@ final class CustomersReport
         return [array_map('count', $byKey), count($all)];
     }
 
-    private function profileViews(Window $window): int
+    /**
+     * Del rastro del panel, en UNA consulta: las fichas abiertas en la puerta y las altas del MOSTRADOR («Crear pedido»,
+     * `CustomerRegistrar::register()`; TA, `#876`), que no pasan por la web y no dejan hecho en el libro.
+     *
+     * @return array{profile_views: int, counter: int}
+     */
+    private function trailCounts(Window $window): array
     {
-        return $this->between(DB::table('audit_logs'), 'created_at', $window)
-            ->where('action', self::ACTION_PROFILE_VIEWED)
-            ->count();
+        $row = $this->between(DB::table('audit_logs'), 'created_at', $window)
+            ->whereIn('action', [self::ACTION_PROFILE_VIEWED, self::ACTION_COUNTER_REGISTERED])
+            ->selectRaw(
+                'SUM(CASE WHEN action = ? THEN 1 ELSE 0 END) AS profile_views, SUM(CASE WHEN action = ? THEN 1 ELSE 0 END) AS counter',
+                [self::ACTION_PROFILE_VIEWED, self::ACTION_COUNTER_REGISTERED],
+            )
+            ->first();
+
+        return ['profile_views' => (int) ($row->profile_views ?? 0), 'counter' => (int) ($row->counter ?? 0)];
     }
 
     /**

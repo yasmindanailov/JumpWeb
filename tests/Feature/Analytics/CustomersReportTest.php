@@ -14,6 +14,7 @@ use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Analytics\Visitor;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Analytics\CustomersReport;
+use App\Filament\Widgets\Analytics\CustomersBreakdownWidget;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -92,6 +93,8 @@ class CustomersReportTest extends TestCase
             'verified' => 3,
             'buyers' => 1,
             'by_method' => ['password' => 2, 'google' => 1, 'unknown' => 1],
+            // TA: ningún alta del fixture lleva campaña (son de antes de medirla) ni rastro de mostrador → las cuatro, «sin dato».
+            'by_origin' => ['web' => [], 'counter' => 0, 'unknown' => 4],
         ], $r['registrations']);
         $this->assertSame(1, $r['previous']['registrations']);
 
@@ -99,6 +102,48 @@ class CustomersReportTest extends TestCase
         $this->assertSame(1, $series['2026-06-10']['registrations'], 'las 22:30 UTC del 9 son el 10 en el parque');
         $this->assertSame(0, $series['2026-06-09']['registrations']);
         $this->assertSame(1, $series['2026-06-03']['verified']);
+    }
+
+    /**
+     * **De dónde llegan las altas** (TA, `#876`). Sobre el fixture de junio (cuatro altas sin campaña), cuatro más: Eva y Fran
+     * con el QR del parque (`parque/qr/registro`), Gus por un anuncio de Google sin campaña (`google/cpc`) y Hugo en el
+     * MOSTRADOR (su rastro); Iris, con el QR, en mayo (fuera). Ocho altas: el QR 2, Google 1, el mostrador 1 y «sin dato» 4.
+     */
+    public function test_the_registrations_by_origin_campaign_counter_and_the_rest(): void
+    {
+        $this->seedJune();
+        $qr = ['source' => 'parque', 'medium' => 'qr', 'campaign' => 'registro'];
+        $this->registered($this->customer('2026-06-08 10:00:00', verified: true), 'password', '2026-06-08 10:00:00', $qr);
+        $this->registered($this->customer('2026-06-08 11:00:00', verified: true), 'google', '2026-06-08 11:00:00', $qr);
+        $this->registered($this->customer('2026-06-06 10:00:00', verified: true), 'password', '2026-06-06 10:00:00', ['source' => 'google', 'medium' => 'cpc']);
+        $hugo = $this->customer('2026-06-07 12:00:00', verified: false);
+        $this->lookup(CustomersReport::ACTION_COUNTER_REGISTERED, $hugo, '2026-06-07 12:00:00');
+        $this->registered($this->customer('2026-05-05 11:00:00', verified: true), 'password', '2026-05-05 11:00:00', $qr);
+
+        $r = (new CustomersReport)->compute(ReportPeriod::ThisMonth->window())['registrations'];
+
+        $this->assertSame(8, $r['total']);
+        $this->assertSame([
+            'web' => [
+                ['source' => 'parque', 'medium' => 'qr', 'campaign' => 'registro', 'n' => 2],
+                ['source' => 'google', 'medium' => 'cpc', 'campaign' => null, 'n' => 1],
+            ],
+            'counter' => 1,
+            'unknown' => 4,
+        ], $r['by_origin']);
+        $this->assertSame(['password' => 4, 'google' => 2, 'unknown' => 2], $r['by_method'], 'el método no cambia con el origen');
+
+        // La tabla del panel («Clientes», plegada): una fila por campaña, la del mostrador y «sin dato», en ese orden.
+        $widget = new CustomersBreakdownWidget;
+        $widget->pageFilters = ['period' => ReportPeriod::ThisMonth->value];
+        $tabla = collect((new \ReflectionMethod($widget, 'getViewData'))->invoke($widget)['tables'])->firstWhere('heading', 'De dónde llegan las altas');
+        $this->assertSame(['Fuente', 'Medio', 'Campaña', 'Cuántas'], $tabla['columns']);
+        $this->assertSame([
+            ['parque', 'qr', 'registro', '2'],
+            ['google', 'cpc', '—', '1'],
+            ['En el mostrador del parque', '—', '—', '1'],
+            ['Sin dato (antes de medir, o sin visita)', '—', '—', '4'],
+        ], $tabla['rows']);
     }
 
     // ─── La puerta ──────────────────────────────────────────────────────────────────────────────
@@ -205,7 +250,7 @@ class CustomersReportTest extends TestCase
     {
         $r = (new CustomersReport)->compute(ReportPeriod::Yesterday->window());
 
-        $this->assertSame(['total' => 0, 'verified' => 0, 'buyers' => 0, 'by_method' => ['password' => 0, 'google' => 0, 'unknown' => 0]], $r['registrations']);
+        $this->assertSame(['total' => 0, 'verified' => 0, 'buyers' => 0, 'by_method' => ['password' => 0, 'google' => 0, 'unknown' => 0], 'by_origin' => ['web' => [], 'counter' => 0, 'unknown' => 0]], $r['registrations']);
         $this->assertSame(0, $r['gate']['lookups']);
         $this->assertSame(0, $r['gate']['visitors']);
         $this->assertSame(array_fill(0, 24, 0), $r['hours']);
@@ -261,11 +306,12 @@ class CustomersReportTest extends TestCase
         return $user;
     }
 
-    private function registered(User $user, string $method, string $atUtc): void
+    /** @param  array<string, string>  $campaign  la capa de campaña de su visita (TA), como la pone el `Recorder` */
+    private function registered(User $user, string $method, string $atUtc, array $campaign = []): void
     {
         AnalyticsEvent::query()->create([
             'event_id' => Visitor::mint(), 'user_id' => $user->id, 'name' => 'user_registered',
-            'props' => ['method' => $method], 'occurred_at' => $atUtc, 'received_at' => $atUtc,
+            'props' => ['method' => $method, ...$campaign], 'occurred_at' => $atUtc, 'received_at' => $atUtc,
         ]);
     }
 

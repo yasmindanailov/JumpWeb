@@ -28,7 +28,14 @@ final class Contract
     /** Las propiedades de atribución que viajan en la primera vista y en ninguna otra. */
     public const ATTRIBUTION_PROPS = ['entry', 'referrer_host', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'ref', 'gclid', 'fbclid', 'ttclid'];
 
-    /** @var array<string, array{source: string, props: list<string>}> */
+    /**
+     * **La capa de CAMPAÑA** de un hecho del servidor (TA, `specs/analitica-para-decidir.md` §4.15): de dónde llegó la visita en
+     * la que ocurrió —`AttributionContext::touch()`, la regla del embudo—. La pide el hecho con `'campaign' => true` y la pone
+     * el `Recorder`: va SIEMPRE, como la del sello del pedido (rgpd-5), y sin identificadores, que siguen pidiendo `analytics`.
+     */
+    public const CAMPAIGN_PROPS = ['source', 'medium', 'campaign'];
+
+    /** @var array<string, array{source: string, props: list<string>, campaign?: bool}> */
     public const EVENTS = [
         // ── Entrada y landing (cliente) ──────────────────────────────────────────────────────────
         'page_viewed' => ['source' => self::CLIENT, 'props' => [...self::ATTRIBUTION_PROPS, 'device', 'locale']],
@@ -74,7 +81,8 @@ final class Contract
         'order_payment_init_failed' => ['source' => self::SERVER, 'props' => ['channel']],
         'order_cancelled' => ['source' => self::SERVER, 'props' => ['channel']],
         'order_refunded' => ['source' => self::SERVER, 'props' => ['refunded_cents', 'channel']],
-        'user_registered' => ['source' => self::SERVER, 'props' => ['method']],
+        // TA (`#876`): el alta lleva la campaña de su visita, para contar dónde se dan de alta (en casa, con el QR del parque…).
+        'user_registered' => ['source' => self::SERVER, 'props' => ['method'], 'campaign' => true],
         'user_logged_in' => ['source' => self::SERVER, 'props' => ['method']],
         'contact_received' => ['source' => self::SERVER, 'props' => ['topic']],
         // ── La fiesta (`specs/analitica-fiesta.md` §4.2): HECHOS DE LA RESERVA, sin visitante ─────
@@ -141,10 +149,18 @@ final class Contract
         return (self::EVENTS[$name]['source'] ?? null) === self::SERVER;
     }
 
-    /** @return list<string> */
+    /** @return list<string> las suyas y, si el hecho la pide, las de la capa de campaña */
     public static function allowedProps(string $name): array
     {
-        return self::EVENTS[$name]['props'] ?? [];
+        $props = self::EVENTS[$name]['props'] ?? [];
+
+        return self::carriesCampaign($name) ? [...$props, ...self::CAMPAIGN_PROPS] : $props;
+    }
+
+    /** ¿Lleva este hecho la capa de campaña de su visita ({@see CAMPAIGN_PROPS})? */
+    public static function carriesCampaign(string $name): bool
+    {
+        return (self::EVENTS[$name]['campaign'] ?? false) === true;
     }
 
     /** @return list<string> */

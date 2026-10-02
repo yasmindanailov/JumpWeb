@@ -1238,18 +1238,25 @@ return [
             ],
             'hours_heading' => 'Búsquedas en la puerta por hora del parque',
             'methods_chart' => 'Cómo se registran las cuentas nuevas',
+            // La clave `password` se queda (es la del libro); desde la A5 (`#869`) el cliente se da de alta con el formulario y un código.
             'method_short' => [
-                'password' => 'Con contraseña',
+                'password' => 'Con el formulario',
                 'google' => 'Con Google',
                 'unknown' => 'Sin dato',
             ],
             'breakdown_heading' => 'Registros y puerta, al detalle',
-            'breakdown_note' => 'La puerta se mide desde su rastro (cada búsqueda queda auditada y cada visita acreditada, anotada), que existe desde agosto. Solo agregados: ningún nombre.',
+            'breakdown_note' => 'La puerta se mide desde su rastro (cada búsqueda queda auditada y cada visita acreditada, anotada), que existe desde agosto. De dónde llegan las altas: la campaña de la visita en la que se dio cada una (un cartel o un anuncio con su enlace sale como su fila) y el mostrador, desde el rastro del panel. Solo agregados: ningún nombre.',
             'by_method' => 'Cómo se registran',
             'method' => [
-                'password' => 'Con contraseña',
+                'password' => 'Con el formulario',
                 'google' => 'Con Google',
                 'unknown' => 'Sin dato (antes de medir, o alta desde el panel)',
+            ],
+            // TA (`#876`): de dónde llegan las altas.
+            'by_origin' => 'De dónde llegan las altas',
+            'origin' => [
+                'counter' => 'En el mostrador del parque',
+                'unknown' => 'Sin dato (antes de medir, o sin visita)',
             ],
             'col' => [
                 'registrations' => 'Cuentas',

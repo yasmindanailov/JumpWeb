@@ -2,7 +2,7 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **910–939** (del owner, 02-10; 790–819 agotada con `#819`) · Último usado: **`#910`** (el siguiente, `#911`) · La banda está dada de alta en la
+> Banda: **910–939** (del owner, 02-10; 790–819 agotada con `#819`) · Último usado: **`#911`** (el siguiente, `#912`) · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs:
 > **`acceso-con-codigo.md` §0** (la A4 del cajón ✅ en `main`) · `correos-rediseno.md` §0 ·
 > `fiesta-sistema-nuevo.md` §4.17–§4.19 · `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7
@@ -51,10 +51,10 @@ filas 4 y 8), ANTES que la R1c («tus puntos primero»).
 - 🟦 **Fila 4, los complementos y las opciones del menú en la lista**: SIN CÓDIGO (K3, `#808`): el JUMP (106) ya lo tenía en la
   local; el owner eligió (02-10) el KIDS (105) igual, montado con `ojo-kids.php` y medido con su sonda a 390 y 1280 (`CARRIL-SPA`
   §8 (29)). ▶ Falta su OJO en vivo. En producción, con la v2.0.0: la receta, `fiesta-sistema-nuevo.md` §4.17 «K3».
-- **Fila 8, las altas en casa y en el parque**: el alta (`user_registered`) se ata a la visita y la visita guarda su `utm_source`,
-  pero `CustomersReport` solo corta por `method`: una tanda, con su «al detalle» MEDIDO en `analitica-para-decidir.md`, su arnés
-  `SOLO=` y el enlace del cartel de plataforma verificado en la local. ⚠️ v1.1.0 no tiene ni la analítica ni `#mi-cuenta`
-  (`#774`): un QR impreso hoy abre la portada y no cuenta nada hasta la v2.0.0. Antes, el ancla rota del arnés («retomar» 3).
+- 🟦 **Fila 8, las altas en casa y en el parque** (la TA, `analitica-para-decidir.md` §4.15): HECHA en `wip/ta-altas-por-origen`
+  con la TA·0 (los robots fuera de la demanda sin hueco); sonda del cartel 10/10. ▶ Espera el sí de `#911` (`[PENDIENTE: owner]`:
+  la campaña en el alta sin consentimiento), el arnés `SOLO=TA` con la local quieta y el ojo. ⚠️ v1.1.0 no tiene ni la
+  analítica ni `#mi-cuenta`: un QR impreso hoy abre la portada y no cuenta nada hasta la v2.0.0. El ancla del arnés, arreglada.
 
 0. ✅ **LOS COMPLEMENTOS DE LA FIESTA** (`#806`→`#808`, `fiesta-sistema-nuevo.md` §4.17): K1 y K2 en `main`; K3 es DATO del
    panel (la receta, en §4.17 «K3»): lo configura el parque en SU panel al desplegar (merienda, calcetines, cono, tartas). ▶

@@ -90,7 +90,8 @@ class AnalyticsContractTest extends TestCase
         foreach (Contract::EVENTS as $name => $definition) {
             $this->assertMatchesRegularExpression('/^[a-z][a-z0-9_]+$/', $name, "«{$name}» no es una clave snake_case");
             $this->assertContains($definition['source'], [Contract::CLIENT, Contract::SERVER], "«{$name}» no dice quién lo emite");
-            foreach ($definition['props'] as $prop) {
+            // Lo que se ADMITE, no solo lo declarado: la capa de campaña (TA) entra por `allowedProps()`.
+            foreach (Contract::allowedProps($name) as $prop) {
                 $this->assertFalse(Contract::isPiiKey($prop), "«{$name}.{$prop}» es una prop con pinta de dato personal");
             }
         }

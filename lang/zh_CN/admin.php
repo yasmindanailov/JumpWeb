@@ -1158,17 +1158,22 @@ return [
             'hours_heading' => '按园区时段的入口查询次数',
             'methods_chart' => '新账户的注册方式',
             'method_short' => [
-                'password' => '密码',
+                'password' => '表单',
                 'google' => 'Google',
                 'unknown' => '无数据',
             ],
             'breakdown_heading' => '注册与入口明细',
-            'breakdown_note' => '入口数据来自其留痕(每次查询均有审计记录,每次到访登记均有记录),自八月起可用。仅为汇总数据,不含姓名。',
+            'breakdown_note' => '入口数据来自其留痕(每次查询均有审计记录,每次到访登记均有记录),自八月起可用。注册来源:每次注册所在访问的推广来源(带链接的海报或广告单独成行),以及后台留痕中的柜台注册。仅为汇总数据,不含姓名。',
             'by_method' => '注册方式',
             'method' => [
-                'password' => '密码注册',
+                'password' => '表单注册',
                 'google' => 'Google 注册',
                 'unknown' => '无数据（统计开始之前，或在后台创建）',
+            ],
+            'by_origin' => '注册来源',
+            'origin' => [
+                'counter' => '园区柜台',
+                'unknown' => '无数据（统计开始之前，或无访问记录）',
             ],
             'col' => [
                 'registrations' => '账户',

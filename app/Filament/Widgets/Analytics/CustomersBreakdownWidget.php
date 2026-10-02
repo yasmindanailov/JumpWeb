@@ -11,7 +11,7 @@ use Filament\Widgets\Widget;
 /**
  * **Registros y puerta, al detalle** (`specs/analitica.md` §4.5, T2b): la tabla por día (o semana) con las
  * cuentas nuevas, las verificadas, las búsquedas, las encontradas, los clientes distintos y las visitas, más
- * cómo se registran. Es la vista de tabla del gráfico de al lado.
+ * cómo se registran y de dónde llegan (TA). Es la vista de tabla del gráfico de al lado.
  */
 class CustomersBreakdownWidget extends Widget
 {
@@ -35,7 +35,31 @@ class CustomersBreakdownWidget extends Widget
             'tables' => [
                 $this->series($report['series'], (string) $report['window']['granularity']),
                 $this->methods($report['registrations']['by_method']),
+                $this->origins($report['registrations']['by_origin']),
             ],
+        ];
+    }
+
+    /**
+     * **De dónde llegan las altas** (TA, `#876`): una fila por campaña de la web (fuente · medio · campaña, como «Las fuentes y
+     * las campañas» de Marketing), la del mostrador y «sin dato».
+     *
+     * @param  array{web: list<array{source: string, medium: string, campaign: ?string, n: int}>, counter: int, unknown: int}  $origins
+     * @return array{heading: string, columns: list<string>, rows: list<list<string>>, wide: bool}
+     */
+    private function origins(array $origins): array
+    {
+        $rows = array_map(static fn (array $r): array => [
+            SourcesWidget::label($r['source']), SourcesWidget::label($r['medium']), $r['campaign'] ?? '—', (string) $r['n'],
+        ], $origins['web']);
+        $rows[] = [__('admin.analytics.customers.origin.counter'), '—', '—', (string) $origins['counter']];
+        $rows[] = [__('admin.analytics.customers.origin.unknown'), '—', '—', (string) $origins['unknown']];
+
+        return [
+            'heading' => __('admin.analytics.customers.by_origin'),
+            'columns' => [__('admin.analytics.traffic.col.source'), __('admin.analytics.traffic.col.medium'), __('admin.analytics.traffic.col.campaign'), __('admin.analytics.customers.col.count')],
+            'rows' => $rows,
+            'wide' => true,
         ];
     }
 

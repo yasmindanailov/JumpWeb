@@ -6,6 +6,7 @@ use App\Domain\Booking\Services\OccupancyReader;
 use App\Domain\Platform\Enums\Comparison;
 use App\Domain\Platform\Services\Analytics\Reports\Window;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -251,15 +252,16 @@ final class OccupancyReport
 
     /**
      * **La demanda sin hueco** (`#758`): los `availability_missing` del periodo —el cajón, al cargar la oferta de un
-     * producto, por cada mes sin días desde el en curso—, por producto y mes; y desde cuándo se mide.
+     * producto, por cada mes sin días desde el en curso—, por producto y mes, de las visitas LIMPIAS ({@see cleanEvents()});
+     * y desde cuándo se mide (el primero que llegó, de quien fuera: es la fecha del instrumento, no una cifra).
      *
      * @return array{count: int, since: ?string, by_product_month: list<array{product: string, month: string, n: int}>}
      */
     private function missing(Window $window): array
     {
-        $rows = DB::table('analytics_events')->where('name', 'availability_missing')
-            ->whereBetween('received_at', [$window->utcFrom()->format('Y-m-d H:i:s'), $window->utcTo()->format('Y-m-d H:i:s')])
-            ->select(['props', 'received_at'])
+        $rows = $this->cleanEvents('availability_missing')
+            ->whereBetween('e.received_at', [$window->utcFrom()->format('Y-m-d H:i:s'), $window->utcTo()->format('Y-m-d H:i:s')])
+            ->select(['e.props', 'e.received_at'])
             ->get()
             ->filter(static fn (object $r): bool => $window->contains(CarbonImmutable::parse((string) $r->received_at, 'UTC')));
         $since = DB::table('analytics_events')->where('name', 'availability_missing')->min('received_at');
@@ -417,11 +419,26 @@ final class OccupancyReport
             'revenue_cents' => $entries['revenue_cents'], 'seat_minutes' => $entries['seat_minutes'], 'lines' => $entries['lines'],
             'present' => $parties['present'], 'cap' => $parties['cap'],
             'visitors' => $visitors['seats'], 'visitor_lines' => $visitors['lines'], 'visitors_sq' => $visitors['seats_sq'],
-            'missing' => (int) DB::table('analytics_events')->where('name', 'availability_missing')
-                ->where('received_at', '>=', $window->utcFrom()->format('Y-m-d H:i:s'))
-                ->where('received_at', '<', $window->utcTo()->format('Y-m-d H:i:s'))
+            'missing' => (int) $this->cleanEvents('availability_missing')
+                ->where('e.received_at', '>=', $window->utcFrom()->format('Y-m-d H:i:s'))
+                ->where('e.received_at', '<', $window->utcTo()->format('Y-m-d H:i:s'))
                 ->count(),
         ];
+    }
+
+    /**
+     * Los eventos (`e`) de un nombre que llegan de visitas LIMPIAS (`s`), sin robots ni personal: la regla del embudo y de
+     * los experimentos (`FunnelReport`, `ExperimentsReport`). Sin ella, «Demanda sin hueco» contaba las sondas y al equipo
+     * (medido por plataforma el 29-09; el 02-10 en la local, 52 de 52 eran de robots). Un evento de cliente siempre trae su
+     * visita: la ingesta la crea (`EventIngestor`).
+     */
+    private function cleanEvents(string $name): Builder
+    {
+        return DB::table('analytics_events as e')
+            ->join('analytics_sessions as s', 's.id', '=', 'e.session_id')
+            ->where('e.name', $name)
+            ->where('s.is_bot', false)
+            ->where('s.is_internal', false);
     }
 
     /** @return array<int, string> */

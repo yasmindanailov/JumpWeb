@@ -81,8 +81,11 @@ class SourcesWidget extends Widget
         ];
     }
 
-    /** «direct», «none» y «unknown» son palabras del contrato: se traducen; lo demás es lo que escribió el anunciante. */
-    private static function label(string $value): string
+    /**
+     * «direct», «none» y «unknown» son palabras del contrato: se traducen; lo demás es lo que escribió el anunciante. Lo usa
+     * también «De dónde llegan las altas» (`CustomersBreakdownWidget`, TA): la misma fuente se lee igual en las dos tablas.
+     */
+    public static function label(string $value): string
     {
         return match ($value) {
             'direct' => __('admin.analytics.traffic.source.direct'),

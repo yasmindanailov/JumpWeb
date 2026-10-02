@@ -22,7 +22,8 @@ use Throwable;
  * PHP sería una manera de saltarse la ingesta y su validación.
  *
  * ⚠️ El visitante y la sesión se cogen del contexto de la petición SOLO si el visitante consintió
- * `analytics`: atar un hecho con `user_id` a la navegación de una cookie es el régimen identificado.
+ * `analytics`: atar un hecho con `user_id` a la navegación de una cookie es el régimen identificado. La CAMPAÑA
+ * de la visita, en cambio, va siempre en los hechos que la piden (`Contract::carriesCampaign()`, rgpd-5).
  */
 class Recorder
 {
@@ -38,6 +39,10 @@ class Recorder
             Log::warning('analytics.record_refused', ['event' => $name, 'reason' => 'not a server fact']);
 
             return;
+        }
+
+        if (Contract::carriesCampaign($name)) {
+            $props += $this->campaign();
         }
 
         $this->write($name, $this->allowed($name, $props), [
@@ -117,6 +122,27 @@ class Recorder
                 Log::warning('analytics.record_failed', ['event' => $row['name'], 'error' => $e->getMessage()]);
             }
         });
+    }
+
+    /**
+     * **La capa de CAMPAÑA** de la visita en curso, para los hechos que el contrato marca con ella (TA, `#876`): de dónde
+     * llegó la visita en la que se dio el alta. Va SIEMPRE, como la del sello del pedido (rgpd-5): no dice quién navegó, y
+     * los identificadores siguen pidiendo `analytics` ({@see linksToVisitor()}). Un valor con pinta de dato personal no
+     * viaja (`RGPD-07`): la campaña la escribe quien hace el enlace.
+     *
+     * @return array<string, string>
+     */
+    private function campaign(): array
+    {
+        try {
+            $touch = $this->context->currentTouch() ?? [];
+        } catch (Throwable $e) {
+            Log::warning('analytics.context_failed', ['error' => $e->getMessage()]);
+
+            return [];
+        }
+
+        return array_filter($touch, static fn (?string $value): bool => $value !== null && $value !== '' && ! Contract::looksLikePii($value));
     }
 
     private function linksToVisitor(): bool

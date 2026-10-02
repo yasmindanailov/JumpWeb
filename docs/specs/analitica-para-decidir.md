@@ -508,6 +508,7 @@ referencia de lo que se descartó.
 | T6 | **Cohortes** | §4.10 | test de cohorte con fechas fijas · `EXPLAIN` · ojo |
 | T7 | **Pérdidas y complementos** | §4.10 (promociones con plataforma) | tests · ojo |
 | T8 | **Satisfacción** | §4.10 (la foto diaria de Google) | tests · ojo |
+| TA | **Las altas por origen** (`#876`, la fila 8 de la lista del owner del 02-10; antes que T6–T8) | §4.15 | tests del hecho (la campaña siempre; el `session_id` solo con «análisis»), del informe y del contrato, con su mutación · la sonda del enlace del cartel · ojo |
 
 ### 4.13 La T3 al detalle — medido el 28-09, antes de codificar (`#759`)
 
@@ -991,6 +992,68 @@ día, con quién viene, las fiestas, ≤ 12 consultas fijas, la pantalla). Arné
 «Otros» (el bucle que lo junta hasta cinco COMPENSABA las dos mutaciones con los casos que tenía): faltaban el caso de una pequeña
 sola y el de «otro» ≥ 5 con otras dos que ya suman cinco. Fixture del ojo, `ojo-tp2.php` (carpeta de auditoría de `storage`, fuera de git; reversible) y
 sonda `sonda-tp2-panel.mjs` (la pantalla contra el informe, ninguna cifra de 1 a 4, el CSV).
+
+### 4.15 Las altas por origen (TA) — la fila 8 de la lista del owner (`#876`), medida el 02-10 antes de codificar
+
+**El pedido** (owner, 02-10, por plataforma: `isla-y-landing-nueva.md` §4.28): «qué enlace con UTM poner para el registro en el
+parque: altas en casa y en el parque».
+
+**Medido (02-10, 18:00; el código en `dd59d03c`)**:
+1. `CustomersReport` cuenta las altas desde `users` (cuentas de cliente por `created_at`) y solo las reparte por MÉTODO
+   (`user_registered.props.method`, `password`/`google`; lo demás, «sin dato»). Ningún corte por origen.
+2. `user_registered` lo escriben `SelfSignup` y `GoogleSignup` por `Recorder::fact()`, con `user_id`; su `session_id`, SOLO con
+   «análisis» consentido (`Recorder::linksToVisitor()`, `RGPD-07` (2)). Cruzar el alta con su visita contaría solo a quien aceptó
+   «análisis»: el QR del parque saldría por debajo, en la proporción de quien lo rechaza.
+3. El PEDIDO resuelve lo mismo con DOS CAPAS (rgpd-5, `AttributionContext::seal()`): la de CAMPAÑA (fuente · medio · campaña) va
+   siempre y los identificadores solo con su categoría: «sin consentimiento, el pedido sabe su campaña y no sabe quién navegó».
+4. Las altas del MOSTRADOR («Crear pedido» del panel → `CustomerRegistrar::register()`) no emiten `user_registered`: dejan su
+   rastro en `audit_logs` (`orders.customer_registered`, ya en v1.1.0: producción tiene su historia). La Puerta no crea cuentas.
+5. El enlace que propuso plataforma, `https://playjump.es/?utm_source=parque&utm_medium=qr&utm_campaign=registro#mi-cuenta`:
+   `#mi-cuenta` abre Mi cuenta en la isla en cualquier página (`cajon/enlace-cuenta.js`, `#773`/`#774`; sin sesión, «Entra» y
+   «Crea tu cuenta»). ⚠️ v1.1.0 no tiene ni la analítica ni ese enlace: un QR impreso hoy abre la portada y no cuenta nada hasta
+   la v2.0.0. De punta a punta, sin verificar.
+6. En la local: 63 `user_registered` y 1 alta de mostrador.
+
+**Cambia**:
+- **El hecho** (`[PENDIENTE: owner]` 2026-10-02, `#911`: toca `RGPD-07` (2) y el punto 16 de `/privacidad`): `user_registered`
+  gana la capa de CAMPAÑA de la visita en la que se da el alta —`source`, `medium`, `campaign`,
+  con `AttributionContext::touch()` de la sesión EN CURSO (la regla del embudo); sin sesión, ninguna— y sin identificadores: la
+  regla del pedido (rgpd-5) aplicada al alta. La declara el CONTRATO (`Contract::EVENTS`, una marca de campaña en el hecho) y la
+  pone `Recorder::fact()` desde el contexto: quien lo emite (`SelfSignup`, `GoogleSignup`, de plataforma) no se toca, y otro
+  hecho del servidor puede pedirla igual.
+- **El informe**: `CustomersReport` gana `registrations.by_origin`: las de la web por fuente · medio · campaña (de las props),
+  las del MOSTRADOR (del rastro) y «sin dato» como resto (antes de medir, o sin visita).
+- **La pantalla**: en «Clientes», plegada junto a «Cómo se registran», la tabla «De dónde llegan las altas» (Origen · Altas), y
+  en el CSV. Su «¿Cómo se calcula?» (es y zh_CN): «la visita en la que se dio de alta», y el mostrador, del rastro del panel.
+- **De paso** (la A1, `#853`): el rótulo del método `password` pasa a «Con el formulario»; su clave se queda (es historia).
+- **No cambia**: el total de altas, el método, la puerta, `Recorder` ni el régimen del consentimiento.
+
+**Descartado**: (a) cruzar el alta con `analytics_sessions`: solo cuenta a quien consintió; (b) el PRIMER toque, como las
+columnas del pedido: quien vino antes por un anuncio y se da de alta en el parque contaría para el anuncio, y la pregunta es
+DÓNDE se da de alta; (c) una fuente «parque» escrita en el código: el origen es dato del enlace (white-label); (d) un ajuste del
+panel con esa fuente: la tabla por origen ya la enseña sin configurar nada.
+
+**Guardas**: `CustomersReportTest` (el origen desde las props, el mostrador desde el rastro, «sin dato» como resto, otra ventana
+no cuenta) · los dos registros: la campaña SIEMPRE y el `session_id` solo con «análisis» (el control) · `AnalyticsContractTest`
+(props sin PII) · el censo y el CSV · arnés `mutar-analitica-decidir.sh` con `SOLO=TA` (antes, re-apuntar su ancla de la línea
+880, rota desde la A2a) · la sonda del enlace del cartel en la local, de punta a punta: la visita con `parque/qr/registro`, Mi
+cuenta abierta, el alta con código y su fila en el informe. **Antes de la TA**, el defecto de `OccupancyReport::missing()`
+(robots y personal en «demanda sin hueco», medido por plataforma el 29-09), con su mutación: es la regla del carril.
+
+**Lo construido (02-10, 19:00; en `wip/ta-altas-por-origen`, sin `main` hasta el sí de `#911` y el ojo del owner)**:
+- **TA·0**: `OccupancyReport::cleanEvents()`, la regla del embudo: en la local, la demanda sin hueco pasa de 52 a 0 (las 52, de
+  sondas `is_bot`). «Desde cuándo se mide» sigue siendo la fecha del instrumento. El fixture de `OccupancyReportTest` da a cada
+  evento su visita, como la ingesta, y un caso nuevo lleva un robot y uno del equipo en el periodo y un robot en la comparación.
+- **El hecho**: `Contract::CAMPAIGN_PROPS` y la marca `campaign` (solo `user_registered`), que `allowedProps()` admite y
+  `Recorder::campaign()` pone desde `AttributionContext::currentTouch()` (nuevo), sin un valor con pinta de dato personal.
+- **El informe**: `registrationFacts()` (método y origen de las MISMAS filas, una consulta) y `trailCounts()` (fichas y mostrador,
+  una): el presupuesto de consultas (12) no sube. Caché `v4`. **La tabla**, con `SourcesWidget::label()` (ya público).
+- **Medido en el camino**: la visita la crea el primer LOTE de la medición (`FLUSH_MS`, 5 s; la sonda la vio a los 6,3 s de
+  pedir la página): un alta antes de ese lote sale «sin dato» —quien teclea no llega antes; un autocompletado muy rápido, sí—.
+- **Verificación**: `RegistrationCampaignTest` 6, `CustomersReportTest` 9 (con la tabla del panel), `OccupancyReportTest` 11,
+  `AnalyticsContractTest` (la guarda de datos personales, sobre `allowedProps()`) y el vecindario (467) en verde; Pint y Larastan
+  limpios; `scripts/sonda-cartel.mjs` **10/10** (el enlace del cartel sin consentimiento, de punta a punta; su cuenta, anonimizada
+  al final, sigue contando en la fila del QR). ▶ Falta el arnés `SOLO=TA` (18 mutaciones, la local quieta ~5 min) y el ojo.
 
 ## 5. Impacto en invariantes
 
