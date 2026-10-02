@@ -100,6 +100,7 @@ class PrivacyTest extends TestCase
         $role = Role::create(['name' => 'customer', 'label' => 'Cliente']);
         $user->roles()->attach($role);
         $originalId = $user->id;
+        $this->assertNotNull($user->getRawOriginal('password'), 'control: la cuenta llega a la purga con contraseña');
 
         $user->anonymize();
 
@@ -112,6 +113,8 @@ class PrivacyTest extends TestCase
         $this->assertNull($anonymized->phone);
         $this->assertNotSame('ana@example.com', $anonymized->email);
         $this->assertStringEndsWith('@deleted.local', $anonymized->email);
+        // A5d (`#869`): sin contraseña, no con un hash aleatorio; la fila no guarda ninguna forma de entrar.
+        $this->assertNull($anonymized->getRawOriginal('password'));
 
         // Consents y roles eliminados/desvinculados.
         $this->assertDatabaseMissing('consents', ['user_id' => $originalId]);

@@ -523,9 +523,12 @@ instalación de un cliente. Si se configura a mano deja de ser una prueba del pr
 > eliminan» tras la fiesta): se corrigen AQUÍ, en la v2.0.0 (`#865`), con un script por huella como el de `/cookies`
 > (futuro, spec §4.3·4) y SOLO si la poda de `#863` va en la misma versión.
 > ❗ **Las CONTRASEÑAS de los clientes se borran AQUÍ** (A5d de `specs/acceso-con-codigo.md` §4.12, `#869`; el owner, 02-10:
-> «eso será al desplegar»): el `migrate` de la v2.0.0 pone `NULL` en las de las cuentas sin rol del panel —desde la A5b nadie
-> entra con ellas— y deja las del personal. MEDIR antes y después por SSH (tinker): `User::customers()` y
-> `User::teamMembers()` con `whereNotNull('password')->count()`; la del personal, igual; la de clientes, a cero. Sin vuelta.
+> «eso será al desplegar»): el `migrate` de la v2.0.0 (`erase_customer_passwords`) pone `NULL` en las de las cuentas sin rol
+> del panel —desde la A5b nadie entra con ellas— y deja las del personal. MEDIR antes y después por SSH (tinker):
+> `User::customers()` y `User::teamMembers()` con `whereNotNull('password')->count()`, y la huella del personal
+> (`hash('sha256', User::teamMembers()->orderBy('id')->pluck('password', 'id')->toJson())`): la del personal, IDÉNTICA; la
+> de clientes, a cero; el registro dice `users.customer_passwords_erased` con la cifra. Ensayado en local (02-10): 51 → 0,
+> el equipo 2 → 2 con la misma huella. Sin vuelta.
 > ❗❗❗ **El tercero se paró en la GUARDA 1 y dejó el sitio 3 minutos en 503** (`#594`): el owner había
 > pasado Redsys a `live` a las 17:29. Se levantó con `artisan up` y se completaron a mano las franjas,
 > `artisan optimize` y la salud. Desde `#594`, en producción la guarda admite `test` o `live`.

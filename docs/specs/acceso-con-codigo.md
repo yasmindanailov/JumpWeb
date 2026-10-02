@@ -1,7 +1,7 @@
 # [SPEC] Entrar con un código al correo — la contraseña del cliente se retira
 
 > Estado: ✅ aprobada (29-09: el owner contestó el §7) → **A1 ✅** (§4.8) · **A2 ✅** (§4.9) · **A3 ✅** (§4.10) · **A4a ✅**
-> (SPA, §4.11) · **A4b ✅** (vista por el owner) · **A5** (§4.12, plataforma): **A5a ✅** · **A5b ✅** · **A5c ✅** · Última actualización: 2026-10-02 ·
+> (SPA, §4.11) · **A4b ✅** (vista por el owner) · **A5 ✅** (§4.12, plataforma: A5a–A5d) · A6 ⬜ · Última actualización: 2026-10-02 ·
 > Decisiones: `#847` (el owner: código al correo y Google; fuera la contraseña) · `#848` (el §7: una sola puerta, borrar
 > las contraseñas, 90 días, solo el código) · `#849` (corrige el 1: el registro NO espera al código, hay cola en la puerta) ·
 > `#853`/`#854` (la A1: el código en el servidor; el dispositivo recordado y `RGPD-06`) · `#855` (la A2a: reconfirmar con
@@ -18,18 +18,17 @@
   el código; nuevo, sus datos y dentro, SIN código —el registro no espera a ningún correo: en la puerta hay cola (`#849`)—,
   y el correo se confirma después, sin frenar. El personal del panel NO cambia (su contraseña, y el authenticator de los
   administradores, `#847`).
-- **Empieza por** §4.12 (la A5: lo que queda, medido) → §7 (lo que decidió el owner). §1 es la medida del 29-09.
+- **Empieza por** §4.12 (la A5, hecha; queda la A6) → §7 (lo que decidió el owner). §1 es la medida del 29-09.
 - **Trampas**: (1) la cola sale por el cron CADA MINUTO en producción (`ENTORNOS.md` §6): un código encolado puede tardar
   60 s; se envía en la misma petición, tras la respuesta (§4.3). (2) Reconfirmar las acciones sensibles (`SEGURIDAD.md`
-  §3) es SOLO el código (§4.4). (3) Las cuentas nuevas (Google, la propia y el mostrador) nacen sin contraseña desde
-  la A5b/A5c; las de antes la llevan hasta la A5d, que la borra AL DESPLEGAR. (4) Los limitadores son de DOMINIO
+  §3) es SOLO el código (§4.4). (3) Ninguna cuenta de cliente tiene contraseña: las nuevas nacen sin ella (A5b/A5c) y
+  las de antes las borra la A5d, una migración que en producción corre AL DESPLEGAR. (4) Los limitadores son de DOMINIO
   (`SEC-06`): ningún controlador los reimplementa. (5) La
   puerta dice si un correo tiene cuenta, como el alta de hoy (`#31`): la acotan los límites de §4.2.
 - **Estado**: ✅ aprobada (`#848`). **A1–A4 ✅** (29-09→01-10, `#853`→`#857`, `#810`→`#813`, §4.8–§4.11: el código en el
-  servidor, reconfirmar con él, la isla y el cajón; vistos por el owner). La A5 (plataforma, §4.12, `#869`/`#870`):
-  **A5a ✅** (la contraseña del personal) · **A5b ✅** (el servidor y el contrato 1.59.0, sin la del cliente) · **A5c ✅**
-  (los correos y los textos; el mostrador, sin ella); sigue la A5d (las que ya existen: una migración que en producción
-  corre SOLO al desplegar la v2.0.0).
+  servidor, reconfirmar con él, la isla y el cajón; vistos por el owner). **La A5 ✅** (plataforma, §4.12, `#869`/`#870`):
+  la contraseña del personal (A5a), el servidor y el contrato 1.59.0 sin la del cliente (A5b), los correos y los textos
+  (A5c) y las que ya existían, borradas por una migración que en producción corre SOLO con la v2.0.0 (A5d). Sigue la A6.
 - **Invariantes**: `SEC-06` (se amplía al código), `RGPD-01` (la purga borra los códigos), `RGPD-06` (sin cambio de
   forma). Ningún fichero del `CRITICAL_RE`.
 
@@ -490,9 +489,18 @@ SPA: quiere decir «con el formulario del correo», `SelfSignup`); la tabla `pas
 - **Guardas**: `CustomerRegistrarTest` (nace sin contraseña, con correo y sin él; la bienvenida dice cómo entrar) y el
   arnés `mutar-acceso-codigo.sh` **52/52** (el mostrador que vuelve a fabricarla). ✱ Medido: la línea de adelanto
   francesa del alta repetida medía 91 caracteres (`MailInboxLineTest`, techo 85): acortada.
-- **La A5d, lo que queda** (el owner, 02-10: en producción no se borra nada hasta desplegar): la migración y
-  `User::anonymize()` con `NULL` (hoy un `Str::random(60)` hasheado; su frase de `RGPD-01` cambia con él); corre en
-  producción SOLO al desplegar la v2.0.0 (`#670`), medida antes y después (`ENTORNOS.md` §6).
+
+**La A5d ✅** (02-10; nada que ver al ojo; el owner: en producción no se borra nada hasta desplegar):
+- **La migración** `2026_10_02_210000_erase_customer_passwords`: `NULL` en las de `User::customers()` —la frontera del
+  panel, leída del modelo y no copiada: la copia vieja de `app:create-admin` se dejaba `puerta`—, sin tocar `updated_at`,
+  con `users.customer_passwords_erased` y su cifra en el registro solo si borra, y un `down()` que no devuelve nada.
+  `User::anonymize()` pone `NULL` (era un `Str::random(60)` hasheado; `RGPD-01`, al día). En producción corre SOLO con la
+  v2.0.0 (`#670`), medida antes y después (`ENTORNOS.md` §6).
+- ✱ **Medido en la MySQL local** (la suite va en sqlite): clientes con contraseña 51 → 0 (19 eran anonimizadas); el
+  equipo, 2 → 2 con la misma huella de sus hashes.
+- **Guardas**: `CustomerPasswordsErasedMigrationTest` (los clientes —con rol `customer`, sin rol y anonimizada— sin ella;
+  `admin`, `staff`, `puerta` y quien es cliente y `staff`, byte a byte; `updated_at`; el registro; sin vuelta) y
+  `PrivacyTest` (la supresión, sin contraseña); arnés `scripts/mutar-contrasenas-clientes.sh` **8/8**.
 
 ## 5. Impacto en invariantes
 

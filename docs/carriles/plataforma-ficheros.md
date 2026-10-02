@@ -23,7 +23,8 @@ A2b** (`#856`): `Identity\Contracts\EmailChangeOutcome`, `Notifications\Support\
 **y la A5a** (`#870`): `Identity\Services\PanelPasswordLinks`, `Notifications\PanelPasswordLink`, `App\Filament\Auth\PanelPassword`,
 `Admin\Users\SendPanelPasswordActionTest` y `scripts/mutar-contrasena-panel.sh` (y, AVISANDO, del SPA: `EmailUtm`, `MailTextCatalogTest`) ·
 **y la A5b** (`#869`; retiró `Reconfirmation`, `EmailChangeController` y lo de la contraseña del cliente): `tests/Support/IssuesCodes.php`
-y `Auth\{LoginGate,CustomerPasswordRetired}Test` ·
+y `Auth\{LoginGate,CustomerPasswordRetired}Test` · **y la A5d** (`#869`): la migración `erase_customer_passwords`,
+`Auth\CustomerPasswordsErasedMigrationTest` y `scripts/mutar-contrasenas-clientes.sh` ·
 **EL SEO** (`specs/seo.md`): la spec, `scripts/{sonda-seo.mjs,mutar-seo.sh}`, `RobotsController`, `MapsEmbed::coordinates()`,
 `VenueAddress::parts()` y el grafo de `StructuredData` (y, AVISANDO, `components/{pagina,layout}.blade.php` y `deploy.sh`) ·
 **LA POLÍTICA DE COOKIES de producción** (`#858`/`#859`): su spec, `App\Http\Legal\CookieInventory`, la migración

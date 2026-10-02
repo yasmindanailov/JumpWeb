@@ -433,7 +433,7 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
      * Anonimiza la cuenta (RGPD art. 17 + AEAT): sobrescribe datos personales con valores
      * neutros pero conserva la fila `users` (FK con `orders` para conservar las facturas
      * ≥4 años). El email original queda libre para re-uso por otra cuenta. La contraseña se
-     * reemplaza por un hash aleatorio (login imposible). Borra consents y desvincula roles.
+     * borra (`NULL`: ninguna abre la cuenta). Borra consents y desvincula roles.
      *
      * Idempotente: si ya estaba anonimizada, no hace nada y devuelve false. Atómico.
      */
@@ -586,7 +586,8 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
                 'phone' => null,
                 'born_on' => null,                               // TP·1 (`#792`): la fecha de nacimiento es PII
                 'locale' => 'es',
-                'password' => Str::random(60),                  // hash aleatorio → login imposible
+                // Sin contraseña: el proveedor de Laravel no valida contra un `NULL` (A5d, `#869`; antes, un hash aleatorio).
+                'password' => null,
                 'remember_token' => null,
                 'app_authentication_secret' => null,             // el authenticator del panel (`#851`): una credencial más
                 'app_authentication_recovery_codes' => null,
