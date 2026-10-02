@@ -169,7 +169,31 @@ export function propsDeLaIsla({ config, estado, acciones, textos }) {
         cookiePrefs: estado.preferencias ?? null,
         notice: estado.aviso ?? null,
         onNavigate: acciones.navegar,
+        // Lo que la compra deja al cerrarse (`#867`) y, mientras llega en el primer toque, «Preparando tu reserva».
+        ...trasLaCompra(estado, { elegido: Boolean(calculo?.elegido), textos, acciones }),
     };
+}
+
+/**
+ * **Lo que la compra deja al cerrarse, en la isla** (`#867`, `useCompraCerrada.js`): a medias, su reserva en la fila de «Sigue
+ * con tu reserva» (`resume`, la situación `a-medias`); hecha, el banner de lo hecho —«¡Reservado!» o «¡Fiesta reservada!» ·
+ * «Toca para ver tu QR»—, que cede mientras la calculadora tiene otra compra elegida; y, mientras la compra llega en el primer
+ * toque, el de la espera («Preparando tu reserva»: tocarlo no hace nada, la compra ya viene). Los dos banners van en
+ * `waiting` (la situación `espera`), y la espera manda.
+ */
+export function trasLaCompra({ compra = null, preparando = false } = {}, { elegido = false, textos = {}, acciones = {} } = {}) {
+    const resume = compra?.estado === 'a-medias' ? { text: compra.linea || '', onClick: acciones.seguirCompra } : null;
+    let waiting = null;
+
+    if (preparando) waiting = { type: 'espera', text: textos?.banner?.preparando ?? '', onClick: () => {} };
+    else if (compra?.estado === 'hecho' && ! elegido) {
+        waiting = {
+            type: 'hecho', text: textos?.compra?.listo?.[compra.fiesta ? 'titular_fiesta' : 'titular'] ?? '',
+            sub: textos?.banner?.ver_qr ?? '', onClick: acciones.verQr,
+        };
+    }
+
+    return { resume, waiting };
 }
 
 /**

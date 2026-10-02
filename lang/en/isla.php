@@ -29,6 +29,10 @@ return [
     'pago' => [
         'no_cobrado' => 'Nothing has been charged.',
     ],
+    'banner' => [
+        'preparando' => 'Getting your booking ready',
+        'ver_qr' => 'Tap to see your QR',
+    ],
     'control' => [
         'menu' => 'Menu',
         'cuenta' => 'Account',

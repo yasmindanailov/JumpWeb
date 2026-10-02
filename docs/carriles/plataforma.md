@@ -5,11 +5,11 @@
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
 > **820–849 AGOTADA con `#849`** → sigue en **850–879** (del owner, 29-09; centena `decisiones/800-899.md`) · Último usado:
 > **`#867`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-10-01**
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-10-02**
 > (el acceso con código: A1–A3 ✅ `#853`→`#857`; la A4 del SPA en `main`, `#813`; `/cookies` ✅ `#858`→`#860`; el zip (6) y
 > el reparto, `#861`; el SEO, `specs/seo.md`: S4 y S6 ✅ `#862`; 01-10: el FOLLETO del 26-09 en producción como DATOS
 > (`ENTORNOS.md` §6), los textos legales para el owner (`#863`→`#865`), **la Z6a de la isla ✅** y, por la noche, **la
-> Z6b ✅** (`#866`, `#867`), las dos con su visto bueno).
+> Z6b ✅** (`#866`, `#867`) y sus tres usos de los banners ✅ (02-10), con su visto bueno).
 > ⚠️ El techo de 32 KB: **se muda, no se raspa**; el 29-09 el owner sacó la lista de ficheros a `plataforma-ficheros.md`
 > (`#852`) y NO subió el techo. Si vuelve a apretar tres veces seguidas, llévaselo con la medida.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -50,19 +50,16 @@ normas, la T6f (301 y la web vieja fuera, `#843`), `#844`, la T6h (las legales) 
 **T6g** (§4.25, `#845`: el mural, los iconos del kit y `/_diseno` fuera; `SLOTS` = las 4 poses del arco; `kit:build --podar`).
 Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,entradas}.mjs`), la web entera (`sonda-web.mjs`,
 17/17) y la compra (`sonda-isla.mjs`).
-▶▶▶▶ **LO SIGUIENTE, EN ORDEN** (actualizado el 01-10 noche; el reparto con el SPA, `#861`, `isla-y-landing-nueva.md` §4.27):
-0. ▶▶▶ **LA Z6b ✅** (01-10, con el visto bueno del owner en vivo: la Z6b·1, `#866`, y la Z6b·2, el aviso a isla entera; la
-   Z6b·3 no se hace, `#867`; lo hecho y lo medido, en §4.27). **SIGUE, en el orden de `#867`**: (1) **los TRES usos de los
-   banners**: «Sigue con tu reserva» al cerrar la compra a medias antes de pagar (la fila `a-medias`, sin «hora guardada»: no
-   la hay antes de pagar, `#688`), «Preparando tu reserva» (espera) mientras baja la compra en el primer toque, y «¡Reservado!
-   · Toca para ver tu QR» (hecho) al cerrar el Listo, el resto de esa visita; tocan `useSeccionCompra.js` y el puente con la
-   isla de la página · (2) **la Z6c (el B3)**, sobre el `Experiments` del SPA (avisarle ANTES en el buzón): con el vídeo de
-   verdad, `isla_accion` por visita en móvil primero y las reservas de control, 50/50 y dos semanas como mínimo · (3) **la
-   A5** (fuera la contraseña) · (4) el acceso con código (su página, crear cuenta, «XXX-XXX» en el asunto, continuar al
-   escribir el último dígito, también en el authenticator del panel; mucho es la Z6g) · (5) los retoques del zip (6) (Z6d–Z6f,
-   colores, secciones; la cabecera sin precio salvo Colegios, la regla del owner en
-   `instancias/playjump/docs/estrategia/2026-09-30/Web.md`) · (6) la isla en un móvil de verdad, **en STAGING al terminarlo
-   todo**. `isla_razon` y la imagen de la INVITACIÓN son del SPA (`#861`). ⚠️ `sonda-cuenta` sigue sin pasarse tras la Z6b
+▶▶▶▶ **LO SIGUIENTE, EN ORDEN** (actualizado el 02-10; el reparto con el SPA, `#861`, `isla-y-landing-nueva.md` §4.27):
+0. ▶▶▶ **LA Z6b ✅ Y SUS TRES USOS ✅** (01→02-10, con el visto bueno del owner en vivo: la Z6b·1, `#866`; la Z6b·2, el aviso a
+   isla entera; y «Sigue con tu reserva», «Preparando tu reserva» y «¡Reservado! · Toca para ver tu QR», `#867`; la Z6b·3 no
+   se hace; lo hecho y lo medido, en §4.27). **SIGUE, en el orden de `#867`**: (1) **la Z6c (el B3)**, sobre el `Experiments`
+   del SPA (avisarle ANTES en el buzón): con el vídeo de verdad, `isla_accion` por visita en móvil primero y las reservas de
+   control, 50/50 y dos semanas como mínimo · (2) **la A5** (fuera la contraseña) · (3) el acceso con código (su página, crear
+   cuenta, «XXX-XXX» en el asunto, continuar al escribir el último dígito, también en el authenticator del panel; mucho es la
+   Z6g) · (4) los retoques del zip (6) (Z6d–Z6f, colores, secciones; la cabecera sin precio salvo Colegios, la regla del owner
+   en `instancias/playjump/docs/estrategia/2026-09-30/Web.md`) · (5) la isla en un móvil de verdad, **en STAGING al
+   terminarlo todo**. `isla_razon` y la imagen de la INVITACIÓN son del SPA (`#861`). ⚠️ `sonda-cuenta` sigue sin pasarse tras la Z6b
    (monta «hoy» antes de las 20:00); `sonda-banco-movimiento.mjs` sigue con los casos del 27-09: se rehace en la
    verificación final (`#768`).
 1. ▶▶ **EL SEO** (`specs/seo.md`, 🟦; el owner: «IMPORTANTÍSIMO»). Investigado y medido (§1–§2: la marca ya está en el 1 y
@@ -261,11 +258,9 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
   (ya en `DEUDA.md`, `#659`) y los mutantes viejos de `mutar-cabecera.py`/`mutar-bandas.py` (`DEUDA.md`). El texto, en git.
 
 ### Atendido
-- **SPA 01-10 noche, aviso previo de `#815`** (`fuentes.imagen` en `instancia.json` e `InstanceViews::fuentes()` en mi
-  fichero): leído y de acuerdo, hazlo tú. Tres notas: (1) la validación de `hojas()` en UNA función privada que usen las dos
-  (la extensión por parámetro), no copiada; (2) GD necesita la ruta del DISCO y `hojas()` devuelve la de `public/`: que
-  `fuentes()` lo diga en su nombre o en su doc; (3) la clave en `paquete-de-instancia.md` junto a `hojas` y vacía en la
-  plantilla del producto, con su caso como `InstanceSheetsTest`.
+- **SPA 02-10, la imagen de la invitación EN `main`** (`#815`, `#816`): leído. Mis tres notas de su aviso previo, hechas
+  (`InstanceViews::rutaValidada`, la ruta del disco dicha en `fuentes()`, la clave en `paquete-de-instancia.md` §4.6.bis y
+  vacía en la plantilla, `InstanceFontsTest`); el kit de PlayJump, en la instancia (`084fb40`), sale con su despliegue.
 - **SPA 01-10 noche, `LinkIsland` EN `main`** (`#814`): leído. Nada mío lo usa: `x-pieza.boton` y `x-pieza.selector`, solo en
   la fiesta (medido con `grep`), y nada en `resources/js/isla`. Si traigo otro zip que toque `paginas/{invitacion,autorizacion,
   lista-invitados}`, se lo digo; «90 + 30» es la descripción del pack (panel).

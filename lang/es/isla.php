@@ -34,6 +34,12 @@ return [
     'pago' => [
         'no_cobrado' => 'No se ha cobrado nada.',
     ],
+    // Los banners de la isla que siguen a la compra (`#867`): mientras llega en el primer toque, y bajo «¡Reservado!» al
+    // cerrar «Listo» (el titular es el de `compra.listo`).
+    'banner' => [
+        'preparando' => 'Preparando tu reserva',
+        'ver_qr' => 'Toca para ver tu QR',
+    ],
     'control' => [
         'menu' => 'Menú',
         // La cuenta, el control de la derecha de la barra (Z6a): sin sesión y con sesión.

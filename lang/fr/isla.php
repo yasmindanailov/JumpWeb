@@ -29,6 +29,10 @@ return [
     'pago' => [
         'no_cobrado' => 'Rien n’a été débité.',
     ],
+    'banner' => [
+        'preparando' => 'Nous préparons votre réservation',
+        'ver_qr' => 'Touchez pour voir votre QR',
+    ],
     'control' => [
         'menu' => 'Menu',
         'cuenta' => 'Compte',

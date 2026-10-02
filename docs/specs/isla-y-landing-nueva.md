@@ -2526,6 +2526,49 @@ entiende y rompía el módulo entero); con «reducir movimiento», sin barra; el
 la base `9af637fb` construida antes de tocar el JS. Sin sondas ni capturas: el owner lo revisó en vivo en una página temporal,
 ya borrada. **Con esto se cierra la Z6b**; siguen los tres usos de `#867`.
 
+#### Los tres usos de los banners al detalle (`#867`; medido el 01-10 noche, antes de codificar)
+
+**Lo medido**: (1) la tabla de la isla ya los tiene: `a-medias` (`resume`: la línea en alerta y «Sigue con tu reserva», que urge)
+y `espera` (`waiting`: un banner bloqueado, de tipo `espera` —la bola— o `hecho` —el check lima—); falta quien se los dé, porque
+la compra es otra app y la isla de la página solo oye `jw:cajon:open`/`close`. (2) Reabrir sin intención (`cajon.open()`) vuelve
+al MISMO paso: el motor sigue montado y la compra solo empieza otra al cerrar tras «Listo» (`cerrar()` → `empezar(null)`). (3) La
+X y Escape pasan por `cerrar()` de `useSeccionCompra.js`. (4) ⚠️ Entrar o crear la cuenta DENTRO de la compra marca `authChanged`
+(`usePurchaseFlow` → `sessionGained`) y cerrar RECARGA la página: lo que la isla tuviera en memoria se pierde. (5) En el mockup
+(`compra.jsx`), cerrar a medias deja `resume` («Pack Kids · sáb 26, 17:00» y «Sigue con tu reserva», al mismo paso); cerrar
+«Listo» NO deja banner (el «¡Reservado!» del mockup es el de la compra cerrada, la Z6b·3): lo de aquí es la propuesta aceptada.
+(6) «Listo» enseña el CARNÉ, el mismo QR que «Mi QR» (`openAccount(…, 'card')`); `pantallaListo().fiesta` dice si fue una fiesta.
+
+**El plan**:
+- **La compra dice lo que deja al cerrarse** (`pagina/compra-cerrada.js`, plano, con su `node --test`; lo importan las dos, como
+  `aviso-servidor.js`): en «Tus datos», «Pagar» o la hora perdida, con pedido, `{ estado: 'a-medias', linea }` (la línea de su
+  resumen; sin «hora guardada», `#688`); en «Listo», `{ estado: 'hecho', fiesta }`; si no, nada. `cerrar()` lo anuncia
+  (`isla:compra`) ANTES de cerrar y, si la página va a recargarse, lo deja en la pestaña (una vez, 2 min) y, a medias, deja también
+  la marca de la vuelta de Google (`marcarSalida`) con su `vuelta` (`?compra=reanudar`).
+- **La isla de la página lo dice** (`pagina/useCompraCerrada.js`, en un `effectScope` con relojes falsos): a medias,
+  `resume` → «Sigue con tu reserva» reabre la compra en su paso (`cajon.open()`; tras la recarga, va a la `vuelta` y la compra
+  sigue con `reanudar()`, como al volver de Google); hecho, `waiting` `hecho` → «¡Reservado!» o «¡Fiesta reservada!» · «Toca
+  para ver tu QR», que abre Tu QR y se gasta. **Mientras dure la página** (lo mismo que «una por visita» de la Z6b·1): se va al
+  reabrir la compra, y lo hecho también al tocarlo; lo hecho cede mientras la calculadora tiene algo elegido (otra compra).
+- **«Preparando tu reserva»**: abierta la compra en la isla, si a los 400 ms (el umbral de Doherty) aún no la ha relevado su
+  capa, `waiting` `espera` con la bola; se va al relevarla, al cerrar o con el tope de siempre (`ESPERA_RELEVO`). No con Mi
+  cuenta: no es una reserva. Rápida (con `precarga.js`, ~350 ms en 4G), no se ve.
+- Los textos: «Preparando tu reserva» y «Toca para ver tu QR», nuevos en `banner.*`; los titulares, los de `compra.listo` (la
+  página recibe esos dos, no el grupo entero).
+
+**Fuera**: la medida de reanudar (`compra_reanudar` del mockup), de la analítica del SPA (`#735`); el pago no completado con la
+capa cerrada (situación 11) y la espera del banco, que eran la Z6b·3. **Verificación**: `node --test` del módulo, del composable
+y de `propsDeLaIsla`; la suite; el peso con su base; y el ojo del owner en vivo.
+
+**✅ Hechos, con el visto bueno del owner en vivo (02-10)**, como dice el plan: `pagina/compra-cerrada.js`,
+`pagina/useCompraCerrada.js`, `trasLaCompra` en `pagina.js`, `dejarAlCerrar()` en `useSeccionCompra.js`, `banner.*` en
+`lang/*/isla.php` y los dos titulares de «Listo» en `<x-pagina>`. **Medido en Chromium** (diagnóstico de una vez, sin
+versionar): a medias sin sesión a 390 y con sesión entrada DENTRO a 1280 (cerrar recarga, el aviso sigue, «Sigue con tu
+reserva» vuelve a «Pagar» por `?compra=reanudar` y cerrar otra vez lo repite); «¡Reservado!» tras la vuelta del banco a la
+portada (pasarela interceptada) y su toque abre Tu QR; «Preparando» con la red lenta. `node --test` 12 casos nuevos, cuatro
+mutantes a mano (sin arnés: `DEUDA.md`). El peso, la compra 182,37 → 183,82 (techo 184) y la isla de la página 189,33 →
+192,04 (193), con la base `a4d761d5`. ⚠️ Lo que costó una ronda con el owner: en `/kids` el «Reservar» de la isla lleva a la
+calculadora y NO abre la compra; «Preparando» se ve desde el selector de la portada.
+
 ## 5. Impacto en invariantes
 
 - `PAY-*`: solo si entra Bizum; entonces `VERIFY_CONC=1` y la lista del `CRITICAL_RE`.

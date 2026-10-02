@@ -985,10 +985,11 @@ alguien más» del diseño frente a «Invitar a más» del producto, sin medir s
 **Qué hacer**: ajustar el modelo del banco (`banco-fiesta/modelos.php → lista('guardado')`) y esconder a cada lado lo
 decidido, hasta dar 0; después, la pasada ligera de la lista con la isla.
 
-## ▶ Baja · el aviso a isla entera (Z6b·2) muerde, pero sin arnés versionado (01-10, modo ligero)
+## ▶ Baja · el aviso a isla entera (Z6b·2) y los tres usos de los banners (`#867`) muerden, pero sin arnés versionado (01→02-10, modo ligero)
 
 `resources/js/isla/aviso.test.js` se vio morder con tres mutantes A MANO, 3/3 y revertidos con la edición al revés: el reloj
 que vuelve a empezar tras una pausa (`useAviso.js`), la pausa que sobrevive al aviso que se deja de ver y el corte del hecho
-solo por punto (`piezas/aviso-isla.js`). No hay guion que lo repita. **Qué hacer**: llevarlos a `scripts/mutar-isla-z6b.sh`
-(`aviso.test.js` en su `NODE`; `useAviso.js` y `piezas/aviso-isla.js` en `FICHEROS`) la próxima vez que se toque el aviso, y
-correrlo entero.
+solo por punto (`piezas/aviso-isla.js`). Y `pagina/compra-cerrada.test.js` con `pagina.test.js`, con cuatro, 4/4: lo dejado
+sin pedido, lo tomado en otra página (`compra-cerrada.js`), Mi cuenta que se lleva lo dejado (`useCompraCerrada.js`) y lo
+hecho que no cede ante otra compra elegida (`trasLaCompra`). No hay guion que lo repita. **Qué hacer**: llevarlos a
+`scripts/mutar-isla-z6b.sh` (sus tests en su `NODE`; sus ficheros en `FICHEROS`) la próxima vez que se toque, y correrlo entero.

@@ -949,7 +949,13 @@ BLADE);
         $this->assertNull($invitado['config']['owner']);
         $this->assertSame(route('legal.cookies'), $invitado['config']['cookiesUrl']);
         $this->assertSame(__('isla.hoy'), $invitado['textos']['hoy']);
-        $this->assertArrayNotHasKey('compra', $invitado['textos'], 'Los textos de la compra viajan con la compra, no aquí.');
+        // Los textos de la compra viajan con la compra, no aquí: solo sus dos titulares de «Listo», que la isla dice al cerrarla
+        // tras reservar (`#867`), como la calculadora de la fiesta recibe dos de `compra.cuando`.
+        $this->assertSame(
+            ['listo' => ['titular' => __('isla.compra.listo.titular'), 'titular_fiesta' => __('isla.compra.listo.titular_fiesta')]],
+            $invitado['textos']['compra'],
+            'Los textos de la compra viajan con la compra, no aquí: solo los dos titulares de «Listo».'
+        );
         $this->assertArrayNotHasKey('calculadora', $invitado['textos']);
         // T5c: los de Mi cuenta viven en el motor y viajan con la sesión; aquí eran 4 KB en cada página (`PERF-02`).
         $this->assertArrayNotHasKey('mi_cuenta', $invitado['textos']);

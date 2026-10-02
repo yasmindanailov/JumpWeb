@@ -1000,7 +1000,10 @@ class SidebarBundleBudgetTest extends TestCase
     // le queda) y su reloj, que se para y sigue donde iba (`useAviso`). Viaja con `IslaFlotante`, como la Z6b·1, aunque la
     // compra no avise. Medido 178,83 → 182,37 (base: el `HEAD` `9af637fb` construido en el mismo árbol ANTES de tocar el
     // JS, el mismo cálculo); casi todo son estilos en línea, como pinta la isla. El techo, a 183.
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 183;
+    // Los tres usos de los banners (`#867`, §4.27): al cerrarse, la compra dice lo que deja —a medias o hecha— y, si la página
+    // va a recargarse, lo deja en la pestaña (`pagina/compra-cerrada.js`, un trozo COMPARTIDO con la isla de la página, que lo
+    // lee). Medido 182,37 → 183,82 (base: el `HEAD` `a4d761d5`, con el build del gate). El techo, a 184.
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 184;
 
     // T4d·4 (`specs/isla-y-landing-nueva.md` §4.12): la CALCULADORA de una página, entrada propia que la página pide
     // (`scripts` de `<x-pagina>`) y se monta al acercarse su pieza. Su DESCARGA entera, como la mide el navegador que
@@ -1068,7 +1071,12 @@ class SidebarBundleBudgetTest extends TestCase
     // Z6b·2 (§4.27): lo mismo que la compra —el aviso a isla entera y su reloj—, que en la página es el que dice lo que dejó
     // el servidor al volver (`aviso-servidor.js`). Medido 185,78 → 189,33 (base: el `HEAD` `9af637fb` construido en el
     // mismo árbol ANTES de tocar el JS); las calculadoras, sin cambio (187,81 y 194,27). El techo, a 190.
-    private const ISLA_PAGINA_MAX_KB = 190;
+    // Los tres usos de los banners (`#867`, §4.27): lo que la compra deja al cerrarse («Sigue con tu reserva», «¡Reservado!»)
+    // y «Preparando tu reserva» (`useCompraCerrada.js`, `trasLaCompra`). Dos trozos compartidos nuevos, a propósito:
+    // `compra-cerrada.js` (0,96: quien escribe y quien lee el mismo formato, juntos) y `marca-compra.js` (0,43: la regla de
+    // la ruta propia, sin copiarla). Partirlos ahorraba ~0,8 con el formato en dos ficheros. Medido 189,33 → 192,04 (base:
+    // el `HEAD` `a4d761d5`, con el build del gate); el motor, la landing y las calculadoras, sin cambio. El techo, a 193.
+    private const ISLA_PAGINA_MAX_KB = 193;
 
     // T3e·3 (`#694`): las pantallas de después de la pantalla 0, en su trozo (`isla/compra/pasos-diferidos.js`), que la
     // compra pide al montarse. Medido 36,92 KiB. T3e·4 (`#695`): «Entra» con sus eventos y la «G» de Google, 37,66.

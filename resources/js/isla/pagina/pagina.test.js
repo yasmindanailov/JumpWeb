@@ -1,7 +1,8 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { avisoDeCookies, cajaSiVisible, fraseDe, medirVista, preferenciasDeCookies, propsDeLaIsla, razonDe, zonaEnMedio } from './pagina.js';
+import { avisoDeCookies, cajaSiVisible, fraseDe, medirVista, preferenciasDeCookies, propsDeLaIsla, razonDe, trasLaCompra, zonaEnMedio } from './pagina.js';
 import { paginaConSelector } from './con-selector.js';
+import { resolverSituacion } from '../situacion.js';
 
 /**
  * T4e — la isla viva en una página declarada (`pagina.js`), contra lo que hace `paginas/entradas/pagina.jsx` del diseño.
@@ -290,5 +291,59 @@ describe('el aviso de cookies nombra solo lo que pide (#860)', () => {
         const p = propsDeLaIsla({ config, estado: estado({ cookies: true, categorias: ['analytics', 'desconocida'] }), acciones, textos: { ...textos, ...textosCookies } });
         assert.equal(p.cookies.shortText, 'Cookies necesarias y, con tu permiso, análisis.');
         assert.ok(! p.cookies.text.includes('anuncios'));
+    });
+});
+
+describe('lo que la compra deja al cerrarse (#867)', () => {
+    const textosCompra = {
+        ...textos, accion: { ...textos.accion, reservar: 'Reservar', seguir: 'Sigue con tu reserva' },
+        banner: { preparando: 'Preparando tu reserva', ver_qr: 'Toca para ver tu QR' },
+        compra: { listo: { titular: '¡Reservado!', titular_fiesta: '¡Fiesta reservada!' } },
+    };
+    const deLaCompra = { seguirCompra: () => 'seguir', verQr: () => 'qr' };
+    const conCompra = (extra) => propsDeLaIsla({ config, estado: estado(extra), acciones: { ...acciones, ...deLaCompra }, textos: textosCompra });
+    const aMedias = { estado: 'a-medias', linea: 'Kids · 1 hora · sáb 4, 17:00 · 2 niños' };
+
+    test('a medias, la isla dice la reserva y «Sigue con tu reserva», que urge y la reabre', () => {
+        const p = conCompra({ compra: aMedias });
+        assert.equal(p.resume.text, aMedias.linea);
+        assert.equal(p.resume.onClick(), 'seguir');
+        assert.equal(p.waiting, null);
+        const s = resolverSituacion({ ...p, ctaVisible: true, reason: { type: 'razon', text: 'Hoy solo pagas 50 €' } }, textosCompra);
+        assert.equal(s.id, 'a-medias');
+        assert.equal(s.line, aMedias.linea);
+        assert.equal(s.action.label, 'Sigue con tu reserva');
+        assert.equal(s.calm, false, 'urge: con el botón de la página a la vista no baja a secundaria');
+        assert.equal(s.bn, undefined, 'ni cede su sitio a la razón de la pieza');
+    });
+
+    test('hecha, el banner de lo hecho, con el titular de «Listo» y el de la fiesta, que abre Tu QR', () => {
+        const p = conCompra({ compra: { estado: 'hecho', fiesta: false } });
+        assert.deepEqual({ type: p.waiting.type, text: p.waiting.text, sub: p.waiting.sub }, { type: 'hecho', text: '¡Reservado!', sub: 'Toca para ver tu QR' });
+        assert.equal(p.waiting.onClick(), 'qr');
+        assert.equal(p.resume, null);
+        assert.equal(conCompra({ compra: { estado: 'hecho', fiesta: true } }).waiting.text, '¡Fiesta reservada!');
+        const s = resolverSituacion(p, textosCompra);
+        assert.equal(s.id, 'espera');
+        assert.equal(s.bn.type, 'hecho', 'el banner es de lo hecho, no la bola de la espera');
+        assert.equal(s.action, null);
+    });
+
+    test('lo hecho cede mientras la calculadora tiene otra compra elegida', () => {
+        const calculo = { elegido: 'Sáb 4 · 17:00 · 2 niños', boton: 'Reservar y pagar' };
+        assert.equal(conCompra({ compra: { estado: 'hecho', fiesta: false }, calculo }).waiting, null);
+        assert.equal(resolverSituacion(conCompra({ compra: { estado: 'hecho', fiesta: false }, calculo }), textosCompra).id, 'elegido');
+    });
+
+    test('mientras la compra llega, «Preparando tu reserva» con la bola; manda sobre lo que hubiera', () => {
+        const p = conCompra({ preparando: true, compra: { estado: 'hecho', fiesta: false } });
+        assert.deepEqual({ type: p.waiting.type, text: p.waiting.text }, { type: 'espera', text: 'Preparando tu reserva' });
+        assert.equal(typeof p.waiting.onClick, 'function', 'se toca sin abrir la hoja de una razón');
+        assert.equal(resolverSituacion(p, textosCompra).bn.type, 'espera');
+    });
+
+    test('sin nada que dejar, nada', () => {
+        assert.deepEqual(trasLaCompra({}, { textos: textosCompra, acciones: deLaCompra }), { resume: null, waiting: null });
+        assert.deepEqual(trasLaCompra(), { resume: null, waiting: null });
     });
 });

@@ -35,6 +35,7 @@ import {
     almacenDeLaPestana, conVuelta, esVuelta, marcarSalida, sinVuelta, tomarMarca, vueltaDe, vuelveAqui,
 } from '../../sidebar/reanudar.js';
 import { tomarAvisoDelServidor } from '../pagina/aviso-servidor.js';
+import { anunciar, dejar, loQueDeja } from '../pagina/compra-cerrada.js';
 
 /** Lo que `SeccionCompra.vue` da a los pasos de después de la pantalla 0, que viajan en otro trozo (`PasosCompra.vue`). */
 export const COMPRA = Symbol('la compra de la isla');
@@ -401,8 +402,29 @@ export function useSeccionCompra(props) {
 
     /** La X: cierra la isla. Tras «Listo», la próxima vez se empieza otra compra (el `cerrar()` del diseño). */
     function cerrar() {
+        dejarAlCerrar();
         cerrarSuperficie();
         if (store.step === STEPS.CONFIRMED) empezar(null);
+    }
+
+    /**
+     * Lo que deja, para la isla de la página (`#867`, `pagina/compra-cerrada.js`): a medias, la línea de la reserva; tras
+     * «Listo», lo hecho. Se anuncia ANTES de cerrar, así la isla vuelve ya diciéndolo. Si cerrar va a RECARGAR la página
+     * (entró en su cuenta aquí dentro, `authChanged`), lo deja también en la pestaña y, a medias, la marca de la vuelta:
+     * «Sigue con tu reserva» seguirá por `reanudar()`, como al volver de Google.
+     */
+    function dejarAlCerrar() {
+        const lo = loQueDeja({ paso: paso.value, pedido: compra.pedido, linea: resumen.value.summary, fiesta: paso.value === 'listo' && listo.value.fiesta });
+
+        if (lo && cajonHost()?.authChanged) {
+            const { pathname, search } = window.location;
+            const vuelta = lo.estado === 'a-medias' ? vueltaDe(pathname, search) : null;
+            const ahora = Date.now();
+
+            if (vuelta) marcarSalida(almacenDeLaPestana(), { vuelta, compra: { borrador: compra.borrador, pedido: compra.pedido }, ahora });
+            dejar(almacenDeLaPestana(), lo, { ruta: pathname, vuelta, ahora });
+        }
+        anunciar(lo);
     }
 
     /**

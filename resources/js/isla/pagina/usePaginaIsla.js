@@ -15,12 +15,15 @@
  *     la de la compra ocupa su sitio. Si se abre EN LA ISLA (Z3, `#782`), no se aparta hasta que la otra la releva
  *     (`isla:relevada`: ya creció desde esta píldora), con un tope (`ESPERA_RELEVO`) por si el motor no llega; así no
  *     queda un hueco sin isla la primera vez, mientras se descarga (medido: ~290ms). Con el cajón lateral, al momento.
+ *   · **Lo que la compra deja al cerrarse** (`#867`, `useCompraCerrada.js`): «Sigue con tu reserva», «¡Reservado!» y, si
+ *     tarda en llegar, «Preparando tu reserva».
  */
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, watch } from 'vue';
 import { createCookiesStore } from '../../ui/cookie-consent.js';
 import { cajaSiVisible, medirVista, preferenciasDeCookies, propsDeLaIsla, zonaEnMedio } from './pagina.js';
 import { loTomaUnaCapa, tomarAvisoDelServidor } from './aviso-servidor.js';
 import { precargarCompra } from './precarga.js';
+import { useCompraCerrada } from './useCompraCerrada.js';
 
 /** Lo más que la píldora espera a que la releve la isla de la compra (la primera apertura descarga el motor). */
 export const ESPERA_RELEVO = 2500;
@@ -86,19 +89,24 @@ export function usePaginaIsla({ config, textos, doc = document, win = window }) 
     // Un contenido de la página que necesita una categoría («Cargar el mapa») se la pide a la isla, dueña del almacén;
     // al confirmarla el servidor, el almacén dispara `cookies-updated` y el contenido se carga.
     const alPedirCategoria = (ev) => { if (ev.detail?.categoria) cookies.grant(ev.detail.categoria); };
+    // Lo que la compra deja al cerrarse y «Preparando tu reserva» (`#867`): las aperturas y los cierres le llegan de aquí.
+    const compraCerrada = useCompraCerrada({ win });
     let espera = 0;
-    const apartarse = () => { win.clearTimeout(espera); e.compraAbierta = true; };
+    const apartarse = () => { win.clearTimeout(espera); e.compraAbierta = true; compraCerrada.listo(); };
     // Con la isla como carcasa (lo dice el servidor, `config.carcasa`: la primera vez, el aviso dice «cajón» porque el
     // motor aún no ha arrancado), la píldora espera a que la releven; con el cajón lateral, se aparta ya.
     const alAbrir = (ev) => {
-        if (config.carcasa !== 'isla' && ev?.detail?.surface !== 'isla') { apartarse(); return; }
+        const enLaIsla = config.carcasa === 'isla' || ev?.detail?.surface === 'isla';
+
+        compraCerrada.alAbrir({ cuenta: ev?.detail?.cuenta === true, enLaIsla });
+        if (! enLaIsla) { apartarse(); return; }
         win.clearTimeout(espera);
         espera = win.setTimeout(apartarse, ESPERA_RELEVO);
     };
     // Cualquier capa grande que se monta la releva: también la que nace abierta (la vuelta del banco), cuyo aviso de
     // apertura sonó antes de que esta isla escuchara.
     const alRelevar = () => apartarse();
-    const alCerrar = () => { win.clearTimeout(espera); espera = 0; e.compraAbierta = false; };
+    const alCerrar = () => { win.clearTimeout(espera); espera = 0; e.compraAbierta = false; compraCerrada.listo(); };
     const irA = (selector) => {
         const el = doc.querySelector(selector);
         if (! el) return;
@@ -125,6 +133,16 @@ export function usePaginaIsla({ config, textos, doc = document, win = window }) 
         },
         // Un plan del selector (T6a): la compra con su intención (`cajon.openWith`, el mismo camino que la calculadora).
         comprar: (intencion) => { win.JumpWeb?.cajon?.openWith?.(intencion); },
+        // «Sigue con tu reserva» (`#867`): sin intención, la compra vuelve a su paso (el motor sigue montado); tras la
+        // recarga de quien entró en su cuenta dentro, por su vuelta, que la retoma con `reanudar()` como al volver de Google.
+        seguirCompra: () => {
+            const vuelta = compraCerrada.deja.value?.vuelta;
+
+            if (vuelta) win.location.assign(vuelta);
+            else win.JumpWeb?.cajon?.open?.();
+        },
+        // «Toca para ver tu QR»: Tu QR, el carné que enseñaba «Listo»; lo hecho se gasta al tocarlo.
+        verQr: () => { compraCerrada.gastar(); acciones.abrirCuenta('card', 'isla'); },
     };
 
     /**
@@ -152,7 +170,10 @@ export function usePaginaIsla({ config, textos, doc = document, win = window }) 
 
     const props = computed(() => propsDeLaIsla({
         config, textos, acciones,
-        estado: { vista: e.vista, zona: e.zona, calculo: e.calculo, cookies: cookies.showing, categorias: cookies.categories, preferencias: preferencias.value, aviso: e.aviso },
+        estado: {
+            vista: e.vista, zona: e.zona, calculo: e.calculo, cookies: cookies.showing, categorias: cookies.categories, preferencias: preferencias.value, aviso: e.aviso,
+            compra: compraCerrada.deja.value, preparando: compraCerrada.preparando.value,
+        },
     }));
 
     // El hecho `consent_shown`, una vez por página y cuando el aviso se enseña de verdad (como el banner de siempre).

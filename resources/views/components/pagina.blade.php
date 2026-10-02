@@ -53,7 +53,9 @@
                 'precargar' => $carcasa === \App\Domain\Content\Services\ShellSettings::ISLA && in_array('cajon', $scripts, true)
                     ? \App\Http\Instancia\PrecargaDeCompra::urls($entradas) : [],
             ],
-            'textos' => \Illuminate\Support\Arr::except((array) __('isla'), ['compra', 'calculadora', 'mi_cuenta', 'mi_cuenta_alta']),
+            // Del grupo de la compra, solo los dos titulares de «Listo»: los dice la isla al cerrarla tras reservar (`#867`).
+            'textos' => \Illuminate\Support\Arr::except((array) __('isla'), ['compra', 'calculadora', 'mi_cuenta', 'mi_cuenta_alta'])
+                + ['compra' => ['listo' => \Illuminate\Support\Arr::only((array) __('isla.compra.listo'), ['titular', 'titular_fiesta'])]],
         ]
         : null;
     // Lo que la calculadora necesita y solo sabe el producto: sus textos, el TITULAR de la cesta —el mismo que da el
