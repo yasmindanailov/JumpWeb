@@ -969,6 +969,16 @@ lista solo configurando, probado en el pack 106 de la local (`ojo-config.php` + 
 - **Límites aceptados**: no obliga a elegir UNA (se pueden pedir dos, o ninguna); el precio dice «0,00 €» (no «Incluido»).
 - **De paso, también configurables**: calcetines y cono (venta posterior, «para 1», tope ≥ máximo del pack); las tartas, en el
   bloque «La tarta» (K2). ⚠️ Al desenganchar el menú, la isla pinta «¿Qué menú?» vacía hasta el `v-if` de plataforma (avisado).
+- ❗ **DEFECTO MEDIDO (02-10, 18:40), sin arreglar: la invitación pinta complementos CANCELADOS.** El owner, al ver el KIDS como
+  el JUMP (`#876`, fila 4): «si he seleccionado Sándwich, ¿por qué me sale pizza en la invitación?». `PartyInvitations::menuFor()`
+  lee TODAS las líneas de la reserva marcadas «se enseña en la invitación» (`$reservation->children`, sin filtro), y quitar un
+  complemento en la lista no borra su línea: la CANCELA (`cancelled_at`, a 0 €, con su historia). En la local: el KIDS
+  (`JW-OJO-KIDS`) pinta la Pizza (la puso y la quitó la sonda a las 17:42) junto al Sándwich del owner; el JUMP (`JW-OJO-CFG`), la
+  Pizza cancelada el 30-09 SIN ninguna merienda pedida. Está desde T5·1 (`#701`, 18-09): con el menú al reservar casi no pasaba;
+  con la merienda en la lista (K3), cada vez que una familia cambia de opción. Producción no lo ve hoy (la invitación sigue
+  apagada hasta la v2.0.0); la imagen al compartir no pinta la merienda. ▶ El arreglo, a la espera del sí del owner («no
+  escribas código»): solo las líneas VIVAS en `menuFor()` (la regla de `OrderItem::scopeActive()`), con su caso en
+  `InvitationPageTest` (una cancelada no sale; de control, la viva sí) y su mutación.
 
 ### 4.18 `LinkIsland` · la isla de las páginas de enlace (`#861`, `#814`) — al detalle, medido antes de codificar (01-10)
 
