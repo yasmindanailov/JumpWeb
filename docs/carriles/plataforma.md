@@ -4,7 +4,7 @@
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
 > **820–849 AGOTADA con `#849`** → **850–879 AGOTADA con `#879`** → sigue en **880–909** (del owner, 02-10 noche; de
-> `#880` a `#899` en `decisiones/800-899.md`, de `#900` en adelante en `900-999.md`) · Último usado: **`#880`** · Spec:
+> `#880` a `#899` en `decisiones/800-899.md`, de `#900` en adelante en `900-999.md`) · Último usado: **`#881`** · Spec:
 > `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador;
 > `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-10-02 noche** (todo con el visto bueno del owner: **su
 > lista del 02-10, L1→L5** —`#876`→`#879`, §4.28; el código de la L2, por hacer—, el zip (6) de este carril, ENTERO —Z6a→Z6g,
@@ -64,8 +64,9 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
 1. ▶▶▶ **LA LISTA DEL OWNER DEL 02-10 (noche)** (`#880`; su censo, medido, en `isla-y-landing-nueva.md` §4.29), en este orden:
    ✅ **M1** la compra de la isla enseña TODOS los complementos que se venden al reservar el producto, «los que sean» (los de la
    lista de invitados, no; visto por el owner, §4.29: `compra/complementos.js`, la lista diferida, `calcetinDe` con tope, los
-   techos de peso subidos con su base). ⚠️ Sin pintar: un grupo de elección en una ENTRADA o un segundo en un pack (§4.29) → ⬜ **M2**
-   «Continuar» sin estar listo dice qué falta, donde falta; ningún botón apagado sin decir por qué → ⬜ **M3** sin sesión, el
+   techos de peso subidos con su base). ⚠️ Sin pintar: un grupo de elección en una ENTRADA o un segundo en un pack: va con la
+   L2 (`#881`, en `otra-zona.md` §4.6) → ⬜ **M2** (`#881`, diseño en §4.29) lo que falta, ENCIMA del botón mientras falte (la
+   nota del pie, como la calculadora) y, al pulsar, en rojo en su pregunta; ningún botón apagado sin decir por qué → ⬜ **M3** sin sesión, el
    correo primero: «Entra o crea tu cuenta» tras el producto, con el texto del owner (§4.29); solo un correo sin cuenta rellena
    el resto (`PantallaEntrar` con `cuenta` y `PantallaDatos` con `nueva` ya existen) → el código de la L2 (el 2) → ⬜ **M4** el
    pulido: la carga (sobre todo la isla), las transiciones sin saltos y el HERO (en ordenador, la portada: al bajar y volver a

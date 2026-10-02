@@ -2887,7 +2887,16 @@ apagada sin hora y con su precio después, 135,60 → 140,60 €, y de vuelta; l
 extra, «Continuar» guarda la línea con `317 × 1` y «Tus datos» dice 140,60 €; sin errores de consola). **Visto por el owner en
 vivo** (02-10 noche: «Visto bueno»). ⚠️ **Sin pintar todavía**: un grupo de ELECCIÓN («esto o aquello», como Menú 1 o Menú 2)
 en una ENTRADA, o un segundo grupo en un pack: la isla solo pinta el menú del pack, y el servidor deja elegido el de por
-defecto. Ningún dato lo usa hoy (medido en la BD local, 02-10).
+defecto. Ningún dato lo usa hoy (medido en la BD local, 02-10). `[DECIDIDO owner]` (`#881`): se cubre con la L2
+(`otra-zona.md`), que rehace esa pantalla.
+
+**M2, el diseño** (`[DECIDIDO owner]` 2026-10-02, `#881`; con tres formas delante, la recomendada): ningún botón de la compra
+de la isla se queda apagado sin decir por qué. (1) Mientras falte algo, ENCIMA del botón va lo que falta —«Elige la hora para
+continuar»—, como ya lo dice la calculadora de la página (`ResumenPrecio`, su `incomplete`: «Elige la hora para ver el
+total»); en la isla, la nota del pie (`ck.note`, hoy vacía en la pantalla 0). (2) Al PULSAR, la caja lleva a esa pregunta
+(`ir-a.js`, como hoy) y la marca en rojo con su frase hasta que se contesta. Vale para la pantalla 0 (entradas y fiesta;
+también sin fila elegida, que hoy apaga el botón), «Entra» (sin correo; con el código a medias, aunque la sexta cifra ya
+entra sola) y la hora llena («Elegir esta hora» sin hora). «Tus datos» ya pinta sus errores: no cambia. Sin servidor.
 
 ## 5. Impacto en invariantes
 

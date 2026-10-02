@@ -14,9 +14,10 @@
 - **Trampas**: (1) la cesta de la isla SUSTITUYE su línea porque el recibo no tenía «quitar» (`#692`, T3e·3): una
   línea más exige poder quitarla en «Pagar», y el mockup no lo trae (D2). (2) Cada línea se valida con las anteriores
   en `items` y la candidata FUERA (`cart.js::validateLine`), o compite consigo misma. (3) Los pesos, a ras de su techo:
-  la compra 186,98 de 188 y los pasos 50,79 de 52 (`SidebarBundleBudgetTest`, 02-10). (4) La hora llena (`#822`) y la
-  vuelta del banco, con dos líneas.
-- **Estado**: ✅ aprobada (`#878`), sin código; sigue K1 (§4.6).
+  la compra 190,66 de 191 y los pasos 55,15 de 56 (`SidebarBundleBudgetTest`, tras la M1 de `#880`, 02-10). (4) La hora
+  llena (`#822`) y la vuelta del banco, con dos líneas.
+- **Estado**: ✅ aprobada (`#878`), sin código; sigue K1 (§4.6). ➕ `#881`: con ella, los grupos de elección que la isla no
+  pinta —uno en una ENTRADA o un segundo en un pack— (`isla-y-landing-nueva.md` §4.29, M1).
 - **Invariantes**: `PAY-12`, `PAY-20`, `AFORO-01`, `AFORO-02`, sin tocar el servidor ni el `CRITICAL_RE`; la compra
   entera con la pasarela de pruebas y la BD, sí (§6).
 
@@ -124,6 +125,9 @@ decide el mockup (`#767`).
 ### 4.6 Las tandas
 **K1** el modelo y la cesta, sin pantalla nueva (pruebas de nodo) → **K2** la pantalla 0 → **K3** «Pagar» y quitar →
 **K4** la hora llena, la vuelta del banco y la compra entera en la sonda. Cada una, al ojo del owner en vivo.
+➕ `#881` (`[DECIDIDO owner]`, 02-10): en K1 y K2, los GRUPOS DE ELECCIÓN que la M1 de `#880` no pinta —uno en una entrada o
+un segundo en un pack—: la elección de cada grupo en el borrador y en la línea, y su pregunta con `TarjetasOpcion`, como el
+menú del pack (`fiesta.js::menusDe`, hoy solo el primer grupo).
 
 ## 5. Impacto en invariantes
 - `PAY-12` y `PAY-20`: el recibo pinta el presupuesto del servidor y no suma nada.
