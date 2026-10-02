@@ -130,6 +130,10 @@ return [
             'fiesta' => ':firmados de :esperados con autorización',
             'pie' => 'La ficha se cierra sola a los :min min.',
             'velo' => 'Ficha oculta por inactividad. Toca para seguir.',
+            'preguntale' => 'Pregúntale.',
+            'siguiente' => 'Siguiente',
+            'ahora_no' => 'Ahora no',
+            'guardado' => 'Guardado.',
         ],
         'validar' => [
             'title' => 'Validar registro',

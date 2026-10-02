@@ -27,11 +27,13 @@ use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
- * **La encuesta INTERNA en la puerta** (`docs/specs/encuestas.md` §4.2 y §4.7, T2 y T5; `DECISIONES #740` y `#754`): se
- * ofrece SOLO con la visita de hoy acreditada, una encuesta interna viva y sin participación de este cliente; el
- * operador lee el aviso, pregunta y marca; lo marcado se tipa y se valida en el SERVIDOR; una por cliente y encuesta;
- * «No preguntar» también es una fila. Desde `#754`, ANÓNIMA: la participación dice a quién se preguntó, la respuesta lo
- * que contestó SIN nadie (día, franja, empleado); al libro no va nada; el rastro dice a quién sin decir qué pasó.
+ * **La encuesta INTERNA en la puerta** (`docs/specs/encuestas.md` §4.2 y §4.7; `DECISIONES #740` y `#754`) y, desde la P1b
+ * de la Puerta nueva (`docs/specs/puerta-nueva.md` §4.4; `#817`·3), **PREGUNTA A PREGUNTA y solo en verde**: se ofrece SOLO
+ * con la visita de hoy acreditada, una encuesta interna viva y sin participación de este cliente; la tarjeta nace preguntando
+ * la primera; cada toque se TIPA y se VALIDA en el servidor contra SU pregunta; el primero escribe la participación y la
+ * respuesta ANÓNIMA y sellada, y los siguientes la completan; «Ahora no» sin nada contestado es el «no preguntar» de siempre
+ * y, con algo, cierra con lo contestado. Una por cliente y encuesta; la franja, nunca la hora; al libro, nada; un rastro que
+ * dice a quién sin decir qué pasó.
  */
 class GateSurveyTest extends TestCase
 {
@@ -67,16 +69,19 @@ class GateSurveyTest extends TestCase
         return $u;
     }
 
-    /** @return array{0: User, 1: string} el cliente y su carné en claro */
-    private function customer(): array
+    /**
+     * @return array{0: User, 1: string} el cliente y su carné en claro. Con su descargo (el modo de las pruebas es el
+     *                                   externo: lo dice su sello), así que el veredicto es VERDE y la tarjeta se pinta.
+     */
+    private function customer(bool $conDescargo = true): array
     {
-        $holder = User::factory()->create(['name' => 'Ana Titular', 'email' => 'ana@example.com', 'email_verified_at' => now()]);
+        $holder = User::factory()->create(['name' => 'Ana Titular', 'email' => 'ana@example.com', 'email_verified_at' => now(), 'waiver_accepted_at' => $conDescargo ? now() : null]);
         $holder->roles()->sync([Role::where('name', 'customer')->value('id')]);
 
         return [$holder, (string) app(CustomerCards::class)->ensureFor($holder)->plainToken()];
     }
 
-    /** Los cinco tipos de pregunta, dos de ellas obligatorias. */
+    /** Los cinco tipos de pregunta, en este orden; dos de ellas obligatorias. */
     private function survey(array $overrides = []): Survey
     {
         return Survey::create(array_merge([
@@ -101,16 +106,15 @@ class GateSurveyTest extends TestCase
         ], $overrides));
     }
 
-    /** La ficha abierta por CARNÉ, como en el mostrador. */
+    /** La ficha abierta por CARNÉ, como en el mostrador: el escaneo acredita la visita (`#741`). */
     private function open(User $staff, string $token): Testable
     {
         return Livewire::actingAs($staff)->test(ValidarRegistro::class)->set('input', $token)->call('search');
     }
 
-    /** La ficha abierta y la visita de hoy acreditada: el momento en que la spec dice que se ofrece. */
-    private function openWithVisit(User $staff, string $token): Testable
+    private function closedAudits(): int
     {
-        return $this->open($staff, $token)->call('registerVisit');
+        return AuditLog::query()->where('action', 'like', 'puerta.survey_%')->count();
     }
 
     // ─── Cuándo se ofrece ─────────────────────────────────────────────────────
@@ -122,71 +126,64 @@ class GateSurveyTest extends TestCase
         $this->survey(['key' => 'externa', 'kind' => Survey::KIND_EXTERNAL]);
         $this->survey(['key' => 'apagada', 'active' => false]);
 
-        $page = $this->openWithVisit($this->staff(), $token);
+        $page = $this->open($this->staff(), $token);
 
         $page->assertSet('profile.visit_registered_today', true)
             ->assertSet('survey', null)
             ->assertDontSee('data-gate-survey', false);
     }
 
-    /** `#741`: el ESCANEO acredita la visita y la tarjeta sale en el mismo gesto, sin botón. */
-    public function test_a_scan_accredits_the_visit_and_offers_the_survey_in_the_same_gesture(): void
+    /** `#741`: el ESCANEO acredita la visita y la tarjeta sale en el mismo gesto, ya preguntando la primera (la P1b). */
+    public function test_a_scan_accredits_the_visit_and_asks_the_first_question_in_the_same_gesture(): void
     {
         [$holder, $token] = $this->customer();
         $this->survey();
 
         $page = $this->open($this->staff(), $token);
 
-        $page->assertSet('profile.holder_name', 'Ana Titular')
-            ->assertSet('profile.via', 'card')
+        $page->assertSet('profile.via', 'card')
             ->assertSet('profile.visit_registered_today', true)
-            ->assertSet('survey.state', 'offer')
+            ->assertSet('survey.state', 'asking')
+            ->assertSet('survey.step', 0)
             ->assertSet('survey.key', 'visita-de-hoy')
-            ->assertSet('survey.count', 5)
-            ->assertSee('data-gate-survey="offer"', false)
-            ->assertSee('Tu visita de hoy')
-            ->assertSee('data-gate-survey-open', false)
-            ->assertSee('data-gate-survey-decline', false);
+            ->assertSee('data-gate-survey="asking"', false)
+            ->assertSee('Pregúntale.')
+            ->assertSee('data-gate-question="ambiente"', false)
+            ->assertSee('¿Qué tal el ambiente?')
+            ->assertDontSee('¿Cómo nos conociste?')
+            ->assertSee('data-gate-survey-skip', false)
+            // La intro del panel y el aviso del anonimato, sobre la PRIMERA pregunta (D7). Tecleados a mano (`#734`).
+            ->assertSee('Dos minutos, con la persona delante.')
+            ->assertSee('data-gate-survey-notice', false)
+            ->assertSee('Es anónima: nadie en el parque verá tu nombre junto a tus respuestas, y a los 90 días se separan de ti del todo.');
         $this->assertSame(1, CustomerVisit::query()->where('user_id', $holder->id)->count());
         $this->assertSame(1, AnalyticsEvent::query()->where('name', 'visit_checked_in')->count());
-        $this->assertSame($holder->id, (int) $page->get('profileUserId'));
 
-        // La oferta no escribe nada de la encuesta: ni participación, ni respuesta, ni rastro. Eso lo hace el operador.
+        // La oferta no escribe nada de la encuesta: ni participación, ni respuesta, ni rastro. Eso lo hace el primer toque.
         $this->assertSame(0, SurveyParticipation::query()->count());
         $this->assertSame(0, SurveyResponse::query()->count());
-        $this->assertSame(0, AuditLog::query()->where('action', 'like', 'puerta.survey_%')->count());
+        $this->assertSame(0, $this->closedAudits());
 
-        // `#754`: el aviso del anonimato, para leerlo en voz alta, en la tarjeta de la oferta. Tecleado a mano (`#734`).
-        $page->assertSee('data-gate-survey-notice', false)
-            ->assertSee('Es anónima: nadie en el parque verá tu nombre junto a tus respuestas, y a los 90 días se separan de ti del todo.');
-
-        // Un segundo escaneo el mismo día no duplica la visita, y vuelve a ofrecer (sigue sin respuesta).
-        $this->open($this->staff(), $token)->assertSet('survey.state', 'offer');
+        // Un segundo escaneo el mismo día no duplica la visita, y vuelve a preguntar (sigue sin respuesta).
+        $this->open($this->staff(), $token)->assertSet('survey.state', 'asking');
         $this->assertSame(1, CustomerVisit::query()->count());
-        $this->assertSame(1, AnalyticsEvent::query()->where('name', 'visit_checked_in')->count());
     }
 
-    /**
-     * `#756` (el owner, 27-09): buscar por correo o móvil TAMBIÉN acredita la visita, como el escaneo, y la encuesta se
-     * ofrece en el mismo gesto. Hasta entonces (`#741`) no acreditaba («puede ser una consulta»): por eso la visita
-     * guarda su ORIGEN, `lookup`, y el cuadro puede separarla del escaneo.
-     */
+    /** `#756`: buscar por correo o móvil TAMBIÉN acredita la visita (con su origen, `lookup`), y la encuesta se ofrece. */
     public function test_a_typed_lookup_registers_the_visit_as_lookup_and_offers_the_survey(): void
     {
         [$holder] = $this->customer();
         $this->survey();
 
         $page = Livewire::actingAs($this->staff())->test(ValidarRegistro::class)->set('input', 'ana@example.com')->call('search');
-        $page->assertSet('profile.holder_name', 'Ana Titular')
-            ->assertSet('profile.via', 'lookup')
+        $page->assertSet('profile.via', 'lookup')
             ->assertSet('profile.visit_registered_today', true)
-            ->assertSet('survey.state', 'offer');
+            ->assertSet('survey.state', 'asking');
 
         $visit = CustomerVisit::query()->sole();
         $this->assertSame($holder->id, (int) $visit->user_id);
         $this->assertSame('lookup', $visit->source);
 
-        // Otra búsqueda el mismo día no duplica, y `registerVisit()` sobre una ficha acreditada tampoco.
         $page->call('registerVisit');
         Livewire::actingAs($this->staff())->test(ValidarRegistro::class)->set('input', 'ana@example.com')->call('search');
         $this->assertSame(1, CustomerVisit::query()->count());
@@ -200,174 +197,171 @@ class GateSurveyTest extends TestCase
         $page = $this->open($this->staffWithoutProfile(), $token);
 
         $page->assertSet('profile', null)->assertSet('survey', null);
-        $page->call('openSurvey')->assertStatus(403);
+        $page->call('answerQuestion', 'ambiente', '4')->assertStatus(403);
     }
 
-    // ─── Contestar ────────────────────────────────────────────────────────────
+    /**
+     * ▶ **Solo en VERDE** (el mockup): sin el descargo, el veredicto es ámbar y la tarjeta no se PINTA; el servidor la sigue
+     * ofreciendo, pero nada se escribe hasta el primer toque.
+     */
+    public function test_without_the_waiver_the_card_is_not_painted_and_nothing_is_written(): void
+    {
+        [, $token] = $this->customer(conDescargo: false);
+        $this->survey();
 
-    public function test_answering_writes_the_participation_and_an_anonymous_typed_response_and_closes_the_offer(): void
+        $page = $this->open($this->staff(), $token);
+
+        $page->assertSet('survey.state', 'asking')->assertDontSee('data-gate-survey', false)->assertSee('Falta firmar el descargo');
+        $this->assertSame(0, SurveyParticipation::query()->count());
+    }
+
+    // ─── Contestar, pregunta a pregunta ───────────────────────────────────────
+
+    public function test_each_tap_answers_one_question_the_first_opens_the_row_and_the_rest_complete_it(): void
     {
         [$holder, $token] = $this->customer();
         $survey = $this->survey();
         $staff = $this->staff();
 
-        $page = $this->openWithVisit($staff, $token)->call('openSurvey');
-        $page->assertSet('survey.state', 'open')
-            ->assertSee('data-gate-survey-form', false)
-            ->assertSee('data-gate-question="ambiente"', false)
-            ->assertSee('¿Cómo nos conociste?')
-            ->assertSee('data-gate-survey-save', false)
-            // `#754`: el aviso sigue a la vista con el formulario abierto, y junto a la pregunta de texto, «que no diga su nombre».
-            ->assertSee('data-gate-survey-notice', false)
-            ->assertSee('data-gate-survey-text-hint', false)
-            ->assertSee('Si quiere seguir en el anonimato, que no diga su nombre ni datos personales.');
+        $page = $this->open($staff, $token);
 
-        // Lo que manda un formulario: CADENAS y listas de cadenas. El «no» de `volveria` es a propósito:
-        // un servidor que guardara «lo que llega» dejaría una cadena, y uno que confundiera el «0» con
-        // «verdadero» guardaría un sí.
-        $page->set('surveyAnswers.ambiente', '4')
-            ->set('surveyAnswers.como', 'google')
+        // Primer toque: la escala, con su CADENA, como llega de un botón. Abre la participación y la respuesta.
+        $page->call('answerQuestion', 'ambiente', '4')
+            ->assertHasNoErrors()
+            ->assertSet('survey.state', 'asking')
+            ->assertSet('survey.step', 1)
+            ->assertSee('¿Cómo nos conociste?')
+            ->assertDontSee('data-gate-survey-notice', false);
+
+        $asked = SurveyParticipation::query()->sole();
+        $this->assertSame($holder->id, (int) $asked->user_id);
+        $this->assertSame($staff->id, (int) $asked->asked_by);
+        $this->assertSame(self::TODAY, $asked->asked_on->toDateString());
+        $row = SurveyResponse::query()->sole();
+        $this->assertSame(['ambiente' => 4], $row->answers);
+        $this->assertSame(SurveyResponse::BAND_MORNING, $row->band);
+        $this->assertSame($staff->id, (int) $row->asked_by);
+        $this->assertFalse($row->declined);
+        $this->assertCount(1, app(SurveySeals::class)->sealedFor($holder->id), 'contestada = sellada');
+        $this->assertSame(1, $this->closedAudits(), 'el rastro, UNO, al nacer la participación');
+
+        // Los siguientes completan la MISMA fila. El «no» de `volveria` es a propósito: «0» no puede guardarse como sí.
+        $page->call('answerQuestion', 'como', 'google')
             ->set('surveyAnswers.zonas', ['jump', 'kids'])
-            ->set('surveyAnswers.volveria', '0')
+            ->call('answerQuestion', 'zonas')
+            ->call('answerQuestion', 'volveria', '0')
             ->set('surveyAnswers.comentario', '  Genial, volveremos.  ')
-            ->call('answerSurvey')
+            ->call('answerQuestion', 'comentario')
             ->assertHasNoErrors()
             ->assertSet('survey.state', 'answered')
             ->assertSee('data-gate-survey="answered"', false)
-            ->assertDontSee('data-gate-survey-form', false);
+            ->assertSee('Guardado.');
 
-        // LA PARTICIPACIÓN: a quién se preguntó, quién y el día de la visita. Sin respuestas, sin hora, sin desenlace.
-        $asked = SurveyParticipation::query()->sole();
-        $this->assertSame($survey->id, (int) $asked->survey_id);
-        $this->assertSame($holder->id, (int) $asked->user_id);
-        $this->assertSame(SurveyResponse::CHANNEL_INTERNAL, $asked->channel);
-        $this->assertSame($staff->id, (int) $asked->asked_by);
-        $this->assertSame(self::TODAY, $asked->asked_on->toDateString());
-        $this->assertNull($asked->sent_at);
-        $this->assertNull($asked->token_hash);
-
-        // LA RESPUESTA: sin nadie. El día, la FRANJA (las 11:00 del parque son la mañana), quién preguntó, lo grueso de
-        // la visita (su primera vez; nada cobrado para hoy) y lo contestado TIPADO por su pregunta.
-        $row = SurveyResponse::query()->sole();
-        $this->assertSame($survey->id, (int) $row->survey_id);
-        $this->assertSame(SurveyResponse::CHANNEL_INTERNAL, $row->channel);
-        $this->assertSame(self::TODAY, $row->answered_on->toDateString());
-        $this->assertSame(SurveyResponse::BAND_MORNING, $row->band);
-        $this->assertSame($staff->id, (int) $row->asked_by);
-        $this->assertTrue($row->first_visit);
-        $this->assertSame(SurveyResponse::KIND_OTHER, $row->visit_kind);
-        $this->assertFalse($row->declined);
+        $this->assertSame(1, SurveyParticipation::query()->count());
         $this->assertSame(
             ['ambiente' => 4, 'como' => 'google', 'zonas' => ['jump', 'kids'], 'volveria' => false, 'comentario' => 'Genial, volveremos.'],
-            $row->answers,
-            'las respuestas se guardan TIPADAS por su pregunta (entero, booleano, lista, texto recortado), no como llegaron',
+            SurveyResponse::query()->sole()->answers,
+            'una sola fila, completada toque a toque y TIPADA por su pregunta',
         );
-        // Contestada = sellada: el sello (cifrado) es lo único que sabe de quién es, y solo `SurveySeals` lo lee.
-        $this->assertCount(1, app(SurveySeals::class)->sealedFor($holder->id));
+        $this->assertSame(1, $this->closedAudits(), 'completar no deja más rastros');
+        $this->assertSame(0, AnalyticsEvent::query()->where('name', 'like', 'survey_%')->count(), 'al libro, nada (`#754`)');
 
-        // El libro: NADA de la respuesta (`#754`: su hora exacta y el cliente unirían el desenlace; `RGPD-07`).
-        $this->assertSame(0, AnalyticsEvent::query()->where('name', 'like', 'survey_%')->count());
-
-        // El rastro: UNO, `puerta.survey_closed` — a quién (target) y quién preguntó (autor), la encuesta, y NADA más:
-        // ni el desenlace ni la fila (con ellos y la hora, la respuesta anónima tendría dueño).
-        $audit = AuditLog::query()->where('action', 'like', 'puerta.survey_%')->sole();
-        $this->assertSame('puerta.survey_closed', $audit->action);
-        $this->assertSame($holder->id, (int) $audit->target_id);
-        $this->assertSame($staff->id, (int) $audit->user_id);
-        $this->assertSame(['survey' => 'visita-de-hoy'], $audit->payload);
-
-        // Y no se vuelve a ofrecer: la siguiente ficha del mismo cliente (con la visita ya acreditada) no la trae.
-        $again = $this->open($staff, $token);
-        $again->assertSet('profile.visit_registered_today', true)->assertSet('survey', null);
+        // Y no se vuelve a ofrecer.
+        $this->open($staff, $token)->assertSet('survey', null);
     }
 
-    public function test_declining_is_also_an_answer_and_is_not_offered_again(): void
+    /** «Siguiente» sin nada marcado SALTA la pregunta: en la puerta una obligatoria no frena (`#817`·3). */
+    public function test_an_empty_next_skips_the_question_without_writing(): void
+    {
+        [, $token] = $this->customer();
+        $this->survey();
+
+        $page = $this->open($this->staff(), $token)->call('answerQuestion', 'ambiente', '5')->call('answerQuestion', 'como', 'amigos');
+        $page->call('answerQuestion', 'zonas')->assertHasNoErrors()->assertSet('survey.step', 3);
+
+        $this->assertSame(['ambiente' => 5, 'como' => 'amigos'], SurveyResponse::query()->sole()->answers);
+    }
+
+    public function test_now_not_without_any_answer_is_the_old_decline(): void
     {
         [$holder, $token] = $this->customer();
         $this->survey();
         $staff = $this->staff();
 
-        $page = $this->openWithVisit($staff, $token)->call('declineSurvey');
+        $page = $this->open($staff, $token)->call('skipSurvey');
 
         $page->assertSet('survey.state', 'declined')->assertSee('data-gate-survey="declined"', false);
-
-        $asked = SurveyParticipation::query()->sole();
-        $this->assertSame($holder->id, (int) $asked->user_id);
-        $this->assertSame(self::TODAY, $asked->asked_on->toDateString());
-        $this->assertSame($staff->id, (int) $asked->asked_by);
-
-        // «No preguntar» es una respuesta anónima `declined`, sin lo contestado y SIN SELLO: «volvió quien puntuó» no
-        // pregunta por quien no puntuó.
+        $this->assertSame($holder->id, (int) SurveyParticipation::query()->sole()->user_id);
         $row = SurveyResponse::query()->sole();
         $this->assertTrue($row->declined);
         $this->assertNull($row->answers);
-        $this->assertSame(self::TODAY, $row->answered_on->toDateString());
-        $this->assertSame($staff->id, (int) $row->asked_by);
-        $this->assertNull(DB::table('survey_responses')->value('seal'));
-
-        // El MISMO rastro que al contestar: el registro de actividad no distingue las dos salidas.
-        $this->assertSame(0, AnalyticsEvent::query()->where('name', 'like', 'survey_%')->count());
+        $this->assertNull(DB::table('survey_responses')->value('seal'), 'declinada, sin sello');
         $audit = AuditLog::query()->where('action', 'like', 'puerta.survey_%')->sole();
         $this->assertSame('puerta.survey_closed', $audit->action);
-        $this->assertSame($holder->id, (int) $audit->target_id);
-        $this->assertSame(['survey' => 'visita-de-hoy'], $audit->payload);
+        $this->assertSame(['survey' => 'visita-de-hoy'], $audit->payload, 'el mismo rastro que al contestar: sin desenlace');
 
         $this->open($staff, $token)->assertSet('survey', null);
     }
 
-    public function test_a_required_question_left_blank_or_an_impossible_value_is_refused_and_nothing_is_written(): void
+    public function test_now_not_after_some_answers_closes_with_what_was_answered(): void
     {
         [, $token] = $this->customer();
         $this->survey();
 
-        $page = $this->openWithVisit($this->staff(), $token)->call('openSurvey');
-
-        // «6» no está en la escala y `como` (obligatoria) no viene: dos errores, cero filas.
-        $page->set('surveyAnswers.ambiente', '6')
-            ->call('answerSurvey')
-            ->assertHasErrors(['surveyAnswers.ambiente', 'surveyAnswers.como'])
-            ->assertHasNoErrors(['surveyAnswers.zonas', 'surveyAnswers.volveria', 'surveyAnswers.comentario'])
-            ->assertSet('survey.state', 'open')
-            ->assertSee('data-gate-survey-error="ambiente"', false)
-            ->assertSee(__('admin.puerta.validar.profile.survey_error_required'));
-
-        // Un texto más largo de lo que la pregunta acepta, y una opción que no existe.
-        $page->set('surveyAnswers.ambiente', '5')
-            ->set('surveyAnswers.como', 'tiktok')
-            ->set('surveyAnswers.comentario', str_repeat('a', 301))
-            ->call('answerSurvey')
-            ->assertHasErrors(['surveyAnswers.como', 'surveyAnswers.comentario'])
-            ->assertHasNoErrors(['surveyAnswers.ambiente']);
-
-        $this->assertSame(0, SurveyParticipation::query()->count());
-        $this->assertSame(0, SurveyResponse::query()->count());
-        $this->assertSame(0, AuditLog::query()->where('action', 'like', 'puerta.survey_%')->count());
-
-        // Y con las dos obligatorias basta: lo opcional puede quedarse en blanco.
-        $page->set('surveyAnswers.como', 'amigos')
-            ->set('surveyAnswers.comentario', '')
-            ->call('answerSurvey')
-            ->assertHasNoErrors()
+        $this->open($this->staff(), $token)->call('answerQuestion', 'ambiente', '3')->call('skipSurvey')
             ->assertSet('survey.state', 'answered');
-        $this->assertSame(['ambiente' => 5, 'como' => 'amigos'], SurveyResponse::query()->sole()->answers);
+
+        $row = SurveyResponse::query()->sole();
+        $this->assertFalse($row->declined);
+        $this->assertSame(['ambiente' => 3], $row->answers, '«deja el resto»: lo contestado se queda');
+    }
+
+    public function test_an_impossible_value_is_refused_and_nothing_is_written(): void
+    {
+        [, $token] = $this->customer();
+        $this->survey();
+
+        $page = $this->open($this->staff(), $token);
+        $page->call('answerQuestion', 'ambiente', '6')
+            ->assertHasErrors(['surveyAnswers.ambiente'])
+            ->assertSet('survey.step', 0)
+            ->assertSee('data-gate-survey-error="ambiente"', false);
+        $this->assertSame(0, SurveyParticipation::query()->count());
+        $this->assertSame(0, $this->closedAudits());
+
+        $page->call('answerQuestion', 'ambiente', '5')->call('answerQuestion', 'como', 'tiktok')->assertHasErrors(['surveyAnswers.como']);
+        $page->call('answerQuestion', 'como', 'google')->call('answerQuestion', 'zonas')->call('answerQuestion', 'volveria', '1');
+        $page->set('surveyAnswers.comentario', str_repeat('a', 301))->call('answerQuestion', 'comentario')->assertHasErrors(['surveyAnswers.comentario']);
+
+        $this->assertSame(['ambiente' => 5, 'como' => 'google', 'volveria' => true], SurveyResponse::query()->sole()->answers);
+    }
+
+    /** El navegador no decide: una clave que la encuesta GUARDADA no tiene no escribe nada, y lo contestado no se pisa. */
+    public function test_the_browser_copy_decides_nothing(): void
+    {
+        [, $token] = $this->customer();
+        $this->survey();
+
+        $page = $this->open($this->staff(), $token);
+        $page->set('survey.questions.0.key', 'inventada')->call('answerQuestion', 'inventada', '4')->assertSet('survey.step', 0);
+        $this->assertSame(0, SurveyResponse::query()->count());
+
+        $page->call('answerQuestion', 'ambiente', '4')->call('answerQuestion', 'ambiente', '1');
+        $this->assertSame(['ambiente' => 4], SurveyResponse::query()->sole()->answers, 'lo contestado no se pisa');
     }
 
     // ─── Los límites: la ficha caduca, la encuesta se apaga, otra tablet ya contestó ────────────────
 
-    public function test_the_open_survey_dies_with_the_sheet_and_writes_nothing(): void
+    public function test_the_survey_dies_with_the_sheet_and_writes_nothing(): void
     {
         [, $token] = $this->customer();
         $this->survey();
 
-        $page = $this->openWithVisit($this->staff(), $token)->call('openSurvey')
-            ->set('surveyAnswers.ambiente', '5')
-            ->set('surveyAnswers.como', 'google');
-
+        $page = $this->open($this->staff(), $token);
         $this->travel(PuertaSettings::profileTtlMinutes() + 1)->minutes();
 
-        $page->call('answerSurvey')->assertSet('profile', null)->assertSet('survey', null);
+        $page->call('answerQuestion', 'ambiente', '5')->assertSet('profile', null)->assertSet('survey', null);
         $this->assertSame(0, SurveyParticipation::query()->count(), 'una ficha caducada no escribe: se vuelve a ofrecer en la siguiente búsqueda');
-        $this->assertSame(0, SurveyResponse::query()->count());
     }
 
     public function test_a_survey_switched_off_between_the_offer_and_the_answer_is_not_written(): void
@@ -375,13 +369,10 @@ class GateSurveyTest extends TestCase
         [, $token] = $this->customer();
         $survey = $this->survey();
 
-        $page = $this->openWithVisit($this->staff(), $token)->call('openSurvey')
-            ->set('surveyAnswers.ambiente', '5')
-            ->set('surveyAnswers.como', 'google');
-
+        $page = $this->open($this->staff(), $token);
         $survey->update(['active' => false]);
 
-        $page->call('answerSurvey')->assertSet('survey', null);
+        $page->call('answerQuestion', 'ambiente', '5')->assertSet('survey', null);
         $this->assertSame(0, SurveyParticipation::query()->count());
         $this->assertSame(0, SurveyResponse::query()->count());
     }
@@ -391,21 +382,16 @@ class GateSurveyTest extends TestCase
         [$holder, $token] = $this->customer();
         $survey = $this->survey();
 
-        $page = $this->openWithVisit($this->staff(), $token)->call('openSurvey')
-            ->set('surveyAnswers.ambiente', '2')
-            ->set('surveyAnswers.como', 'amigos');
+        $page = $this->open($this->staff(), $token);
 
         // Otra tablet (u otro operador) contesta por este cliente mientras ésta sigue abierta.
         $this->assertTrue(app(SurveyResponses::class)->answerInPerson($survey, $holder->id, ['ambiente' => 5, 'como' => 'google'], null));
 
-        $page->call('answerSurvey')->assertHasNoErrors()->assertSet('survey.state', 'answered');
+        $page->call('answerQuestion', 'ambiente', '2')->assertHasNoErrors()->assertSet('survey.state', 'answered');
 
-        // La participación es el árbitro: la segunda escritura no deja ni otra participación ni OTRA RESPUESTA anónima
-        // (que contaría dos veces a la misma persona en el cuadro).
         $this->assertSame(1, SurveyParticipation::query()->count());
-        $row = SurveyResponse::query()->sole();
-        $this->assertSame(['ambiente' => 5, 'como' => 'google'], $row->answers, 'la primera respuesta manda: la segunda no la pisa');
-        $this->assertSame(0, AuditLog::query()->where('action', 'like', 'puerta.survey_%')->count(), 'sin escritura no hay rastro que inventar');
+        $this->assertSame(['ambiente' => 5, 'como' => 'google'], SurveyResponse::query()->sole()->answers, 'la primera respuesta manda');
+        $this->assertSame(0, $this->closedAudits(), 'sin escritura no hay rastro que inventar');
     }
 
     /** La FRANJA sale de la hora del PARQUE (hasta las 13:00, hasta las 16:00, y después), nunca de la hora exacta. */
@@ -416,11 +402,7 @@ class GateSurveyTest extends TestCase
         // Las 16:00 en Madrid son las 14:00 en UTC: la franja tiene que salir de la hora del PARQUE (tarde), no de la UTC.
         $this->travelTo(Carbon::parse(self::TODAY.' 16:00:00', 'Europe/Madrid'));
 
-        $this->openWithVisit($this->staff(), $token)->call('openSurvey')
-            ->set('surveyAnswers.ambiente', '3')
-            ->set('surveyAnswers.como', 'google')
-            ->call('answerSurvey')
-            ->assertHasNoErrors();
+        $this->open($this->staff(), $token)->call('answerQuestion', 'ambiente', '3')->assertHasNoErrors();
 
         $this->assertSame(SurveyResponse::BAND_AFTERNOON, SurveyResponse::query()->sole()->band);
     }

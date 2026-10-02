@@ -100,6 +100,36 @@ for (const [ancho, alto] of TAMANOS) {
     }
 }
 
+// La encuesta PREGUNTA A PREGUNTA (la P1b), con Elena —verde y sin participación—: la PRIMERA pregunta con el aviso del
+// anonimato; un toque pasa a la siguiente; «Ahora no» cierra con lo contestado («Guardado.»). En amarillo, ni se pinta.
+// (Tras el recorrido de tamaños, que solo ESCANEA: la encuesta no se escribe hasta el primer toque. El montaje borra las
+// participaciones de sus clientes, así que en cada pasada se vuelve a ofrecer.)
+await page.setViewportSize({ width: 1080, height: 810 });
+await abrir();
+await escanear(tokens.jorge);
+check('encuesta · en ámbar no se pinta', (await page.locator('[data-gate-survey]').count()) === 0);
+await escanear(tokens.elena);
+const tarjeta = page.locator('[data-gate-survey]');
+check('encuesta · Elena (verde) la ve preguntando la PRIMERA, con el aviso del anonimato', (await tarjeta.getAttribute('data-gate-survey')) === 'asking' && (await page.locator('[data-gate-survey-notice]').count()) === 1 && (await page.locator('[data-gate-question]').count()) === 1);
+const primera = await page.locator('[data-gate-question]').getAttribute('data-gate-question');
+await page.locator('[data-gate-survey-option]').first().click();
+await page.waitForLoadState('networkidle');
+await page.waitForTimeout(300);
+const segunda = await page.locator('[data-gate-question]').getAttribute('data-gate-question').catch(() => null);
+check('encuesta · un toque guarda y pasa a la siguiente (sin el aviso)', segunda !== null && segunda !== primera && (await page.locator('[data-gate-survey-notice]').count()) === 0, `${primera} → ${segunda}`);
+check('encuesta · el foco vuelve al campo tras el toque', await page.evaluate(() => document.activeElement?.id === 'input'));
+await page.screenshot({ path: `${OUT}/sonda-puerta-p1-encuesta-1080.png` });
+await page.locator('[data-gate-survey-skip]').click();
+await page.waitForLoadState('networkidle');
+await page.waitForTimeout(300);
+check('encuesta · «Ahora no» cierra con lo contestado: «Guardado.»', (await tarjeta.getAttribute('data-gate-survey')) === 'answered' && (await tarjeta.textContent()).includes('Guardado.'));
+await page.screenshot({ path: `${OUT}/sonda-puerta-p1-encuesta-guardada-1080.png` });
+// ⚠️ Más de 3 s antes de volver a escanearla: el mismo código antes es una DOBLE LECTURA y no busca (la primera vuelta de
+// esta sonda lo confundió con que la encuesta se volvía a ofrecer).
+await page.waitForTimeout(3200);
+await escanear(tokens.elena);
+check('encuesta · ya no se vuelve a ofrecer', (await page.locator('[data-gate-profile]').count()) === 1 && (await page.locator('[data-gate-survey]').count()) === 0);
+
 // Una vez, en la tablet: la doble lectura, el velo y los estados sin ficha.
 await page.setViewportSize({ width: 1080, height: 810 });
 await page.clock.install();

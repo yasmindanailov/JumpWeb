@@ -78,23 +78,75 @@ final class SurveyResponses
      */
     public function answerInPerson(Survey $survey, int $userId, array $answers, ?int $askedBy): bool
     {
-        return $this->closeInPerson($survey, $userId, $answers, $askedBy);
+        return $this->startInPerson($survey, $userId, $answers, $askedBy) !== null;
     }
 
     /** «No preguntar»: participación y una respuesta `declined`, sin sello; no se vuelve a ofrecer. */
     public function declineInPerson(Survey $survey, int $userId, ?int $askedBy): bool
     {
-        return $this->closeInPerson($survey, $userId, null, $askedBy);
+        return $this->closeInPerson($survey, $userId, null, $askedBy) !== null;
     }
 
-    /** @param  array<string, mixed>|null  $answers  `null` = «no preguntar» */
-    private function closeInPerson(Survey $survey, int $userId, ?array $answers, ?int $askedBy): bool
+    /**
+     * **La primera respuesta en la puerta, PREGUNTA A PREGUNTA** (`docs/specs/puerta-nueva.md` §4.4, la P1b; `#817`·3):
+     * la participación y la respuesta —sellada— nacen como siempre, juntas y en la misma transacción, pero con lo contestado
+     * HASTA AHORA. Devuelve la clave de la respuesta (UUID v4) para que los toques siguientes la completen
+     * ({@see addInPerson()}), o `null` si este cliente ya había participado. `$answers`, ya TIPADAS y válidas.
+     *
+     * @param  array<string, mixed>  $answers
+     */
+    public function startInPerson(Survey $survey, int $userId, array $answers, ?int $askedBy): ?string
+    {
+        return $this->closeInPerson($survey, $userId, $answers, $askedBy);
+    }
+
+    /**
+     * **Los toques siguientes**: añade respuestas a la fila que abrió {@see startInPerson()}. Solo a una respuesta INTERNA,
+     * de esta encuesta, de HOY, de este empleado y no declinada —la clave sola no basta—, y una pregunta ya contestada no se
+     * pisa. Nada en la fila cambia salvo lo contestado: ni hora (no tiene), ni franja, ni sello. `true` si escribió algo.
+     *
+     * @param  array<string, mixed>  $answers  ya TIPADAS y válidas
+     */
+    public function addInPerson(Survey $survey, string $responseKey, array $answers, ?int $askedBy): bool
+    {
+        return DB::transaction(function () use ($survey, $responseKey, $answers, $askedBy): bool {
+            $response = SurveyResponse::query()
+                ->whereKey($responseKey)
+                ->where('survey_id', $survey->getKey())
+                ->where('channel', SurveyResponse::CHANNEL_INTERNAL)
+                ->whereDate('answered_on', DisplayTime::today()->toDateString())
+                ->where('asked_by', $askedBy)
+                ->where('declined', false)
+                ->lockForUpdate()
+                ->first();
+            if ($response === null) {
+                return false;
+            }
+
+            $ya = (array) ($response->answers ?? []);
+            $nuevas = array_diff_key($answers, $ya);
+            if ($nuevas === []) {
+                return false;
+            }
+
+            $response->answers = $ya + $nuevas;
+            $response->save();
+
+            return true;
+        });
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $answers  `null` = «no preguntar»
+     * @return string|null la clave de la respuesta escrita, o `null` si ya había participado
+     */
+    private function closeInPerson(Survey $survey, int $userId, ?array $answers, ?int $askedBy): ?string
     {
         $now = DisplayTime::now();
         $today = $now->toDateString();
         $facts = $this->factsOf($userId, $today);
 
-        return DB::transaction(function () use ($survey, $userId, $answers, $askedBy, $now, $today, $facts): bool {
+        return DB::transaction(function () use ($survey, $userId, $answers, $askedBy, $now, $today, $facts): ?string {
             $participation = $this->participate([
                 'survey_id' => $survey->getKey(),
                 'user_id' => $userId,
@@ -103,12 +155,10 @@ final class SurveyResponses
                 'asked_on' => $today,
             ]);
             if ($participation === null) {
-                return false;
+                return null;
             }
 
-            $this->respond($survey, SurveyResponse::CHANNEL_INTERNAL, $now->toDateString(), SurveyResponse::bandAt($now), $askedBy, $facts, $answers, $answers === null ? null : $userId);
-
-            return true;
+            return (string) $this->respond($survey, SurveyResponse::CHANNEL_INTERNAL, $now->toDateString(), SurveyResponse::bandAt($now), $askedBy, $facts, $answers, $answers === null ? null : $userId)->getKey();
         });
     }
 
@@ -224,7 +274,7 @@ final class SurveyResponses
      * @param  array{first_visit: bool, visit_kind: string}  $facts
      * @param  array<string, mixed>|null  $answers
      */
-    private function respond(Survey $survey, string $channel, string $day, string $band, ?int $askedBy, array $facts, ?array $answers, ?int $sealFor): void
+    private function respond(Survey $survey, string $channel, string $day, string $band, ?int $askedBy, array $facts, ?array $answers, ?int $sealFor): SurveyResponse
     {
         $response = new SurveyResponse([
             'survey_id' => $survey->getKey(),
@@ -241,6 +291,8 @@ final class SurveyResponses
             $this->seals->stamp($response, $sealFor);
         }
         $response->save();
+
+        return $response;
     }
 
     /** @return array{first_visit: bool, visit_kind: string} */

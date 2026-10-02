@@ -119,6 +119,10 @@ return [
             'fiesta' => ':firmados / :esperados 已获授权',
             'pie' => '档案将在 :min 分钟后自动关闭。',
             'velo' => '因无操作，档案已隐藏。轻触继续。',
+            'preguntale' => '请问客人：',
+            'siguiente' => '下一题',
+            'ahora_no' => '现在不问',
+            'guardado' => '已保存。',
         ],
         'validar' => [
             'title' => '验证注册',

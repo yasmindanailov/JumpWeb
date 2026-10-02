@@ -186,7 +186,7 @@ HAY = el producto ya lo sabe (dónde) · FALTA = hay que construirlo · CHOCA = 
 - **P3 · La reseña del día, por palabras** (§4.3·4).
 
 Cada una con su «al detalle» medido aquí antes del código, en `wip/…`, con su arnés (`mutar-puerta-p1.sh`… futuro) y su
-sonda (`sonda-puerta.mjs`, futuro) a 1080 × 810, 1194 × 834, 1366 × 1024 y 390 de ancho, y las fichas de `datos.js`
+sonda (`sonda-puerta-p1.mjs`) a 1080 × 810, 1194 × 834, 1366 × 1024 y 390 de ancho, y las fichas de `datos.js`
 montadas en la BD local (`ojo-puerta.php`, con `OJO=desmontar`).
 
 #### La P1 al detalle (medido el 02-10; los puntos de «Abierto» se miden al empezar, antes del código)
@@ -245,7 +245,7 @@ mockup y CONSERVA la de «Nueva búsqueda» nunca escondida (`#817`) y las del f
 
 **5 · El arnés y la sonda.** `mutar-puerta-p1.sh` (futuro): un mutante por estado de `GateVerdict`, por forma del
 enmascarado, por clase de dinero, por la agrupación, por los menores en el veredicto, por el `wire:confirm` y por «Nueva
-búsqueda». `sonda-puerta.mjs` y `ojo-puerta.php` (futuros): las fichas de `datos.js` montadas en la local, fotos en los
+búsqueda». `sonda-puerta-p1.mjs` y `ojo-puerta.php` (este, fuera de git): las fichas de `datos.js` montadas en la local, fotos en los
 cuatro tamaños y, en cada una, el veredicto y las tareas sin desplazar (el caso común, a 1080 × 810), ≥ 44 px, el foco
 tras buscar, tocar y volver, y ningún correo ni teléfono enteros en el HTML.
 
@@ -295,6 +295,45 @@ dos: la **P1a**, la pantalla, y la **P1b**, la encuesta pregunta a pregunta y so
   verdad (el montaje da «no cuadra»: la misma pieza con otro texto, cubierta por las pruebas). Dato de la local: su Kids no
   tiene tope de edad y su línea dice «personas»; se arregla en el panel.
 
+#### La P1b al detalle: la encuesta pregunta a pregunta (medido el 02-10, antes del código; `#817`·3)
+
+- **Hoy** (`ValidarRegistro`): oferta («Preguntar» · «No preguntar») → formulario entero → «Guardar» TIPA y VALIDA todo y
+  escribe de una vez (`SurveyResponses::answerInPerson()`); «No preguntar» escribe la fila `declined`
+  (`declineInPerson()`); un solo rastro, `puerta.survey_closed`, sin desenlace. `answerInPerson()` y `declineInPerson()`
+  son además la API con la que seis ficheros de pruebas montan sus datos: se quedan.
+- **El mockup**: la tarjeta, solo en VERDE: «Pregúntale.», la pregunta, sus opciones (un toque guarda), «Ahora no» y, al
+  acabar, «Guardado.». Sin paso de oferta.
+- **Lo que cambia**:
+  - **`SurveyResponses::startInPerson()`** (futuro): la participación y la respuesta, en la MISMA transacción y con su sello,
+    como hoy, pero con lo contestado hasta ahí; devuelve la clave (UUID v4) de la respuesta, o `null` si ya había
+    participado. `answerInPerson()` pasa a ser `startInPerson() !== null`: un solo camino de escritura.
+  - **`SurveyResponses::addInPerson()`** (futuro): añade respuestas a ESA fila, con la guarda de que es interna, de esta
+    encuesta, de hoy, de este empleado y no declinada; una pregunta ya contestada no se pisa.
+  - **La puerta**: el primer toque llama a `startInPerson()` y guarda la clave en una propiedad `#[Locked]` (viaja al
+    navegador con la ficha, como ya viajan las respuestas marcadas: no expone nada nuevo); los siguientes, a `addInPerson()`.
+    Elección, sí/no y escala: un toque guarda y pasa a la siguiente. Varias y texto: «Siguiente» (vacío, la salta). Cada
+    valor se tipa y se valida SOLO contra su pregunta, en el servidor y contra la encuesta GUARDADA (nunca la copia del
+    navegador); una obligatoria no frena en la puerta.
+  - **«Ahora no»**: sin nada contestado, es el «no preguntar» de hoy (`declineInPerson()`: la fila `declined`, sin sello, y
+    no se vuelve a ofrecer); con algo, cierra con lo contestado. El rastro, UNO, al nacer la participación.
+  - **Solo en verde**: la vista no pinta la tarjeta si el veredicto no es verde; el servidor la sigue ofreciendo (nada se
+    escribe hasta el primer toque), así que tras «Dar por firmado» aparece.
+  - **D7**: la intro de la encuesta (dato del panel) y el aviso del anonimato van sobre la PRIMERA pregunta.
+- **Lo que no cambia**: cuándo se ofrece (`offerFor()`), una por cliente y encuesta (el índice único de la participación),
+  la franja y no la hora, nada al libro, la caducidad de la ficha y una encuesta apagada que no se escribe.
+- **Pruebas**: `GateSurveyTest` se rehace para el flujo nuevo conservando cada garantía; la sonda vieja de la encuesta
+  (la de `#741`) se retira y sus comprobaciones pasan a `sonda-puerta-p1.mjs`; el arnés de la P1 gana sus mutantes.
+
+**P1b · la encuesta, HECHA** (02-10, en `wip/puerta-p1b`; al ojo del owner): `SurveyResponses::startInPerson()` y
+`addInPerson()` (y `answerInPerson()` sobre el primero: un solo camino); en `ValidarRegistro`, `answerQuestion()` y
+`skipSurvey()` en lugar del formulario entero (fuera `openSurvey()`, `cancelSurvey()`, `answerSurvey()` y
+`declineSurvey()`), con la clave de la respuesta `#[Locked]`; la tarjeta, pregunta a pregunta y solo en verde, con la intro
+y el aviso sobre la primera. `SurveyInPersonStepsTest` (nueva, 4) y `GateSurveyTest` rehecha (15); suite 6747 / 46745.
+Arnés: los 11 mutantes de la encuesta, 11/11 (`SOLO=encuesta`). Sonda 202/202, con la encuesta de Elena (el montaje borra
+las participaciones de sus clientes para que se vuelva a ofrecer). Dos trampas, medidas: un `@php(...)` EN LÍNEA antes de un
+bloque `@php … @endphp` deja media vista sin compilar (la regex de Blade va del primero al `@endphp`: en la vista, solo
+bloques); y la sonda leyó como «se vuelve a ofrecer» una DOBLE LECTURA (el mismo código en < 3 s): el instrumento espera.
+
 ## 5. Impacto en invariantes
 
 - **RGPD** (`INVARIANTES.md` §3, lo que ve la cola): más estricto, con «Resultado para» enmascarado; sin apellidos de menores
@@ -323,3 +362,4 @@ dos: la **P1a**, la pantalla, y la **P1b**, la encuesta pregunta a pregunta y so
   menores invitados fuera de una fiesta, con su nombre). Sigue el código de la P1, en `wip/puerta-p1`.
 - 2026-10-02 · la P1a, hecha (§4.4) y en vivo para el owner; contesta D9 (`#818`: un descargo de una versión anterior
   deja pasar) y le da el visto bueno («visto bueno. continuamos.»): a `main`. Sigue la P1b.
+- 2026-10-02 · la P1b (la encuesta pregunta a pregunta), hecha (§4.4) y en vivo para el owner, en `wip/puerta-p1b`.

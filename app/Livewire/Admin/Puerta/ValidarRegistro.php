@@ -155,6 +155,15 @@ class ValidarRegistro extends Component
     public ?int $surveyId = null;
 
     /**
+     * La respuesta que abrió el PRIMER toque de esta ficha (`SurveyResponses::startInPerson()`; `specs/puerta-nueva.md`
+     * §4.4, la P1b): los toques siguientes la completan. Bloqueada como el sujeto —el navegador no elige qué fila
+     * completa— y, aun así, el servidor comprueba que es SU fila (`addInPerson()`). Viaja en el snapshot con la ficha, como
+     * ya viajan las respuestas marcadas, y muere con ella (`forgetSurvey()`).
+     */
+    #[Locked]
+    public ?string $surveyResponseId = null;
+
+    /**
      * Esta página vive FUERA del shell de Filament (decisión #119) y por eso no pasa por el middleware
      * `SetUpPanel` del panel. Consecuencia MEDIDA en navegador (§9.7 C·5): sin panel «actual» y
      * booteado, `@filamentStyles` no emite `--gray-*`, `--primary-*`, `--success-*`… y el bundle del
@@ -458,13 +467,15 @@ class ValidarRegistro extends Component
         }
 
         $this->surveyId = (int) $survey->getKey();
-        $this->survey = $this->surveyState($survey, 'offer');
+        // La Puerta nueva no tiene paso de oferta (el mockup): la tarjeta nace preguntando la primera (la P1b).
+        $this->survey = $this->surveyState($survey, 'asking');
     }
 
     private function forgetSurvey(): void
     {
         $this->survey = null;
         $this->surveyId = null;
+        $this->surveyResponseId = null;
         $this->surveyAnswers = [];
     }
 
@@ -494,35 +505,116 @@ class ValidarRegistro extends Component
             'intro' => $survey->displayIntro($locale),
             'count' => count($questions),
             'state' => $state,
+            // La pregunta que se enseña (pregunta a pregunta, la P1b). Solo decide qué se PINTA: lo que se escribe lo
+            // valida el servidor contra la encuesta guardada, sea cual sea el número que devuelva el navegador.
+            'step' => 0,
             'questions' => $questions,
         ];
     }
 
-    /** «Preguntar»: abre el formulario. Sin escribir nada todavía. */
-    public function openSurvey(): void
+    /**
+     * **Un toque, una respuesta** (`docs/specs/puerta-nueva.md` §4.4, la P1b; `#817`·3): el valor de UNA pregunta se TIPA
+     * y se VALIDA solo contra ella —y contra la encuesta GUARDADA, nunca contra la copia del navegador—; el primero abre la
+     * participación y la respuesta anónima (`startInPerson()`) y los siguientes la completan (`addInPerson()`). Sin valor
+     * (varias o texto vacíos, «Siguiente»), la pregunta se salta: en la puerta una obligatoria no frena. Tras la última,
+     * la tarjeta se cierra como «Ahora no».
+     */
+    public function answerQuestion(string $key, ?string $value = null): void
     {
-        if ($this->surveySubject() === null) {
+        $subject = $this->surveySubject();
+        if ($subject === null || ($this->survey['state'] ?? null) !== 'asking') {
             return;
+        }
+        [$customer, $survey] = $subject;
+
+        $questions = $survey->questionList();
+        $index = array_search($key, array_column($questions, 'key'), true);
+        if ($index === false) {
+            return;
+        }
+        $question = $questions[$index];
+
+        $this->resetErrorBag();
+        $typed = QuestionSchema::fromForm([$question], [$key => $value ?? ($this->surveyAnswers[$key] ?? null)]);
+        if (array_key_exists($key, $typed)) {
+            if (! QuestionSchema::accepts($question, $typed[$key])) {
+                throw ValidationException::withMessages(['surveyAnswers.'.$key => (string) __('admin.puerta.validar.profile.survey_error_invalid')]);
+            }
+            $this->escribir($customer, $survey, [$key => $typed[$key]]);
+        }
+
+        if (($this->survey['state'] ?? null) === 'asking') {
+            $this->survey['step'] = $index + 1;
+            if ($index + 1 >= count($questions)) {
+                $this->cerrar($customer, $survey);
+            }
         }
 
         $this->surveyAnswers = [];
-        $this->resetErrorBag();
-        $this->survey['state'] = 'open';
-        $this->touchProfileWindow();
-    }
-
-    /** «Ahora no»: vuelve a la oferta sin guardar (la tarjeta sigue ahí mientras viva la ficha). */
-    public function cancelSurvey(): void
-    {
-        if ($this->surveySubject() === null) {
-            return;
-        }
-
-        $this->surveyAnswers = [];
-        $this->resetErrorBag();
-        $this->survey['state'] = 'offer';
         $this->touchProfileWindow();
         $this->releaseReader();
+    }
+
+    /**
+     * «Ahora no»: sin nada contestado, es el «no preguntar» de siempre —la fila `declined`, sin sello, y no se vuelve a
+     * ofrecer—; con algo contestado, cierra con lo contestado (`#817`·3: «deja el resto»).
+     */
+    public function skipSurvey(): void
+    {
+        $subject = $this->surveySubject();
+        if ($subject === null || ($this->survey['state'] ?? null) !== 'asking') {
+            return;
+        }
+        [$customer, $survey] = $subject;
+
+        $this->cerrar($customer, $survey);
+        $this->surveyAnswers = [];
+        $this->touchProfileWindow();
+        $this->releaseReader();
+    }
+
+    /**
+     * Escribe lo contestado: el primer toque abre la participación y la respuesta y deja el rastro (UNO, sin desenlace);
+     * los siguientes completan la misma fila. Si este cliente ya había participado (otra tablet, la ficha abierta dos
+     * veces), no se escribe nada y la tarjeta se da por contestada.
+     *
+     * @param  array<string, mixed>  $answers
+     */
+    private function escribir(User $customer, Survey $survey, array $answers): void
+    {
+        $askedBy = Auth::id() === null ? null : (int) Auth::id();
+        $responses = app(SurveyResponses::class);
+
+        if ($this->surveyResponseId !== null) {
+            $responses->addInPerson($survey, $this->surveyResponseId, $answers, $askedBy);
+
+            return;
+        }
+
+        $key = $responses->startInPerson($survey, (int) $customer->getKey(), $answers, $askedBy);
+        if ($key === null) {
+            $this->survey['state'] = 'answered';
+
+            return;
+        }
+
+        $this->surveyResponseId = $key;
+        $this->auditSurveyClosed($customer, $survey);
+    }
+
+    /** Cierra la tarjeta: con algo escrito, «Guardado.»; sin nada, la fila `declined` de «no preguntar». */
+    private function cerrar(User $customer, Survey $survey): void
+    {
+        if ($this->surveyResponseId !== null) {
+            $this->survey['state'] = 'answered';
+
+            return;
+        }
+
+        if (app(SurveyResponses::class)->declineInPerson($survey, (int) $customer->getKey(), Auth::id() === null ? null : (int) Auth::id())) {
+            $this->auditSurveyClosed($customer, $survey);
+        }
+        $this->survey['state'] = 'declined';
     }
 
     /**
@@ -533,65 +625,6 @@ class ValidarRegistro extends Component
     private function releaseReader(): void
     {
         $this->dispatch('gate-input-cleared');
-    }
-
-    /**
-     * «Guardar respuestas»: lo marcado se TIPA y se VALIDA contra las preguntas en el servidor; una obligatoria
-     * sin contestar o un valor que la pregunta no acepta vuelven como error de campo y no se escribe nada. Con
-     * todo en orden: la participación, la respuesta ANÓNIMA (`#754`: el día, la franja y el operador, sin el cliente)
-     * y el rastro sin desenlace.
-     */
-    public function answerSurvey(): void
-    {
-        $subject = $this->surveySubject();
-        if ($subject === null) {
-            return;
-        }
-        [$customer, $survey] = $subject;
-
-        // Cada intento se juzga de nuevo: los errores del anterior no sobreviven a una corrección.
-        $this->resetErrorBag();
-        $questions = $survey->questionList();
-        $typed = QuestionSchema::fromForm($questions, $this->surveyAnswers);
-        $errors = QuestionSchema::validate($questions, $typed);
-        if ($errors !== []) {
-            $messages = [];
-            foreach ($errors as $key => $reason) {
-                $messages['surveyAnswers.'.$key] = (string) __('admin.puerta.validar.profile.survey_error_'.$reason);
-            }
-
-            throw ValidationException::withMessages($messages);
-        }
-
-        $written = app(SurveyResponses::class)->answerInPerson($survey, (int) $customer->getKey(), $typed, Auth::id() === null ? null : (int) Auth::id());
-        if ($written) {
-            $this->auditSurveyClosed($customer, $survey);
-        }
-
-        $this->survey = $this->surveyState($survey, 'answered');
-        $this->surveyAnswers = [];
-        $this->touchProfileWindow();
-        $this->releaseReader();
-    }
-
-    /** «No preguntar»: también es una fila — la participación y una respuesta anónima `declined` —, y no se vuelve a ofrecer. */
-    public function declineSurvey(): void
-    {
-        $subject = $this->surveySubject();
-        if ($subject === null) {
-            return;
-        }
-        [$customer, $survey] = $subject;
-
-        $written = app(SurveyResponses::class)->declineInPerson($survey, (int) $customer->getKey(), Auth::id() === null ? null : (int) Auth::id());
-        if ($written) {
-            $this->auditSurveyClosed($customer, $survey);
-        }
-
-        $this->survey = $this->surveyState($survey, 'declined');
-        $this->surveyAnswers = [];
-        $this->touchProfileWindow();
-        $this->releaseReader();
     }
 
     /**

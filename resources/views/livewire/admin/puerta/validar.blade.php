@@ -23,8 +23,13 @@
         <div class="ppu-marca">
             {{-- El logotipo de la INSTALACIÓN (el hueco `client-logo.svg`, el mismo que usa la marca del panel), sin el
                  «Administración» de su barra; sin logotipo, el nombre del negocio. Solo modo claro (D3): basta el claro. --}}
-            @php($businessName = \App\Domain\Platform\Models\Setting::value('business.name') ?: config('app.name'))
-            @php($clientLogo = @filemtime(public_path('img/client-logo.svg')))
+            {{-- ⚠️ Bloques `@php … @endphp`, nunca `@php(...)` en línea: la regex de Blade para los bloques empieza en el
+                 primer `@php` que encuentra —también uno en línea— y se traga todo hasta el siguiente `@endphp` (medido en
+                 la P1b: media vista salió sin compilar). --}}
+            @php
+                $businessName = \App\Domain\Platform\Models\Setting::value('business.name') ?: config('app.name');
+                $clientLogo = @filemtime(public_path('img/client-logo.svg'));
+            @endphp
             @if ($clientLogo)
                 <img class="ppu-logo" src="{{ asset('img/client-logo.svg') }}?v={{ $clientLogo }}" alt="{{ $businessName }}" />
             @else
@@ -132,7 +137,12 @@
             x-on:click.window="arm()"
             x-on:keydown.window="arm()"
         >
-            <div @class(['ppu-cuerpo', 'solo' => $ficha['hijos'] === [] && $ficha['invitados'] === [] && $ficha['fiesta'] === null && $survey === null])>
+            {{-- La encuesta, SOLO en verde (la P1b): el servidor la sigue ofreciendo —nada se escribe hasta el primer toque—,
+                 así que tras «Dar por firmado» aparece. --}}
+            @php
+                $conEncuesta = $survey !== null && $verdict['tone'] === \App\Livewire\Admin\Puerta\GateVerdict::VERDE;
+            @endphp
+            <div @class(['ppu-cuerpo', 'solo' => $ficha['hijos'] === [] && $ficha['invitados'] === [] && $ficha['fiesta'] === null && ! $conEncuesta])>
                 <div class="ppu-col" data-gate-col="main">
                     {{-- 1 · El veredicto y, dentro de la misma tarjeta, el nombre: una sola cosa que mirar. --}}
                     <div class="ppu-ver t-{{ $verdict['tone'] }}" role="status" aria-live="polite" data-gate-status="{{ $estado }}" data-gate-waiver="{{ $ficha['descargo'] }}"
@@ -274,83 +284,58 @@
                         <p class="ppu-card pad ppu-fiesta" data-gate-guest-minors-count>{{ $ficha['fiesta'] }}</p>
                     @endif
 
-                    {{-- LA ENCUESTA INTERNA (`specs/encuestas.md` §4.2): en esta tanda, la de siempre con la cara nueva; pregunta a
-                         pregunta llega en la P1b (`#817`). ▶ `#754`: ANÓNIMA, y su aviso se lee antes de preguntar (D7). --}}
-                    @if ($survey !== null)
+                    {{-- LA ENCUESTA INTERNA, PREGUNTA A PREGUNTA y SOLO EN VERDE (`specs/puerta-nueva.md` §4.4, la P1b; `#817`·3; el
+                         mockup): un toque guarda y pasa a la siguiente; «Siguiente» en las de varias y de texto; «Ahora no» deja el
+                         resto. ▶ `#754`: ANÓNIMA, y su aviso (y la intro del panel) se lee antes de la PRIMERA pregunta (D7). --}}
+                    @if ($conEncuesta)
+                        @php
+                            $paso = (int) ($survey['step'] ?? 0);
+                            $q = $survey['questions'][$paso] ?? null;
+                        @endphp
                         <section class="ppu-card pad ppu-enc gate-survey" data-gate-survey="{{ $survey['state'] }}" data-gate-survey-key="{{ $survey['key'] }}">
-                            <p class="ppu-over">{{ $survey['name'] }}</p>
-                            @if (filled($survey['intro'] ?? null))
-                                <p class="ppu-enc__intro">{{ $survey['intro'] }}</p>
-                            @endif
-                            @if (in_array($survey['state'], ['offer', 'open'], true))
-                                <p class="gate-hint" data-gate-survey-notice>{{ __('admin.puerta.validar.profile.survey_notice') }}</p>
-                            @endif
-                            @if ($survey['state'] === 'offer')
-                                <p class="gate-hint" data-gate-survey-count>{{ trans_choice('admin.puerta.validar.profile.survey_questions', (int) $survey['count'], ['count' => (int) $survey['count']]) }}</p>
-                                <div class="gate-survey__actions">
-                                    <button type="button" wire:click="openSurvey" class="ppu-boton ppu-boton--primario" data-gate-survey-open>{{ __('admin.puerta.validar.profile.survey_ask') }}</button>
-                                    <button type="button" wire:click="declineSurvey" class="ppu-boton" data-gate-survey-decline>{{ __('admin.puerta.validar.profile.survey_skip') }}</button>
-                                </div>
-                            @elseif ($survey['state'] === 'open')
-                                <form wire:submit="answerSurvey" class="gate-survey__form" data-gate-survey-form>
-                                    @foreach ($survey['questions'] as $q)
-                                        <fieldset class="gate-q" data-gate-question="{{ $q['key'] }}" data-gate-question-type="{{ $q['type'] }}">
-                                            <legend class="gate-q__label">
-                                                {{ $q['label'] }}
-                                                @if ($q['required'])
-                                                    <span class="gate-q__required">· {{ __('admin.puerta.validar.profile.survey_required') }}</span>
-                                                @endif
-                                            </legend>
+                            @if ($survey['state'] === 'asking' && $q !== null)
+                                <p class="ppu-over">{{ __('admin.puerta.ficha.preguntale') }}</p>
+                                @if ($paso === 0)
+                                    @if (filled($survey['intro'] ?? null))
+                                        <p class="ppu-enc__intro">{{ $survey['intro'] }}</p>
+                                    @endif
+                                    <p class="gate-hint" data-gate-survey-notice>{{ __('admin.puerta.validar.profile.survey_notice') }}</p>
+                                @endif
+                                <h3 class="ppu-enc__pregunta" data-gate-question="{{ $q['key'] }}" data-gate-question-type="{{ $q['type'] }}">{{ $q['label'] }}</h3>
 
-                                            @if ($q['type'] === 'choice')
-                                                <div class="gate-q__options">
-                                                    @foreach ($q['options'] as $o)
-                                                        <input type="radio" id="q-{{ $q['key'] }}-{{ $o['key'] }}" class="gate-q__input" wire:model="surveyAnswers.{{ $q['key'] }}" value="{{ $o['key'] }}">
-                                                        <label for="q-{{ $q['key'] }}-{{ $o['key'] }}" class="gate-q__btn">{{ $o['label'] }}</label>
-                                                    @endforeach
-                                                </div>
-                                            @elseif ($q['type'] === 'multi')
-                                                <div class="gate-q__options">
-                                                    @foreach ($q['options'] as $o)
-                                                        <input type="checkbox" id="q-{{ $q['key'] }}-{{ $o['key'] }}" class="gate-q__input" wire:model="surveyAnswers.{{ $q['key'] }}" value="{{ $o['key'] }}">
-                                                        <label for="q-{{ $q['key'] }}-{{ $o['key'] }}" class="gate-q__btn">{{ $o['label'] }}</label>
-                                                    @endforeach
-                                                </div>
-                                            @elseif ($q['type'] === 'scale')
-                                                <div class="gate-q__options">
-                                                    @foreach (range(\App\Domain\Platform\Services\Surveys\QuestionSchema::SCALE_MIN, \App\Domain\Platform\Services\Surveys\QuestionSchema::SCALE_MAX) as $n)
-                                                        <input type="radio" id="q-{{ $q['key'] }}-{{ $n }}" class="gate-q__input" wire:model="surveyAnswers.{{ $q['key'] }}" value="{{ $n }}">
-                                                        <label for="q-{{ $q['key'] }}-{{ $n }}" class="gate-q__btn gate-q__btn--scale">{{ $n }}</label>
-                                                    @endforeach
-                                                </div>
-                                            @elseif ($q['type'] === 'yesno')
-                                                <div class="gate-q__options">
-                                                    <input type="radio" id="q-{{ $q['key'] }}-yes" class="gate-q__input" wire:model="surveyAnswers.{{ $q['key'] }}" value="1">
-                                                    <label for="q-{{ $q['key'] }}-yes" class="gate-q__btn">{{ __('admin.puerta.validar.profile.survey_yes') }}</label>
-                                                    <input type="radio" id="q-{{ $q['key'] }}-no" class="gate-q__input" wire:model="surveyAnswers.{{ $q['key'] }}" value="0">
-                                                    <label for="q-{{ $q['key'] }}-no" class="gate-q__btn">{{ __('admin.puerta.validar.profile.survey_no') }}</label>
-                                                </div>
-                                            @else
-                                                <input type="text" id="q-{{ $q['key'] }}" class="gate-q__text" wire:model="surveyAnswers.{{ $q['key'] }}" maxlength="{{ \App\Domain\Platform\Services\Surveys\QuestionSchema::TEXT_MAX }}" autocomplete="off" placeholder="{{ __('admin.puerta.validar.profile.survey_text_placeholder') }}" aria-describedby="q-{{ $q['key'] }}-hint">
-                                                <p class="gate-hint" id="q-{{ $q['key'] }}-hint" data-gate-survey-text-hint>{{ __('admin.puerta.validar.profile.survey_text_hint') }}</p>
-                                            @endif
-
-                                            @error('surveyAnswers.'.$q['key'])
-                                                <p class="gate-q__error" data-gate-survey-error="{{ $q['key'] }}">{{ $message }}</p>
-                                            @enderror
-                                        </fieldset>
-                                    @endforeach
-
-                                    <div class="gate-survey__actions">
-                                        <button type="submit" class="ppu-boton ppu-boton--primario" data-gate-survey-save>
-                                            <span wire:loading.remove wire:target="answerSurvey">{{ __('admin.puerta.validar.profile.survey_save') }}</span>
-                                            <span wire:loading wire:target="answerSurvey">…</span>
-                                        </button>
-                                        <button type="button" wire:click="cancelSurvey" class="ppu-boton" data-gate-survey-cancel>{{ __('admin.puerta.validar.profile.survey_cancel') }}</button>
+                                @if (in_array($q['type'], ['choice', 'yesno', 'scale'], true))
+                                    @php
+                                        $opciones = match ($q['type']) {
+                                            'yesno' => [['key' => '1', 'label' => __('admin.puerta.validar.profile.survey_yes')], ['key' => '0', 'label' => __('admin.puerta.validar.profile.survey_no')]],
+                                            'scale' => array_map(static fn (int $n): array => ['key' => (string) $n, 'label' => (string) $n], range(\App\Domain\Platform\Services\Surveys\QuestionSchema::SCALE_MIN, \App\Domain\Platform\Services\Surveys\QuestionSchema::SCALE_MAX)),
+                                            default => $q['options'],
+                                        };
+                                    @endphp
+                                    <div class="ppu-ops">
+                                        @foreach ($opciones as $o)
+                                            <button type="button" class="ppu-op" wire:click="answerQuestion('{{ $q['key'] }}', '{{ $o['key'] }}')" data-gate-survey-option="{{ $o['key'] }}">{{ $o['label'] }}</button>
+                                        @endforeach
                                     </div>
-                                </form>
+                                @elseif ($q['type'] === 'multi')
+                                    <div class="gate-q__options">
+                                        @foreach ($q['options'] as $o)
+                                            <input type="checkbox" id="q-{{ $q['key'] }}-{{ $o['key'] }}" class="gate-q__input" wire:model="surveyAnswers.{{ $q['key'] }}" value="{{ $o['key'] }}">
+                                            <label for="q-{{ $q['key'] }}-{{ $o['key'] }}" class="gate-q__btn">{{ $o['label'] }}</label>
+                                        @endforeach
+                                    </div>
+                                    <button type="button" class="ppu-boton ppu-boton--primario" wire:click="answerQuestion('{{ $q['key'] }}')" data-gate-survey-next>{{ __('admin.puerta.ficha.siguiente') }}</button>
+                                @else
+                                    <input type="text" id="q-{{ $q['key'] }}" class="gate-q__text" wire:model="surveyAnswers.{{ $q['key'] }}" maxlength="{{ \App\Domain\Platform\Services\Surveys\QuestionSchema::TEXT_MAX }}" autocomplete="off" placeholder="{{ __('admin.puerta.validar.profile.survey_text_placeholder') }}" aria-describedby="q-{{ $q['key'] }}-hint">
+                                    <p class="gate-hint" id="q-{{ $q['key'] }}-hint" data-gate-survey-text-hint>{{ __('admin.puerta.validar.profile.survey_text_hint') }}</p>
+                                    <button type="button" class="ppu-boton ppu-boton--primario" wire:click="answerQuestion('{{ $q['key'] }}')" data-gate-survey-next>{{ __('admin.puerta.ficha.siguiente') }}</button>
+                                @endif
+
+                                @error('surveyAnswers.'.$q['key'])
+                                    <p class="gate-q__error" data-gate-survey-error="{{ $q['key'] }}">{{ $message }}</p>
+                                @enderror
+                                <button type="button" class="ppu-ahora" wire:click="skipSurvey" data-gate-survey-skip>{{ __('admin.puerta.ficha.ahora_no') }}</button>
                             @elseif ($survey['state'] === 'answered')
-                                <p class="ppu-guardado"><x-filament::icon :icon="Heroicon::OutlinedCheck" />{{ __('admin.puerta.validar.profile.survey_answered') }}</p>
+                                <p class="ppu-guardado"><x-filament::icon :icon="Heroicon::OutlinedCheck" />{{ __('admin.puerta.ficha.guardado') }}</p>
                             @else
                                 <p class="gate-hint">{{ __('admin.puerta.validar.profile.survey_declined') }}</p>
                             @endif

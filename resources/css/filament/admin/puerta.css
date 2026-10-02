@@ -747,6 +747,49 @@
     color: var(--ppu-texto);
 }
 
+.ppu-enc__pregunta {
+    margin: 0;
+    font: 700 19px/1.3 var(--ppu-letra);
+    color: var(--ppu-tinta);
+}
+
+/* Pregunta a pregunta (la P1b): un toque guarda y pasa a la siguiente. */
+.ppu-ops {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px;
+}
+
+.ppu-op {
+    min-height: 48px;
+    padding: 8px 12px;
+    border: 1px solid var(--ppu-borde-fuerte);
+    border-radius: 10px;
+    background: var(--ppu-blanco);
+    font: 600 15px/1.25 var(--ppu-letra);
+    color: var(--ppu-tinta);
+    text-align: center;
+    cursor: pointer;
+}
+
+.ppu-op:active {
+    transform: scale(0.98);
+}
+
+/* «Ahora no»: un enlace, pero de 44 px de alto (se toca con el mismo dedo). */
+.ppu-ahora {
+    justify-self: start;
+    min-height: 44px;
+    padding: 0 4px;
+    border: 0;
+    background: none;
+    font: 600 15px/1 var(--ppu-letra);
+    color: var(--primary-700);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+
 .ppu-guardado {
     display: flex;
     align-items: center;

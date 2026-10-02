@@ -15,10 +15,11 @@ set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 EXEC="docker compose exec -u sail -T laravel.test"
-PHP='Puerta|GateKioskTest|GateVerdictTest|QueryMaskTest|FichaPuertaTest|WaiverGateTest|MixedPartyParkSurfacesTest|PanelSecretPathTest'
+PHP='Puerta|GateKioskTest|GateVerdictTest|QueryMaskTest|FichaPuertaTest|WaiverGateTest|MixedPartyParkSurfacesTest|PanelSecretPathTest|SurveyInPersonStepsTest'
 
 TMP="$(mktemp -d)"
 FICHEROS=(
+    app/Domain/Platform/Services/Surveys/SurveyResponses.php
     app/Livewire/Admin/Puerta/GateVerdict.php
     app/Livewire/Admin/Puerta/QueryMask.php
     app/Livewire/Admin/Puerta/FichaPuerta.php
@@ -166,6 +167,42 @@ mutar "hoja · un botón de 40 px" "$HOJA" \
     padding: 0 18px;"
 mutar "hoja · la pantalla se desplaza como documento" "$HOJA" \
   "    height: 100dvh;" "    min-height: 100dvh;"
+
+# ── La P1b: la encuesta pregunta a pregunta (`#817`·3) ───────────────────────────────────────────────────────
+RESPUESTAS=app/Domain/Platform/Services/Surveys/SurveyResponses.php
+mutar "encuesta · completar pisa lo contestado" "$RESPUESTAS" \
+  "\$response->answers = \$ya + \$nuevas;" "\$response->answers = \$answers + \$ya;"
+mutar "encuesta · completa la fila de OTRO empleado" "$RESPUESTAS" \
+  "                ->where('asked_by', \$askedBy)
+" ""
+mutar "encuesta · completa una declinada" "$RESPUESTAS" \
+  "                ->where('declined', false)
+" ""
+mutar "encuesta · completa una de otro día" "$RESPUESTAS" \
+  "                ->whereDate('answered_on', DisplayTime::today()->toDateString())
+" ""
+mutar "encuesta · el primer toque no sella" "$RESPUESTAS" \
+  "\$answers, \$answers === null ? null : \$userId)->getKey();" "\$answers, null)->getKey();"
+mutar "encuesta · manda la copia del navegador" "$COMPONENTE" \
+  "        \$questions = \$survey->questionList();
+        \$index = array_search(" "        \$questions = array_values((array) (\$this->survey['questions'] ?? []));
+        \$index = array_search("
+mutar "encuesta · un valor imposible se guarda" "$COMPONENTE" \
+  "            if (! QuestionSchema::accepts(\$question, \$typed[\$key])) {" "            if (false) {"
+mutar "encuesta · «Ahora no» con algo contestado declina" "$COMPONENTE" \
+  "        if (\$this->surveyResponseId !== null) {
+            \$this->survey['state'] = 'answered';
+
+            return;
+        }
+
+        if (app(SurveyResponses::class)->declineInPerson(" "        if (app(SurveyResponses::class)->declineInPerson("
+mutar "encuesta · no pasa a la siguiente" "$COMPONENTE" \
+  "\$this->survey['step'] = \$index + 1;" "\$this->survey['step'] = \$index;"
+mutar "encuesta · se pinta también en ámbar" "$VISTA" \
+  "\$conEncuesta = \$survey !== null && \$verdict['tone'] === \\App\\Livewire\\Admin\\Puerta\\GateVerdict::VERDE;" "\$conEncuesta = \$survey !== null;"
+mutar "encuesta · el aviso del anonimato en cada pregunta" "$VISTA" \
+  "                                @if (\$paso === 0)" "                                @if (true)"
 
 echo
 echo "$muerden/$total muerden"

@@ -63,8 +63,9 @@
    «Nueva búsqueda» se queda en el pie, los invitados en una línea, la encuesta pregunta a pregunta, la reseña del día por
    palabras «profesional y robusto»). Cambia la VISTA de `ValidarRegistro`; sus garantías se quedan. ✅ **La P1a (la
    pantalla) EN `main` con el visto bueno del owner** (02-10; D9 → `#818`; montaje y sonda: `CARRIL-SPA.md` §8 (27); arnés
-   `mutar-puerta-p1.sh` 34/34, sonda `sonda-puerta-p1.mjs` 196/196). ▶ **Ahora la P1b**: la encuesta pregunta a pregunta y
-   solo en verde (§4.4, punto a); después la P2 (pulseras) y la P3 (reseña).
+   `mutar-puerta-p1.sh` 34/34, sonda `sonda-puerta-p1.mjs` 196/196). 🟦 **La P1b (la encuesta pregunta a pregunta, solo en
+   verde) HECHA en `wip/puerta-p1b`, al ojo del owner** (suite 6747; sus 11 mutantes 11/11; sonda 202/202). Con su visto
+   bueno, a `main`; después la P2 (pulseras) y la P3 (reseña).
 2. ▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4; `#789`, `#800`→`#804`)**: ✅ R1a, R1b y **R1·T** en `main` (la
    R1·T revisada: §4.2.2; su sonda y el medidor de bloques, `CARRIL-SPA` §8 (26)). Del zip (6) (`#861`): el 8, «482-913 es tu
    código para entrar» sin botón; «Quién firma el descargo» en el 1 y el 3; las dos horas (90 + 30). ▶ **Tras la A4, la R1·T2** (`#809`,
