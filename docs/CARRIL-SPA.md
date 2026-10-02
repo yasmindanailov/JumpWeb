@@ -366,7 +366,7 @@ borra (y sus líneas): ⚠️ **desmontar este ANTES que el de K1 y el de F5**. 
 el panel escribe —la merienda como tres complementos NUEVOS a 0 € (familia «Merienda», tope 1, en la invitación), el Menú 1/2
 DESENGANCHADO, las tartas sin bloque en «Tartas», calcetines y cono en la lista, combos y cubos en «Para los adultos», la
 invitación ENCENDIDA— y la fiesta `JW-OJO-CFG` (reserva 11236, 14 niños, el 06-10). Lo de antes, en `ojo-config-antes.json`.
-`OJO=desmontar` lo deja como estaba: ⚠️ **desmontar este el PRIMERO**. La sonda: `sonda-config.mjs "<lista>" "<invitación>"`.
+`OJO=desmontar` lo deja como estaba: ⚠️ **desmontar este el PRIMERO** (tras el de (29), que va encima). La sonda: `sonda-config.mjs "<lista>" "<invitación>"`.
 
 (26) **De la R1·T (30-09, `#802`)**: la migración `mail_texts` APLICADA en local y el permiso `emails.edit_texts` sembrado;
 `ojo-r1t.php` (en la carpeta de auditoría) crea el rol `ojo-correos` (solo `emails.edit_texts` y `settings.manage`) y su empleado
@@ -404,6 +404,15 @@ exposiciones igual— y 103 visitas de PRUEBA del 29-09 al 01-10 (`entry_route =
 isla) y b3 40 (16); 20 de escritorio y 3 con las dos variantes, que no cuentan. Se ven en «Analítica → Marketing», con
 «Esta semana». `OJO=desmontar` quita las visitas, el experimento de prueba y la caché del informe. **Desmontado el 02-10**
 tras el visto bueno (medido: 0 visitas de prueba, 0 experimentos `isla`, 0 `isla_accion`).
+
+(29) **«KIDS como JUMP» (02-10, la fila 4 de la lista del owner, `#876`)**: `ojo-kids.php` (en la carpeta de auditoría) va
+ENCIMA de `ojo-config.php`: en el PACK 105 desengancha el Menú 1/2 de la reserva y engancha la merienda de `ojo-config.php` con
+el MISMO enganche que tiene en el 106 (copiado fila a fila); las tartas siguen en el bloque «La tarta» (K2). Y la fiesta
+`JW-OJO-KIDS` (reserva 11775, 14 niños, el 08-10 a las 18:00; Noa, 6 años). Lo de antes, en `ojo-kids-antes.json`.
+`OJO=desmontar` lo deja como estaba (y quita la franja si la creó): ⚠️ **desmontar este ANTES que el de (25)**. La sonda:
+`sonda-kids.mjs <etiqueta> "<lista>" ["<invitación>" --elegir | --quitar]`, a 390 y 1280, con los botones de verdad y «Guardar»
+de la isla; su control, la fiesta `JW-OJO-CFG`. ⚠️ Quitar un complemento en la lista CANCELA su línea (`cancelled_at`), no la
+borra: se mide con `cancelled_at IS NULL`.
 
 ## 9 · La foto vieja del carril (mudada VERBATIM de `carriles/spa.md` el 2026-09-29, su techo)
 
@@ -566,6 +575,12 @@ De «por dónde retomar», mudado VERBATIM el 2026-09-30 al empezar la R1·T (el
        261/261; spec §4.4). ▶ El arnés ENTERO, DE NOCHE (bloquea la local 45 min; parado a 22/129, muerden);
        la Puerta, entera (`mutar-puerta-p1.sh` sin `SOLO`; su resultado, en la spec §4.4 y aquí).
 
+- Mudado VERBATIM de «por dónde retomar» 1 de `carriles/spa.md` el 2026-10-02, 17:50 (su techo), al tomar la lista del owner
+  (`#876`):
+  1. ✅ **LA A4 DEL ACCESO CON CÓDIGO (el cajón), ENTERA EN `main`**: la A4a (`#810`→`#812`) y la A4b (`#813`), las dos con el
+     visto bueno del owner. La red: `mutar-cajon-a4a.sh`/`-a4b.sh` y `sonda-cajon-a4a.mjs`/`-a4b.mjs`. ⚠️ El código, como la
+     isla (`#812`): manda el servidor; si plataforma lo cambia (su Z6g o su A5), el cajón lo sigue. ▶ Lo siguiente, el 1b.
+
 - Mudados VERBATIM del buzón de `carriles/spa.md` el 2026-09-30 (su techo): los dos avisos al carril de CORREOS, que desde
   `#789` son de este carril:
 
@@ -603,6 +618,25 @@ De «por dónde retomar», mudado VERBATIM el 2026-09-30 al empezar la R1·T (el
   firma sin avisar. Su defecto medido de `OccupancyReport::missing()`, tarea mía en «por dónde retomar» 3.
 - **Plataforma 29-09** (`#850`/`#851`, el guard `admin`, `PANEL_PATH`, el authenticator): leído; mis pruebas del panel usan
   `actingAs` sin guard (medido al fusionar: suite verde sobre su árbol) y nada mío llama a `auth('web')` en el panel.
+
+### «Atendido» del 30-09 y el 01-10 (mudado VERBATIM de `carriles/spa.md` el 2026-10-02, su techo)
+- **Plataforma 01-10** (leyó mi A4 y `LinkIsland`; `#863`→`#867`; la Z6a y la Z6b·1 de su isla, nada mío tocado): leídos.
+  `#863` es suyo; `isla_razon` y `variante`, a mi analítica («retomar» 3). Leyó también mi aviso previo de `#815` («de
+  acuerdo, hazlo tú», con tres notas: hechas, mi aviso de arriba) y `LinkIsland` EN `main`: los dos, retirados. Y mis notas
+  para `/privacidad` (`#750`, `#754`, la TP·1 y `#793`) están DENTRO del texto nuevo de `textos-legales.md` (medido el 02-10:
+  las filas 1, 10, 12, 14 y 15 de su §1.2 y el «⟨si felicitaciones⟩» del punto 15 de su §4.2.1; publicarlo espera al owner y la
+  asesoría): retiradas.
+- **Plataforma 30-09 noche** (el zip (6) y el reparto del owner, `#861`; su lectura de mi previo de la A4; `#860` en `main`):
+  leídos. La A4 con el `CodeInput`, hecha en la A4a (`#811`); la Puerta, `LinkIsland` y la imagen de la invitación, a «por
+  dónde retomar» 1b; los correos del zip, al 2. Su `PLEGABLE_DE_ZONA.password` se va en su A5.
+- **Plataforma 30-09, lo último** (`#859` lo que tocó de mi T3; aviso previo `#860`, el aviso pedirá solo lo encendido; `#858`
+  la casilla): leídos. Nada mío a medias en el consentimiento; la casilla, a mi A4. Su sugerencia (el faro de
+  `/api/v1/events` sin conexión deja un error en la consola: mirar `navigator.onLine`), a la analítica («retomar» 3).
+- **Plataforma 30-09 noche** (el TEXTO de `/cookies` para producción, aviso previo; la guarda de `{code}` en mi R1·T; la A3a/A3b
+  `#857`; la A2b `#856`, contrato 1.57.0): leídos. Nada mío a medias en `/cookies`; la guarda, hecha y medida (mi aviso de
+  arriba); lo de la A3 y la A2b, para mi A4 («por dónde retomar» 1).
+- **Plataforma 30-09** (la A2a, `#855`, contrato 1.56.0: `POST /me/confirm-code` y `code` en las cuatro acciones; tocó otra vez
+  `EmailTiming` y dos censos; la sesión atada al token): leído; para mi A4. Nada mío cambia el token a mano.
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 

@@ -7,8 +7,8 @@
 > **`acceso-con-codigo.md` §0** (la A4 del cajón ✅ en `main`) · `correos-rediseno.md` §0 ·
 > `fiesta-sistema-nuevo.md` §4.17–§4.19 · `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7
 > (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md` §4.11 · `celebracion-e-invitacion.md` §0 ·
-> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-02, 16:40
-> (la Puerta ENTERA y la Z6c·3 en `main`; el arnés entero de la Puerta, de noche).
+> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-02, 17:50
+> (la lista del owner, `#876`: la fila 4, montada en la local; la 8, por medir; el arnés entero de la Puerta, de noche).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
@@ -46,13 +46,22 @@
 
 ## Por dónde retomar, en orden
 
+▶▶▶ **AHORA, LA LISTA DEL OWNER DEL 02-10 (tarde)**: lo que plataforma me pasó (`#876`; `isla-y-landing-nueva.md` §4.28,
+filas 4 y 8), ANTES que la R1c («tus puntos primero»).
+- 🟦 **Fila 4, los complementos y las opciones del menú en la lista**: SIN CÓDIGO (K3, `#808`): el JUMP (106) ya lo tenía en la
+  local; el owner eligió (02-10) el KIDS (105) igual, montado con `ojo-kids.php` y medido con su sonda a 390 y 1280 (`CARRIL-SPA`
+  §8 (29)). ▶ Falta su OJO en vivo. En producción, con la v2.0.0: la receta, `fiesta-sistema-nuevo.md` §4.17 «K3».
+- **Fila 8, las altas en casa y en el parque**: el alta (`user_registered`) se ata a la visita y la visita guarda su `utm_source`,
+  pero `CustomersReport` solo corta por `method`: una tanda, con su «al detalle» MEDIDO en `analitica-para-decidir.md`, su arnés
+  `SOLO=` y el enlace del cartel de plataforma verificado en la local. ⚠️ v1.1.0 no tiene ni la analítica ni `#mi-cuenta`
+  (`#774`): un QR impreso hoy abre la portada y no cuenta nada hasta la v2.0.0. Antes, el ancla rota del arnés («retomar» 3).
+
 0. ✅ **LOS COMPLEMENTOS DE LA FIESTA** (`#806`→`#808`, `fiesta-sistema-nuevo.md` §4.17): K1 y K2 en `main`; K3 es DATO del
    panel (la receta, en §4.17 «K3»): lo configura el parque en SU panel al desplegar (merienda, calcetines, cono, tartas). ▶
    **Antes de proponer código en cualquier tanda, medir si el panel ya lo configura** (montaje y sonda en la local); si algo
    ya existía, parar y decírselo al owner (`#808`).
-1. ✅ **LA A4 DEL ACCESO CON CÓDIGO (el cajón), ENTERA EN `main`**: la A4a (`#810`→`#812`) y la A4b (`#813`), las dos con el
-   visto bueno del owner. La red: `mutar-cajon-a4a.sh`/`-a4b.sh` y `sonda-cajon-a4a.mjs`/`-a4b.mjs`. ⚠️ El código, como la
-   isla (`#812`): manda el servidor; si plataforma lo cambia (su Z6g o su A5), el cajón lo sigue. ▶ Lo siguiente, el 1b.
+1. ✅ **LA A4 DEL ACCESO CON CÓDIGO (el cajón), ENTERA EN `main`**: su punto, mudado verbatim a `CARRIL-SPA.md` §9 (02-10).
+   ⚠️ El código, como la isla (`#812`): manda el servidor; si plataforma lo cambia, el cajón lo sigue.
 1b. ✅ **Lo del zip (6) que el owner repartió al SPA** (`#861`; `isla-y-landing-nueva.md` §4.27), EN `main` con el visto
    bueno: `LinkIsland` (§4.18), la imagen de la invitación (§4.19; 🟦 hasta verla en WhatsApp) y **la Puerta entera**
    (`puerta-nueva.md` §4.4; montaje y sonda, `CARRIL-SPA.md` §8 (27)). ▶ **Queda el arnés ENTERO de la Puerta, DE NOCHE**
@@ -63,7 +72,8 @@
 2. ▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4; `#789`, `#800`→`#804`)**: ✅ R1a, R1b y **R1·T** en `main` (la
    R1·T revisada: §4.2.2; su sonda y el medidor de bloques, `CARRIL-SPA` §8 (26)). Del zip (6) (`#861`): el 8, «482-913 es tu
    código para entrar» sin botón; «Quién firma el descargo» en el 1 y el 3 (la isla ya lo dice, `#875`:
-   «menores a tu cargo», nunca «tus hijos»; lo mío, las dos líneas del 1, el 3 y lo que diga el cajón); las dos horas (90 + 30). ✅ **La R1·T2** (`#809`:
+   «menores a tu cargo», nunca «tus hijos»; lo mío, las dos líneas del 1, el 3 y lo que diga el cajón); las dos horas (90 + 30; y las de `lang/*/fiesta.php`,
+   `preheader` y `linea`: Z6e `#873`). ✅ **La R1·T2** (`#809`:
    «Solo sale si…» y la «Situación», §4.2.3–§4.2.4) EN `main` con el visto bueno. Cada tanda con su «al detalle» MEDIDO
    en la spec antes de codificar, en `wip/…`, con su arnés y al ojo del owner en Mailpit (el banco,
    `php scripts/banco-correos.php [filtro]`, y la sonda de la carpeta de auditoría, `sonda-correos-r1a.mjs N`):
@@ -79,7 +89,9 @@
    así que cuenta robots (`webdriver`, las sondas) y personal, que el embudo y los experimentos excluyen; arreglarlo con su
    mutación antes de retomar la analítica (su `sonda-demanda.mjs` borra lo suyo). Y de la A1 de plataforma (`#853`): el
    `password` de `CustomersReport::METHODS` ya es «con el formulario» (renombrarlo) y `user_logged_in` cuenta las vueltas de un
-   dispositivo recordado. ✅ **La Z6c·3, la medida del B3, EN `main` con el visto bueno del owner** (02-10; `analitica.md` §4.4:
+   dispositivo recordado. Y (02-10) el ancla de `mutar-analitica-decidir.sh:880` (A5): busca `$data['current_password']` y la
+   línea dice hoy `$emailChanges ? $data['code'] : null`: re-apuntarla antes de la siguiente pasada. El faro de `/api/v1/events`
+   sin conexión deja un error en la consola (plataforma, 30-09: mirar `navigator.onLine`). ✅ **La Z6c·3, la medida del B3, EN `main` con el visto bueno del owner** (02-10; `analitica.md` §4.4:
    los tres `isla_*` al contrato, 1.60.0; `isla_accion` por visita en móvil en el informe; arnés `SOLO=B3` 10/10; los datos de
    prueba, desmontados). En `main` y aprobadas
    T0→T4, con TP·1→TP·3b y T3d (arneses `SOLO=<tanda>` de `mutar-analitica-decidir.sh`; sondas y fixtures `ojo-tp2.php` y
@@ -284,6 +296,11 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   código `MIN_REVIEWS = 1` (`#494`): no la toco yo.
 
 ### Atendido
+- **Plataforma 02-10 tarde** (`#876`, la lista del owner; y tres avisos suyos del 02-10 sin acuse aquí: la A5 `#869`/`#870`, la
+  Z6e `#873` y la Z6g·1 `#871`): leídos. `#876`: sus filas 4 y 8, arriba en «retomar». A5: nada mío a medias; el ancla de mi
+  arnés y el `password` de `user_registered` (mío), a «retomar» 3. Z6e: no cambio las props ni el marcado de
+  `x-fiesta.invitacion` sin avisar; las «dos horas» de `fiesta.php`, a «retomar» 2. Z6g·1: mi correo 8 usará
+  `LoginCodes::shown()`; no cambio la forma de `sidebar/code-input.js` sin avisar; su pista «Te llega de {negocio}…», sin decidir.
 - **Plataforma 02-10 tarde** (`#874`, la traducida; `#875`, «Quién firma el descargo» en la isla): leídos. `->untranslated()`
   en la Puerta, HECHO (`puerta-nueva.md` §4.4); lo mío de `#875` (el correo 1, el 3 y el cajón), a «retomar» 2; las claves
   que retira de `isla.php` no las lee nada mío (medido). Mi aviso de `#771`, hecho por ellos: retirado.
@@ -291,23 +308,8 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   (sus tres notas, hechas; el kit sale con el despliegue de la instancia): retirado. El texto, en el `git log`. Y su aviso
   previo de la Z6c (`318fec68`, `#868`, la flecha naranja): leído; mi respuesta, en el `git log`; la Z6c·3,
   hecha (arriba).
-- **Plataforma 01-10** (leyó mi A4 y `LinkIsland`; `#863`→`#867`; la Z6a y la Z6b·1 de su isla, nada mío tocado): leídos.
-  `#863` es suyo; `isla_razon` y `variante`, a mi analítica («retomar» 3). Leyó también mi aviso previo de `#815` («de
-  acuerdo, hazlo tú», con tres notas: hechas, mi aviso de arriba) y `LinkIsland` EN `main`: los dos, retirados. Y mis notas
-  para `/privacidad` (`#750`, `#754`, la TP·1 y `#793`) están DENTRO del texto nuevo de `textos-legales.md` (medido el 02-10:
-  las filas 1, 10, 12, 14 y 15 de su §1.2 y el «⟨si felicitaciones⟩» del punto 15 de su §4.2.1; publicarlo espera al owner y la
-  asesoría): retiradas.
-- **Plataforma 30-09 noche** (el zip (6) y el reparto del owner, `#861`; su lectura de mi previo de la A4; `#860` en `main`):
-  leídos. La A4 con el `CodeInput`, hecha en la A4a (`#811`); la Puerta, `LinkIsland` y la imagen de la invitación, a «por
-  dónde retomar» 1b; los correos del zip, al 2. Su `PLEGABLE_DE_ZONA.password` se va en su A5.
-- **Plataforma 30-09, lo último** (`#859` lo que tocó de mi T3; aviso previo `#860`, el aviso pedirá solo lo encendido; `#858`
-  la casilla): leídos. Nada mío a medias en el consentimiento; la casilla, a mi A4. Su sugerencia (el faro de
-  `/api/v1/events` sin conexión deja un error en la consola: mirar `navigator.onLine`), a la analítica («retomar» 3).
-- **Plataforma 30-09 noche** (el TEXTO de `/cookies` para producción, aviso previo; la guarda de `{code}` en mi R1·T; la A3a/A3b
-  `#857`; la A2b `#856`, contrato 1.57.0): leídos. Nada mío a medias en `/cookies`; la guarda, hecha y medida (mi aviso de
-  arriba); lo de la A3 y la A2b, para mi A4 («por dónde retomar» 1).
-- **Plataforma 30-09** (la A2a, `#855`, contrato 1.56.0: `POST /me/confirm-code` y `code` en las cuatro acciones; tocó otra vez
-  `EmailTiming` y dos censos; la sesión atada al token): leído; para mi A4. Nada mío cambia el token a mano.
+- Del 30-09 y el 01-10 (la A2a, la A2b y la A3, `/cookies`, `#857`→`#867`, el zip (6) y su reparto; mis previos de la A4, de
+  `#815` y de `LinkIsland`, leídos por plataforma): mudados verbatim a `CARRIL-SPA.md` §9 (02-10).
 - Del 25 al 29-09 (la A1 `#853`/`#854`, T6f/T6g, la hoja de correo, `#792`, `#847`/`#848`, `#846` —no cambio la firma de
   `createMissingReporter`/`missingMonths` sin avisar—, `#850`/`#851`, NORMAS `#842`, `#836`, T5f, `#789`/`#822`, ESLint,
   `#788`/`#780`, `#765`) y web `#540`: mudados verbatim a `CARRIL-SPA.md` §9 (29-09 y 30-09 noche).
