@@ -481,6 +481,60 @@ el desplegable (solo en esos correos, la situación que no es del correo no se p
   en el caso → prueba nueva con dos fiestas y la última cancelada (`AuthorizableReservations` ya no la da). Sonda
   `storage/app/audit/sonda-r1t2.mjs` (fuera de git) a 1280 y 390: **16/16**.
 
+### 4.3 La R2 al detalle — los correos de la RESERVA (medida el 03-10, antes de codificar; del agente contra el brief, vetable al ojo)
+
+**El encargo** (el owner, 03-10: «vamos con el punto 1 y el 3»): el 1, el 1b, el 2, el 3, el 4, el 5 y el 6 con el contenido
+del brief, TAL CUAL (§0), sobre la plantilla de la R1. Fuente: `paginas/correos/correos.js` y `plantilla.js` del zip (6).
+
+**Medido, lo que pide y lo que hay**:
+1. **Siete bloques que la R1 no tiene** (sus recetas, en `plantilla.js`): el RESGUARDO DE CAMPOS (la hoja del calendario
+   —día de la semana, número, mes—, la hora grande, qué y cuántos, el precio, el número en mono, sus filas de dinero con la
+   que queda en negrita y dos enlaces claros: «Cómo llegar» y «Añadir al calendario»), el **QR** (la imagen dentro, el código
+   para dictar en mono y «Abrir Mi QR», principal o claro), la **LISTA** con iconos en su círculo (y la TAREA, en su aro), la
+   **SECCIÓN** (titular y una frase), los **PASOS** numerados con su botón, **DOS BOTONES** (principal y claro) y el
+   **MOTIVO** en mono. Y la chapa sobre el titular (ya está) y la línea «Responde a este correo…» en el pie.
+2. **Texto con ENLACES** dentro de la frase («escríbenos por WhatsApp», «añádelos y firma por ellos»): hoy `rico()` solo
+   entiende `**negrita**`, y los textos son editables (R1·T).
+3. **Datos que el correo no tiene hoy**: el QR va ADJUNTO (`carne-qr.png`, `CustomerCards`) y no dentro; no hay `.ics` de
+   una reserva (`CalendarFile`, el de la invitación, sirve tal cual); «Cómo llegar» es `address.maps_url` (el de la web);
+   WhatsApp, teléfono y correo, del pie (`MailPie`); y responder NO llega al parque (solo el de contacto lleva `replyTo`).
+4. **Lo que el brief trae de PlayJump** y no puede ir en el producto (`#1`): «Todos los profesores entran gratis», «los
+   calcetines van incluidos», «cada alumno salta en la zona de su edad». El producto no sabe eso; el parque sí.
+5. **Cuándo sale**: el 2 es HOY dos correos (`OrderConfirmation` y `GuestFormRequest`, que también manda el panel y el pedido
+   del mostrador) y el diseño los funde en uno; el 3 sale hoy SOLO si queda algo y el diseño, SIEMPRE, con el QR; el 5
+   ofrece Bizum y el producto lo enseña solo si `payment.marks` lo lleva.
+
+**La forma (propuesta del agente, vetable)**:
+- **Los bloques, en `MailDocument`, con sus verbos en `BrandedMailMessage`** (como `code()`): `slip()` (el resguardo de
+  campos; las FILAS de dinero, del libro del pedido —`EmailBookBlock`—, para que el correo y Mi cuenta no se contradigan),
+  `qr()`, `list()`, `section()`, `steps()`, `buttons()`, `reason()`; y el pie, `replies()`. Colores, roles nuevos de
+  `MailTheme` con su pareja oscura y sus guardas AA (la hoja y su letra, lo callado y su borde, el punto, el círculo).
+- **Los enlaces dentro del texto, por NOMBRE**: el texto editable escribe `[escríbenos por WhatsApp](whatsapp)` y la URL la
+  pone el correo (`whatsapp`, `tel`, `mi_cuenta`, `menores`…); un nombre que el correo no ofrece no se pinta, y
+  `MailTextRules` lo trata como una variable (obligatorio el de fábrica, ninguno inventado). Nunca una URL escrita a mano.
+- **El QR DENTRO, incrustado** (`cid:`, la imagen viaja en el correo y Gmail la enseña sin «cargar imágenes») y además
+  ADJUNTO, como el diseño; el código para dictar, el token en grupos (el gemelo de `tokenGroups()` de la isla).
+- **El `.ics` de una reserva**: ruta FIRMADA (como la invitación: sin firma no se abre), con `CalendarFile`.
+- **Responder llega al parque**: `replyTo` = el correo del panel (`contact.email`) en los de la reserva, y el pie lo dice.
+- **«Antes de venir»**: las líneas que salen de DATOS las compone el correo —quién firma (`#875`: «Menores a tu cargo…»,
+  «Otros adultos…», con la tarea si faltan menores por añadir), los calcetines comprados (de las líneas del pedido) y la
+  hora—; las que son de cada parque (las de la excursión), TEXTOS EDITABLES del correo con un valor de fábrica genérico,
+  como los «90 minutos» del 12.
+- **«Si cambian los planes»**: el plazo de los hechos de cambio de la reserva (los que ya da la API, `MeReservationChange…`),
+  nunca una cifra del brief.
+
+**Las tandas** (cada una en `wip/`, al ojo en Mailpit con `banco-correos.php`):
+- **R2a · la base**: los siete bloques, los roles, los enlaces por nombre (con su regla en R1·T), los iconos que faltan
+  (`calendar-plus`, `users`, `user-round-plus`, `footprints`, `pen-line`, `banknote`, `reply`, `graduation-cap`, `ruler`), el
+  QR incrustado, el `.ics` firmado y el `replyTo`. Sin cambiar aún ningún correo: el banco los pinta con un correo de muestra.
+- **R2b · el 1 y el 1b** · **R2c · el 2** (un correo con sus dos pasos; `GuestFormRequest` se queda para el REENVÍO del
+  panel) · **R2d · el 3 (siempre) y el 4** · **R2e · el 5 y el 6**.
+- **Después, el punto 3** del owner: la R3 (el 2b), C1 los comerciales, C2 las felicitaciones (su copy, con el owner antes)
+  y la analítica (T6 cohortes → T7 pérdidas → T8 satisfacción).
+
+**`[DECIDIDO owner]` 03-10 (`#915`)**, las tres recomendadas: (a) el 3, SIEMPRE con su QR, como el diseño (hoy solo si
+queda algo); (b) el 2, UN correo (hoy dos); (c) en el 5, Bizum solo si el parque lo tiene en `payment.marks`.
+
 ## 7. Revisión y decisión
 
 - ✅ **`[DECIDIDO owner]` 29-09 (`#801`)**: (1) **el 7**: el correo sigue siendo la encuesta anónima y, al terminarla, la

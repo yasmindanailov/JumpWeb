@@ -733,6 +733,24 @@ filas 4 y 8), ANTES que la R1c («tus puntos primero»).
   previo de la Z6c (`318fec68`, `#868`, la flecha naranja): leído; mi respuesta, en el `git log`; la Z6c·3,
   hecha (arriba).
 
+### El punto 2 de «retomar» (los correos), su cola (mudada VERBATIM de `carriles/spa.md` el 2026-10-03, al empezar la R2)
+
+Del zip (6) (`#861`): el 8, «482-913 es tu
+   código para entrar» sin botón; «Quién firma el descargo» en el 1 y el 3 (la isla ya lo dice, `#875`:
+   «menores a tu cargo», nunca «tus hijos»; lo mío, las dos líneas del 1, el 3 y lo que diga el cajón); las dos horas (90 + 30; y las de `lang/*/fiesta.php`,
+   `preheader` y `linea`: Z6e `#873`). ✅ **La R1·T2** (`#809`:
+   «Solo sale si…» y la «Situación», §4.2.3–§4.2.4) EN `main` con el visto bueno. Cada tanda con su «al detalle» MEDIDO
+   en la spec antes de codificar, en `wip/…`, con su arnés y al ojo del owner en Mailpit (el banco,
+   `php scripts/banco-correos.php [filtro]`, y la sonda de la carpeta de auditoría, `sonda-correos-r1a.mjs N`):
+   **R1c** los 27 correos a la plantilla → **R2** la reserva (1, 1b, 2, 3, 4, 5, 6: el QR dentro, el
+   calendario, «Cómo llegar», WhatsApp, responder al parque) → **R3** el 2b → **C1** los comerciales (11, el 12 ampliado,
+   13a/b, 6b: consentimiento, «una vez», la baja LSSI) → **C2** las felicitaciones (TP·3c; el copy, con el owner) → **C3** las
+   ocasiones. El 7: la encuesta y Google en su página de gracias; sin encuesta activa, solo la reseña (`#801`). Los grupos
+   8–10, cuando el diseño tenga sus textos. También míos (`#789`): la PUERTA (su diseño, en el próximo zip) y **T2·9** (las
+   reseñas en la API, `#771`: ver si queda la selección o se retira). Al acabar la R1c se retiran `vendor/mail/**`,
+   `themes/brand.css` y el layout viejo (§4.1.1). El cajón ya dice «Tu cumpleaños» (`#792`, 29-09, visto por el owner).
+   ▶ (03-10) Hecho desde entonces: el 8 (plataforma, Z6g·1), las dos horas del 12 (la R1c) y el molde viejo fuera (la R1c).
+
 ### Avisos a plataforma del 25→27-09 (mudados VERBATIM de `carriles/spa.md` el 2026-10-03, mañana, su techo)
 
 ### ❗❗ Para el carril de PLATAFORMA (emisor: SPA, 2026-09-25 → 27-09)

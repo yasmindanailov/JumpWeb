@@ -2,7 +2,7 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **910–939** (del owner, 02-10; 790–819 agotada con `#819`) · Último usado: **`#914`** (el siguiente, `#915`) · La banda está dada de alta en la
+> Banda: **910–939** (del owner, 02-10; 790–819 agotada con `#819`) · Último usado: **`#915`** (el siguiente, `#916`) · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs:
 > **`acceso-con-codigo.md` §0** (la A4 del cajón ✅ en `main`) · `correos-rediseno.md` §0 ·
 > `fiesta-sistema-nuevo.md` §4.17–§4.21 · `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7
@@ -69,20 +69,11 @@ portada y no cuenta nada hasta la v2.0.0.
    ▶ **Lo siguiente: la R1c de los correos** («retomar» 2; su «al detalle», `correos-rediseno.md` §4.1.4).
 2. ▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4; `#789`, `#800`→`#804`)**: ✅ R1a, R1b y **R1·T** en `main` (la
    R1·T revisada: §4.2.2; su sonda y el medidor de bloques, `CARRIL-SPA` §8 (26)). ✅ **R1c EN `main`** (03-10, §4.1.4,
-   visto bueno del owner; arnés 12/12). ⚠️ Un arnés copia por RUTA, no por nombre (dos `codigo.blade.php`). Del zip (6) (`#861`): el 8, «482-913 es tu
-   código para entrar» sin botón; «Quién firma el descargo» en el 1 y el 3 (la isla ya lo dice, `#875`:
-   «menores a tu cargo», nunca «tus hijos»; lo mío, las dos líneas del 1, el 3 y lo que diga el cajón); las dos horas (90 + 30; y las de `lang/*/fiesta.php`,
-   `preheader` y `linea`: Z6e `#873`). ✅ **La R1·T2** (`#809`:
-   «Solo sale si…» y la «Situación», §4.2.3–§4.2.4) EN `main` con el visto bueno. Cada tanda con su «al detalle» MEDIDO
-   en la spec antes de codificar, en `wip/…`, con su arnés y al ojo del owner en Mailpit (el banco,
-   `php scripts/banco-correos.php [filtro]`, y la sonda de la carpeta de auditoría, `sonda-correos-r1a.mjs N`):
-   **R1c** los 27 correos a la plantilla → **R2** la reserva (1, 1b, 2, 3, 4, 5, 6: el QR dentro, el
-   calendario, «Cómo llegar», WhatsApp, responder al parque) → **R3** el 2b → **C1** los comerciales (11, el 12 ampliado,
-   13a/b, 6b: consentimiento, «una vez», la baja LSSI) → **C2** las felicitaciones (TP·3c; el copy, con el owner) → **C3** las
-   ocasiones. El 7: la encuesta y Google en su página de gracias; sin encuesta activa, solo la reseña (`#801`). Los grupos
-   8–10, cuando el diseño tenga sus textos. También míos (`#789`): la PUERTA (su diseño, en el próximo zip) y **T2·9** (las
-   reseñas en la API, `#771`: ver si queda la selección o se retira). Al acabar la R1c se retiran `vendor/mail/**`,
-   `themes/brand.css` y el layout viejo (§4.1.1). El cajón ya dice «Tu cumpleaños» (`#792`, 29-09, visto por el owner).
+   visto bueno del owner; arnés 12/12). ▶▶ **AHORA, LA R2** (§4.3, `#915`: el 3 siempre, el 2 uno, Bizum si lo hay): R2a la
+   base → R2b el 1 y el 1b → R2c el 2 → R2d el 3 y el 4 → R2e el 5 y el 6 → R3 el 2b → C1 los comerciales (11, el 12
+   ampliado, 13a/b, 6b) → C2 las felicitaciones (su copy, con el owner) → C3 las ocasiones; y la analítica (3). «Quién firma»
+   (`#875`), dentro de la R2. Cada tanda, «al detalle» medido → `wip/` → arnés → ojo en Mailpit (`banco-correos.php`). El
+   resto del punto (el zip (6), el 7, los grupos 8–10, T2·9), mudado verbatim a `CARRIL-SPA.md` §9 (03-10).
 3. ⏸ **LA ANALÍTICA PARA DECIDIR (`#755`, `specs/analitica-para-decidir.md`), EN PAUSA tras la T4**: ✅ el defecto de
    `OccupancyReport::missing()` que midió plataforma (29-09: contaba robots y personal), ARREGLADO en la TA·0 (`cleanEvents()`,
    `84524415`; comprobado el 03-10). Y de la A1 de plataforma (`#853`): el
