@@ -40,7 +40,7 @@
 | 1 | Reservado, entradas | `OrderConfirmation` | HAY, cambia: el QR dentro (hoy, adjunto), «Antes de venir», «Si cambian los planes», calendario y «Cómo llegar» |
 | 1b | Reservada, excursión | `OrderConfirmation` | HAY, cambia como el 1 |
 | 2 | Fiesta reservada | `OrderConfirmation` y `GuestFormRequest` | HAY, cambia: «Ahora, dos cosas» con sus dos botones |
-| 2b | Tres días antes de la fiesta | — | FALTA |
+| 2b | Tres días antes de la fiesta | — | NO SE HACE (`#919`): sus dos disparadores los retiró el owner (`#805`, `#912`); lo cubre «Falta elegir…» (`#913`) |
 | 3 | Mañana, entradas | `VisitEveNotice` (solo si queda algo) | A MEDIAS: el diseño lo manda siempre, con el QR |
 | 4 | Mañana es la fiesta | `VisitEveNotice` | HAY, cambia |
 | 5 | El pago no ha salido | `OrderPaymentDeclined` | HAY, cambia |
@@ -621,6 +621,55 @@ queda algo); (b) el 2, UN correo (hoy dos); (c) en el 5, Bizum solo si el parque
 - Los dos, sin chapa ni resguardo (el diseño); sus textos viejos se van. Verificación: `PaymentMailsTest` (4),
   `OrderNotificationsTest` (Bizum solo con la marca), el censo con `con_bizum`, `sin_bizum`, `con_hora` y `varias`. Arnés
   `scripts/mutar-correo-r2e.sh` **7/7** con su control (51 s).
+
+**La R3, medida (03-10): el 2b NO se hace (`#919`, del agente, vetable)**. El diseño lo dispara con dos cosas y el owner las
+retiró las dos DESPUÉS: «Faltan N invitados por contestar» con «Escribir el recordatorio» (`#805`: una fila sin respuesta es
+confirmada; el recordatorio, retirado entero, con su ruta y sus textos —la spec de la fiesta, §4.16: «el mockup aún los
+pinta: `#805` manda sobre él»—) y «la tarta, hasta el jueves» (`#912`, P1·b, 02-10 noche: fuera el aviso de la tarta). Lo
+que queda de su idea —lo que aún puede dejarse hecho antes de que se cierre la lista— ya lo manda «Falta elegir…» el día
+antes del plazo (`ChoiceReminderNotice`, `#913`/`#914`). Construirlo sería devolver lo que el owner quitó.
+
+### 4.4 La C1 al detalle — los COMERCIALES automáticos (medida el 03-10, antes de codificar; del agente, vetable)
+
+**El encargo** (el punto 3 del owner): el 11 «El año que viene», el 12 ampliado «El cumple se acerca», el 13a/13b «Hace
+tiempo que no venís» y el 6b «Tienes una reserva a medias», con su diseño (`paginas/correos/correos-comerciales.js`). Cada uno,
+con su comando, su público, su «una vez por persona y periodo» y su baja.
+
+**Medido, lo que pide y lo que hay**:
+1. **El consentimiento**: hay UNO, `users.marketing_opt_in` («Quiero recibir novedades y ofertas del parque», en Mi cuenta y
+   en el alta; retirarlo es un clic, `PUT /me/marketing`, art. 7.3), con su prueba en `consents` (`TYPE_MARKETING`). En la
+   local, 19 de 193 cuentas. El diseño pone en el pie dos motivos: «porque has venido al parque» (11, 13, 6b: el
+   cliente sin casilla, LSSI 21.2) y «porque marcaste la casilla de novedades» (12, ocasiones). §5 de esta spec decía «un
+   comercial sin consentimiento no sale». ▶ **Al owner** (pregunta 1).
+2. **El 11, diez meses después de una fiesta**: el nombre y la edad de quien cumple viven en `event_data`, y desde `#863` se
+   BORRAN a los 14 días de la visita (la promesa de la privacidad). Diez meses después, el producto sabe que hubo una fiesta y
+   su fecha, pero no de quién: «¿Repetimos el cumple de Vera?» solo es posible si Vera es un menor DECLARADO en la cuenta
+   (`dependents`, su nombre y su fecha siguen mientras la cuenta existe). ▶ **Al owner** (pregunta 2).
+3. **El 12 ampliado**: los menores declarados (98 con fecha en la local) de quien no ha celebrado aquí, seis semanas antes
+   de su cumpleaños; el producto tiene ya el correo (`BirthdayComingNotice`, a quien firmó «Avísame de fechas», `#750`) con su
+   baja firmada y su `List-Unsubscribe`: se amplía su público, sin escribir a nadie dos veces el mismo cumple.
+4. **El 13a/13b**: tres meses sin reservar; «con niños» si la cuenta tiene menores declarados o su última visita fue de un
+   producto solo de menores (`minors_only`), «a saltar» si no. El precio «desde», del catálogo (el más barato que se vende).
+5. **El 6b**: un pedido de una cuenta que caducó SIN llegar a la pasarela (sin `Payment`: el que llegó y no pagó ya recibe el
+   6), a las 24 horas, una vez, y solo si su hora sigue libre (`SlotAvailability`).
+6. **Lo del brief que es de PlayJump** y no del producto: «90 minutos», «Desde 15,95 €», «Kids desde 8 €», «la ilimitada por
+   18 € de lunes a jueves», «la Noche Jump», «los adultos que acompañan no pagan». Los precios salen del catálogo; lo demás, en
+   textos editables con un valor de fábrica genérico. Los huecos del diseño ([Novedad], [Bono], [Club], [Noche Jump]) son de
+   piezas que NO existen: no se pintan («cuando existan», dice el propio diseño).
+7. **La baja** (LSSI 22.1): una ruta FIRMADA y sin caducidad por correo, con un botón (el GET no escribe, como la de «Avísame»),
+   que retira `marketing_opt_in` con su prueba (`AccountPrivacy::setMarketing`), y la cabecera `List-Unsubscribe`.
+
+**`[DECIDIDO owner]` 03-10 (`#920`)**: (1) SOLO a quien marcó «novedades», con «porque marcaste la casilla de novedades»;
+(2) el 11, solo si quien cumplió es un menor DECLARADO (medido: `DependentAssigner::assignHonoree()` lo ata a la fiesta en
+`dependent_assignments`, que el plazo de `#863` no borra); (3) de lo de PlayJump, solo lo del catálogo, sin frases de oferta y
+sin los huecos del diseño.
+
+**La forma (propuesta del agente, vetable)**: cada correo, con su comando a la hora del parque (el diseño los fecha a las
+10:00) y su marca de «ya enviado» en la fila de lo que lo dispara —como `eve_notice_at`—; ninguno sale a una cuenta
+anonimizada, sin correo o sin «novedades», y todos llevan el pie COMERCIAL —por qué lo recibe y la baja, con
+`List-Unsubscribe`— en el bloque `pie` (ya lo prevé). Las tandas, cada una en `wip/`, con su arnés y al ojo en Mailpit:
+**C1a** la baja de «novedades» y el pie comercial, con el 12 ampliado (su correo ya existe) · **C1b** el 13a/13b · **C1c** el
+11 · **C1d** el 6b.
 
 ## 7. Revisión y decisión
 
