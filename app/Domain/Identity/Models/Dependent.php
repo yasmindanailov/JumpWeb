@@ -40,6 +40,11 @@ use Illuminate\Database\Query\Builder as QueryBuilder;
  * ⚠️ **No pertenece a Booking** (§4.6): la asignación de una entrada la POSEE Identity
  * (`DependentAssignment`, tanda 4) y referencia el ítem por su id ENTERO (`ModuleBoundariesTest`:
  * Booking no ve a Identity; Identity lee las líneas por `Booking\Contracts\CheckoutLines`).
+ *
+ * Las dos fechas, declaradas para el análisis estático (sus casts, `immutable_date`, no los lee):
+ *
+ * @property CarbonImmutable $born_on
+ * @property CarbonImmutable|null $birthday_mail_for el cumpleaños para el que ya salió el 12 a la cuenta (la C1a, `#920`)
  */
 #[Fillable(['user_id', 'name', 'surname', 'relationship', 'born_on'])]
 class Dependent extends Model
@@ -86,6 +91,8 @@ class Dependent extends Model
     {
         return [
             'born_on' => 'immutable_date',
+            // El cumpleaños para el que ya salió «El cumple se acerca» (el 12 ampliado, `#920`): la escribe el comando.
+            'birthday_mail_for' => 'immutable_date',
             'removed_at' => 'immutable_datetime',
         ];
     }

@@ -26,6 +26,7 @@ use App\Http\Controllers\GuestFormController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\HonoreeWaiverController;
 use App\Http\Controllers\InvitationPageController;
+use App\Http\Controllers\MarketingUnsubscribeController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PaqueteDelCajonController;
 use App\Http\Controllers\Payments\RedsysReturnController;
@@ -510,6 +511,19 @@ Route::withoutMiddleware([ResolveVisitor::class.':'.ResolveVisitor::MINT])->grou
         ->middleware(['signed', 'throttle:20,1', 'no-store'])
         ->missing(fn () => abort(404))
         ->name('birthday-reminder.unsubscribe.confirm');
+
+    // LA BAJA de «novedades» (`specs/correos-rediseno.md` §4.4, la C1a, `#920`): la de los correos comerciales. FIRMADAS y
+    // sin caducidad, como la de arriba (LSSI art. 22.1); el GET enseña UN botón y solo el POST escribe, con su prueba.
+    Route::get('/novedades/{user}/baja', [MarketingUnsubscribeController::class, 'show'])
+        ->whereNumber('user')
+        ->middleware(['signed', 'throttle:60,1', 'no-store'])
+        ->missing(fn () => abort(404))
+        ->name('marketing.unsubscribe');
+    Route::post('/novedades/{user}/baja', [MarketingUnsubscribeController::class, 'confirm'])
+        ->whereNumber('user')
+        ->middleware(['signed', 'throttle:20,1', 'no-store'])
+        ->missing(fn () => abort(404))
+        ->name('marketing.unsubscribe.confirm');
 
 });
 // ═══ fin de las páginas enfocadas de la fiesta ════════════════════════════════════════════════════

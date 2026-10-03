@@ -510,7 +510,10 @@ Las PERSONAS A CARGO que un titular declara (`specs/menores-a-cargo.md` §4.1–
 `user_id` FK **RESTRICT** (la fila sobrevive a la cuenta mientras haya una firma detrás; la limpieza de
 go-live la borra explícitamente antes que `users`) · `name` (120; el nombre de pila, que **sí** enseña
 la puerta desde `#236`) · **`surname` (120, NULLABLE)** y **`relationship` (32, NULLABLE)** desde `#236`
-· `born_on` (date) · `removed_at` nullable · timestamps. ⚠️ **Los dos nuevos son nulables a propósito**:
+· `born_on` (date) · `removed_at` nullable · timestamps · desde `#920` **`birthday_mail_for` (date, NULLABLE)**: el
+cumpleaños para el que ya salió «El cumple se acerca» a la cuenta (el 12 ampliado, `correos-rediseno.md` §4.4), escrito
+antes de encolar por `BirthdayReminders::markDeclaredSent()` (una marca de envío, no un dato del menor: sale de `born_on` y
+se va con la fila). ⚠️ **Los dos nuevos son nulables a propósito**:
 las fichas anteriores a `#236` no los tienen y no hay de dónde sacarlos — inventar un valor por defecto
 sería meter un dato falso en una tabla que alimenta una FIRMA legal. Se exigen en el ALTA NUEVA (la
 validación de `POST /me/dependents`), no en el esquema. ⚠️ `relationship` es una cadena corta y **no un
@@ -524,7 +527,7 @@ declara con el correo sin verificar, las convierte en firma `SignPendingWaiverOn
 verificar —descartándolas si el texto se republicó— y **las limpia `unlink()`**: una aceptación de un
 menor retirado no puede sellarse después. **Y nada más**: la EDAD no existe
 como columna, se deriva (`ageOn()`/`isMinor()`/`adultFrom()`, fecha contra fecha en el «hoy» del
-parque) y la fila sobrevive a la mayoría de edad. Único escritor `Identity\Services\DependentRegistry`
+parque) y la fila sobrevive a la mayoría de edad. Único escritor de la ficha `Identity\Services\DependentRegistry`
 (solo menores; tope `dependents.max_per_account` —vacío = 20— bajo el `lockForUpdate()` de la fila del
 titular; y desde `#441` **el alta EXIGE la aceptación de la exención** donde el modo es `interno` y
 hay versión publicada: sin ella la transacción se deshace y el menor no se crea). **Quitar es

@@ -15,6 +15,11 @@ return [
         'hoy_cerrado' => 'Aujourd’hui, :dia, nous sommes fermés.',
     ],
 
+    // Le pied des e-mails COMMERCIAUX (C1, `#920`) : pourquoi on le reçoit et la désinscription. Le légal ne s’édite pas.
+    'comercial' => [
+        'porque' => 'Vous recevez cet e-mail parce que vous avez coché la case des nouveautés. Si vous ne voulez plus d’e-mails comme celui-ci, [touchez ici](baja).',
+    ],
+
     'customer_account_created' => [
         'subject' => 'Ton compte est prêt',
         'preheader' => 'Pour te connecter, ton e-mail suffit : nous t’enverrons un code à chaque fois.',

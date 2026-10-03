@@ -344,15 +344,13 @@ return [
     ],
     'cumple_mail' => [
         'subject' => ':nombre a :edad ans en :mes : on le fête ici ?',
-        'badge' => 'Son anniversaire',
         'headline' => 'L’anniversaire de :nombre, c’est réglé',
         'preheader' => 'Des sauts, un goûter et des cadeaux. Vous n’amenez que les invités.',
         'linea' => 'D’abord ils sautent dans leur zone, avec des moniteurs, puis goûter pour chaque enfant ; table réservée et cadeaux. Les parents, tranquilles.',
-        'desde' => 'À partir de :precio par enfant, et vous ne payez que ceux qui viennent.',
-        'pronto' => 'Les week-ends proches se remplissent vite : regardez les jours libres.',
+        'desde' => '**À partir de :precio par enfant**, et vous ne payez que ceux qui viennent.',
+        'pronto' => 'Les week-ends proches se remplissent vite : [regardez les jours libres](dias).',
         'boton' => 'Voir les jours libres',
-        'porque' => 'Nous vous écrivons parce que vous avez coché « Prévenez-moi des dates » en signant l’autorisation de :nombre.',
-        'baja' => 'Me désinscrire',
+        'porque' => 'Vous recevez cet e-mail parce que vous avez coché « Prévenez-moi des dates » en signant l’autorisation de :nombre. Si vous ne voulez plus d’e-mails comme celui-ci, [touchez ici](baja).',
     ],
     'avisame_baja' => [
         'titulo' => 'Le rappel d’anniversaire',

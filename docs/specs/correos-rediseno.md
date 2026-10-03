@@ -671,6 +671,32 @@ anonimizada, sin correo o sin «novedades», y todos llevan el pie COMERCIAL —
 **C1a** la baja de «novedades» y el pie comercial, con el 12 ampliado (su correo ya existe) · **C1b** el 13a/13b · **C1c** el
 11 · **C1d** el 6b.
 
+**🟦 La C1a, construida (03-10, `[DECIDIDO]` del agente, vetable: `#921`; en `wip/correos-c1a`, al ojo del owner)**:
+- **La baja de «novedades»** (`MarketingUnsubscribeController`, `novedades/baja.blade.php`, rutas `marketing.unsubscribe` y
+  `.confirm`): firmada y sin caducidad; abrirla no escribe, el botón sí, por `AccountPrivacy::setMarketing()` (sella la
+  aceptación, no la borra); en el idioma de la cuenta; no dice el correo ni el nombre.
+- **El pie comercial** (`BrandedMailMessage::commercial()`, `MailDocument::$comercial`, las dos vistas del pie): el porqué y
+  `[toca aquí](baja)` bajo el filete y ANTES de los enlaces de siempre; en texto, con su dirección; `List-Unsubscribe`; la
+  baja sin UTM; una frase sin `(baja)` lanza. El de «novedades» es `MarketingMail::footer()` (`emails.comercial.porque`).
+- **A quién**: `User::scopeMarketable()` elige (el comando) y `User::canReceiveMarketing()` relee al salir (`shouldSend()`):
+  el mismo predicado, medido igual cuenta a cuenta (`MarketableAccountsTest`). ⚠️ Las dos capas se TAPAN en las pruebas
+  del correo (lo que una deja pasar, la otra lo frena): por eso se mide también la marca de quien no se eligió.
+- **El 12, como su diseño y ampliado**: sin chapa, el precio en negrita, «mira los días libres» enlazado y el pie comercial;
+  a las cuentas con «novedades» por sus menores declarados (`BirthdayReminders::declaredDue()`, `markDeclaredSent()`,
+  `sentToAccountFor()`, `leftOrSentFor()`; migración `dependents.birthday_mail_for`). La vista previa del panel toma el
+  «desde» del catálogo, como el comando (antes enseñaba el de ejemplo, «Desde 120 € por niño»).
+- **Medido**: arnés `scripts/mutar-correo-c1a.sh` **35/35** con dos controles (4 min 10 s; `SOLO=` para una parte);
+  Larastan limpio y su línea base BAJA seis (las fechas de `Dependent`, declaradas: `FROZEN_ERRORS` 422). En la local hoy
+  no saldría ninguno (`--dry-run`: 32 menores de cuentas con «novedades», el más cercano a 104 días): el ojo va con el banco
+  (`banco-correos.php BirthdayComing`, `SITUACION=con_desde` o `por_novedades`).
+- **Fuera, a propósito**: la «garantía» del diseño («Reservas con 50 €; cambias o cancelas hasta…»): sale del catálogo, pero
+  con varios packs pide decidir de cuál (al owner, con el ojo); el One-Click de RFC 8058.
+- **LSSI art. 20.1, medido en el texto consolidado del BOE (03-10)**: el vigente (modificado por la Ley 56/2007, art. 4.9, y la
+  Ley 9/2014) pide que el correo sea identificable como comercial y quién lo manda, y ya NO exige «publicidad» o «publi» al
+  principio: lo cubren el pie comercial y el del parque. Lo que vaya más allá, con la asesoría.
+- **Y la casilla de «Avísame de fechas» se relee también al salir** (`BirthdayComingNotice::shouldSend()`): una baja o un
+  «Borrar» del panel entre el comando y la cola ya no deja salir el correo (antes salía).
+
 ## 7. Revisión y decisión
 
 - ✅ **`[DECIDIDO owner]` 29-09 (`#801`)**: (1) **el 7**: el correo sigue siendo la encuesta anónima y, al terminarla, la

@@ -344,15 +344,13 @@ return [
     ],
     'cumple_mail' => [
         'subject' => ':nombre turns :edad in :mes: shall we celebrate here?',
-        'badge' => 'Their birthday',
         'headline' => ':nombre’s birthday, sorted',
         'preheader' => 'Jumping, snacks and presents. You just bring the guests.',
         'linea' => 'First they jump in their zone, with instructors, then snacks for every child; a reserved table and presents. Parents can relax.',
-        'desde' => 'From :precio per child, and you only pay for the ones who come.',
-        'pronto' => 'The nearest weekends fill up fast: check the free days.',
+        'desde' => '**From :precio per child**, and you only pay for the ones who come.',
+        'pronto' => 'The nearest weekends fill up fast: [check the free days](dias).',
         'boton' => 'See free days',
-        'porque' => 'We’re writing because you ticked «Let me know about dates» when signing :nombre’s authorisation.',
-        'baja' => 'Unsubscribe',
+        'porque' => 'You’re getting this email because you ticked «Let me know about dates» when signing :nombre’s authorisation. If you don’t want any more emails like this, [tap here](baja).',
     ],
     'avisame_baja' => [
         'titulo' => 'The birthday reminder',

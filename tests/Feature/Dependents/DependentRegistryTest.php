@@ -111,6 +111,9 @@ class DependentRegistryTest extends TestCase
 
         $this->assertSame(
             [
+                // `#920` · la MARCA del 12 ampliado: el cumpleaños para el que ya salió «El cumple se acerca» a la
+                // cuenta. No es un dato nuevo del menor (sale de `born_on`): es la de un envío, y se va con la fila.
+                'birthday_mail_for',
                 'born_on', 'created_at', 'id', 'name', 'relationship', 'removed_at', 'surname',
                 'updated_at', 'user_id',
                 // `#441` · la ACEPTACIÓN RETENIDA de su exención, hermana exacta de la del titular
@@ -125,7 +128,7 @@ class DependentRegistryTest extends TestCase
             ],
             $columns,
             'la tabla tiene exactamente las columnas de la spec §4.2, las dos de `#236` (apellidos '
-            .'y relación) y las cuatro de la aceptación retenida de `#441`; lo que sigue sin existir '
+            .'y relación), las cuatro de la aceptación retenida de `#441` y la marca del 12 de `#920`; lo que sigue sin existir '
             .'—y es lo que mide este caso— es una columna de EDAD: guardarla sería una mentira con '
             .'caducidad',
         );

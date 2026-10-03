@@ -2,12 +2,8 @@
 
 namespace Tests\Feature\Fiesta;
 
-use App\Domain\Booking\Models\InvitationReply;
 use App\Domain\Booking\Models\Order;
-use App\Domain\Booking\Models\PartyInvitation;
-use App\Domain\Booking\Services\PartyInvitations;
 use App\Domain\Identity\Models\BirthdayReminder;
-use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\BirthdayReminders;
@@ -25,6 +21,8 @@ use Illuminate\Support\Facades\URL;
 use Livewire\Livewire;
 use Symfony\Component\Mime\Email;
 use Tests\Support\MountsAParty;
+use Tests\Support\SendsThroughTheQueue;
+use Tests\Support\SignsABirthdayReminder;
 use Tests\TestCase;
 
 /**
@@ -39,6 +37,8 @@ class AvisameDeFechasEnvioTest extends TestCase
 {
     use MountsAParty;
     use RefreshDatabase;
+    use SendsThroughTheQueue;
+    use SignsABirthdayReminder;
 
     protected function setUp(): void
     {
@@ -48,7 +48,7 @@ class AvisameDeFechasEnvioTest extends TestCase
 
     public function test_one_email_inside_the_window_and_never_twice_for_the_same_birthday(): void
     {
-        $fila = $this->pedido('Hugo Ruiz', 'marta@example.com', $this->nacidoConCumpleEn(30));
+        $fila = $this->pedirAviso('Hugo Ruiz', 'marta@example.com', $this->nacidoConCumpleEn(30));
 
         $this->artisan('birthday-reminders:send', ['--force' => true])->assertSuccessful();
 
@@ -65,7 +65,7 @@ class AvisameDeFechasEnvioTest extends TestCase
     public function test_a_compound_first_name_goes_whole(): void
     {
         // `minor_name` es SOLO el nombre (los apellidos van aparte): cortarlo en el primer espacio dejaba a María José en «María».
-        $fila = $this->pedido('María José Ruiz', 'marta@example.com', $this->nacidoConCumpleEn(30), 'María José');
+        $fila = $this->pedirAviso('María José Ruiz', 'marta@example.com', $this->nacidoConCumpleEn(30), 'María José');
 
         $this->artisan('birthday-reminders:send', ['--force' => true])->assertSuccessful();
 
@@ -76,8 +76,8 @@ class AvisameDeFechasEnvioTest extends TestCase
 
     public function test_outside_the_window_too_close_or_switched_off_nothing_goes(): void
     {
-        $this->pedido('Hugo Ruiz', 'lejos@example.com', $this->nacidoConCumpleEn(60));
-        $this->pedido('Lía Gil', 'cerca@example.com', $this->nacidoConCumpleEn(3));
+        $this->pedirAviso('Hugo Ruiz', 'lejos@example.com', $this->nacidoConCumpleEn(60));
+        $this->pedirAviso('Lía Gil', 'cerca@example.com', $this->nacidoConCumpleEn(3));
         $this->artisan('birthday-reminders:send', ['--force' => true])->assertSuccessful();
         $this->ningunAviso();
 
@@ -90,7 +90,7 @@ class AvisameDeFechasEnvioTest extends TestCase
 
     public function test_the_dry_run_counts_and_touches_nothing(): void
     {
-        $fila = $this->pedido('Hugo Ruiz', 'marta@example.com', $this->nacidoConCumpleEn(30));
+        $fila = $this->pedirAviso('Hugo Ruiz', 'marta@example.com', $this->nacidoConCumpleEn(30));
 
         $this->artisan('birthday-reminders:send', ['--force' => true, '--dry-run' => true])
             ->expectsOutputToContain('Mandaría 1 avisos de cumple')
@@ -102,7 +102,7 @@ class AvisameDeFechasEnvioTest extends TestCase
 
     public function test_before_ten_at_the_park_the_hourly_run_waits(): void
     {
-        $this->pedido('Hugo Ruiz', 'marta@example.com', $this->nacidoConCumpleEn(30));
+        $this->pedirAviso('Hugo Ruiz', 'marta@example.com', $this->nacidoConCumpleEn(30));
         $this->travelTo(DisplayTime::today()->setTime(8, 0)->shiftTimezone(DisplayTime::timezone()));
 
         $this->artisan('birthday-reminders:send')->assertSuccessful();
@@ -116,8 +116,8 @@ class AvisameDeFechasEnvioTest extends TestCase
     public function test_the_same_child_signed_at_two_parties_is_one_email(): void
     {
         $nacio = $this->nacidoConCumpleEn(30);
-        $una = $this->pedido('Hugo Ruiz', 'marta@example.com', $nacio);
-        $otra = $this->pedido('Hugo Ruiz', 'Marta@Example.com', $nacio);
+        $una = $this->pedirAviso('Hugo Ruiz', 'marta@example.com', $nacio);
+        $otra = $this->pedirAviso('Hugo Ruiz', 'Marta@Example.com', $nacio);
 
         $this->artisan('birthday-reminders:send', ['--force' => true])->assertSuccessful();
 
@@ -128,8 +128,8 @@ class AvisameDeFechasEnvioTest extends TestCase
 
     public function test_never_with_the_opt_out_and_the_opt_out_covers_the_whole_address(): void
     {
-        $hugo = $this->pedido('Hugo Ruiz', 'marta@example.com', $this->nacidoConCumpleEn(30));
-        $lia = $this->pedido('Lía Ruiz', 'marta@example.com', $this->nacidoConCumpleEn(35));
+        $hugo = $this->pedirAviso('Hugo Ruiz', 'marta@example.com', $this->nacidoConCumpleEn(30));
+        $lia = $this->pedirAviso('Lía Ruiz', 'marta@example.com', $this->nacidoConCumpleEn(35));
 
         app(BirthdayReminders::class)->revoke($hugo);
 
@@ -140,7 +140,7 @@ class AvisameDeFechasEnvioTest extends TestCase
 
     public function test_whoever_already_celebrates_here_gets_nothing(): void
     {
-        $this->pedido('Hugo Ruiz', 'marta@example.com', $this->nacidoConCumpleEn(30));
+        $this->pedirAviso('Hugo Ruiz', 'marta@example.com', $this->nacidoConCumpleEn(30));
         // Una cuenta con ese correo, con una fiesta pagada hace unos meses.
         ['order' => $order] = $this->mountParty();
         $cliente = User::factory()->create(['email' => 'marta@example.com']);
@@ -152,7 +152,7 @@ class AvisameDeFechasEnvioTest extends TestCase
 
     public function test_the_email_says_why_and_how_to_leave(): void
     {
-        $fila = $this->pedido('Hugo Ruiz', 'marta@example.com', $this->nacidoConCumpleEn(30));
+        $fila = $this->pedirAviso('Hugo Ruiz', 'marta@example.com', $this->nacidoConCumpleEn(30));
         $correo = (new BirthdayComingNotice((int) $fila->getKey(), 'Hugo', 8, 'octubre', '14,95 €'))->toMail(new AnonymousNotifiable);
 
         $this->assertSame('Hugo cumple 8 en octubre: ¿lo celebramos aquí?', $correo->subject);
@@ -175,6 +175,25 @@ class AvisameDeFechasEnvioTest extends TestCase
     }
 
     /**
+     * La casilla, RELEÍDA cuando el correo sale de la cola (la C1a, `#921`): quien se dio de baja entre el comando y el envío,
+     * o a quien el parque borró a petición desde el panel en ese rato, no lo recibe.
+     */
+    public function test_the_checkbox_is_read_again_when_the_mail_leaves_the_queue(): void
+    {
+        $deBaja = $this->pedirAviso('Hugo Ruiz', 'marta@example.com', $this->nacidoConCumpleEn(30));
+        $borrada = $this->pedirAviso('Lía Gil', 'ana@example.com', $this->nacidoConCumpleEn(30));
+        $viva = $this->pedirAviso('Leo Paz', 'bea@example.com', $this->nacidoConCumpleEn(30));
+        $correo = static fn (BirthdayReminder $fila): BirthdayComingNotice => new BirthdayComingNotice((int) $fila->getKey(), 'Hugo', 8, 'octubre', null);
+
+        $this->assertSame(0, $this->salidasDeLaCola($this->aUnCorreo('marta@example.com'), $correo($deBaja),
+            static fn () => app(BirthdayReminders::class)->revoke($deBaja)), 'de baja entretanto: no sale');
+        $this->assertSame(0, $this->salidasDeLaCola($this->aUnCorreo('ana@example.com'), $correo($borrada),
+            static fn () => $borrada->delete()), 'borrada a petición entretanto: no sale');
+        $this->assertSame(1, $this->salidasDeLaCola($this->aUnCorreo('bea@example.com'), $correo($viva), static fn () => null),
+            'CONTROL: viva, sale');
+    }
+
+    /**
      * El texto de FÁBRICA no promete horas (la R1c, `correos-rediseno.md` §4.1.4): desde `#873` las dos horas se reparten
      * —saltan y luego meriendan— y cuánto dura cada parte es de cada parque (los «90 minutos» de PlayJump, en el panel).
      */
@@ -193,7 +212,7 @@ class AvisameDeFechasEnvioTest extends TestCase
     {
         $this->seed(RoleSeeder::class);
         $this->seed(PermissionSeeder::class);
-        $fila = $this->pedido('Hugo Ruiz', 'marta@example.com', $this->nacidoConCumpleEn(30));
+        $fila = $this->pedirAviso('Hugo Ruiz', 'marta@example.com', $this->nacidoConCumpleEn(30));
         $admin = User::factory()->create();
         $admin->roles()->sync([Role::where('name', 'admin')->value('id')]);
 
@@ -223,37 +242,5 @@ class AvisameDeFechasEnvioTest extends TestCase
     private function ningunAviso(): void
     {
         Notification::assertSentOnDemandTimes(BirthdayComingNotice::class, 0);
-    }
-
-    /** Una fecha de nacimiento (hace 7 años) cuyo PRÓXIMO cumpleaños cae dentro de `$dias` días (cumple 8). */
-    private function nacidoConCumpleEn(int $dias): string
-    {
-        return DisplayTime::today()->addDays($dias)->subYears(8)->toDateString();
-    }
-
-    /**
-     * Una fiesta, un «sí», la autorización firmada desde su recibo con ese correo y ese nacimiento, y la casilla marcada:
-     * el camino entero, como lo hace un padre. `$nombre`: el nombre si es compuesto (si no, la primera palabra de `$nino`).
-     */
-    private function pedido(string $nino, string $correo, string $nacio, ?string $nombre = null): BirthdayReminder
-    {
-        ['invitation' => $invitation] = $this->mountParty();
-        /** @var PartyInvitation $invitation */
-        $this->post(route('invitation.reply', ['token' => $invitation->token]), ['child_name' => $nino, 'attending' => '1'])->assertRedirect();
-        $reply = InvitationReply::query()->where('party_invitation_id', $invitation->getKey())->latest('id')->firstOrFail();
-        $url = app(PartyInvitations::class)->receiptUrl($reply);
-        $this->assertSame(1, preg_match('#<form method="post" action="([^"]+)"[^>]*data-receipt-firma#', (string) $this->get($url)->getContent(), $m));
-        $nombre ??= explode(' ', $nino, 2)[0];
-        $apellido = trim(substr($nino, strlen($nombre)));
-        $this->post(html_entity_decode($m[1]), [
-            'document_id' => LegalDocumentVersion::query()->orderByDesc('id')->firstOrFail()->getKey(),
-            'accept_waiver' => '1', 'invitation_reply_id' => (string) $reply->getKey(),
-            'minor_name' => $nombre, 'minor_surname' => $apellido, 'minor_born_on' => $nacio,
-            'guardian_name' => 'Marta Ruiz', 'guardian_relationship' => 'mother', 'guardian_phone' => '600111222',
-            'guardian_email' => $correo,
-        ])->assertRedirect();
-        $this->postJson($url, ['dates' => '1'])->assertOk()->assertJson(['saved' => true]);
-
-        return BirthdayReminder::query()->latest('id')->firstOrFail();
     }
 }

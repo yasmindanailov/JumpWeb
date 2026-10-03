@@ -4227,6 +4227,7 @@ return [
             'cambia_de_signo' => '附加费变为折扣',
             'por_parque' => '由乐园更改',
             'con_desde' => '带「起价」',
+            'por_novedades' => '发给订阅「新闻」的账户',
             'cambio_dia' => '日期或时间变化',
             'cambio_cantidad' => '数量变化',
             'cambio_producto' => '产品变化',

@@ -3,6 +3,15 @@
 return [
     'close' => 'Fermer',
 
+    // Se désinscrire des « nouveautés » depuis le pied d’un e-mail commercial (C1a, `#920`) : une page avec un bouton.
+    'novedades_baja' => [
+        'titulo' => 'Les nouveautés du parc',
+        'texto' => 'Vous avez choisi de recevoir les nouveautés et les offres par e-mail. Si vous n’en voulez plus, désinscrivez-vous ici ; les e-mails de vos réservations continueront d’arriver.',
+        'boton' => 'Me désinscrire',
+        'hecho_titulo' => 'C’est fait',
+        'hecho' => 'Nous ne vous écrirons plus pour les nouveautés ni les offres. Si vous changez d’avis, cochez-le à nouveau dans Mon compte.',
+    ],
+
     'nav' => [
         'hello' => 'Bonjour, :name',
         'login' => 'Se connecter',

@@ -77,7 +77,7 @@ class MailTextCatalogTest extends TestCase
     public function test_nothing_legal_no_data_and_no_plural_is_editable(): void
     {
         foreach ([
-            'fiesta.cumple_mail.baja', 'fiesta.cumple_mail.porque', 'surveys.mail.optout', // lo legal de un comercial
+            'fiesta.cumple_mail.porque', 'emails.comercial.porque', 'surveys.mail.optout', // lo legal de un comercial
             'account.social_link_mail.providers.google', 'emails.confirmation_code.actions.change_email', // datos y fragmentos
             // Fragmentos sueltos: el nombre de reserva de un producto borrado (va también al ASUNTO) y los importes rotulados
             'emails.order_item_cancelled.product_fallback', 'emails.mixed_party_surcharge.amount_discount',

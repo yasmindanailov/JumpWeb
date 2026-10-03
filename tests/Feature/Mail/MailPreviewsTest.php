@@ -7,6 +7,7 @@ use App\Domain\Booking\Models\OrderAdjustment;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Services\PartyCards;
 use App\Domain\Content\Services\MailTextRules;
 use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\User;
@@ -20,6 +21,7 @@ use App\Domain\Platform\Models\Survey;
 use App\Notifications\Support\MailPreviews;
 use App\Notifications\Support\MailSituations;
 use App\Notifications\Support\MailTextCatalog;
+use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Lang;
@@ -338,6 +340,22 @@ class MailPreviewsTest extends TestCase
         foreach (MailPreviews::MOTIVOS as $motivo) {
             $this->assertTrue(Lang::has('admin.mail_texts.sin_caso.'.$motivo, 'zh_CN', false), "falta el motivo {$motivo} en zh_CN");
         }
+    }
+
+    /** El «desde» del 12, el del CATÁLOGO —como lo pone el comando—; sin ningún pack con precio, el de ejemplo (la C1a). */
+    public function test_the_birthday_preview_says_the_price_of_the_catalogue(): void
+    {
+        $quien = User::factory()->create();
+        $ejemplo = (string) __('admin.mail_texts.ejemplo_desde');
+        $sinCatalogo = MailPreviews::pintar('birthday_coming_notice', 'es', [], $quien, false, 'con_desde');
+        $this->assertStringContainsString(e($ejemplo).' por niño', $sinCatalogo['html'] ?? '', 'sin pack con precio, el de ejemplo');
+
+        $this->seed(LandingContentSeeder::class);
+        $desde = (new PartyCards)->cheapest(TicketType::birthdaySurfacePacks()->with(['prices.rateType'])->get());
+        $this->assertNotNull($desde, 'el catálogo sembrado tiene un pack de cumpleaños con precio');
+        $this->assertNotSame($ejemplo, $desde, 'CONTROL: el del catálogo no es el de ejemplo');
+        $conCatalogo = MailPreviews::pintar('birthday_coming_notice', 'es', [], $quien, false, 'con_desde');
+        $this->assertStringContainsString(e($desde).' por niño', $conCatalogo['html'] ?? '');
     }
 
     public function test_the_new_email_is_previewed_as_it_goes_out_with_its_code(): void

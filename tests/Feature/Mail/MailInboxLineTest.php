@@ -43,7 +43,7 @@ class MailInboxLineTest extends TestCase
      * —el titular ya dice el hecho y el código va en su bloque—. ⚠️ Esta lista solo encoge, y su caso exige que de verdad no
      * la lleven: una chapa olvidada aquí sería una pieza que nadie mira.
      */
-    private const SIN_CHAPA = ['emails.login_code', 'emails.confirmation_code', 'emails.verify_pending_email_code', 'emails.fiesta_reservada', 'emails.visit_eve', 'emails.manana', 'emails.order_declined', 'emails.order_expired_without_payment'];
+    private const SIN_CHAPA = ['emails.login_code', 'emails.confirmation_code', 'emails.verify_pending_email_code', 'emails.fiesta_reservada', 'emails.visit_eve', 'emails.manana', 'emails.order_declined', 'emails.order_expired_without_payment', 'fiesta.cumple_mail'];
 
     /**
      * Los grupos del diccionario que gobiernan un correo, LEÍDOS DE LA FUENTE y no de una lista a

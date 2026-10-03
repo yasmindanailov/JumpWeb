@@ -3,9 +3,12 @@
 namespace App\Domain\Identity\Services;
 
 use App\Domain\Identity\Models\BirthdayReminder;
+use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\GuardianAuthorization;
+use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\Setting;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * «AVÍSAME DE FECHAS» (`specs/avisame-de-fechas.md`, `[DECIDIDO owner]` `#750`): quién puede pedirlo, pedirlo y darse
@@ -13,6 +16,10 @@ use Carbon\CarbonImmutable;
  *
  * ⚠️ La prueba es la autorización FIRMADA y con correo: sin firma (o sin correo) no hay a quién escribir ni por qué, y la
  * casilla no se ofrece. De la autorización salen el correo, los nombres de pila y la fecha: la fila no copia nada.
+ *
+ * ▶ Desde la C1a (`#920`), también el 12 AMPLIADO: los menores declarados de las cuentas con «novedades»
+ * ({@see declaredDue()}), con su marca en `dependents.birthday_mail_for`, y lo que impide escribir dos veces el mismo cumple
+ * por los dos caminos ({@see sentToAccountFor()}, {@see leftOrSentFor()}).
  */
 final class BirthdayReminders
 {
@@ -161,6 +168,70 @@ final class BirthdayReminders
     {
         BirthdayReminder::query()->whereKey(array_map(static fn (BirthdayReminder $r): int => (int) $r->getKey(), $rows))
             ->update(['sent_for' => $next->toDateString(), 'sent_at' => now(), 'updated_at' => now()]);
+    }
+
+    /**
+     * **EL 12 AMPLIADO** (la C1a de `specs/correos-rediseno.md` §4.4, `[DECIDIDO owner]` `#920`): los menores DECLARADOS de las
+     * cuentas con «novedades» (`User::scopeMarketable()`) a los que les toca HOY el correo, en la misma ventana que `due()`:
+     * activos, que ese cumpleaños no cumplan los 18 (ya no sería el cumple de un niño) y sin la marca de ESE cumpleaños. Uno por
+     * menor: dos hermanos son dos cumpleaños.
+     *
+     * @return list<array{dependent: Dependent, user: User, next: CarbonImmutable, age: int}>
+     */
+    public function declaredDue(CarbonImmutable $today, int $weeks, int $minDaysAhead): array
+    {
+        if ($weeks <= 0) {
+            return [];
+        }
+        $toca = [];
+        Dependent::query()->active()
+            ->whereHas('user', static fn (Builder $q) => $q->marketable())
+            ->with('user')->orderBy('id')
+            ->each(static function (Dependent $d) use (&$toca, $today, $weeks, $minDaysAhead): void {
+                $next = self::nextBirthday($d->born_on, $today);
+                $dias = (int) $today->startOfDay()->diffInDays($next);
+                $age = $next->year - $d->born_on->year;
+                if ($dias > $weeks * 7 || $dias < $minDaysAhead || $age >= Dependent::ADULT_AGE
+                    || $d->birthday_mail_for?->toDateString() === $next->toDateString() || ! $d->user instanceof User) {
+                    return;
+                }
+                $toca[] = ['dependent' => $d, 'user' => $d->user, 'next' => $next, 'age' => $age];
+            });
+
+        return $toca;
+    }
+
+    /**
+     * Apunta que salió ESE cumpleaños a la cuenta: ANTES de encolar, como `markSent()`. Sin tocar `updated_at`: no es un cambio
+     * del titular en su menor (la ficha la escribe `DependentRegistry`; esto es la marca de un envío).
+     */
+    public function markDeclaredSent(Dependent $dependent, CarbonImmutable $next): void
+    {
+        Dependent::query()->whereKey($dependent->getKey())->toBase()->update(['birthday_mail_for' => $next->toDateString()]);
+    }
+
+    /** ¿Le salió ya ESE cumple a la cuenta de este correo, por un menor declarado con esa fecha de nacimiento? */
+    public function sentToAccountFor(string $email, CarbonImmutable $bornOn, CarbonImmutable $next): bool
+    {
+        return Dependent::query()
+            ->whereDate('born_on', $bornOn->toDateString())
+            ->whereDate('birthday_mail_for', $next->toDateString())
+            ->whereHas('user', static fn (Builder $q) => $q->whereRaw('LOWER(email) = ?', [mb_strtolower(trim($email))]))
+            ->exists();
+    }
+
+    /**
+     * ¿Este correo se dio de baja de «Avísame de fechas» —de todo: la baja es del CORREO, {@see revoke()}, y su página le
+     * prometió «No te escribiremos para su cumple»—, o le salió ya ESE cumple por su casilla? Entonces, tampoco por «novedades».
+     */
+    public function leftOrSentFor(string $email, CarbonImmutable $bornOn, CarbonImmutable $next): bool
+    {
+        return BirthdayReminder::query()
+            ->whereHas('authorization', static fn (Builder $q) => $q->whereRaw('LOWER(guardian_email) = ?', [mb_strtolower(trim($email))]))
+            ->where(static fn (Builder $q) => $q->whereNotNull('revoked_at')->orWhere(static fn (Builder $q) => $q
+                ->whereDate('sent_for', $next->toDateString())
+                ->whereHas('authorization', static fn (Builder $a) => $a->whereDate('minor_born_on', $bornOn->toDateString()))))
+            ->exists();
     }
 
     /**

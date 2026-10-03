@@ -24,7 +24,7 @@ class StaticAnalysisGateTest extends TestCase
      * el número aquí en el mismo commit. Si el test te pide SUBIRLO, has metido un error nuevo en la
      * línea base en vez de arreglarlo.
      */
-    private const FROZEN_ERRORS = 428;   // R2b (`#916`): el formulario de invitados ya no sale aparte al pagar (cuatro, con él)
+    private const FROZEN_ERRORS = 422;   // C1a (`#920`): las dos fechas de `Dependent`, declaradas (seis, que las leían como texto)
 
     private function config(): string
     {

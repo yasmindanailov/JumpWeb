@@ -3,6 +3,15 @@
 return [
     'close' => 'Cerrar',
 
+    // La baja de «novedades» desde el pie de un correo comercial (la C1a, `#920`): una página con un botón.
+    'novedades_baja' => [
+        'titulo' => 'Las novedades del parque',
+        'texto' => 'Marcaste que querías recibir novedades y ofertas por correo. Si ya no las quieres, date de baja aquí; los correos de tus reservas te seguirán llegando.',
+        'boton' => 'Darme de baja',
+        'hecho_titulo' => 'Hecho',
+        'hecho' => 'No te escribiremos con novedades ni ofertas. Si cambias de idea, lo vuelves a marcar en Mi cuenta.',
+    ],
+
     'nav' => [
         'hello' => 'Hola, :name',
         'login' => 'Iniciar sesión',

@@ -7,6 +7,7 @@ use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Services\OrderItemEditor;
+use App\Domain\Booking\Services\PartyCards;
 use App\Domain\Booking\Services\PostFormAddonChanges;
 use App\Domain\Booking\Services\PostFormAddons;
 use App\Domain\Content\Services\MailTexts;
@@ -305,8 +306,13 @@ final class MailPreviews
 
                 return new N\MixedPartySurchargeChanged($f, $antes, $ahora, $s !== 'por_parque');
             }),
+            // «Por novedades», sin fila de «Avísame de fechas»: el pie y la baja son los de la cuenta que mira. El «desde», el del
+            // CATÁLOGO, como lo pone el comando (el pack de cumpleaños más barato); sin ninguno con precio, el de ejemplo.
             'birthday_coming_notice' => static fn (User $quienMira, string $locale, ?string $s): Notification => new N\BirthdayComingNotice(
-                1, 'Vera', 7, __('admin.mail_texts.ejemplo_mes'), $s === 'con_desde' ? (string) __('admin.mail_texts.ejemplo_desde') : null,
+                $s === 'por_novedades' ? null : 1, 'Vera', 7, (string) __('admin.mail_texts.ejemplo_mes'),
+                $s === 'con_desde'
+                    ? ((new PartyCards)->cheapest(TicketType::birthdaySurfacePacks()->with(['prices.rateType'])->get()) ?? (string) __('admin.mail_texts.ejemplo_desde'))
+                    : null,
             ),
             // Siempre CON un cambio (`#809`): el de la situación, armado con los datos del caso como lo hace el producto.
             'order_item_modified' => $conReserva(static function (Order $o, OrderItem $r, ?string $s): Notification {

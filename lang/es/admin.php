@@ -5128,6 +5128,7 @@ return [
             'cambia_de_signo' => 'El suplemento pasa a descuento',
             'por_parque' => 'Lo cambia el parque',
             'con_desde' => 'Con un precio «desde»',
+            'por_novedades' => 'A una cuenta con «novedades»',
             'cambio_dia' => 'Cambio de día u hora',
             'cambio_cantidad' => 'Cambio de cantidad',
             'cambio_producto' => 'Cambio de producto',

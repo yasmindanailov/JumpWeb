@@ -949,12 +949,6 @@ parameters:
 			path: app/Domain/Identity/Models/CookieConsentLog.php
 
 		-
-			message: '#^Cannot call method toDateString\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: app/Domain/Identity/Models/Dependent.php
-
-		-
 			message: '#^Method App\\Domain\\Identity\\Models\\Dependent\:\:prunable\(\) should return Illuminate\\Database\\Eloquent\\Builder\<App\\Domain\\Identity\\Models\\Dependent\> but returns Illuminate\\Database\\Eloquent\\Builder\<static\(App\\Domain\\Identity\\Models\\Dependent\)\>\.$#'
 			identifier: return.type
 			count: 1
@@ -1003,21 +997,9 @@ parameters:
 			path: app/Domain/Identity/Models/WaiverSignature.php
 
 		-
-			message: '#^Cannot call method toDateString\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Domain/Identity/Services/AccountPrivacy.php
-
-		-
 			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
 			identifier: method.nonObject
 			count: 3
-			path: app/Domain/Identity/Services/AccountPrivacy.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Domain\\Identity\\Models\\Dependent\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
 			path: app/Domain/Identity/Services/AccountPrivacy.php
 
 		-
@@ -1115,12 +1097,6 @@ parameters:
 			identifier: return.unusedType
 			count: 1
 			path: app/Domain/Identity/Services/TermsAcceptance.php
-
-		-
-			message: '#^Cannot call method toDateString\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Domain/Identity/Services/WaiverSigner.php
 
 		-
 			message: '#^Strict comparison using \!\=\= between string and null will always evaluate to true\.$#'
@@ -1781,12 +1757,6 @@ parameters:
 			identifier: method.nonObject
 			count: 1
 			path: app/Http/Resources/Api/V1/CustomerCardResource.php
-
-		-
-			message: '#^Cannot call method toDateString\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Http/Resources/Api/V1/DependentResource.php
 
 		-
 			message: '#^Using nullsafe method call on non\-nullable type Carbon\\Carbon\. Use \-\> instead\.$#'

@@ -3,6 +3,15 @@
 return [
     'close' => 'Close',
 
+    // Unsubscribing from «news» from the footer of a marketing email (C1a, `#920`): a page with one button.
+    'novedades_baja' => [
+        'titulo' => 'News from the park',
+        'texto' => 'You chose to receive news and offers by email. If you no longer want them, unsubscribe here; the emails about your bookings will keep coming.',
+        'boton' => 'Unsubscribe',
+        'hecho_titulo' => 'Done',
+        'hecho' => 'We won’t write to you with news or offers. If you change your mind, tick it again in My account.',
+    ],
+
     'nav' => [
         'hello' => 'Hi, :name',
         'login' => 'Log in',

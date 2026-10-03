@@ -23,11 +23,18 @@
 - **MENOR: «El pago no ha salido» y «Tu hora se ha liberado», como su diseño** (la R2e, `#918`): la hora y el motivo del
   banco; «Pagar con Bizum» solo si el parque lo tiene en sus marcas de pago (Ajustes → Pagos). ⚠️ Lo editado de los dos
   correos viejos no pasa (sus textos son otros).
+- **MENOR: los correos comerciales, con su pie y su baja de «novedades»; «El cumple se acerca», también por «novedades»** (la
+  C1a, `#920`, `#921`): sale además a las cuentas que marcaron «Quiero recibir novedades», unas semanas antes del cumple de
+  cada menor que declararon (el mismo ajuste, `party.birthday_reminder_weeks`), y nunca dos veces el mismo cumple. Su pie dice
+  por qué lo recibe y da de baja de un toque (también desde el botón del gestor de correo). ⚠️ Lo editado en «Textos de los
+  correos» de su frase «Los fines de semana cercanos…» no pasa: gana su enlace a los días libres.
 
 ### Interno
 
 - `MailReservation` compone lo de una reserva para los correos (del libro de cada reserva, `#916`); `ticket_types.before_visit`
   (migración). Arnés `scripts/mutar-correo-r2b.sh`.
+- La C1a: `dependents.birthday_mail_for` (migración); `User::scopeMarketable()` y `canReceiveMarketing()`; la ruta firmada
+  `novedades/{user}/baja`. Arnés `scripts/mutar-correo-c1a.sh`.
 
 ## v2.0.0 · 2026-10-03
 

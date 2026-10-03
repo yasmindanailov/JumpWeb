@@ -1,6 +1,6 @@
 # [SPEC] «Avísame de fechas» — un correo antes del cumple de un invitado
 
-> Estado: ✅ aprobado (decisiones del owner `#743`·8, `#747` y `#750`) · Última actualización: 2026-09-26 ·
+> Estado: ✅ aprobado (decisiones del owner `#743`·8, `#747` y `#750`) · Última actualización: 2026-10-03 (la C1a, §4.3) ·
 > Carril SPA · Hermana: `fiesta-sistema-nuevo.md` §4.12 (F6b).
 
 ## §0 · Antes de tocar
@@ -70,6 +70,12 @@ molde de `surveys:send-external`): a las filas vivas cuyo próximo cumpleaños c
 días (más cerca llegaría tarde: ese año se salta), UNA vez por correo, niño y fecha (el mismo niño firmado en dos
 fiestas es un correo), y marca `sent_for` en todas sus filas ANTES de encolar (reintentar no duplica). **No** a quien ya tiene, con ese correo y en una cuenta, una fiesta pagada de
 un año antes del cumpleaños en adelante («a quien no ha celebrado aquí»). El 29 de febrero, el 28 en año no bisiesto.
+
+▶ **Desde la C1a de los correos** (`correos-rediseno.md` §4.4, `#920`, `#921`, 03-10): el correo es el de su diseño (sin
+chapa, el precio en negrita, «mira los días libres» enlazado y el pie comercial «Recibes este correo porque marcaste «Avísame
+de fechas»… [toca aquí]»), y el MISMO comando lo manda también, en la misma ventana, a las cuentas con «novedades» por cada
+menor que declararon (`BirthdayReminders::declaredDue()`, marca `dependents.birthday_mail_for`), con la baja de «novedades».
+Nunca dos veces el mismo cumple por los dos caminos, y a quien se dio de baja aquí, tampoco por «novedades».
 
 ### 4.4 La baja y la lista (A1 y A2)
 La baja: `GET` firmado sin caducidad (`birthday-reminder.unsubscribe`) → página enfocada con UN botón → `POST` firmado

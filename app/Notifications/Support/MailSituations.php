@@ -180,7 +180,8 @@ final class MailSituations
         'guardian_authorization_signed' => [self::CASO, 'firma_de_reserva'],
         'post_form_addons_changed' => ['extra_anadido', 'extra_cambiado', 'extra_quitado'],
         'mixed_party_surcharge_changed' => ['suplemento_nace', 'suplemento_cambia', 'suplemento_se_quita', 'descuento_nace', 'descuento_cambia', 'descuento_se_quita', 'cambia_de_signo', 'por_parque'],
-        'birthday_coming_notice' => [self::CASO, 'con_desde'],
+        // El 12 a sus dos públicos (la C1a, `#920`): quien marcó «Avísame de fechas» (el caso) y una cuenta con «novedades».
+        'birthday_coming_notice' => [self::CASO, 'con_desde', 'por_novedades'],
         'order_item_modified' => ['cambio_dia', 'cambio_cantidad', 'cambio_producto', 'cambio_datos', 'cambio_complementos'],
         'order_item_cancelled' => [self::CASO, 'caen_complementos'],
         'order_item_refunded' => [self::CASO, 'tambien_cancelada', 'devolucion_a_mano'],

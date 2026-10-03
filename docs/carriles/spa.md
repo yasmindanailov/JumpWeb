@@ -2,13 +2,14 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **910–939** (del owner, 02-10; 790–819 agotada con `#819`) · Último usado: **`#920`** (el siguiente, `#921`) · La banda está dada de alta en la
+> Banda: **910–939** (del owner, 02-10; 790–819 agotada con `#819`) · Último usado: **`#921`** (el siguiente, `#922`) · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs:
 > **`acceso-con-codigo.md` §0** (la A4 del cajón ✅ en `main`) · `correos-rediseno.md` §0 ·
 > `fiesta-sistema-nuevo.md` §4.17–§4.21 · `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7
 > (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md` §4.11 · `celebracion-e-invitacion.md` §0 ·
-> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-03, 11:54
-> (la R2a y la R2b de los correos, en `main`; la R2d y la R2e, en `wip/correos-r2d`, esperan el ojo del owner en Mailpit).
+> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-03, 18:14
+> (la R2a y la R2b de los correos, en `main`; la R2d y la R2e, en `wip/correos-r2d`, y la C1a, en `wip/correos-c1a`, esperan
+> el ojo del owner en Mailpit).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
@@ -73,9 +74,14 @@ portada y no cuenta nada hasta la v2.0.0.
    `c415b1ea`, visto bueno; la R2b es el 1, el 1b y el 2). 🟦 **R2d (el 3 y el 4) y R2e (el 5 y el 6) CONSTRUIDAS en
    `wip/correos-r2d`** (arneses `mutar-correo-r2d.sh` 10/10 y `mutar-correo-r2e.sh` 7/7): ▶ **esperan el ojo del owner**
    (`SITUACION=<situación> php scripts/banco-correos.php VisitReminderNotice` · `VisitEveNotice` · `OrderPaymentDeclined` ·
-   `OrderExpiredWithoutPayment`) y, con él, a `main` (sin `CRITICAL_RE`). Con eso la R2 queda entera. Después, el punto 3:
-   R3 el 2b → C1 los comerciales (11, el 12 ampliado, 13a/b, 6b) → C2 las felicitaciones (su copy, con el owner) → C3 las
-   ocasiones; y la analítica (3). Cada tanda, «al detalle» medido → `wip/` → arnés → ojo en Mailpit. ▶ DATO
+   `OrderExpiredWithoutPayment`) y, con él, a `main` (sin `CRITICAL_RE`). Con eso la R2 queda entera. ▶▶ **EL PUNTO 3**: R3
+   (el 2b) SUPERADA (`#919`: sin datos que contar). **C1, los comerciales** (§4.4; el owner eligió, `#920`: solo con
+   «novedades», el 11 solo con un menor declarado, solo el catálogo): 🟦 **C1a CONSTRUIDA en `wip/correos-c1a`** (sobre
+   `wip/correos-r2d`; `#921`; arnés `mutar-correo-c1a.sh` 35/35): la baja de «novedades», el pie comercial y el 12 ampliado;
+   ▶ espera el ojo (`SITUACION=con_desde|por_novedades php scripts/banco-correos.php BirthdayComing`; la baja, en «toca aquí»;
+   la cuenta de sondas tiene «novedades» marcada para eso) y la «garantía» del 12, al owner. Después: **C1b** el 13a/13b →
+   **C1c** el 11 → **C1d** el 6b → C2 las felicitaciones (su copy, con el owner) → C3 las ocasiones; y la analítica (3).
+   Cada tanda, «al detalle» medido → `wip/` → arnés → ojo en Mailpit. ▶ DATO
    de PlayJump tras desplegar: «Antes de venir» de la excursión (panel → producto) y el aviso de los calcetines. El resto del
    punto (el zip (6), el 7, los grupos 8–10, T2·9), mudado verbatim a `CARRIL-SPA.md` §9 (03-10).
 3. ⏸ **LA ANALÍTICA PARA DECIDIR (`#755`, `specs/analitica-para-decidir.md`), EN PAUSA tras la T4**: ✅ el defecto de

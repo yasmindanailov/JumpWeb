@@ -23,6 +23,11 @@ return [
         'hoy_cerrado' => 'Hoy, :dia, no abrimos.',
     ],
 
+    // El pie de los COMERCIALES (la C1, `#920`): por qué lo recibe y la baja. Lo legal no se edita desde el panel (`porque`).
+    'comercial' => [
+        'porque' => 'Recibes este correo porque marcaste la casilla de novedades. Si no quieres más correos como este, [toca aquí](baja).',
+    ],
+
     'customer_account_created' => [
         'subject' => 'Tu cuenta ya está lista',
         'preheader' => 'Para entrar solo necesitas tu email: te enviaremos un código cada vez.',

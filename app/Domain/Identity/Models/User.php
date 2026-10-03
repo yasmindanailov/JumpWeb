@@ -838,4 +838,25 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     {
         return $query->whereDoesntHave('roles', fn (Builder $roles) => $roles->whereIn('name', self::PANEL_ROLES));
     }
+
+    /**
+     * ¿Se le puede escribir un correo COMERCIAL, ahora? (la C1 de `specs/correos-rediseno.md` §4.4, `[DECIDIDO owner]`
+     * `#920`): SOLO con «Quiero recibir novedades» (`marketing_opt_in`, con su prueba en `consents`), con correo y sin
+     * anonimizar. El mismo predicado que {@see scopeMarketable()}: el comando elige con aquel y el envío relee con este.
+     */
+    public function canReceiveMarketing(): bool
+    {
+        return (bool) $this->marketing_opt_in && trim((string) $this->email) !== '' && ! $this->isAnonymized();
+    }
+
+    /**
+     * Las cuentas a las que se les puede escribir un comercial ({@see canReceiveMarketing()}). ⚠️ `!= ''` deja fuera también el
+     * correo NULL (en SQL, `NULL != ''` no es verdad), y el `not like` lo mismo: las dos condiciones lo descartan.
+     */
+    public function scopeMarketable(Builder $query): Builder
+    {
+        return $query->where('marketing_opt_in', true)
+            ->where('email', '!=', '')
+            ->where('email', 'not like', '%@'.self::ANONYMIZED_EMAIL_DOMAIN);
+    }
 }

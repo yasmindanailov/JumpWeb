@@ -388,15 +388,14 @@ return [
     // panel (el texto es editable, R1·T).
     'cumple_mail' => [
         'subject' => ':nombre cumple :edad en :mes: ¿lo celebramos aquí?',
-        'badge' => 'Su cumple',
         'headline' => 'El cumple de :nombre, resuelto',
         'preheader' => 'Saltan, meriendan y se llevan regalos. Tú solo traes a los invitados.',
         'linea' => 'Primero saltan en su zona, con monitores, y luego, merienda para cada niño; mesa reservada y regalos. Los padres, tranquilos.',
-        'desde' => 'Desde :precio por niño, y solo pagas los que vengan.',
-        'pronto' => 'Los fines de semana cercanos se llenan pronto: mira los días libres.',
+        'desde' => '**Desde :precio por niño**, y solo pagas los que vengan.',
+        'pronto' => 'Los fines de semana cercanos se llenan pronto: [mira los días libres](dias).',
         'boton' => 'Ver días libres',
-        'porque' => 'Te escribimos porque marcaste «Avísame de fechas» al firmar la autorización de :nombre.',
-        'baja' => 'Darme de baja',
+        // Lo legal (no se edita): a quien marcó «Avísame de fechas»; a una cuenta con «novedades», `emails.comercial.porque`.
+        'porque' => 'Recibes este correo porque marcaste «Avísame de fechas» al firmar la autorización de :nombre. Si no quieres más correos como este, [toca aquí](baja).',
     ],
     // LA BAJA de «Avísame de fechas» (`avisame-de-fechas.md` §4.4): una página con UN botón (no escribe al abrirse).
     'avisame_baja' => [

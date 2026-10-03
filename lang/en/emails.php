@@ -15,6 +15,11 @@ return [
         'hoy_cerrado' => 'Today, :dia, we’re closed.',
     ],
 
+    // The footer of MARKETING emails (C1, `#920`): why they get it and how to leave. The legal part is not edited in the panel.
+    'comercial' => [
+        'porque' => 'You’re getting this email because you ticked the box for news. If you don’t want any more emails like this, [tap here](baja).',
+    ],
+
     'customer_account_created' => [
         'subject' => 'Your account is ready',
         'preheader' => 'All you need to sign in is your email: we’ll send you a code each time.',

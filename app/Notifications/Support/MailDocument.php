@@ -74,6 +74,8 @@ final class MailDocument
         public readonly array $enlaces = [],
         /** La ayuda del pie, «Responde a este correo…», si el correo la lleva (la R2; con el `replyTo` del parque). */
         public readonly ?string $responde = null,
+        /** Por qué lo recibe y la baja, `[toca aquí](baja)`, si es un COMERCIAL (la C1; `BrandedMailMessage::commercial()`). */
+        public readonly ?string $comercial = null,
     ) {}
 
     /**
@@ -104,6 +106,7 @@ final class MailDocument
                 ARRAY_FILTER_USE_BOTH,
             ),
             responde: is_string($data['responde'] ?? null) && $data['responde'] !== '' ? $data['responde'] : null,
+            comercial: is_string($data['comercial'] ?? null) && $data['comercial'] !== '' ? $data['comercial'] : null,
         );
     }
 

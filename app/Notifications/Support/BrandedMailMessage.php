@@ -419,6 +419,28 @@ class BrandedMailMessage extends MailMessage
         return $this;
     }
 
+    /**
+     * EL PIE COMERCIAL (la C1, `specs/correos-rediseno.md` §4.4; LSSI art. 22.1): por qué lo recibe y cómo darse de baja, bajo
+     * el filete del pie (el `pie({comercial})` del diseño), y la baja también en `List-Unsubscribe` (RFC 2369), donde el gestor
+     * de correo la pinta como botón. La frase la da el correo y nombra su enlace, `[toca aquí](baja)`; la URL es la de la baja
+     * FIRMADA, tal cual: sin UTM ni marca del envío, porque darse de baja no se mide.
+     *
+     * ⚠️ Una frase sin `(baja)` es un error de quien compone, no algo que se tape: el correo saldría sin baja. La frase es de lo
+     * que el panel NUNCA edita (`porque`, `MailTextCatalog::NUNCA`), así que solo la rompe el código.
+     */
+    public function commercial(string $porque, string $baja): static
+    {
+        if (preg_match('/\]\(baja\)/', $porque) !== 1) {
+            throw new \LogicException('El pie comercial nombra su baja, «[…](baja)»: sin ella el correo sale sin baja.');
+        }
+        $this->viewData['comercial'] = $porque;
+        $this->viewData['enlaces']['baja'] = $baja;
+
+        return $this->withSymfonyMessage(static function (Email $message) use ($baja): void {
+            $message->getHeaders()->addTextHeader('List-Unsubscribe', '<'.$baja.'>');
+        });
+    }
+
     /** @param  array<string, mixed>  $b */
     private function bloque(array $b): static
     {
