@@ -16,7 +16,7 @@ import { zonasConFilas } from './otra-zona.js';
 import { conNuevaLinea } from './linea.js';
 import { nuevaEnZona, nuevaEntrada, pantallaOtraEntrada } from './otra-entrada.js';
 
-export function useOtraEntrada({ flow, compra, enCola, textos, pago }) {
+export function useOtraEntrada({ flow, compra, enCola, textos, pago, alLlenarse }) {
     const { catalogStore } = flow;
 
     /** Lo que decide la línea de partida: el catálogo, los días, el del pedido, la duración de su fila y lo que ya lleva. */
@@ -91,7 +91,8 @@ export function useOtraEntrada({ flow, compra, enCola, textos, pago }) {
 
     /**
      * «Continuar»: el pedido con la nueva (o con más gente en su línea, si su tiempo ya estaba), validado y presupuestado
-     * entero (`rehacer`); si el servidor dice que sí, a «Pagar»; si no, aquí, con su aviso.
+     * entero (`rehacer`); si el servidor dice que sí, a «Pagar». Si no cabe a ESA hora, las cercanas en que caben todos, la
+     * nueva incluida (D1-A, K4: elegir una cambia la hora de toda la reserva; su flecha vuelve aquí); si no, aquí, con su aviso.
      */
     async function continuar() {
         const nueva = compra.nueva;
@@ -101,9 +102,12 @@ export function useOtraEntrada({ flow, compra, enCola, textos, pago }) {
         try {
             const ficha = compra.fichasOtras[nueva.fila];
             const linea = { fila: nueva.fila, n: nueva.n, extras: nueva.extras ?? [], elecciones: elecciones(), guardian: ficha?.guardian_authorization ?? 'none' };
-            const ok = await enCola(() => pago.rehacer(conNuevaLinea(compra.pedido, linea)));
+            const cambio = conNuevaLinea(compra.pedido, linea);
+            const r = await enCola(() => pago.rehacer(cambio));
+            const zona = catalogStore.products.find((p) => p.id === r.fila)?.zone?.name ?? '';
 
-            if (ok) Object.assign(compra, { modo: null, nueva: null, nuevaOferta: null, paso: 'pagar' });
+            if (r.ok) Object.assign(compra, { modo: null, nueva: null, nuevaOferta: null, paso: 'pagar' });
+            else if (r.horaLlena) await alLlenarse(r.aviso, { zona: r.fila === compra.pedido.fila ? '' : zona, pendiente: cambio });
         } finally {
             compra.ocupado = null;
         }

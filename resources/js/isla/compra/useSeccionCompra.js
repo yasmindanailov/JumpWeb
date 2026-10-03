@@ -27,7 +27,7 @@ import { usePagoCompra } from './usePagoCompra.js';
 import { usePantallaCero } from './usePantallaCero.js';
 import { useOtraEntrada } from './useOtraEntrada.js';
 import { borradorDeIntencion, conOtras, sigueSola } from './intencion.js';
-import { euros, horasCercanas, horasDelSelector } from './vista.js';
+import { euros, horasCercanas } from './vista.js';
 import { avisoDeLinea, conLaCesta, meterLinea, pedidoDe, resolverOtras } from './linea.js';
 import { alPrincipio, irA } from './ir-a.js';
 import { FALTA, PERDIDA, conFalta, faltaDeEntrada, faltaDePerdida, marcaDe, sigueLaMarca } from './falta.js';
@@ -75,6 +75,9 @@ export function useSeccionCompra(props) {
         // «Añadir otra entrada» (K3 de `otra-zona.md`, `useOtraEntrada.js`): la pantalla 0 en modo «otra» desde «Pagar», la
         // línea nueva y lo que el servidor resuelve de ella a la hora del pedido.
         modo: null, nueva: null, nuevaOferta: null,
+        // La hora llena con varias líneas (K4): la zona de la que no cupo (la nombra la pantalla; `''`, la del pedido) y el
+        // cambio PENDIENTE —la línea de «Añadir otra entrada»— que se rehace con la hora nueva.
+        perdidaZona: '', pendiente: null,
         paso: 'cuando', aviso: '', ocupado: null, pedido: null, pagado: null, dir: null, cercanas: [], horaNueva: null,
         preparando: false, sinDatos: false, alEntrar: false, desde: null, desdeHoy: false,
     });
@@ -93,11 +96,11 @@ export function useSeccionCompra(props) {
     const esDeEntradas = () => ! compra.borrador.fiesta && catalogStore.products.find((p) => p.id === (compra.pedido?.fila ?? compra.borrador.fila))?.type === 'entry';
     const datos = useDatosCompra({ flow, props, textos, esFiesta: esPack });
     const pago = usePagoCompra({ flow, props, textos, compra, enCola, alPagarMal, alLlenarse });
-    const otraEntrada = useOtraEntrada({ flow, compra, enCola, textos, pago });
+    const otraEntrada = useOtraEntrada({ flow, compra, enCola, textos, pago, alLlenarse });
     // La vista del paso «cuando»: la de la pantalla 0 o, en «Añadir otra entrada», la suya (con la misma forma).
     const enOtra = () => compra.modo === 'otra' && compra.nueva !== null;
     const vistaCuando = computed(() => (enOtra() ? otraEntrada.vista.value : vista.value));
-    const { vista, situar, cambiar, cargarHoras, extrasDelPedido } = usePantallaCero({ flow, compra, enCola, textos });
+    const { vista, situar, cambiar, cargarHoras, extrasDelPedido, horasParaTodas } = usePantallaCero({ flow, compra, enCola, textos });
 
     /**
      * La compra que salió a Google y VUELVE a esta página (T3e·4, `sidebar/reanudar.js`): el servidor la sirve con la
@@ -136,8 +139,9 @@ export function useSeccionCompra(props) {
     watch(() => vistaCuando.value.falta, (falta) => { if (marca.value?.id !== PERDIDA && ! sigueLaMarca(marca.value, falta)) marca.value = null; });
     watch(paso, () => { marca.value = null; });
     watch(() => compra.horaNueva, (hora) => { if (hora && marca.value?.id === PERDIDA) marca.value = null; });
-    // «Añadir otra entrada» es del paso «cuando»: salir de él (a «Pagar», a un desenlace…) la cierra.
-    watch(paso, (ahora) => { if (ahora !== 'cuando' && compra.modo) Object.assign(compra, { modo: null, nueva: null, nuevaOferta: null }); });
+    // «Añadir otra entrada» es del paso «cuando»: salir de él (a «Pagar», a un desenlace…) la cierra. A la hora llena NO: si la
+    // nueva no cabe a esa hora, su flecha vuelve a ella (K4 de `otra-zona.md`).
+    watch(paso, (ahora) => { if (! ['cuando', 'perdida'].includes(ahora) && compra.modo) Object.assign(compra, { modo: null, nueva: null, nuevaOferta: null }); });
 
     /** Pulsar sin estar listo: la caja va a lo que falta (`ir-a.js`) y lo marca (con lo que su frase nombra: la otra zona). */
     function aLoQueFalta(falta) {
@@ -292,11 +296,12 @@ export function useSeccionCompra(props) {
             const r = await meterLinea({ api, pedido, resueltos: selectionStore.resolved, resueltosOtras, cartStore, messages: props.messages });
 
             // La hora se llenó ENTRE elegirla y continuar (`#822`, §4.16): el aviso del diseño con las cercanas y «Elegir
-            // esta hora», no un texto en la pantalla 0. El pedido intentado queda como el perdido, para rehacerlo. ⚠️ Solo si
-            // la llena es la SUYA: la de la otra zona se dice en la pantalla 0, con su nombre (las cercanas para TODAS, K4).
-            if (! r.ok && r.horaLlena && r.fila === pedido.fila) {
+            // esta hora», no un texto en la pantalla 0. El pedido intentado queda como el perdido, para rehacerlo. Desde la
+            // K4 (`otra-zona.md` §4.4), la de CUALQUIER línea: las cercanas, las de TODAS, y si la llena es una añadida, con
+            // el nombre de su zona.
+            if (! r.ok && r.horaLlena) {
                 Object.assign(compra, { pedido, alEntrar: true });
-                await alLlenarse(r.aviso);
+                await alLlenarse(r.aviso, { zona: r.fila === pedido.fila ? '' : zonaDe(r.fila) });
 
                 return;
             }
@@ -378,13 +383,18 @@ export function useSeccionCompra(props) {
      * cuando ya están: mientras, «Pagar» sigue esperando. ⚠️ Sin ninguna libre ese día, a la pantalla 0 con el aviso del
      * servidor, que es donde se elige otro día: una pantalla que dice «Estas sí:» y no enseña ninguna mentiría.
      */
-    async function alLlenarse(aviso) {
+    async function alLlenarse(aviso, { zona = '', pendiente = null } = {}) {
         const perdida = compra.pedido?.hora ?? compra.borrador.hora;
+        // El pedido que se QUIERE: el de ahora y, con «Añadir otra entrada», su línea nueva (`pendiente`).
+        const quiere = { n: compra.borrador.n, otras: [], ...(compra.pedido ?? {}), ...(pendiente ?? {}) };
 
         await enCola(cargarHoras);
-        const cercanas = horasCercanas(horasDelSelector(timeStore.offered, { gente: compra.borrador.n, textos }), perdida);
+        // Las cercanas en que caben TODAS sus líneas, cada una en su zona y con su gente (D1-A, K4 de `otra-zona.md`).
+        const cercanas = horasCercanas(await horasParaTodas({ n: quiere.n, otras: quiere.otras ?? [] }), perdida);
 
         cartStore.setError('');
+        // «Añadir otra entrada» sin ninguna hora en que quepan todos: se queda en su pantalla, diciendo por qué.
+        if (pendiente && cercanas.length === 0) { compra.aviso = aviso; return; }
         if (cercanas.length === 0) {
             // Al continuar, la línea no llegó a la cesta: se vuelve a la pantalla 0 SIN sacar nada de ella (sus horas, ya
             // recargadas: la llena no se ofrece).
@@ -394,13 +404,16 @@ export function useSeccionCompra(props) {
 
             return;
         }
-        Object.assign(compra, { paso: 'perdida', cercanas, horaNueva: null, aviso: '' });
+        Object.assign(compra, { paso: 'perdida', cercanas, horaNueva: null, aviso: '', perdidaZona: zona, pendiente });
     }
 
+    /** El nombre de la zona de una fila (el que dice la hora llena de una línea añadida), o `''`. */
+    const zonaDe = (fila) => catalogStore.products.find((p) => p.id === fila)?.zone?.name ?? '';
+
     /**
-     * «Elegir esta hora»: la línea, rehecha a esa hora (`pago.rehacer`), y de vuelta a «Pagar». Si se llenó al CONTINUAR
-     * (`alEntrar`), la admisión que faltaba y el paso que toque, «Tus datos» o «Pagar» (`admitir`). Si también se llenó,
-     * otra vez.
+     * «Elegir esta hora»: el pedido, rehecho a esa hora para TODAS sus líneas (`pago.rehacer`; con la nueva de «Añadir otra
+     * entrada», también ella), y de vuelta a «Pagar». Si se llenó al CONTINUAR (`alEntrar`), la admisión que faltaba y el
+     * paso que toque, «Tus datos» o «Pagar» (`admitir`). Si también se llenó, otra vez.
      */
     async function elegirHora() {
         if (compra.ocupado) return;
@@ -412,25 +425,33 @@ export function useSeccionCompra(props) {
 
         try {
             const hora = compra.horaNueva;
+            const { pendiente, perdidaZona } = compra;
+            const r = await enCola(() => pago.rehacer({ ...(pendiente ?? {}), hora }));
+            const limpia = { cercanas: [], horaNueva: null, perdidaZona: '', pendiente: null };
 
-            if (await enCola(() => pago.rehacer({ hora }))) {
-                if (compra.alEntrar) {
-                    Object.assign(compra, { cercanas: [], horaNueva: null, alEntrar: false, borrador: { ...compra.borrador, hora } });
-                    await admitir();
-                } else {
-                    Object.assign(compra, { paso: 'pagar', cercanas: [], horaNueva: null });
-                }
+            if (! r.ok) {
+                await alLlenarse(compra.aviso, { zona: r.horaLlena && r.fila ? zonaDe(r.fila) : perdidaZona, pendiente });
+            } else if (compra.alEntrar) {
+                Object.assign(compra, { ...limpia, alEntrar: false, borrador: { ...compra.borrador, hora } });
+                await admitir();
             } else {
-                await alLlenarse(compra.aviso);
+                // Con la línea nueva ya dentro, «Añadir otra entrada» se cierra.
+                Object.assign(compra, { ...limpia, paso: 'pagar', ...(pendiente ? { modo: null, nueva: null, nuevaOferta: null } : {}) });
             }
         } finally {
             compra.ocupado = null;
         }
     }
 
-    /** La flecha de la hora que se llenó al CONTINUAR: a la pantalla 0, como estaba (la línea no llegó a la cesta). */
+    /**
+     * La flecha de la hora llena: si se llenó al CONTINUAR, a la pantalla 0, como estaba (la línea no llegó a la cesta); si
+     * fue al añadir una línea («Añadir otra entrada», K4), a esa pantalla, con lo elegido: la reserva no ha cambiado.
+     */
     function volverDeLaPerdida() {
-        Object.assign(compra, { paso: 'cuando', pedido: null, alEntrar: false, cercanas: [], horaNueva: null, aviso: '' });
+        const limpia = { cercanas: [], horaNueva: null, aviso: '', perdidaZona: '', pendiente: null };
+
+        if (compra.pendiente) { Object.assign(compra, { ...limpia, paso: 'cuando' }); return; }
+        Object.assign(compra, { ...limpia, paso: 'cuando', pedido: null, alEntrar: false });
     }
 
     /** Volver de «Tus datos» a la pantalla 0: la línea sale de la cesta, y la pantalla 0 sigue como estaba. */
@@ -583,14 +604,14 @@ export function useSeccionCompra(props) {
             ...ckDelPaso({
                 paso: paso.value, vista: datos.estado.vista, entrada: datos.estado.ent, textos, resumen: resumen.value,
                 ocupado: compra.ocupado, importe: euros(cartStore.quote?.online_amount_cents ?? 0, flow.locale),
-                horaNueva: compra.horaNueva, sinDatos: compra.sinDatos, alEntrar: compra.alEntrar,
+                horaNueva: compra.horaNueva, sinDatos: compra.sinDatos, alEntrar: compra.alEntrar, desdeOtra: Boolean(compra.pendiente),
                 acciones: {
                     cerrar,
                     // De «Pagar» a «Tus datos» si falta algo de la cuenta; si no (`#785`, `#857`), a la pantalla 0. De
                     // la hora llena al continuar (`#822`), a la pantalla 0 sin tocar la cesta. Dentro de «Tus datos», un
                     // paso atrás (`datos.js::atras`): de la puerta, que es el primero (M3, `#880`), a la pantalla 0.
                     volver: paso.value === 'pagar' ? (compra.sinDatos ? aCuando : () => { compra.paso = 'datos'; })
-                        : paso.value === 'perdida' && compra.alEntrar ? volverDeLaPerdida
+                        : paso.value === 'perdida' && (compra.alEntrar || compra.pendiente) ? volverDeLaPerdida
                             : datos.haciaAtras() === 'cuando' ? aCuando : datos.volver,
                     continuar: continuarDatos, entrar: entrarDatos,
                     pagar: pago.pagar, salir: pago.salir, reintentar: pago.reintentar, elegirHora, miQr: pago.miQr,
@@ -675,7 +696,12 @@ export function useSeccionCompra(props) {
             como: compra.sinDatos && datos.contexto.context?.first_name ? tp(textos, 'compra.pagar.como', { nombre: datos.contexto.context.first_name }) : '',
         })),
         fallido: computed(() => ({ hora: outcomeStore.holdUntil, motivo: outcomeStore.declinedReason, aviso: compra.aviso })),
-        perdida: computed(() => ({ cercanas: compra.cercanas, horaNueva: compra.horaNueva, alEntrar: compra.alEntrar })),
+        // La hora llena (K4 de `otra-zona.md`): con varias líneas, la hora nueva es de toda la reserva (`todos`); la zona que
+        // no cupo, si es una añadida (`zona`); y si fue al añadir una línea, aún no se ha pedido nada (`desdeOtra`).
+        perdida: computed(() => ({
+            cercanas: compra.cercanas, horaNueva: compra.horaNueva, alEntrar: compra.alEntrar, desdeOtra: Boolean(compra.pendiente),
+            zona: compra.perdidaZona, todos: (compra.pedido?.otras?.length ?? 0) > 0 || Boolean(compra.pendiente),
+        })),
         elegirNueva: (hora) => { compra.horaNueva = hora; },
         otraReserva: () => empezar(null),
         rotuloOtra: t(textos, 'compra.listo.otra'),

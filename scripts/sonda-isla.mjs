@@ -9,7 +9,10 @@
  *   2. los DESENLACES por la vuelta real del banco: sin datos («verificando»), el rechazo («El pago no se ha
  *      completado», con su motivo) y reintentar, y el sí («¡Reservado!» con el QR del carné);
  *   3. un CUMPLEAÑOS desde `/cumpleanos`: su calculadora (la edad elige el pack, el primer día con hueco y su primera hora),
- *      «Reservar y pagar la señal», la SEÑAL a la pasarela (5000 céntimos) y «¡Fiesta reservada!».
+ *      «Reservar y pagar la señal», la SEÑAL a la pasarela (5000 céntimos) y «¡Fiesta reservada!»;
+ *   4. DOS ZONAS en una compra (la L2, `otra-zona.md` K3–K4): Kids desde la calculadora, JUMP con «Añadir otra entrada»,
+ *      la hora de JUMP que se llena al pagar —las cercanas, las de TODAS—, «Elegir esta hora» para las dos y el pago, con
+ *      «¡Reservado!» y el pedido en la BD: dos líneas, cada una en la franja de SU zona y a la misma hora.
  *
  *   docker compose exec -u sail -T -e PLAYWRIGHT_BROWSERS_PATH=/home/sail/pw-browsers laravel.test \
  *       node scripts/sonda-isla.mjs [390|1280]
@@ -343,6 +346,77 @@ try {
     await quieta();
     ok('pagada → «¡Fiesta reservada!» con el formulario de invitados y su plazo', /Rellena el formulario de invitados/.test(await cuerpo()), (await cuerpo()).match(/Rellena[^\n]*/)?.[0]);
     await foto('7-fiesta-reservada');
+
+    // ── 4. DOS ZONAS en una compra (la L2, `otra-zona.md` K3–K4): Kids desde la calculadora, JUMP con «Añadir otra entrada»,
+    //    la hora llena de JUMP —las cercanas, las de TODAS— y el pago, con sus dos líneas en la BD, cada una en su zona ──────
+    devolverTelefono();
+    limitadoresACero();
+    await page.goto(`${BASE}/kids`, { waitUntil: 'networkidle' });
+    await page.locator('#precio').scrollIntoViewIfNeeded();
+    await page.waitForSelector('[data-jw-calculadora] button[aria-label*=", libre"]:not([disabled])', { timeout: 20000 });
+    await page.locator('[data-jw-calculadora] button[aria-label*=", libre"]:not([disabled])').first().click();
+    await page.waitForSelector('[data-jw-calculadora] [role=group] button:not([disabled])', { timeout: 15000 });
+    await page.locator('[data-jw-calculadora] [role=group] button:not([disabled])').first().click();
+    await espera(() => { const b = [...document.querySelectorAll('[data-jw-calculadora-lado] button')].find((x) => x.textContent.includes('Reservar y pagar')); return b && ! b.disabled; }, null, 15000);
+    await page.locator('[data-jw-calculadora-lado] button', { hasText: 'Reservar y pagar' }).click();
+    await hastaPagar();
+    await boton(/Añadir otra entrada/).click();
+    await page.waitForSelector('section[aria-labelledby="pjc-q-zona"]', { timeout: 15000 });
+    await quieta();
+    ok('«Añadir otra entrada» desde «Pagar»: de partida, JUMP', await page.locator('input[name="pjc-zona"]:checked').getAttribute('value') === 'jump');
+    await accion(/^Continuar$/).click();
+    await hastaPaso('Pagar');
+    await quieta();
+    const conDos = await cuerpo();
+    ok('«Pagar» con las DOS líneas, y «Quitar» solo en la añadida', /Kids/.test(conDos) && /Jump/.test(conDos) && await boton(/^Quitar$/).count() === 1, conDos.slice(0, 160));
+    const lineas = await page.evaluate(() => {
+        for (const valor of Object.values(localStorage)) {
+            try { const j = JSON.parse(valor); if (Array.isArray(j?.lines) && j.lines.length) return j.lines; } catch { /* otra clave */ }
+        }
+
+        return [];
+    });
+    const jump = lineas.find((l) => tinker(`echo App\\Domain\\Booking\\Models\\TicketType::find(${Number(l.product_id)})?->zone?->slug;`) === 'jump') ?? null;
+    ok('en la cesta, las dos a la MISMA hora (D1-A)', lineas.length === 2 && jump !== null && lineas[0].time === lineas[1].time, lineas.map((l) => `${l.product_id}@${l.time}`).join(' · '));
+    const horaPerdida = String(jump?.time ?? '').slice(0, 5);
+    llena = JSON.parse(tinker(`$tt = App\\Domain\\Booking\\Models\\TicketType::find(${Number(jump?.product_id)}); $s = App\\Domain\\Booking\\Models\\Slot::where('zone_id', $tt->zone_id)->whereDate('date', '${jump?.date}')->where('start_time', '${horaPerdida}:00')->first(); echo json_encode($s ? ['id' => $s->id, 'cupo' => $s->online_capacity, 'hora' => '${horaPerdida}'] : null);`));
+    tinker(`$s = App\\Domain\\Booking\\Models\\Slot::find(${llena.id}); $s->online_capacity = $s->seats_taken; $s->saveQuietly();`);
+    const antesDeDos = cuantosPedidos();
+    await accion(/^Pagar .* con tarjeta$/).click();
+    await enElCuerpo(/ya no está libre|ya no queda sitio/);
+    await quieta();
+    const perdidaDos = await cuerpo();
+    const cercanasDos = await boton(/^\d{2}:\d{2}/).allInnerTexts();
+    ok('JUMP llena al pagar → la hora llena, con las cercanas «para toda la reserva» y sin la perdida', /para toda la reserva/.test(perdidaDos) && cercanasDos.length > 0 && ! cercanasDos.some((h) => h.startsWith(horaPerdida)),
+        `${horaPerdida} → ${cercanasDos.map((h) => h.slice(0, 5)).join(', ')} · ${perdidaDos.slice(0, 80)}`);
+    ok('no nació ningún pedido', cuantosPedidos() === antesDeDos);
+    await foto('8-dos-zonas-llena');
+    devolverFranja();
+    const nuevaDos = (await boton(/^\d{2}:\d{2}/).first().innerText()).slice(0, 5);
+    await boton(/^\d{2}:\d{2}/).first().click();
+    await accion(/^Elegir esta hora$/).click();
+    await hastaPaso('Pagar');
+    await espera((h) => ([...document.querySelectorAll('[data-isla] [aria-live="polite"]')].pop()?.textContent ?? '').includes(h), nuevaDos, 15000);
+    await quieta();
+    const rehechas = await page.evaluate(() => {
+        for (const valor of Object.values(localStorage)) {
+            try { const j = JSON.parse(valor); if (Array.isArray(j?.lines) && j.lines.length) return j.lines.map((l) => String(l.time).slice(0, 5)); } catch { /* otra clave */ }
+        }
+
+        return [];
+    });
+    ok('«Elegir esta hora» → las DOS líneas a la hora nueva', rehechas.length === 2 && rehechas.every((h) => h === nuevaDos), `${nuevaDos}: ${rehechas.join(', ')}`);
+    await accion(/^Pagar .* con tarjeta$/).click();
+    await page.waitForURL(/redsys\.es/, { timeout: 20000 });
+    bancoDice('0000');
+    await volverDelBanco('/pago/redsys/retorno-ok');
+    await enElCuerpo(/Reservado/);
+    await quieta();
+    const reservado = await cuerpo();
+    ok('el sí → «¡Reservado!» con las DOS líneas', /Kids/.test(reservado) && /Jump/.test(reservado) && /Nº de pedido/.test(reservado), reservado.match(/[^\n]*Nº de pedido[^\n]*/)?.[0] ?? reservado.slice(0, 120));
+    const enLaBD = JSON.parse(tinker(`$o = ${ULTIMO}; echo json_encode($o->items()->whereNull('parent_item_id')->with(['ticketType.zone', 'slot'])->get()->map(fn ($i) => [$i->ticketType->zone?->slug, substr((string) $i->slot?->start_time, 0, 5), $i->slot?->zone_id === $i->ticketType->zone_id])->all());`));
+    ok('en la BD: un pedido con DOS líneas, cada una en la franja de SU zona y a la misma hora', enLaBD.length === 2 && new Set(enLaBD.map((i) => i[0])).size === 2 && enLaBD.every((i) => i[1] === nuevaDos && i[2] === true), JSON.stringify(enLaBD));
+    await foto('9-dos-zonas-reservado');
 } catch (e) {
     ok('SE CORTA', false, e.message.split('\n')[0]);
     await foto('corte').catch(() => {});

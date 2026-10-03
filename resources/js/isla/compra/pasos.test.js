@@ -173,6 +173,14 @@ describe('la descripción de cada paso', () => {
         assert.equal(ck('perdida', { alEntrar: true, horaNueva: '18:00' }).action.onClick(), 'elegirHora');
     });
 
+    test('K4: la que no cupo es la de «Añadir otra entrada» (`desdeOtra`): en «Pagar», con flecha de vuelta a esa pantalla', () => {
+        const c = ck('perdida', { desdeOtra: true });
+
+        assert.equal(`${c.stepStrong}${c.step}`, 'Paso 2 de 2 · Pagar');
+        assert.equal(c.onBack(), 'volver', 'la reserva no ha cambiado: se puede volver');
+        assert.equal(ck('perdida', {}).onBack, null, 'desde «Pagar», sin flecha, como el diseño');
+    });
+
     test('«Listo»: sin banda ni resumen, y «Ir a Mi QR»', () => {
         const c = ck('listo');
 

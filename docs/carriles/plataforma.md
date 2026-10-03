@@ -64,7 +64,9 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
    la pantalla 0 y la pregunta de los grupos de `#881`; vista por el owner—; **K2·b ✅** (`#882`, §4.7) —la tarjeta, una
    entrada completa: su tiempo de partida el del pedido, sus edades, su hora extra y la hora de salida de cada grupo;
    contrato 1.63.0; visto bueno del owner el 03-10—; **K3 ✅** —varias líneas, «Pagar» con − / + y «Quitar», «Añadir otra
-   entrada»; §4.3; visto bueno del owner el 03-10—; ▶ ahora la K4). La lista nueva del owner (el 1),
+   entrada»; §4.3; visto bueno del owner el 03-10—; **K4 ✅** —la hora llena con varias líneas, las cercanas de todas,
+   `sonda-isla` 34/34 con dos zonas; §4.4; visto bueno del owner el 03-10—: **la L2, ENTERA**; ▶ ahora la M4). ⚠️ Medido en su sonda:
+   `Slot::whereIn('start_time', …)` no casa (0 frente a 1 con `where`, mismo SQL); nada del código lo usa. La lista nueva del owner (el 1),
    con M1→M3 ✅, espera solo a su M4 (después de la L2). ⚠️ La compra, a 204,81 de 206 kB (+17,64 en una noche): la M4 empieza
    por CARGARLA al abrirla. ⚠️ El limitador de la API es de 60/min por IP (`API_RATE_LIMIT_PER_MINUTE`): una sonda larga lo
    agota (429; se vacía con `RateLimiter::clear`); tras el NAT de un parque o un colegio, la IP es de todos: a mirar en la M4.

@@ -16,7 +16,7 @@ import { toApiItems, todayIso } from '../../sidebar/cart.js';
 import { calcetinDe, cargarDiasDeFilas, cargarFichas, horaDelMotor, horaQueCabe, primerDia } from './oferta.js';
 import { informarDemanda } from './demanda.js';
 import { borradorDeIntencion, borradorVacio, conOtras } from './intencion.js';
-import { horaCorta } from './vista.js';
+import { horaCorta, horasDelSelector } from './vista.js';
 import { datosDeReserva, filasDeZona, pantallaCuando, preguntaCalcetines, respuestasDe } from './pantalla-cuando.js';
 import { campoDeEdad, menuElegido, packPorEdad, packsDeFiesta, pantallaCuandoFiesta } from './fiesta.js';
 import { cargarSinHora, complementosDe, conExtra, eleccionesDelBorrador, gruposComoFilas, quedanEn } from './complementos.js';
@@ -147,6 +147,28 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
 
     /** Una línea añadida, cambiada (la `i`): el resto, igual. */
     const conLinea = (i, cambio) => otras().map((o, j) => (j === i ? { ...o, ...cambio } : o));
+
+    /**
+     * Las horas de ESE día en que caben TODAS las líneas de un pedido (D1-A; la hora llena, K4 de `otra-zona.md`): las de la
+     * fila del pedido con su gente y las de cada línea añadida con la suya —las de una fila que aún no están (la de «Añadir
+     * otra entrada»), pedidas con la cesta de contexto (`AFORO-02`)—. Donde alguna no cabe, apagada: `horasCercanas` la salta.
+     *
+     * @param {{n: number, otras?: Array<{fila: number, n: number}>}} pedido  el que se quiere (con la línea nueva, si la hay)
+     */
+    async function horasParaTodas({ n, otras: lineas = [] }) {
+        const b = compra.borrador;
+        const faltan = [...new Set(lineas.map((o) => o.fila))].filter((fila) => ! Array.isArray(compra.horasOtras[fila]));
+
+        if (faltan.length && b.dia) {
+            const llegadas = await Promise.all(faltan.map((fila) => cargarHorasDe({ api, fila, dia: b.dia, lineas: cartStore.lines })));
+
+            compra.horasOtras = { ...compra.horasOtras, ...Object.fromEntries(faltan.map((fila, i) => [fila, llegadas[i]])) };
+        }
+
+        return horasDelSelector(timeStore.offered, { gente: n, textos }).map((h) => (
+            ! h.disabled && lineas.some((o) => horasQueNoCaben(compra.horasOtras[o.fila], o.n)(h.time)) ? { ...h, disabled: true } : h
+        ));
+    }
 
     /**
      * Los complementos que se PIDEN (`#880`): los pares de calcetines —de una entrada y, desde la M1, también de una
@@ -462,5 +484,5 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
             });
     });
 
-    return { vista, situar, cambiar, cargarHoras, extrasDelPedido };
+    return { vista, situar, cambiar, cargarHoras, extrasDelPedido, horasParaTodas };
 }

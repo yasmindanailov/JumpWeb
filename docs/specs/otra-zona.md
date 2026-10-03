@@ -14,10 +14,10 @@
 - **Trampas**: (1) la cesta de la isla SUSTITUYE su línea porque el recibo no tenía «quitar» (`#692`, T3e·3): una
   línea más exige poder quitarla en «Pagar», y el mockup no lo trae (D2). (2) Cada línea se valida con las anteriores
   en `items` y la candidata FUERA (`cart.js::validateLine`), o compite consigo misma. (3) Los pesos, a ras de su techo:
-  la compra 212,95 de 214 y los pasos bajo 57 (`SidebarBundleBudgetTest`, tras la K3, 03-10). (4) La hora llena
-  (`#822`) y la vuelta del banco, con dos líneas.
-- **Estado**: ✅ aprobada (`#878`). **K1 ✅ · K2 ✅** (§4.6) · **K2·b ✅** (`#882`, §4.7) · **K3 ✅** (03-10, §4.3: varias
-  líneas, «Pagar» y «Añadir otra entrada»; visto bueno del owner); sigue K4. ➕ `#881`: los grupos de elección, su modelo
+  la compra 214,73 de 216 y los pasos bajo 57 (`SidebarBundleBudgetTest`, tras la K4, 03-10). (4) La hora llena
+  (`#822`) y la vuelta del banco, con dos líneas: las cercanas, las de TODAS (§4.4).
+- **Estado**: ✅ aprobada (`#878`). **K1 ✅ · K2 ✅** (§4.6) · **K2·b ✅** (`#882`, §4.7) · **K3 ✅** (§4.3) · **K4 ✅** (03-10,
+  §4.4: la hora llena con varias líneas y la compra entera; visto bueno del owner). **La L2, ENTERA.** ➕ `#881`: los grupos de elección, su modelo
   en la K1 y su pregunta en la K2.
 - **Invariantes**: `PAY-12`, `PAY-20`, `AFORO-01`, `AFORO-02`, sin el `CRITICAL_RE`; del servidor, solo un dato de
   lectura en la ficha (`stay_minutes`, contrato 1.63.0, `#882`); la compra entera con la pasarela de pruebas (§6).
@@ -142,6 +142,22 @@ mismo tiempo suma, la flecha vuelve sin cambiar nada y la pantalla 0 recuerda lo
 - `#822` con varias líneas: las horas cercanas son las que caben para TODAS.
 - La vuelta del banco y la compra a medias (`marcarSalida`) guardan el pedido con sus `otras`; «¡Reservado!», la isla
   tras la compra y Mi cuenta dicen las líneas con « + », como el mockup.
+
+**K4, hecha (03-10; visto bueno del owner).** La hora llena de CUALQUIER línea —al continuar, al pagar, al cambiar el pedido
+y al añadirle una con «Añadir otra entrada»— lleva a la pantalla de la hora perdida con las cercanas en que caben TODAS
+(`usePantallaCero::horasParaTodas`: la oferta del pedido con su gente y la de cada línea con la suya; la de una nueva, pedida si
+falta). Si la que no cupo es una añadida, el título nombra su zona («En JUMP ya no queda sitio a esa hora.»); con varias
+líneas, «Estas sí, para toda la reserva:». Desde «Añadir otra entrada», la nueva queda PENDIENTE: «Elegir esta hora» rehace
+el pedido con ella a la hora nueva y su flecha vuelve a esa pantalla (la reserva no cambió). `rehacer` dice ahora por qué no
+(`{ ok, horaLlena, fila }`). ⚠️ De paso, un defecto de `#822`: `vista.js::horasCercanas` comparaba la perdida del motor
+(«11:00:00») con las del selector («11:00») y no casaban nunca: salían las PRIMERAS del día, no las de alrededor. La vuelta del
+banco y «¡Reservado!» ya servían con varias líneas (el pedido viaja entero; `lineaListo` las dice todas). **Medido**: JS 1.809;
+tres mutaciones muerden (las cercanas sin cortar, la flecha de la nueva, las horas sin las líneas añadidas —esta, con la
+sonda—); una sonda desechable a 390 y 1280, 8/8 —con JUMP lleno a esa hora y a la SIGUIENTE (libre para Kids), las cercanas
+saltan las dos; la flecha vuelve; «Elegir esta hora» deja las dos líneas a la nueva—; y `sonda-isla` con su recorrido 4,
+DOS ZONAS: de la calculadora de `/kids` a «Pagar», JUMP con «Añadir otra entrada», JUMP lleno al pagar → las cercanas «para
+toda la reserva», «Elegir esta hora», el pago y «¡Reservado!» con las dos; en la BD, dos líneas, cada una en la franja de su
+zona y a la misma hora (34/34). K3 14/14, K2·b 19/19, `sonda-conversion` 22/22.
 
 ### 4.5 Textos y medida
 - Clave nueva en es/en/fr para D3-B («¿Alguien va a :zona? Añádelo a la misma reserva»); el resto ya existe.

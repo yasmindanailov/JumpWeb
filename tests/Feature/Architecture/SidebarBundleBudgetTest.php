@@ -1039,7 +1039,11 @@ class SidebarBundleBudgetTest extends TestCase
     // «Añadir otra entrada» (`otra-entrada.js`, `useOtraEntrada.js`). Medido 204,81 → 212,95 (base: la medida de la K2·b,
     // `508db23a`; los commits del SPA de en medio solo tocan `resources/js/fiesta/`, fuera del grafo de la compra). El techo,
     // a 214. ⚠️⚠️ La noche, +25,78 kB (187,17 → 212,95): la M4 ya no espera, va justo tras la K4.
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 214;
+    // K4 de la L2 (`otra-zona.md` §4.4): la hora llena con varias líneas —las cercanas de TODAS (`usePantallaCero::
+    // horasParaTodas`), la zona que no cupo en el título y «Añadir otra entrada» que no cabe a esa hora— y las cercanas que
+    // por fin son las de alrededor (`vista.js::horasCercanas`). Medido 212,95 → 214,73 (base: la medida de la K3, `dc514c7b`,
+    // que es el `HEAD`). El techo, a 216. ⚠️⚠️ Lo siguiente es la M4: cargar la compra al ABRIRLA.
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 216;
 
     // T4d·4 (`specs/isla-y-landing-nueva.md` §4.12): la CALCULADORA de una página, entrada propia que la página pide
     // (`scripts` de `<x-pagina>`) y se monta al acercarse su pieza. Su DESCARGA entera, como la mide el navegador que

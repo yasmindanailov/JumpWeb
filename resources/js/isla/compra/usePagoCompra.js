@@ -38,7 +38,9 @@ export function usePagoCompra({ flow, props, textos = {}, compra, enCola, alPaga
      * cuando llega; si el servidor dice que no, vuelve lo de antes —y el aviso nombra la zona de la línea que no cupo—. Con
      * OTRA HORA es lo mismo, para todas (T3e·6: la que se elige tras llenarse la primera; D1-A, `#878`). Desde la K3, también
      * la gente de una línea AÑADIDA, quitarla o sumar una («Añadir otra entrada»), y el borrador de la pantalla 0 lo sigue:
-     * volver atrás enseña lo mismo. Dice si el servidor lo aceptó.
+     * volver atrás enseña lo mismo. Dice si el servidor lo aceptó y, si no, por qué (K4: si es la HORA, y de qué fila).
+     *
+     * @returns {Promise<{ok: boolean, horaLlena?: boolean, fila?: number|null, aviso?: string}>}
      */
     async function rehacer(cambio) {
         const antes = compra.pedido;
@@ -61,13 +63,13 @@ export function usePagoCompra({ flow, props, textos = {}, compra, enCola, alPaga
             compra.pedido = antes;
             compra.aviso = avisoDeLinea(r, p, { productos: flow.catalogStore.products, textos });
 
-            return false;
+            return { ok: false, horaLlena: r.horaLlena === true, fila: r.fila ?? null, aviso: compra.aviso };
         }
 
         compra.pedido = conLaCesta(p, cartStore.lines);
         Object.assign(compra.borrador, { n: compra.pedido.n, cal: p.cal, hora: p.hora, otras: borradorDeOtras(compra.pedido.otras) });
 
-        return true;
+        return { ok: true };
     }
 
     const cantidad = (id, n) => enCola(() => rehacer(cambioDe(id, n, compra.pedido)));

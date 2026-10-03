@@ -146,13 +146,17 @@ export function horasDelSelector(ofrecidas, { gente, textos }) {
 /**
  * Las horas CERCANAS del mismo día, por si la elegida se llena al pagar (T3e·6; `cercanas()` de
  * `paginas/compra/datos.js` del diseño): las cuatro con sitio más próximas a la perdida, en orden de reloj.
+ * ⚠️ La perdida llega como la guarda el motor («17:00:00», `oferta.js::horaDelMotor`) y las horas del selector, cortas
+ * («17:00»): se comparan en «HH:MM». Comparadas tal cual no casaban nunca, y salían las PRIMERAS del día con sitio, no las
+ * de alrededor (medido el 03-10, en la K4 de `otra-zona.md`).
  */
 export function horasCercanas(slots, hora) {
     const lista = Array.isArray(slots) ? slots : [];
-    const k = lista.findIndex((s) => s.time === hora);
+    const corta = String(hora ?? '').slice(0, 5);
+    const k = lista.findIndex((s) => s.time === corta);
     const minutos = (h) => Number(h.slice(0, 2)) * 60 + Number(h.slice(3));
 
-    return lista.filter((s) => s.time !== hora && s.left > 0 && ! s.disabled)
+    return lista.filter((s) => s.time !== corta && s.left > 0 && ! s.disabled)
         .sort((a, b) => Math.abs(lista.indexOf(a) - k) - Math.abs(lista.indexOf(b) - k))
         .slice(0, 4)
         .sort((a, b) => minutos(a.time) - minutos(b.time));

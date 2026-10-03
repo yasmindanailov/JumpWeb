@@ -451,6 +451,11 @@ return [
             'texto' => 'No se ha cobrado nada. Estas sí:',
             // Al CONTINUAR de la pantalla 0 (`#822`): aún no se ha pedido ni cobrado nada (el «Estas sí:» de «Tus datos»).
             'texto_al_entrar' => 'Estas sí:',
+            // K4 de `otra-zona.md`: con varias líneas, las cercanas son las de TODAS y la hora nueva, de toda la reserva; si la
+            // que no cupo es una añadida, el título nombra su zona.
+            'titular_zona' => 'En :zona ya no queda sitio a esa hora.',
+            'texto_todos' => 'No se ha cobrado nada. Estas sí, para toda la reserva:',
+            'texto_todos_al_entrar' => 'Estas sí, para toda la reserva:',
             'boton' => 'Elegir esta hora',
         ],
     ],

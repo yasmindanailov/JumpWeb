@@ -73,7 +73,8 @@ export function direccion(antes, ahora) {
  *   `paso` · `vista` (`descargo` · `entrar`, dentro de «Tus datos») · `entrada` (el estado de «Entra»: `paso`,
  *   `valor`, `codigo`) · `textos` · `resumen` ({ summary, total }) · `importe` (lo que cobra la pasarela, ya escrito) ·
  *   `ocupado` (el paso que espera al servidor) · `horaNueva` (la elegida en «perdida») · `sinDatos` (se llegó a «Pagar»
- *   sin «Tus datos») · `acciones` ({ volver, continuar, entrar, pagar, salir, reintentar, elegirHora, miQr, cerrar }).
+ *   sin «Tus datos») · `alEntrar` (la hora se llenó al continuar) · `desdeOtra` (se llenó al añadir una línea, K4) ·
+ *   `acciones` ({ volver, continuar, entrar, pagar, salir, reintentar, elegirHora, miQr, cerrar }).
  */
 export function ckDelPaso(e) {
     const t = (clave) => texto(e.textos, clave);
@@ -147,7 +148,8 @@ export function ckDelPaso(e) {
     if (e.paso === 'perdida') {
         return conFalta({
             ...ck, ...(e.alEntrar ? pasoN(1, t('compra.datos.banda')) : pasoN(2, t('compra.pagar.banda'))),
-            onBack: e.alEntrar ? a.volver ?? null : null,
+            // Con la línea nueva de «Añadir otra entrada» sin caber (`desdeOtra`, K4 de `otra-zona.md`), también: a esa pantalla.
+            onBack: e.alEntrar || e.desdeOtra ? a.volver ?? null : null,
             action: { label: t('compra.perdida.boton'), onClick: a.elegirHora, loading: e.ocupado === 'perdida' ? t('pieza.cargando') : false },
         }, faltaDePerdida(e.horaNueva, e.textos), a.elegirHora);
     }

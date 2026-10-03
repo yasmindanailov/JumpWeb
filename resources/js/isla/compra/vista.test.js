@@ -143,6 +143,13 @@ describe('la tira de días y el selector de horas', () => {
         assert.deepEqual(horasCercanas(libres.slice(0, 5), '15:00').map((s) => s.time), ['16:00', '17:00', '18:00', '19:00']);
         assert.deepEqual(horasCercanas([], '17:00'), []);
     });
+
+    test('K4: la perdida, tal como la guarda el motor («19:00:00»), da las MISMAS cercanas que en corto (antes, las primeras del día)', () => {
+        const dia = ['14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'].map((time) => ({ time, left: time === '19:00' ? 0 : 5, ...(time === '19:00' ? { disabled: true } : {}) }));
+
+        assert.deepEqual(horasCercanas(dia, '19:00:00').map((s) => s.time), ['17:00', '18:00', '20:00', '21:00']);
+        assert.deepEqual(horasCercanas(dia, '19:00:00'), horasCercanas(dia, '19:00'));
+    });
 });
 
 describe('la pantalla 0 de las entradas', () => {
