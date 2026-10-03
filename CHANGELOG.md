@@ -40,7 +40,8 @@ encuestas, los correos rediseñados, la puerta y el SEO. 475 commits desde v1.2.
     borra. Sin paquete, el producto sirve su anfitrión mínimo: no es la web de la instalación.
   - **`.env`**: fuera `GOOGLE_PLACES_API_KEY` (Places retirado, `#771`/`#772`; las reseñas se importan con
     `reviews:import`). Nuevas y opcionales, vacías = apagado: `POSTHOG_*`, `MATOMO_TOKEN_AUTH`, `META_CAPI_*`,
-    `TIKTOK_EVENTS_ACCESS_TOKEN`.
+    `TIKTOK_EVENTS_ACCESS_TOKEN`. Y `MAIL_ONLY_TO` (`#883`), el BUZÓN TRAMPA de staging: con ella el correo solo sale
+    hacia esas direcciones; en producción, VACÍA (la guarda 3 para el despliegue que la lleve).
   - **El kit de ilustración**: tras el despliegue, `kit:build --podar` (la guarda 7 sale en rojo hasta entonces, `#845`).
   - **Tras el `migrate`**: las contraseñas de los CLIENTES se borran (A5d, `#869`; sin vuelta: medir antes y después); y,
     si la instalación editó a mano su texto legal o su política de cookies, su guion por huella (los de PlayJump, en su
@@ -56,8 +57,9 @@ encuestas, los correos rediseñados, la puerta y el SEO. 475 commits desde v1.2.
 
 - **La landing fuera** (F5, `#677`, `#681`) y **la isla** (`#682`): la web nueva en la instancia con la compra en Vue
   contra `/api/v1`; su primera pantalla, la conversión y las páginas (`#820`→`#846`), Mi cuenta (T5, `#774`→`#779`), el
-  zip tercero y el sexto (`#780`→`#787`, `#866`→`#875`), la otra zona en un mismo pedido (L2, `#878`, `#881`, `#882`) y la
-  lista del owner del 02-10 (`#876`→`#880`).
+  zip tercero y el sexto (`#780`→`#787`, `#866`→`#875`), la otra zona en un mismo pedido (L2, `#878`, `#881`, `#882`), la
+  lista del owner del 02-10 (`#876`→`#880`) y la del 03-10, probada en staging: «Añadir otra entrada», el «Guardado» de
+  las cookies, la flecha siempre al selector, sin foco en el correo, el QR más grande y los datos de la reserva de la fiesta.
 - **Promociones** (`#770`), **las reseñas copiadas** (`#771`, `#774`) y **el SEO** (`#862`).
 - **El panel a salvo** (`#850`, `#851`, `#877`) y **el acceso con código** sin contraseña (`#853`→`#857`, `#869`, `#870`).
 - **Lo legal**: `/cookies` (`#858`→`#860`), los textos (`#863`→`#865`) y los datos de los invitados a los 14 días (`#863`).

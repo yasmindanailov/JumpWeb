@@ -6,10 +6,8 @@
 > **820–849 AGOTADA con `#849`** → **850–879 AGOTADA con `#879`** → sigue en **880–909** (del owner, 02-10 noche; de
 > `#880` a `#899` en `decisiones/800-899.md`, de `#900` en adelante en `900-999.md`) · Último usado: **`#883`** · Spec:
 > `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador;
-> `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-10-02 noche** (todo con el visto bueno del owner: **su
-> lista del 02-10, L1→L5** —`#876`→`#879`, §4.28; el código de la L2, por hacer—, el zip (6) de este carril, ENTERO —Z6a→Z6g,
-> `#866`→`#875`— y la A5, `#869`/`#870`; y, de noche, **su lista nueva, M1→M4** —`#880`, §4.29: M1→M3 ✅— y la L2 en código,
-> K1·K2 ✅ y la K2·b de `#882`; lo anterior, en `git log -p` de este fichero).
+> `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-10-03**, el día de la v2.0.0 (el estado, el primero de
+> «Por dónde retomar»; lo anterior, en `git log -p` de este fichero).
 > ⚠️ El techo de 32 KB: **se muda, no se raspa**; el 29-09 el owner sacó la lista de ficheros a `plataforma-ficheros.md`
 > (`#852`) y NO subió el techo. Si vuelve a apretar tres veces seguidas, llévaselo con la medida.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -42,14 +40,12 @@
 
 ## Por dónde retomar, en orden
 
-▶▶▶▶ **EL ORDEN HASTA LA v2.0.0** (`#789`, del owner). **HECHO** (lo visible, con el ✅ del owner): la primera pantalla, la
-conversión del zip tercero, la T5 (§4.13–§4.16) y **la T6 ENTERA** (§4.17–§4.25): portada, cumpleaños, colegios, visítanos,
-normas, la T6f (301 y la web vieja fuera, `#843`), `#844`, la T6h (las legales) y, el 29-09 tarde, la **T4f** (§4.12:
-`sonda-entradas.mjs` 89/89 a 390 y 1280, arnés `mutar-sonda-entradas.sh` 25/25; `sonda-isla` compra desde `/kids` y
-`/cumpleanos`, 22/22), el **`#792` en la isla** (§4.24: «Tu cumpleaños» y solo «Opcional», ✅ del owner; `isla/ui/fecha.js`) y la
-**T6g** (§4.25, `#845`: el mural, los iconos del kit y `/_diseno` fuera; `SLOTS` = las 4 poses del arco; `kit:build --podar`).
-Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,entradas}.mjs`), la web entera (`sonda-web.mjs`,
-17/17) y la compra (`sonda-isla.mjs`).
+▶▶▶▶ **03-10, EL DÍA DE LA v2.0.0** (lo hecho antes, en sus specs y en `git log -p` de este fichero). Producto: `#883` (buzón
+trampa `MAIL_ONLY_TO`, solo staging; la guarda 3 la quiere vacía en producción), `4bc1bbaf` y `010c70d0` (la lista del owner).
+STAGING = copia de producción + la config nueva del owner (`storage/app/aplicar-produccion-*.php`); panel `/ensayo-28a37e7ee4`.
+Instancia: `4075996` (textos) y, SIN COMMITEAR hasta su ✅, colores (cian y lima), vídeos y atracciones reales. La rama
+`cliente/playjump` = `99ba026a` (`:root, .sidecart`); su worktree viejo está ROTO (pre-`#648`). LA RECETA, en `ENTORNOS.md` §6;
+lo pendiente, uno por uno, en `storage/app/medios-owner/PENDIENTES.md`. Al SPA: staging es copia de producción desde el 03-10.
 ▶▶▶▶ **LO SIGUIENTE, EN ORDEN** (actualizado el 02-10 tarde, `#876`; el reparto con el SPA, `#861` y `#876`):
 0. ✅ **EL ZIP (6) DE ESTE CARRIL, CERRADO** (01→02-10, cada tanda con el visto bueno del owner en vivo; su detalle, en §4.27):
    Z6a, Z6b y sus tres usos (`#866`, `#867`), el B3 (`#868`; su MEDIDA, la Z6c·3, es del SPA), Z6d (`#872`), Z6e (`#873`,

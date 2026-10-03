@@ -541,6 +541,19 @@ instalación de un cliente. Si se configura a mano deja de ser una prueba del pr
 > (`hash('sha256', User::teamMembers()->orderBy('id')->pluck('password', 'id')->toJson())`): la del personal, IDÉNTICA; la
 > de clientes, a cero; el registro dice `users.customer_passwords_erased` con la cifra. Ensayado en local (02-10): 51 → 0,
 > el equipo 2 → 2 con la misma huella. Sin vuelta.
+> ▶▶ **LA RECETA DE LA v2.0.0, EN ORDEN** (03-10; ensayada entera en STAGING sobre una copia de producción): (1) copia de
+> la BD (`copia-bd-remota.sh`) y MEDIR las contraseñas (arriba); (2) `.env`: `PANEL_PATH` (la del owner, en el chat),
+> `INSTANCIA_RUTA` (el paquete, FUERA de `public_html`), `MAIL_ONLY_TO` VACÍA (la guarda 3: el buzón trampa es solo de
+> staging, `#883`) y fuera `GOOGLE_PLACES_API_KEY`; (3) el PAQUETE de la instancia (`rsync` sin `.git`, `diseno`, `docs` ni
+> `datos`) y su `publico/` a `public/` (`instancia/`, `videos/`, `images/attractions/`), más los MEDIOS que son subidas del
+> panel: los 7 clips de las atracciones a `public/uploads/atracciones/` y la foto del bar a `public/uploads/bar/` (del
+> `storage/app/medios-owner/` del owner); (4) `deploy.sh --go` de la etiqueta, con la guarda 7 en rojo y el kit podado
+> (arriba); (5) los GUIONES gitignorados, cada uno en seco (`ENSAYO=1`) y luego de verdad, en este orden: cookies →
+> legales → `aplicar-produccion-v2-datos.php` (zonas, entradas, cumpleaños, normas con icono, ajustes) →
+> `aplicar-produccion-atracciones.php` (apaga las 23 y crea las 26 reales) → `aplicar-produccion-normas.php` (va DESPUÉS
+> del v2: espera «de 4 a 7») → `aplicar-produccion-bar.php`; todos con valor esperado por fila, en transacción y con la
+> segunda pasada que aborta; (6) `reviews:import`; (7) `cache:clear` y `social-proof:refresh`; (8) a ojo: las siete páginas
+> en es/en/fr sin marcadores crudos, una compra de Kids hasta la pasarela, el panel por su dirección con authenticator.
 > ❗❗❗ **El tercero se paró en la GUARDA 1 y dejó el sitio 3 minutos en 503** (`#594`): el owner había
 > pasado Redsys a `live` a las 17:29. Se levantó con `artisan up` y se completaron a mano las franjas,
 > `artisan optimize` y la salud. Desde `#594`, en producción la guarda admite `test` o `live`.
