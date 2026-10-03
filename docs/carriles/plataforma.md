@@ -268,6 +268,9 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
   (`isla/compra/embudo-isla.js`). Toda línea de la isla, también la de la otra zona, emite `line_added`: la prop de origen
   (`otra_zona`|`otra_entrada`, el aviso del 02-10 que este sustituye) sigue siendo tuya. En `track.js`, el 401 de `/me` ya no
   es `request_failed` (`isSessionProbe`). Sin contrato nuevo; techos del motor (300) y de la compra (217), medidos.
+- Y un rojo tuyo que bloqueó mi push: `ExtrasDeLaFiestaListaTest::merienda()` creaba el grupo TRAS el pedido y con la hora del
+  reloj; si el segundo cambiaba entre los dos, `appliesToSaleAt` lo dejaba fuera («sin zona 4»; reproducido con
+  `travel(1)->seconds()`). Ahora nace un minuto antes de la venta, como en tus `ChoiceGroupsParkTest` y `PostFormChoiceGroupsTest`.
 
 ### ❗ Para el SPA (emisor: plataforma, 2026-10-02 noche) — contrato **1.61.0**: `guest_form` en la ficha, y «¿Qué menú?» con condición
 - `GET /catalog/products/{id}` gana `guest_form` (booleano, aditivo; la L3 de `#876`, `isla-y-landing-nueva.md` §4.28): la

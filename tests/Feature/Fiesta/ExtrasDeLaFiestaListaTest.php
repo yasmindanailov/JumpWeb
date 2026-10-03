@@ -443,12 +443,21 @@ class ExtrasDeLaFiestaListaTest extends TestCase
     /**
      * La merienda como GRUPO DE OPCIONES (`#914`): «¿Qué merienda?», Sándwich y Pizza, incluidas y una por niño.
      *
+     * ⚠️ El grupo ya estaba al VENDERSE la fiesta: un grupo creado después no se le pide (`appliesToSaleAt`, `#914`), y
+     * crearlo aquí, tras el pedido de `mountParty()`, con la hora del reloj, lo dejaba fuera cuando el segundo cambiaba entre
+     * los dos (sin la zona 4; rojo en el gate del 03-10, bajo carga; reproducido con `travel(1)->seconds()` en medio).
+     *
      * @return array{0: TicketType, 1: TicketType}
      */
     private function merienda(OrderItem $r, bool $required): array
     {
         $tipo = $this->tipo($r);
-        AddonChoiceGroup::create(['product_id' => $tipo->id, 'key' => 'merienda', 'title' => ['es' => '¿Qué merienda?'], 'is_required' => $required]);
+        $vendida = $r->order?->created_at;
+        $this->assertNotNull($vendida);
+        AddonChoiceGroup::create([
+            'product_id' => $tipo->id, 'key' => 'merienda', 'title' => ['es' => '¿Qué merienda?'], 'is_required' => $required,
+            'created_at' => $vendida->copy()->subMinute(),
+        ]);
         $opcion = ['choice_group' => 'merienda', 'quantity_mode' => ProductAddon::MODE_PER_GUEST, 'is_included' => true];
 
         return [
