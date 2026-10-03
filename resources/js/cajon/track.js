@@ -15,7 +15,8 @@
  *  · el nombre que diga **`data-jw-track="…"`** al hacer clic —o al ENFOCAR, si va en un `<form>`, una vez—, y
  *    sin marcado los enlaces `tel:` (`call_clicked`), de WhatsApp (`whatsapp_clicked`) y de mapas (`map_clicked`);
  *  · `drawer_opened` · `step_entered` · `drawer_closed`, oyendo lo que el controlador anuncia (`jw:cajon:*`);
- *  · `request_failed` cuando `api.js` no consigue una respuesta buena (`jw:api:failed`);
+ *  · `request_failed` cuando `api.js` no consigue una respuesta buena (`jw:api:failed`), salvo el 401 de quien solo
+ *    pregunta si hay sesión ({@see isSessionProbe}, 03-10);
  *  · `client_error` (un hash, cinco por página) · `consent_updated` · `batch_dropped`.
  *
  * ⚠️ Cola en `sessionStorage` (sobrevive a la navegación; en memoria si no hay almacén), envío cada 5 s o a los
@@ -61,6 +62,17 @@ export function ulid(ms, bytes) {
     for (let i = 0; i < 16; i++) out += B32[bytes[i] & 31];
 
     return out;
+}
+
+/**
+ * **¿Es la página preguntando si hay sesión, sin tenerla?** Un 401 de `/me` o de una de sus hijas NO es un fallo: sin sesión,
+ * la respuesta buena ES el 401 (la isla y el cajón preguntan al cargar). Medido el 03-10 en staging: los 58 `request_failed`
+ * de un día eran eso, y ensuciaban la calidad del dato. Un 401 de cualquier otra ruta sigue contando.
+ */
+export function isSessionProbe(detail) {
+    const route = String(detail?.route ?? '');
+
+    return detail?.status === 401 && (route === '/me' || route.startsWith('/me/'));
 }
 
 /** Un hash corto y estable (djb2) para `client_error`: se compara, no se lee. */
@@ -328,7 +340,10 @@ export function createTracker({
         for (const type of ['open', 'step', 'purchased', 'close']) {
             doc.addEventListener(`jw:cajon:${type}`, (e) => onCajon(type, e.detail));
         }
-        doc.addEventListener('jw:api:failed', (e) => track('request_failed', { route: e.detail?.route, status: e.detail?.status, offline: !! e.detail?.offline }));
+        doc.addEventListener('jw:api:failed', (e) => {
+            if (isSessionProbe(e.detail)) return;
+            track('request_failed', { route: e.detail?.route, status: e.detail?.status, offline: !! e.detail?.offline });
+        });
         doc.addEventListener('click', onClick);
         doc.addEventListener('focusin', onFocus);
         doc.addEventListener('visibilitychange', () => {

@@ -388,6 +388,22 @@ describe('la landing', () => {
         assert.equal(cola().at(-1).name, 'request_failed');
     });
 
+    test('el 401 de quien solo pregunta si hay sesión (`/me` y sus hijas) no es un fallo; el de otra ruta, sí (03-10)', () => {
+        const { tracker, evento, cola } = montar();
+
+        tracker.install();
+        const antes = cola().length;
+        evento('jw:api:failed', { route: '/me', status: 401, offline: false });
+        evento('jw:api:failed', { route: '/me/reservation-eligibility', status: 401, offline: false });
+        assert.equal(cola().length, antes);
+
+        // `/me` con OTRO estado (un 500) sí es un fallo, y un 401 fuera de `/me` también (`/membership` no es `/me/…`).
+        evento('jw:api:failed', { route: '/me', status: 500, offline: false });
+        evento('jw:api:failed', { route: '/auth/login', status: 401, offline: false });
+        evento('jw:api:failed', { route: '/membership', status: 401, offline: false });
+        assert.deepEqual(cola().slice(antes).map((e) => `${e.props.route} ${e.props.status}`), ['/me 500', '/auth/login 401', '/membership 401']);
+    });
+
     test('un error de JS se cuenta por su hash, y como mucho cinco por página', () => {
         const { tracker, evento, cola } = montar();
 

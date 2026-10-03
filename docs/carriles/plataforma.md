@@ -4,7 +4,7 @@
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
 > **820–849 AGOTADA con `#849`** → **850–879 AGOTADA con `#879`** → sigue en **880–909** (del owner, 02-10 noche; de
-> `#880` a `#899` en `decisiones/800-899.md`, de `#900` en adelante en `900-999.md`) · Último usado: **`#883`** · Spec:
+> `#880` a `#899` en `decisiones/800-899.md`, de `#900` en adelante en `900-999.md`) · Último usado: **`#884`** · Spec:
 > `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador;
 > `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-10-03**, el día de la v2.0.0 (el estado, el primero de
 > «Por dónde retomar»; lo anterior, en `git log -p` de este fichero).
@@ -41,7 +41,8 @@
 ## Por dónde retomar, en orden
 
 ▶▶▶▶ **03-10, EL DÍA DE LA v2.0.0** (lo hecho antes, en sus specs y en `git log -p` de este fichero). Producto: `#883` (buzón
-trampa `MAIL_ONLY_TO`, solo staging; la guarda 3 la quiere vacía en producción), `4bc1bbaf` y `010c70d0` (la lista del owner).
+trampa `MAIL_ONLY_TO`, solo staging; la guarda 3 la quiere vacía en producción), `4bc1bbaf` y `010c70d0` (la lista del owner),
+`5738efcd` (el cuadro en MariaDB) y `#884` (el embudo entero; aviso al SPA en el buzón).
 STAGING = copia de producción + la config nueva del owner (`storage/app/aplicar-produccion-*.php`); panel `/ensayo-28a37e7ee4`.
 Instancia: `4075996` (textos) y, SIN COMMITEAR hasta su ✅, colores (cian y lima), vídeos y atracciones reales. La rama
 `cliente/playjump` = `99ba026a` (`:root, .sidecart`); su worktree viejo está ROTO (pre-`#648`). LA RECETA, en `ENTORNOS.md` §6;
@@ -259,11 +260,14 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
   cantidad fija, por unidad—. La isla los usa para decir a qué hora sale cada grupo. Tu 1.62.0 (`#914`, los grupos de la
   lista) llegó antes: esta va detrás, en **1.63.0**. Si subes la versión, parte de **1.63.0**.
 
-### ❗ Para el SPA (emisor: plataforma, 2026-10-02 noche) — la isla compone pedidos de VARIAS líneas (la L2, `otra-zona.md`)
-- Desde la K1/K2 (`#878`), una compra de ENTRADAS de la isla puede llevar la OTRA zona (Kids + Jump) en UN pedido: la cesta se
-  compone en `isla/compra/linea.js::meterLineas` (`cartStore.setLines`), sin pasar por el `addToCart` del motor. Su §4.5 pedía,
-  antes de la K2, una prop en `line_added` que diga de dónde vino una línea (`otra_zona` | `otra_entrada`): es del contrato de
-  eventos, tuyo. Mídelo: hoy la isla quizá no emite `line_added` en ninguna de sus líneas. Sin contrato nuevo por mi parte.
+### ❗ Para el SPA (emisor: plataforma, 2026-10-03 tarde) — el embudo, entero (`#884`; el owner: «hazlo tú, avisa al carril del spa»)
+- El cuadro contaba por sesión `date_chosen`, `line_added`, `identified` y `pay_started`, y nadie los emitía. Ahora los emite
+  el MOTOR al cambiar de paso (`sidebar/embudo.js`, desde el `onChange` de `index.js`: al carrito, por línea, `product_chosen`,
+  `date_chosen`, `time_chosen` y `line_added`; luego `identify_started`, `email_verification_pending`, `identified` con
+  `checkout`|`session` y `pay_started` con el último total), y la pantalla 0 y las calculadoras al elegir
+  (`isla/compra/embudo-isla.js`). Toda línea de la isla, también la de la otra zona, emite `line_added`: la prop de origen
+  (`otra_zona`|`otra_entrada`, el aviso del 02-10 que este sustituye) sigue siendo tuya. En `track.js`, el 401 de `/me` ya no
+  es `request_failed` (`isSessionProbe`). Sin contrato nuevo; techos del motor (300) y de la compra (217), medidos.
 
 ### ❗ Para el SPA (emisor: plataforma, 2026-10-02 noche) — contrato **1.61.0**: `guest_form` en la ficha, y «¿Qué menú?» con condición
 - `GET /catalog/products/{id}` gana `guest_form` (booleano, aditivo; la L3 de `#876`, `isla-y-landing-nueva.md` §4.28): la

@@ -909,7 +909,11 @@ class SidebarBundleBudgetTest extends TestCase
     // ▶ **302 → 299 con la A4b (`#813`), y BAJA**: Mi cuenta confirma con un código —la pieza `account/ConfirmCode.vue`, su
     // store y su petición; el `CodeInput` sigue bajando aparte, el mismo trozo que la puerta—, y salen cambiar y recuperar
     // la contraseña (dos zonas, `forgot.js`, el aviso y `PasswordInput`). Medido 301,79 → 298,46.
-    private const SIDEBAR_CHUNK_MAX_KB = 299;
+    // ▶ **299 → 300 el 03-10, el EMBUDO** (`#884`; el owner: «profesional y robusto»): el cuadro contaba «eligió fecha», «añadió»,
+    // «se identificó» e «inició el pago» y nadie los emitía; los cuenta el motor al cambiar de paso (`embudo.js` y su
+    // cableado en `index.js`, con la cesta y el último total). Medido construyendo el JS de `HEAD` (`5738efcd`) y el del
+    // embudo: 298,67 → 299,46 (+0,79).
+    private const SIDEBAR_CHUNK_MAX_KB = 300;
 
     // T3e·2: la compra de la isla, chunk diferido del motor que solo trae una instalación con la isla. Medido 93,36 KiB
     // (la sección, la pantalla 0, la isla y sus piezas); su hoja va aparte (7,2 KiB).
@@ -1043,7 +1047,11 @@ class SidebarBundleBudgetTest extends TestCase
     // horasParaTodas`), la zona que no cupo en el título y «Añadir otra entrada» que no cabe a esa hora— y las cercanas que
     // por fin son las de alrededor (`vista.js::horasCercanas`). Medido 212,95 → 214,73 (base: la medida de la K3, `dc514c7b`,
     // que es el `HEAD`). El techo, a 216. ⚠️⚠️ Lo siguiente es la M4: cargar la compra al ABRIRLA.
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 216;
+    // El EMBUDO de la pantalla 0 (`#884`, 03-10): el día, la hora y el producto se eligen sin cambiar de paso, así que
+    // se cuentan allí (`embudo-isla.js`, desde `usePantallaCero::cambiar`; lo comparte con las calculadoras). Medido
+    // construyendo el JS de `HEAD` (`5738efcd`, 215,72 con los arreglos del 03-10) y el del embudo: 215,72 → 216,07
+    // (+0,35). El techo, a 217.
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 217;
 
     // T4d·4 (`specs/isla-y-landing-nueva.md` §4.12): la CALCULADORA de una página, entrada propia que la página pide
     // (`scripts` de `<x-pagina>`) y se monta al acercarse su pieza. Su DESCARGA entera, como la mide el navegador que
@@ -1070,12 +1078,15 @@ class SidebarBundleBudgetTest extends TestCase
     // arrastraba `sidebar/missing.js` y con él el calendario del motor: 186,08 → 189,25. Diferido, 187,80 (base: el build
     // del gate sobre `28dfdf15`): 1,17 son el `preload-helper` de Vite, que la página ya baja con la isla y el cargador del
     // cajón; los 3,05 del trozo de la demanda, solo al primer toque. El techo, a 188.
+    // `#884`: el día, la hora y la fila, al embudo al elegirlos (`compra/embudo-isla.js`, estático: es pequeño y sin
+    // dependencias). Medido 186,66 → 187,25, los mismos 14 ficheros (base: el mismo árbol sin el enganche). Bajo el techo.
     private const CALCULADORA_MAX_KB = 188;
 
     // La calculadora de la FIESTA (T6b·3, `#836`): su entrada propia, con lo que comparte con la de entradas (Vue, Pinia,
     // los stores de la oferta, el calendario y sus piezas) y lo suyo (la vista, el composable y `FilaMejora`). Medido al
     // nacer: 191,87 (con la de entradas en 183: trae además la regla de la edad de `compra/fiesta.js`). El techo, a 193.
     // `#758` (§4.26): igual que la de entradas, con `import()`. Medido 192,55 → 194,26 (estático, 195,72). El techo, a 195.
+    // `#884`: el embudo, como la de entradas (y la edad, que elige el pack). Medido 193,59 → 194,24, los mismos 16 ficheros.
     private const CALCULADORA_FIESTA_MAX_KB = 195;
 
     // La HOJA para dirección de colegios (T6c·4b): escribe las cifras del grupo con la línea del servidor (`api.js`,

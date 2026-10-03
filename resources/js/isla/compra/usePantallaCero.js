@@ -22,6 +22,8 @@ import { campoDeEdad, menuElegido, packPorEdad, packsDeFiesta, pantallaCuandoFie
 import { cargarSinHora, complementosDe, conExtra, eleccionesDelBorrador, gruposComoFilas, quedanEn } from './complementos.js';
 import { cargarHorasDe, horasQueNoCaben, otraDeLaPantalla, otraDelDia, otraNueva, otrasZonas, zonasConFilas } from './otra-zona.js';
 import { lineasDe, pedidoDe, resolverOtrasConOferta } from './linea.js';
+import { medirEleccion } from './embudo-isla.js';
+import { medir } from '../medir.js';
 
 export function usePantallaCero({ flow, compra, enCola, textos }) {
     const { catalogStore, timeStore, selectionStore, cartStore } = flow;
@@ -373,6 +375,12 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
         const b = compra.borrador;
 
         compra.aviso = '';
+        // El día, la hora y el producto, al embudo AQUÍ: en la isla se eligen sin cambiar de paso (`embudo-isla.js`). En una
+        // fiesta, la EDAD elige el pack: cuenta como elegirlo.
+        const aqui = (nombre, datos) => medir(nombre, datos);
+
+        if (b.fiesta && campo === 'edad') medirEleccion('fila', packPorEdad(packs.value, Number(valor))?.id, b, aqui);
+        else medirEleccion(campo, valor, b, aqui);
         if (b.fiesta) return cambiarFiesta(campo, valor);
         if (campo === 'zona') return enCola(() => situar({ ...borradorDeIntencion({ type: 'zone', slug: valor }, catalogStore.products), elegirZona: b.elegirZona, dia: b.dia, n: b.n }));
         if (campo === 'dia') {

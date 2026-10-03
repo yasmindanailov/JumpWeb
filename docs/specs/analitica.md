@@ -227,13 +227,17 @@ techo propio; el contrato cierra NOMBRES (no `props`) en el yaml; `data-jw-track
   `navigator.webdriver` emite igual, marcado en `meta.webdriver` (el servidor lo guarda `is_bot`): así la sonda
   verifica el camino entero. Captura sola: `page_viewed` (con entrada, referer, `utm_*`, `ref` y click ids en la
   primera vista), `section_viewed` (`IntersectionObserver`, umbral ≥ 0,5 y 500 ms), `request_failed` (desde
-  `result(false, …)` de `api.js`: ruta normalizada, `status`, `offline`), `client_error` (hash, ≤ 5 por
+  `result(false, …)` de `api.js`: ruta normalizada, `status`, `offline`; no el 401 de `/me`, que solo pregunta si hay
+  sesión: `isSessionProbe`, `#884`), `client_error` (hash, ≤ 5 por
   sesión), `consent_shown`/`consent_updated`. Clics que no abren el cajón por **`data-jw-track="call_clicked"`**
   (el prefijo del paquete, documentado en `declarative.js`; en un `<form>`, al enfocarlo, una vez; los enlaces
   `tel:`, de WhatsApp y de mapas se reconocen SIN atributo); los que lo abren ya producen `drawer_opened`.
   Lo que pase antes de que el trozo llegue —el cajón que nace abierto, su primer paso— lo guarda un BUZÓN en
   `JumpWeb.track.pending` (`index.js`) y el tracker lo vacía al instalarse; `JumpWeb.track(name, props)` es la
-  puerta para los eventos que emiten los stores del motor (`product_chosen`, `date_chosen`…, carril del SPA).
+  puerta para los del EMBUDO (`#884`): el motor los emite al cambiar de paso (`sidebar/embudo.js`: al carrito, por
+  línea, `product_chosen`, `date_chosen`, `time_chosen` y `line_added`; después `identify_started`,
+  `email_verification_pending`, `identified` y `pay_started`), y la pantalla 0 de la isla y las calculadoras de las
+  páginas, al elegir (`isla/compra/embudo-isla.js`: el día, la hora y el producto; en una fiesta, la edad elige el pack).
 - **El cajón**: `drawer_opened` lo emite el motor **también al nacer abierto** (`start()`, con `reason:
   user|deeplink|return|restored`); `step_entered(from, to)` desde `machine.js`; `drawer_closed(step, outcome,
   reloading)`; nada en `REDIRECTING` al descargar. **El abandono no es un evento**: lo deriva el servidor

@@ -1,4 +1,4 @@
-import { createApp } from 'vue';
+import { createApp, watch } from 'vue';
 import { createPinia } from 'pinia';
 import Sidebar from './Sidebar.vue';
 import { createMachine, STEPS } from './machine.js';
@@ -14,6 +14,7 @@ import { takeOver } from '../ui/account-host.js';
 import { cajonHost } from './host-bridge.js';
 import { CARCASA, ISLA, TEXTOS_ISLA, carcasaDe } from './carcasa.js';
 import { EXPERIMENTOS, createExperiments } from './experiments.js';
+import { createFunnelFacts } from './embudo.js';
 
 /**
  * El ENTRY del cajón SPA (Fase 4 · paso 4.1, `sidebar-spa.md` §4.7).
@@ -71,7 +72,13 @@ export function mount(el, boot = {}) {
     // Cada transición se le cuenta al ANFITRIÓN (`step_entered`, analítica §4.2), que es quien le pone nombre:
     // el motor no conoce el vocabulario del paquete, igual que con `purchased`. Sin anfitrión (un test), nada.
     // Una «transición» al mismo paso —`restart()` ya en el catálogo— no es un paso: no se cuenta.
-    const machine = createMachine({ onChange: (to, from) => { if (to !== from) cajonHost()?.enteredStep?.(from, to); } });
+    // …y los PASOS DEL EMBUDO que el cuadro cuenta (`embudo.js`, 03-10: nadie los emitía), con la cesta de este motor.
+    let embudo = null;
+    const machine = createMachine({ onChange: (to, from) => {
+        if (to === from) return;
+        cajonHost()?.enteredStep?.(from, to);
+        embudo?.paso(from, to);
+    } });
     const pinia = createPinia();
 
     app = createApp(Sidebar, {
@@ -92,6 +99,13 @@ export function mount(el, boot = {}) {
         urls: boot.urls ?? {},
     });
     app.use(pinia);
+
+    // Los pasos del embudo (`embudo.js`): por `JumpWeb.track` resuelto en cada llamada (antes de que llegue `track.js` es el
+    // buzón de `cajon/index.js`), con las líneas de la cesta y el total cada vez que el servidor presupuesta —la cesta se
+    // vacía con su presupuesto justo antes de saltar a la pasarela—.
+    const cesta = useCartStore(pinia);
+    embudo = createFunnelFacts({ track: (name, props) => window.JumpWeb?.track?.(name, props), lineas: () => cesta.lines });
+    watch(() => cesta.quote?.total_cents, (cents) => embudo.precio(cents));
 
     // ⚠️ **La CARCASA de la compra** (T3e·2, `DECISIONES #682`): la raíz monta la compra del cajón o la de la isla,
     // y la isla recibe sus rótulos (`boot.isla`, que solo viajan con ella). Va por `provide` y no como prop: la

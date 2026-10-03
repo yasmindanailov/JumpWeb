@@ -19,6 +19,8 @@ import { useSelectionStore } from '../../sidebar/stores/selection.js';
 import { useTimeStore } from '../../sidebar/stores/time.js';
 import { cargarDiasDeFilas, horaDelMotor, horaQueCabe } from '../compra/oferta.js';
 import { eleccionesDe } from '../compra/fiesta.js';
+import { medirEleccion } from '../compra/embudo-isla.js';
+import { medir } from '../medir.js';
 import { menuDeLaFiesta, menusDeLaFiesta, packDeLaEdad, vistaCalculadoraFiesta } from './vistaFiesta.js';
 
 /** Los menús de la ficha como grupo de elección, mientras el servidor no los resuelve (su `choice_group`). */
@@ -132,6 +134,12 @@ export function useCalculadoraFiesta({ pagina, textos, locale, owner = null }) {
         // El `then` corre cuando `cambiar` ya ha escrito el borrador: informa el pack de DESPUÉS del cambio (la edad).
         arrancar().then(mirada);
         e.tocada = true;
+        // Al embudo como en la pantalla 0 (`embudo-isla.js`): el día y la hora, con el pack cuyos días enseña; y la EDAD,
+        // que elige el pack: cuenta como elegirlo.
+        const aqui = (nombre, datos) => medir(nombre, datos);
+
+        if (campo === 'edad') medirEleccion('fila', packDeLaEdad(packs, Number(valor))?.id, {}, aqui);
+        else medirEleccion(campo, valor, { fila: (pack() ?? packs[0])?.id ?? null }, aqui);
         if (campo === 'edad') return cambiarEdad(valor);
         if (campo === 'n') { b.n = valor; return enCola(cargarHoras); }
         if (campo === 'dia') { b.dia = valor; return enCola(cargarHoras); }

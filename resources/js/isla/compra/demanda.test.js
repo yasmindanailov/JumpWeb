@@ -19,6 +19,9 @@ import { usePantallaCero } from './usePantallaCero.js';
  * se calculan desde HOY: un producto que solo se vende dentro de dos meses deja sin hueco el en curso y el siguiente.
  *
  * ⚠️ El reportero de la página vive en el MÓDULO y dura lo que este fichero: cada prueba usa sus propios productos.
+ *
+ * Las mismas superficies mandan también lo ELEGIDO al embudo (`embudo-isla.js`, 03-10): esas pruebas, al final; las de la
+ * demanda miran solo `availability_missing`.
  */
 const mes = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 const ahora = new Date();
@@ -58,6 +61,10 @@ beforeEach(() => {
 
 /** Lo que queda en cola tras un `await`: los `then` de la calculadora corren después de quien la toca. */
 const asentar = () => new Promise((r) => setImmediate(r));
+
+/** Lo enviado de la DEMANDA, y lo demás (lo elegido, al embudo). */
+const demanda = () => enviados.filter(([nombre]) => nombre === 'availability_missing');
+const elegido = () => enviados.filter(([nombre]) => nombre !== 'availability_missing');
 
 describe('la regla: la fila que se mira, si su oferta llegó', () => {
     test('informa los meses sin días desde el en curso, una vez por producto y mes', () => {
@@ -111,11 +118,11 @@ describe('la calculadora de la página', () => {
 
         await c.cambiar('fila', 301);
         await asentar();
-        assert.deepEqual(enviados, [...eventos(300), ...eventos(301)], 'la de DESPUÉS del cambio, en ese mismo cambio');
+        assert.deepEqual(demanda(), [...eventos(300), ...eventos(301)], 'la de DESPUÉS del cambio, en ese mismo cambio');
 
         await c.cambiar('n', 4);
         await asentar();
-        assert.deepEqual(enviados, [...eventos(300), ...eventos(301)], 'cada una, una vez');
+        assert.deepEqual(demanda(), [...eventos(300), ...eventos(301)], 'cada una, una vez');
     });
 
     test('el primer toque llega antes que los días: informa cuando llegan', async () => {
@@ -135,6 +142,22 @@ describe('la calculadora de la página', () => {
         await asentar();
         assert.deepEqual(enviados, []);
     });
+
+    test('lo elegido, al embudo (`embudo-isla.js`): la fila, el día y la hora, con su producto; los niños, no', async () => {
+        dias = { 310: lejanos, 311: lejanos };
+        const c = useCalculadora({ pagina: pagina([310, 311]), textos: {}, locale: 'es' });
+
+        await c.cambiar('n', 3);
+        await c.cambiar('fila', 311);
+        await c.cambiar('dia', '2026-12-10');
+        await c.cambiar('hora', '17:00');
+        await asentar();
+        assert.deepEqual(elegido(), [
+            ['product_chosen', { product: 311 }],
+            ['date_chosen', { product: 311, date: '2026-12-10' }],
+            ['time_chosen', { product: 311 }],
+        ]);
+    });
 });
 
 describe('la calculadora de la FIESTA', () => {
@@ -153,7 +176,25 @@ describe('la calculadora de la FIESTA', () => {
 
         await c.cambiar('edad', 9);
         await asentar();
-        assert.deepEqual(enviados, [...eventos(400), ...eventos(401)]);
+        assert.deepEqual(demanda(), [...eventos(400), ...eventos(401)]);
+    });
+
+    test('lo elegido, al embudo: el día sin edad, con el pack que enseña (el primero); la edad ELIGE el suyo; sin pack, nada', async () => {
+        dias = { 410: lejanos, 411: lejanos };
+        const packs = [{ id: 410, guest_age_min: 3, guest_age_max: 7, min_quantity: 8 }, { id: 411, guest_age_min: 8, guest_age_max: null, min_quantity: 8 }];
+        const c = useCalculadoraFiesta({ pagina: { packs, textos: {} }, textos: {}, locale: 'es' });
+
+        await c.cambiar('dia', '2026-12-10');
+        await c.cambiar('edad', 9);
+        await c.cambiar('hora', '17:00');
+        await c.cambiar('edad', 1);
+        await c.cambiar('n', 12);
+        await asentar();
+        assert.deepEqual(elegido(), [
+            ['date_chosen', { product: 410, date: '2026-12-10' }],
+            ['product_chosen', { product: 411 }],
+            ['time_chosen', { product: 411 }],
+        ]);
     });
 });
 
@@ -176,7 +217,7 @@ describe('la compra (la pantalla 0)', () => {
         assert.deepEqual(enviados, eventos(201), 'la zona pide los días de todas sus filas; se mira una');
 
         await pantalla.cambiar('fila', 200);
-        assert.deepEqual(enviados, [...eventos(201), ...eventos(200)]);
+        assert.deepEqual(demanda(), [...eventos(201), ...eventos(200)]);
     });
 
     test('una FIESTA: el pack situado y, al cambiar la edad, el de su tramo', async () => {
@@ -192,7 +233,7 @@ describe('la compra (la pantalla 0)', () => {
         assert.deepEqual(enviados, eventos(220));
 
         await pantalla.cambiar('edad', 9);
-        assert.deepEqual(enviados, [...eventos(220), ...eventos(221)]);
+        assert.deepEqual(demanda(), [...eventos(220), ...eventos(221)]);
     });
 
     test('un pack sin edad (una excursión): la oferta que trae la fiesta que no lo era también cuenta', async () => {
@@ -201,5 +242,31 @@ describe('la compra (la pantalla 0)', () => {
 
         await pantalla.situar(borradorDeIntencion({ type: 'product', id: 211 }, catalogStore.products));
         assert.deepEqual(enviados, eventos(211));
+    });
+
+    test('lo elegido, al embudo (`embudo-isla.js`): situarla no es elegir; cambiar de fila, sí', async () => {
+        dias = { 202: lejanos, 203: lejanos };
+        const { catalogStore, pantalla } = montar([{ id: 202, type: 'entry', zone: { slug: 'kids' } }, { id: 203, type: 'entry', zone: { slug: 'kids' } }]);
+
+        await pantalla.situar(borradorDeIntencion({ type: 'product', id: 203 }, catalogStore.products));
+        assert.deepEqual(elegido(), []);
+
+        await pantalla.cambiar('fila', 202);
+        assert.deepEqual(elegido(), [['product_chosen', { product: 202 }]]);
+    });
+
+    test('lo elegido, al embudo: en una FIESTA la edad ELIGE el pack de su tramo; una edad que ninguno cubre, nada', async () => {
+        dias = { 222: lejanos, 223: lejanos };
+        const edad = { key: 'edad', type: 'celebrant_age' };
+        fichas = {
+            222: { id: 222, addons: [], min_quantity: 8, guest_age_min: 3, guest_age_max: 7, event_fields: [edad] },
+            223: { id: 223, addons: [], min_quantity: 8, guest_age_min: 8, guest_age_max: null, event_fields: [edad] },
+        };
+        const { catalogStore, pantalla } = montar([{ id: 222, type: 'pack', zone: { slug: 'cumpleanos' } }, { id: 223, type: 'pack', zone: { slug: 'cumpleanos' } }]);
+
+        await pantalla.situar(borradorDeIntencion({ type: 'product', id: 222 }, catalogStore.products));
+        await pantalla.cambiar('edad', 9);
+        await pantalla.cambiar('edad', 1);
+        assert.deepEqual(elegido(), [['product_chosen', { product: 223 }]]);
     });
 });

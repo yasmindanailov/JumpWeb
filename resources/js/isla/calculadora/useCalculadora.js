@@ -22,6 +22,8 @@ import { useCatalogStore } from '../../sidebar/stores/catalog.js';
 import { useSelectionStore } from '../../sidebar/stores/selection.js';
 import { useTimeStore } from '../../sidebar/stores/time.js';
 import { calcetinDe, cargarDiasDeFilas, horaDelMotor, horaQueCabe } from '../compra/oferta.js';
+import { medirEleccion } from '../compra/embudo-isla.js';
+import { medir } from '../medir.js';
 import { cargarCargo } from './cargo.js';
 import { cierreDelDia, codificarCalculo, leerCalculo, vistaCalculadora } from './vista.js';
 
@@ -162,6 +164,8 @@ export function useCalculadora({ pagina, textos, locale, owner = null }) {
         arrancar().then(mirada);
         // Tocado, deja de ser «el retomado»; con otro día u otra hora, el aviso de la perdida sobra.
         Object.assign(e, { tocada: true, vuelta: null, perdida: e.perdida && campo !== 'dia' && campo !== 'hora' });
+        // El día, la hora y la fila, al embudo como en la pantalla 0 (`embudo-isla.js`): quien elige aquí y se va, cuenta.
+        medirEleccion(campo, valor, b, (nombre, datos) => medir(nombre, datos));
 
         if (campo === 'dia') { b.dia = valor; return enCola(cargarHoras); }
         if (campo === 'hora') { b.hora = horaDelMotor(timeStore.offered, valor); return enCola(resolver); }
