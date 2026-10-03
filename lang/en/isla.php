@@ -318,6 +318,7 @@ return [
             'como' => 'Booking as :nombre',
             'total' => 'Total',
             'otra' => 'Add another ticket',
+            'sin_otra' => 'There is no other ticket to add that day.',
             'tarjeta' => 'Pay :importe by card',
             'bizum' => 'Pay :importe with Bizum',
             'pasarela' => 'Payment on your bank\'s gateway. Your card is not stored.',

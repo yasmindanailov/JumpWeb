@@ -92,7 +92,12 @@ export function usePaginaIsla({ config, textos, doc = document, win = window }) 
     // Lo que la compra deja al cerrarse y «Preparando tu reserva» (`#867`): las aperturas y los cierres le llegan de aquí.
     const compraCerrada = useCompraCerrada({ win });
     let espera = 0;
-    const apartarse = () => { win.clearTimeout(espera); e.compraAbierta = true; compraCerrada.listo(); };
+    /**
+     * La píldora CEDE su sitio a otra capa (la compra, Mi cuenta, los planes): se desmonta, y la que vuelve al cerrarla es
+     * otra. ⚠️ El aviso se gasta aquí: un «Guardado» es del momento, y si se quedaba en el estado la píldora nueva lo
+     * enseñaba OTRA VEZ cada vez que se cerraba una capa (el owner, 03-10, tras guardar las cookies).
+     */
+    const apartarse = () => { win.clearTimeout(espera); e.aviso = null; e.compraAbierta = true; compraCerrada.listo(); };
     // Con la isla como carcasa (lo dice el servidor, `config.carcasa`: la primera vez, el aviso dice «cajón» porque el
     // motor aún no ha arrancado), la píldora espera a que la releven; con el cajón lateral, se aparta ya.
     const alAbrir = (ev) => {

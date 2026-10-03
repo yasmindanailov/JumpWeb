@@ -4,6 +4,7 @@
  * `identidad-qr-puerta.md` §0), «Guardar en el móvil» (esa imagen), el código para dictar y «Renovar mi QR», que
  * pregunta en el sitio. Dos formas: en su VISTA de la capa (`vista`, sin tarjeta y con el título en la banda) o en su
  * TARJETA del inicio, que es como sale de entrada cuando la reserva es HOY (T5b). [Wallet], apagado (`#773`·c).
+ * El QR, en las dos, en su tamaño MAYOR (`xl`, el owner 03-10: «más grande»): es lo que se enseña en la puerta.
  *
  * ⚠️ Un carné que el servidor no puede dibujar (su clave rotó) no pinta un hueco: dice por qué y ofrece renovarlo.
  */
@@ -39,7 +40,7 @@ const { t, tp } = useTextos();
         >{{ t('mi_cuenta.qr.titulo') }}</h2>
         <div
             v-if="qr.cargando"
-            :style="{ width: '248px' }"
+            :style="{ width: '320px', maxWidth: '100%' }"
         >
             <EsqueletoCarga
                 kind="block"
@@ -51,7 +52,7 @@ const { t, tp } = useTextos();
             v-else-if="qr.dibujable"
             :code="qr.codigo"
             :src="qr.src"
-            size="lg"
+            size="xl"
             :show-code="false"
             :label="tp('mi_cuenta.qr.de', { codigo: qr.codigo })"
         />

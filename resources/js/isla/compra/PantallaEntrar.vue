@@ -114,7 +114,6 @@ const { t } = useTextos();
                 type="email"
                 inputmode="email"
                 autocomplete="username"
-                data-isla-foco
                 :model-value="valor"
                 :error="error"
                 @update:model-value="emit('cambiar', 'valor', $event)"

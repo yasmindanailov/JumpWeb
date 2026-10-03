@@ -20,7 +20,10 @@ const props = defineProps({
 const { t, tp } = useTextos();
 
 const lienzo = ref(null);
-const px = computed(() => (props.size === 'sm' ? 92 : props.size === 'lg' ? 216 : 152));
+// `xl` (el owner, 03-10: «el QR más grande en Mi QR»): el de la vista propia, para enseñarlo en la puerta; encoge con
+// la pantalla (nunca más ancho que su sitio) y se queda cuadrado.
+const px = computed(() => ({ sm: 92, lg: 216, xl: 288 }[props.size] ?? 152));
+const lado = computed(() => (props.size === 'xl' ? { display: 'block', width: `${px.value}px`, maxWidth: '100%', height: 'auto', aspectRatio: '1' } : { display: 'block', width: `${px.value}px`, height: `${px.value}px` }));
 const nombre = computed(() => props.label || (props.code ? tp('pieza.qr_de', { codigo: props.code }) : t('pieza.qr')));
 const pintar = () => {
     if (props.src) return;
@@ -32,21 +35,21 @@ watch([() => props.code, px, () => props.src], pintar, { flush: 'post' });
 </script>
 
 <template>
-    <figure :style="{ margin: 0, display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: size === 'sm' ? 0 : '10px', padding: size === 'sm' ? '8px' : '16px 16px 12px', background: 'var(--isla-qr-fondo)', borderRadius: size === 'sm' ? 'var(--r-md)' : 'var(--r-lg)', boxShadow: 'var(--isla-qr-sombra)' }">
+    <figure :style="{ margin: 0, display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: size === 'sm' ? 0 : '10px', padding: size === 'sm' ? '8px' : '16px 16px 12px', maxWidth: '100%', boxSizing: 'border-box', background: 'var(--isla-qr-fondo)', borderRadius: size === 'sm' ? 'var(--r-md)' : 'var(--r-lg)', boxShadow: 'var(--isla-qr-sombra)' }">
         <img
             v-if="src"
             :src="src"
             :alt="nombre"
             :width="px"
             :height="px"
-            :style="{ display: 'block', width: `${px}px`, height: `${px}px` }"
+            :style="lado"
         >
         <canvas
             v-else
             ref="lienzo"
             role="img"
             :aria-label="nombre"
-            :style="{ display: 'block', width: `${px}px`, height: `${px}px` }"
+            :style="lado"
         />
         <figcaption
             v-if="code && size !== 'sm' && showCode"

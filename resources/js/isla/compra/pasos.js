@@ -47,14 +47,16 @@ export function rango(paso, vista = null, pasoEntrada = null) {
 /**
  * LA FLECHA DE LA PANTALLA 0 (`#831`, la regla del diseño: «Volver = un paso atrás dentro de la misma capa; solo si hay
  * un paso detrás»; `compra.jsx`): nacida del SELECTOR de planes, lo vuelve a abrir, sin cerrar la isla; nacida de otra
- * capa (Mi cuenta, «Reservar otra vez», T5f), vuelve a ella; desde una página de producto no hay nada detrás dentro de la
- * isla: solo la X. (Con «preparando», ninguna: no hay nada que tocar, `#785`; lo resuelve quien la llama.)
+ * capa (Mi cuenta, «Reservar otra vez», T5f), vuelve a ella. ▶ Desde una página de producto (su calculadora o su
+ * «Reservar»), al SELECTOR si la página lo tiene (el owner, 03-10: «siempre la flecha hacia atrás para poder seleccionar
+ * otro producto»; `haySelector`); sin selector, nada detrás: solo la X. (Con «preparando», ninguna: no hay nada que tocar,
+ * `#785`; lo resuelve quien la llama.)
  *
  * @returns {Function|null}
  */
-export function volverDeLaPantallaCero(desde, { aLaCuenta = null, alSelector = null } = {}) {
+export function volverDeLaPantallaCero(desde, { aLaCuenta = null, alSelector = null, haySelector = false } = {}) {
     if (desde === 'cuenta') return aLaCuenta;
-    if (desde === 'selector') return alSelector;
+    if (desde === 'selector' || haySelector) return alSelector;
 
     return null;
 }

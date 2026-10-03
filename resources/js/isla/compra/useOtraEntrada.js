@@ -10,6 +10,7 @@
  */
 import { computed } from 'vue';
 import { api } from '../../sidebar/api.js';
+import { t as texto } from '../../sidebar/i18n.js';
 import { cargarDiasDeFilas } from './oferta.js';
 import { cargarSinHora, conExtra, eleccionesDelBorrador, quedanEn } from './complementos.js';
 import { zonasConFilas } from './otra-zona.js';
@@ -18,6 +19,9 @@ import { nuevaEnZona, nuevaEntrada, pantallaOtraEntrada } from './otra-entrada.j
 
 export function useOtraEntrada({ flow, compra, enCola, textos, pago, alLlenarse }) {
     const { catalogStore } = flow;
+
+    /** Las filas de entradas cuyos días aún no han llegado: sin ellos, ninguno de sus tiempos «se vende». */
+    const sinDias = () => zonasConFilas(catalogStore.products).flatMap((z) => z.filas.map((f) => f.id)).filter((id) => ! Array.isArray(compra.precios[id]));
 
     /** Lo que decide la línea de partida: el catálogo, los días, el del pedido, la duración de su fila y lo que ya lleva. */
     const base = () => ({
@@ -40,9 +44,9 @@ export function useOtraEntrada({ flow, compra, enCola, textos, pago, alLlenarse 
 
         if (! nueva || ! pedido) return;
         const fila = nueva.fila;
-        const sinDias = zonasConFilas(catalogStore.products).flatMap((z) => z.filas.map((f) => f.id)).filter((id) => ! Array.isArray(compra.precios[id]));
+        const faltan = sinDias();
         const [dias, ficha, sinHora, aEsaHora] = await Promise.all([
-            sinDias.length ? cargarDiasDeFilas({ api, ids: sinDias }) : null,
+            faltan.length ? cargarDiasDeFilas({ api, ids: faltan }) : null,
             compra.fichasOtras[fila]?.id === fila ? null : api.get(`/catalog/products/${fila}`),
             fila in compra.sueltosOtras ? null : cargarSinHora({ api, productId: fila, quantity: nueva.n }),
             api.post(`/catalog/products/${fila}/addons`, { quantity: nueva.n, date: pedido.dia, time: pedido.hora, addons: nueva.extras ?? [], choices: elecciones() }),
@@ -58,11 +62,29 @@ export function useOtraEntrada({ flow, compra, enCola, textos, pago, alLlenarse 
         compra.nueva = { ...compra.nueva, extras: quedanEn(compra.nueva.extras, compra.fichasOtras[fila]) };
     }
 
-    /** «Añadir otra entrada» en «Pagar»: la pantalla 0 en modo «otra», con la línea de partida. Sin nada que vender ese día, nada. */
-    function abrir() {
-        const nueva = compra.pedido ? nuevaEntrada(base()) : null;
+    /**
+     * «Añadir otra entrada» en «Pagar»: la pantalla 0 en modo «otra», con la línea de partida.
+     *
+     * ⚠️ PRIMERO los días de las filas que falten: tras la vuelta de Google (o sin pasar por la pantalla 0) la compra llega a
+     * «Pagar» sin ellos, ninguna fila «se vende» y el botón no hacía NADA (el owner, 03-10, en staging). Y si de verdad ese
+     * día no queda nada que añadir, se dice en «Pagar»: un botón mudo parece roto.
+     */
+    async function abrir() {
+        if (! compra.pedido) return;
+        const faltan = sinDias();
 
-        if (! nueva) return;
+        if (faltan.length) {
+            const llegados = await enCola(() => cargarDiasDeFilas({ api, ids: faltan }));
+
+            if (llegados) compra.precios = { ...compra.precios, ...llegados.dias };
+        }
+        const nueva = nuevaEntrada(base());
+
+        if (! nueva) {
+            compra.aviso = texto(textos, 'compra.pagar.sin_otra');
+
+            return;
+        }
         Object.assign(compra, { modo: 'otra', nueva, nuevaOferta: null, aviso: '', paso: 'cuando' });
         enCola(cargar);
     }

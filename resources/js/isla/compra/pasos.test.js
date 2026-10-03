@@ -278,12 +278,15 @@ test('Z6g·2 «Listo»: la tarjeta de quién firma no da por hecho para quién e
     assert.deepEqual(conLineas([]), [], 'sin entradas no hay nada que explicar');
 });
 
-test('la flecha de la pantalla 0 (`#831`): al selector si nació de él, a Mi cuenta si nació allí; de una página, ninguna', () => {
+test('la flecha de la pantalla 0 (`#831`): al selector si nació de él, a Mi cuenta si nació allí; de una página, al selector si lo tiene', () => {
     const aLaCuenta = () => 'cuenta';
     const alSelector = () => 'selector';
 
     assert.equal(volverDeLaPantallaCero('selector', { aLaCuenta, alSelector }), alSelector);
     assert.equal(volverDeLaPantallaCero('cuenta', { aLaCuenta, alSelector }), aLaCuenta);
-    assert.equal(volverDeLaPantallaCero(null, { aLaCuenta, alSelector }), null);
+    assert.equal(volverDeLaPantallaCero(null, { aLaCuenta, alSelector }), null, 'una página sin selector: nada detrás, solo la X');
     assert.equal(volverDeLaPantallaCero('pagina', { aLaCuenta, alSelector }), null, 'un origen que no es una capa de la isla no tiene flecha');
+    // El owner, 03-10: desde la calculadora o el «Reservar» de Kids, Jump o Cumpleaños, SIEMPRE se puede volver a elegir.
+    assert.equal(volverDeLaPantallaCero(null, { aLaCuenta, alSelector, haySelector: true }), alSelector, 'con selector en la página, a él');
+    assert.equal(volverDeLaPantallaCero('cuenta', { aLaCuenta, alSelector, haySelector: true }), aLaCuenta, 'nacida en Mi cuenta, vuelve a ella aunque haya selector');
 });

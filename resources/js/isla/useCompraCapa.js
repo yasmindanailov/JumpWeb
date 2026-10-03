@@ -42,8 +42,9 @@ export function useCompraCapa({ islandRef, inCheckout, clave, bloquea = () => tr
             const caja = islandRef.value?.querySelector('[data-isla-scroll]');
             if (! caja) return;
             const titular = caja.querySelector('h1');
-            // «El foco, donde se escribe» (zip (6), Z6g·1): el paso que marca su campo (`data-isla-foco`: el correo y el
-            // código de Entra, el nombre de «Crea tu cuenta») lo recibe; los demás, su titular. Se anuncia igual.
+            // «El foco, donde se escribe» (zip (6), Z6g·1): el paso que marca su campo (`data-isla-foco`: el código de Entra,
+            // el nombre de «Crea tu cuenta») lo recibe; los demás, su titular. Se anuncia igual. ⚠️ El CORREO de Entra, no (el
+            // owner, 03-10): al abrirse la pantalla, en el móvil saltaba el teclado tapándola antes de leerla.
             const campo = caja.querySelector('[data-isla-foco]:not([disabled])');
             (campo || titular || caja).focus({ preventScroll: true });
             const paso = islandRef.value.querySelector('#isla-compra-paso')?.textContent || '';

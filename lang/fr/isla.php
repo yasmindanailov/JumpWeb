@@ -318,6 +318,7 @@ return [
             'como' => 'Vous réservez en tant que :nombre',
             'total' => 'Total',
             'otra' => 'Ajouter une autre entrée',
+            'sin_otra' => 'Il n’y a pas d’autre entrée à ajouter ce jour-là.',
             'tarjeta' => 'Payer :importe par carte',
             'bizum' => 'Payer :importe avec Bizum',
             'pasarela' => 'Paiement sur la passerelle de votre banque. Votre carte n\'est pas enregistrée.',

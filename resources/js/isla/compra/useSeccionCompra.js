@@ -38,6 +38,7 @@ import {
     almacenDeLaPestana, conVuelta, esVuelta, marcarSalida, sinVuelta, tomarMarca, vueltaDe, vuelveAqui,
 } from '../../sidebar/reanudar.js';
 import { tomarAvisoDelServidor } from '../pagina/aviso-servidor.js';
+import { haySelectorEnLaPagina } from '../pagina/selector-pagina.js';
 import { anunciar, dejar, loQueDeja } from '../pagina/compra-cerrada.js';
 
 /** Lo que `SeccionCompra.vue` da a los pasos de después de la pantalla 0, que viajan en otro trozo (`PasosCompra.vue`). */
@@ -523,6 +524,10 @@ export function useSeccionCompra(props) {
         cerrar();
         setTimeout(() => window.dispatchEvent(new CustomEvent('isla:abrir', { detail: { panel: 'plans', fromToday } })), 40);
     };
+    // ¿La página trae el selector? (el owner, 03-10: la flecha vuelve a él desde cualquier producto). Se lee una vez: la
+    // configuración de la página no cambia mientras se compra.
+    let selectorEnLaPagina = null;
+    const haySelector = () => (selectorEnLaPagina ??= haySelectorEnLaPagina(document));
 
     // ── Lo que se pinta ──────────────────────────────────────────────────────────────────────────────
 
@@ -590,7 +595,7 @@ export function useSeccionCompra(props) {
             // lo marca; y mientras falte, el pie lo dice encima del botón (M2, `#881`).
             const falta = vista.value.falta;
             const pantalla = {
-                ...c, dir: compra.dir, onBack: volverDeLaPantallaCero(compra.desde, { aLaCuenta, alSelector }), onClose: cerrar,
+                ...c, dir: compra.dir, onBack: volverDeLaPantallaCero(compra.desde, { aLaCuenta, alSelector, haySelector: haySelector() }), onClose: cerrar,
                 action: {
                     ...c.action, disabled: Boolean(c.action.disabled) && ! falta, onClick: vista.value.listo ? continuar : () => aLoQueFalta(falta),
                     loading: compra.ocupado === 'cuando' ? t(textos, 'pieza.cargando') : false,

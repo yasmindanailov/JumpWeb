@@ -180,8 +180,10 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef, rowRef,
     const hayLinea = computed(() => r.value.hasLine);
     const lineaAbre = computed(() => (s.value.opens ? (e) => alternarPanel(s.value.opens, e) : null));
 
-    // La acción: con selector de plan, «Reservar» (y «Reservar para hoy») lo abren en vez de navegar.
-    const conSelector = computed(() => Boolean(props.plans) && (s.value.id === 'desde' || s.value.id === 'hoy'));
+    // La acción: con selector de plan, «Reservar» (y «Reservar para hoy») lo abren en vez de navegar. ⚠️ Salvo el que solo
+    // es el destino de la flecha de la compra (`backOnly`, Kids, Jump y Cumpleaños, el owner 03-10): allí «Reservar» sigue
+    // llevando al producto de la página.
+    const conSelector = computed(() => Boolean(props.plans) && ! props.plans.backOnly && (s.value.id === 'desde' || s.value.id === 'hoy'));
     const accion = computed(() => (s.value.action && !actionView.value ? s.value.action : null));
     const accionHref = computed(() => (accion.value && (accion.value.panel || conSelector.value) ? undefined : accion.value && accion.value.href));
     const accionAbierta = computed(() => view.value === 'plans' || (accion.value && accion.value.panel ? view.value === accion.value.panel : false));

@@ -385,6 +385,7 @@ return [
             'como' => 'Reservas como :nombre',
             'total' => 'Total',
             'otra' => 'Añadir otra entrada',
+            'sin_otra' => 'Ese día no queda otra entrada que añadir.',
             'tarjeta' => 'Pagar :importe con tarjeta',
             'bizum' => 'Pagar :importe con Bizum',
             'pasarela' => 'Pago en la pasarela de tu banco. Tu tarjeta no se guarda.',
