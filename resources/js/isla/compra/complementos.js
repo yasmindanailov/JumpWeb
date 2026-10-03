@@ -65,7 +65,8 @@ const frases = (lista) => (Array.isArray(lista) ? lista : []).map((f) => String(
  *   quantity}]`) · `sinHora` (los sueltos resueltos sin día ni hora) · `conHora` (los resueltos con día y hora, o `null`
  *   mientras no hay hora) · `hora` (la elegida, `HH:MM`) · `textos`
  * @returns {Array<{id: number, forma: string, titulo: string, descripcion: string, precio: string, n: number,
- *   marcada: boolean, max: number, disponible: boolean, porQue: string}>}
+ *   marcada: boolean, max: number, disponible: boolean, porQue: string, minutos: number|null, porUnidad: boolean}>}
+ *   (`minutos` y `porUnidad`: lo que alarga la estancia, de la ficha —`stay_minutes`, `stay_per_unit`, `#882`—)
  */
 export function complementosDe(e) {
     const t = (clave) => texto(e.textos, `compra.cuando.${clave}`);
@@ -101,8 +102,27 @@ export function complementosDe(e) {
             max: a.max_quantity ?? 40,
             disponible,
             porQue,
+            minutos: Number.isInteger(a.stay_minutes) && a.stay_minutes > 0 ? a.stay_minutes : null,
+            porUnidad: a.stay_per_unit === true,
         };
     });
+}
+
+/**
+ * **Cuánto DURA la estancia de una línea** (`#882`): la de su fila más lo que la alarga lo elegido de la lista —la hora
+ * extra—, con los minutos de la ficha (el dominio, no el nombre) y su regla de bloques (cada unidad, o una vez). Solo
+ * cuenta lo que la pantalla tiene elegido Y disponible a esa hora (`n` de cada fila). `null`: sin fin (una fila ilimitada).
+ *
+ * @param {number|null|undefined} duracion  los minutos de la fila (`duration_min`; sin él, ilimitada)
+ * @param {Array<{n: number, minutos: number|null, porUnidad: boolean}>} filas  las de `complementosDe`
+ */
+export function estancia(duracion, filas = []) {
+    if (! Number.isInteger(duracion) || duracion <= 0) return null;
+
+    return (Array.isArray(filas) ? filas : []).reduce(
+        (total, f) => total + (f?.n > 0 && Number.isInteger(f.minutos) ? (f.porUnidad ? f.minutos * f.n : f.minutos) : 0),
+        duracion,
+    );
 }
 
 /**

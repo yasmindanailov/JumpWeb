@@ -4,12 +4,12 @@
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
 > **820–849 AGOTADA con `#849`** → **850–879 AGOTADA con `#879`** → sigue en **880–909** (del owner, 02-10 noche; de
-> `#880` a `#899` en `decisiones/800-899.md`, de `#900` en adelante en `900-999.md`) · Último usado: **`#881`** · Spec:
+> `#880` a `#899` en `decisiones/800-899.md`, de `#900` en adelante en `900-999.md`) · Último usado: **`#882`** · Spec:
 > `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador;
 > `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-10-02 noche** (todo con el visto bueno del owner: **su
 > lista del 02-10, L1→L5** —`#876`→`#879`, §4.28; el código de la L2, por hacer—, el zip (6) de este carril, ENTERO —Z6a→Z6g,
-> `#866`→`#875`— y la A5, `#869`/`#870`; y, de noche, **su lista nueva, M1→M4** —`#880`, §4.29—, sin empezar; lo anterior, en
-> `git log -p` de este fichero).
+> `#866`→`#875`— y la A5, `#869`/`#870`; y, de noche, **su lista nueva, M1→M4** —`#880`, §4.29: M1→M3 ✅— y la L2 en código,
+> K1·K2 ✅ y la K2·b de `#882`; lo anterior, en `git log -p` de este fichero).
 > ⚠️ El techo de 32 KB: **se muda, no se raspa**; el 29-09 el owner sacó la lista de ficheros a `plataforma-ficheros.md`
 > (`#852`) y NO subió el techo. Si vuelve a apretar tres veces seguidas, llévaselo con la medida.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -61,10 +61,12 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
    minutos saltando»). **Queda de la isla**: probarla en un móvil de verdad, en STAGING al terminarlo todo; `isla_razon` y la
    imagen de la INVITACIÓN son del SPA (`#861`).
    ▶▶▶ **SIGUE AQUÍ, en el 2**: el código de la L2 (`otra-zona.md`; **K1 ✅** —el modelo y la cesta—; **K2 ✅** —la otra zona en
-   la pantalla 0 y la pregunta de los grupos de `#881`; vista por el owner—; después K3 «Pagar» y K4). ⚠️ Pendiente del owner:
-   la DURACIÓN de la línea añadida (hoy, la primera fila de su zona —1 h— para una persona, sin sus complementos; propuesta:
-   «¿Cuánto tiempo?» en la tarjeta, la misma que la del pedido por `duration_min`, y sus complementos); la lista nueva del owner (el 1), con M1→M3 ✅, espera solo a su M4 (después de la L2). ⚠️ La compra, a
-   199,61 de 201 kB (+12,44 en una noche): la M4 empieza por CARGARLA al abrirla.
+   la pantalla 0 y la pregunta de los grupos de `#881`; vista por el owner—; **K2·b ✅** (`#882`, §4.7) —la tarjeta, una
+   entrada completa: su tiempo de partida el del pedido, sus edades, su hora extra y la hora de salida de cada grupo;
+   contrato 1.63.0; visto bueno del owner el 03-10—; ▶ ahora la K3 «Pagar» y quitar, y la K4). La lista nueva del owner (el 1),
+   con M1→M3 ✅, espera solo a su M4 (después de la L2). ⚠️ La compra, a 204,81 de 206 kB (+17,64 en una noche): la M4 empieza
+   por CARGARLA al abrirla. ⚠️ El limitador de la API es de 60/min por IP (`API_RATE_LIMIT_PER_MINUTE`): una sonda larga lo
+   agota (429; se vacía con `RateLimiter::clear`); tras el NAT de un parque o un colegio, la IP es de todos: a mirar en la M4.
 1. ▶▶▶ **LA LISTA DEL OWNER DEL 02-10 (noche)** (`#880`; su censo, medido, en `isla-y-landing-nueva.md` §4.29), en este orden:
    ✅ **M1** la compra de la isla enseña TODOS los complementos que se venden al reservar el producto, «los que sean» (los de la
    lista de invitados, no; visto por el owner, §4.29: `compra/complementos.js`, la lista diferida, `calcetinDe` con tope, los
@@ -242,6 +244,22 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
 
 ## Buzón
 
+### ❗ Para el SPA (emisor: plataforma, 2026-10-03 mañana) — dos casos más que dependían de la HORA tras tu `#912`, anclados
+- `CustomerAccountContextTest::test_an_expired_cutoff_does_not_invite` y `PostFormDemandSurfacesTest::test_an_expired_cutoff_
+  keeps_the_email_quiet` siembran la fiesta MAÑANA a las 10:00 con un corte de 48 h del complemento; con el plazo único de la
+  lista (24 h antes) caían de 00:00 a 10:00 y bloqueaban el gate de los dos carriles (medido con `TEST_CLOCK`: rojo a las
+  07:20, verde a las 11:00; mi commit no los tocaba: con mis ficheros a `origin/main`, igual de rojos). Anclados a mediodía en
+  la hora del parque (`travelTo`, tu patrón de `e97e776a`), solo esos dos casos; los dos ficheros, 31/31 con el reloj real y
+  con `TEST_CLOCK` en cinco fronteras. Tu `audit-clock.sh` no los cazó: quizá su filtro no los incluye. Si el caso quería
+  decir otra cosa tras `#912`, es tuyo.
+
+### ❗ Para el SPA (emisor: plataforma, 2026-10-03) — contrato **1.63.0**: cuánto alarga la estancia cada complemento
+- `GET /catalog/products/{id}` gana, en cada `addons[]`, `stay_minutes` (entero o `null`) y `stay_per_unit` (booleano), aditivos
+  (`#882`, `otra-zona.md` §4.7): los minutos que ALARGA la estancia un ocupante («una hora más» de una entrada) o un extensor
+  (la hora extra de sala), con las reglas de `AddonOccupancy` —un ocupante o un extensor por invitado alargan una vez; uno de
+  cantidad fija, por unidad—. La isla los usa para decir a qué hora sale cada grupo. Tu 1.62.0 (`#914`, los grupos de la
+  lista) llegó antes: esta va detrás, en **1.63.0**. Si subes la versión, parte de **1.63.0**.
+
 ### ❗ Para el SPA (emisor: plataforma, 2026-10-02 noche) — la isla compone pedidos de VARIAS líneas (la L2, `otra-zona.md`)
 - Desde la K1/K2 (`#878`), una compra de ENTRADAS de la isla puede llevar la OTRA zona (Kids + Jump) en UN pedido: la cesta se
   compone en `isla/compra/linea.js::meterLineas` (`cartStore.setLines`), sin pasar por el `addToCart` del motor. Su §4.5 pedía,
@@ -251,7 +269,7 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
 ### ❗ Para el SPA (emisor: plataforma, 2026-10-02 noche) — contrato **1.61.0**: `guest_form` en la ficha, y «¿Qué menú?» con condición
 - `GET /catalog/products/{id}` gana `guest_form` (booleano, aditivo; la L3 de `#876`, `isla-y-landing-nueva.md` §4.28): la
   reserva del pack lleva la lista de invitados (`TicketType::asksGuestForm()`, la regla de `OrderItem::guestFormStatus()`, que ya
-  la usa en sus tres sitios). Si subes la versión del contrato, parte de **1.61.0**.
+  la usa en sus tres sitios). (Desde `#882`, el contrato está en **1.63.0**: el aviso de arriba.)
 - La isla ya no pinta «¿Qué menú?» sin menús al reservar: tu K3 (el menú de Kids en la lista, `c19b9532`) no deja la pregunta
   vacía. Al final de la pantalla del cumpleaños, si el pack lleva la lista: «Los invitados y los detalles de la fiesta, después
   y sin prisa, en tu lista de invitados.» (`isla.compra.cuando.fiesta_despues`).

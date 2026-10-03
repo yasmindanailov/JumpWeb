@@ -18,8 +18,11 @@ export const FALTA = Symbol('falta');
 export const PERDIDA = 'pjc-perdida';
 
 // De la pregunta de la pantalla 0 (`pantalla-cuando.js` y `fiesta.js::falta`) a su frase. `pjc-q-otra`: la tarjeta de la
-// OTRA ZONA cuando su zona no se vende ese día (K2 de `otra-zona.md`; su frase lleva `:zona`).
-const FRASES = { 'pjc-q-zona': 'zona', 'pjc-q-dia': 'dia', 'pjc-q-hora': 'hora', 'pjc-q-edad': 'edad', 'pjc-q-otra': 'otra' };
+// OTRA ZONA cuando su zona no se vende ese día (K2 de `otra-zona.md`); `pjc-q-otra-tiempo`, su «¿Cuánto tiempo?» cuando
+// solo su tiempo no se vende (K2·b, `#882`). Las dos frases llevan `:zona`.
+const FRASES = {
+    'pjc-q-zona': 'zona', 'pjc-q-dia': 'dia', 'pjc-q-hora': 'hora', 'pjc-q-edad': 'edad', 'pjc-q-otra': 'otra', 'pjc-q-otra-tiempo': 'otra_tiempo',
+};
 
 /**
  * Lo que se MARCA por lo que falta: un dato de la reserva de un pack (`pjc-dato-<clave>`, `#839`) marca su bloque

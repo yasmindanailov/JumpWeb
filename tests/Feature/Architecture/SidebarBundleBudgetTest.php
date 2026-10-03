@@ -1028,7 +1028,13 @@ class SidebarBundleBudgetTest extends TestCase
     // cesta y el presupuesto de todas las líneas (`otra-zona.js`, `usePantallaCero`)— y la pregunta de los grupos de elección
     // (`#881`, `complementos.js::gruposComoFilas`). Medido 195,08 → 199,61 (base: la medida de la K1, `adb6e0e5`). El techo, a
     // 201 (con 0,39 de holgura, un cable trampa). ⚠️⚠️ En UNA noche, de 187,17 a 199,61 (+12,44): la M4 empieza por aquí.
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 201;
+    // K2·b de la L2 (`otra-zona.md` §4.7, `#882`, el owner): la tarjeta de la otra zona, una entrada COMPLETA en pequeño
+    // —para quién, su tiempo (el parecido al del pedido), su gente y sus complementos (`TarjetaOtraZona.vue`)— y la hora de
+    // salida de cada grupo (`otra-zona.js`, `complementos.js::estancia`), con lo elegido hasta la cesta (`linea.js`). Medido
+    // 199,61 → 204,81 (base: la medida de la K2, `34bfb840`, que es el `HEAD`; los pasos, 56,01 → 56,17, bajo su techo). El
+    // techo, a 206. ⚠️ Con esto, la noche suma +17,64 kB (187,17 → 204,81): la M4 (cargar la compra al ABRIRLA) es lo
+    // siguiente tras la L2.
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 206;
 
     // T4d·4 (`specs/isla-y-landing-nueva.md` §4.12): la CALCULADORA de una página, entrada propia que la página pide
     // (`scripts` de `<x-pagina>`) y se monta al acercarse su pieza. Su DESCARGA entera, como la mide el navegador que

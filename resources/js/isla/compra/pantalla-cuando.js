@@ -48,6 +48,46 @@ export function datosDeReserva(ficha, respuestas = {}) {
         .map((c) => ({ key: c.key, label: String(c.label ?? c.key), numero: c.type === 'number' || c.type === 'adults', required: c.required === true, valor: String(respuestas?.[c.key] ?? '') }));
 }
 
+/**
+ * Las opciones de «¿Cuánto tiempo?»: las filas con su precio de ese día, «No se vende este día» (apagada) si no lo tiene, y
+ * el «Ahorras» de la que dura el doble que la primera por menos de dos. De la pantalla 0 y, desde `#882`, de la tarjeta de
+ * la otra zona. El precio del día de un pack es el de su tramo más barato (el de más gente): «desde», salvo el elegido con
+ * su línea (`elegida`, `hora`, `linea`), que dice el de ESTA cantidad (`unit_price_cents`, del servidor).
+ */
+export function opcionesDeTiempo(filas, { precios, dia, elegida = null, hora = null, linea = null, textos, locale }) {
+    const t = (clave) => texto(textos, clave);
+    const tp = (clave, p) => textoCon(textos, clave, p);
+    const precio = (id) => precioDelDia(precios, id, dia);
+    const base = filas[0] ?? null;
+
+    return filas.map((p) => {
+        const cents = precio(p.id);
+        // ⚠️ Sin sus días TODAVÍA (llegando) no se sabe si se vende: decir «no se vende» sería mentir un segundo.
+        const noSeVende = Array.isArray(precios?.[p.id]) && cents === null;
+        const doble = base && p.id !== base.id && p.duration_min && base.duration_min && p.duration_min === 2 * base.duration_min;
+        const ahorro = doble && cents !== null && precio(base.id) !== null ? 2 * precio(base.id) - cents : 0;
+        const dePack = p.type === 'pack' && cents !== null;
+        const suyo = dePack && p.id === elegida?.id && dia && hora && linea ? linea.unit_price_cents : null;
+
+        return {
+            value: String(p.id),
+            title: p.name,
+            description: noSeVende ? t('compra.cuando.no_disponible') : '',
+            disabled: noSeVende,
+            price: cents === null ? '' : (suyo !== null ? euros(suyo, locale) : (dePack ? tp('compra.cuando.desde_precio', { precio: euros(cents, locale) }) : euros(cents, locale))),
+            was: '',
+            highlight: ahorro > 0 ? tp('compra.cuando.ahorro', { importe: euros(ahorro, locale) }) : '',
+        };
+    });
+}
+
+/**
+ * Un tramo horario que no se parte al final de una línea: «11:00–13:00». El guion va entre dos UNIONES de palabra
+ * (U+2060), que no se ven ni se leen: sin ellas, el pie del paso partía «11:00–» y «14:00» en dos líneas (`#882`, visto a
+ * 390 y a 1280).
+ */
+export const rangoHorario = (desde, hasta) => `${desde}⁠–⁠${hasta}`;
+
 /** ¿Están contestados los obligatorios? Sin espacios, como los sanea el servidor al validar la línea. */
 export const datosCompletos = (datos) => datos.every((d) => ! d.required || d.valor.trim() !== '');
 
@@ -91,16 +131,15 @@ export function pantallaCuando(e) {
     const fila = filas.find((p) => p.id === b.fila) ?? null;
     const zonas = zonasConEntradas(e.productos);
     const zona = zonas.find((z) => z.slug === b.zona) ?? null;
-    const precio = (id) => precioDelDia(e.precios, id, b.dia);
-    const base = filas[0] ?? null;
     // Un PACK sin edad (una excursión, T6c·3): «personas», el tope de su ficha y lo que pide al reservar (`#839`).
     const esPack = fila?.type === 'pack';
     const unidad = esPack
         ? { uno: t('compra.cuando.persona'), varios: t('compra.cuando.personas') }
         : { uno: t('compra.cuando.entrada'), varios: t('compra.cuando.entradas') };
     const datos = esPack ? datosDeReserva(e.ficha, b.evento) : [];
-    // La otra zona (K2): sin ella, nada; con ella, su tarjeta, si se vende ese día y en qué horas cabe.
-    const otra = e.otra ?? { enlace: '', tarjeta: null, bloquea: false, resumen: null, noCabe: () => false, notaHora: '', zona: '' };
+    // La otra zona (K2): sin ella, nada; con ella, su tarjeta, si se vende ese día, en qué horas cabe y, si los grupos salen
+    // a horas distintas, a cuál sale el del pedido (`finPrincipal`, `#882`).
+    const otra = e.otra ?? { enlace: '', tarjeta: null, bloquea: false, falta: null, resumen: null, finPrincipal: null, noCabe: () => false, notaHora: '', zona: '' };
     const listo = Boolean(fila && b.dia && b.hora) && datosCompletos(datos) && ! otra.bloquea;
     // Con la otra zona, el dinero es el del presupuesto de TODAS las líneas (`PAY-12`): hasta que llega, sin total.
     const dinero = b.otra ? (e.cotizacion ?? null) : null;
@@ -127,27 +166,7 @@ export function pantallaCuando(e) {
             .map((h) => (h.disabled || ! otra.noCabe(h.time) ? h : { ...h, disabled: true, note: otra.notaHora })),
         hora: horaCorta(b.hora),
         cargando: Boolean(e.cargandoHoras),
-        filas: filas.map((p) => {
-            const cents = precio(p.id);
-            // ⚠️ Sin sus días TODAVÍA (llegando) no se sabe si se vende: decir «no se vende» sería mentir un segundo.
-            const noSeVende = Array.isArray(e.precios?.[p.id]) && cents === null;
-            const doble = base && p.id !== base.id && p.duration_min && base.duration_min && p.duration_min === 2 * base.duration_min;
-            const ahorro = doble && cents !== null && precio(base.id) !== null ? 2 * precio(base.id) - cents : 0;
-            // El precio del día de un pack es el de su tramo más barato (el de más gente): «desde», salvo el elegido con su
-            // línea, que dice el de ESTA cantidad (`unit_price_cents`, del servidor).
-            const dePack = p.type === 'pack' && cents !== null;
-            const suyo = dePack && p.id === fila?.id && b.dia && b.hora && e.linea ? e.linea.unit_price_cents : null;
-
-            return {
-                value: String(p.id),
-                title: p.name,
-                description: noSeVende ? t('compra.cuando.no_disponible') : '',
-                disabled: noSeVende,
-                price: cents === null ? '' : (suyo !== null ? euros(suyo, locale) : (dePack ? tp('compra.cuando.desde_precio', { precio: euros(cents, locale) }) : euros(cents, locale))),
-                was: '',
-                highlight: ahorro > 0 ? tp('compra.cuando.ahorro', { importe: euros(ahorro, locale) }) : '',
-            };
-        }),
+        filas: opcionesDeTiempo(filas, { precios: e.precios, dia: b.dia, elegida: fila, hora: b.hora, linea: e.linea, textos, locale }),
         fila: fila ? String(fila.id) : null,
         cuantos: { n: b.n, ...unidad, min: e.minimo ?? 1, max: e.maximo ?? (esPack ? e.ficha?.max_quantity : null) ?? 20 },
         calcetines: preguntaCalcetines(e.calcetin, b.cal, { textos, locale }),
@@ -155,13 +174,15 @@ export function pantallaCuando(e) {
         // llegan hechos de `complementos.js`.
         complementos: e.complementos ?? [],
         // La OTRA ZONA (K2, `otra-zona.md`): su tarjeta o, sin ella, el enlace que la nombra (D3-B; `''`, ninguno).
-        otra: otra.tarjeta ? { ...otra.tarjeta, bloquea: otra.bloquea } : null,
+        otra: otra.tarjeta,
         umbral: e.umbral || 6,
         otraZona: otra.enlace,
     };
 
+    // Con la otra zona y estancias distintas, la hora de salida de cada grupo (`#882`): «11:00–13:00».
+    const cuando = b.hora ? `, ${otra.finPrincipal ? rangoHorario(horaCorta(b.hora), otra.finPrincipal) : horaCorta(b.hora)}` : '';
     const resumen = fila && b.dia
-        ? [fila.name, `${diaCorto(b.dia, locale)}${b.hora ? `, ${horaCorta(b.hora)}` : ''}`, `${b.n} ${b.n === 1 ? unidad.uno : unidad.varios}`].join(' · ')
+        ? [fila.name, `${diaCorto(b.dia, locale)}${cuando}`, `${b.n} ${b.n === 1 ? unidad.uno : unidad.varios}`].join(' · ')
             + (otra.resumen ? ` + ${otra.resumen}` : '')
         : null;
     const sinContestar = datos.find((d) => d.required && d.valor.trim() === '');
@@ -176,9 +197,10 @@ export function pantallaCuando(e) {
         listo,
         // Lo PRIMERO que falta para continuar, por su `id` en la pantalla: a donde la capa lleva la vista (`ir-a.js`, el owner
         // 28-09) al llegar con la selección hecha y al pulsar «Continuar» sin estar lista. De un dato, su CAMPO. La otra zona
-        // que no se vende ese día, su tarjeta (`pjc-q-otra`), con el nombre de su zona (`faltaZona`).
+        // que no se vende ese día, su tarjeta (`pjc-q-otra`) o, si solo su tiempo, su «¿Cuánto tiempo?» (`pjc-q-otra-tiempo`,
+        // `#882`), con el nombre de su zona (`faltaZona`).
         falta: listo ? null : (b.elegirZona && ! b.zona ? 'pjc-q-zona' : ! fila ? null : ! b.dia ? 'pjc-q-dia' : ! b.hora ? 'pjc-q-hora'
-            : (sinContestar ? `pjc-dato-${sinContestar.key}` : (otra.bloquea ? 'pjc-q-otra' : null))),
+            : (sinContestar ? `pjc-dato-${sinContestar.key}` : (otra.falta ?? null))),
         faltaZona: otra.zona ?? '',
         ck: {
             key: 'cuando',

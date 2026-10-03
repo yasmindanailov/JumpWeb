@@ -18,6 +18,7 @@ const textos = {
             codigo: 'Escribe las :n cifras del código',
             hora_libre: 'Elige una de estas horas para continuar',
             otra: ':zona no se vende ese día: quítala o elige otro día',
+            otra_tiempo: 'Ese tiempo de :zona no se vende ese día: elige otro',
         },
     },
 };
@@ -37,6 +38,10 @@ describe('la pantalla 0', () => {
 
     test('la otra zona que no se vende ese día (K2 de `otra-zona.md`): su tarjeta, nombrando la zona', () => {
         assert.deepEqual(marcaDe('pjc-q-otra', textos, { zona: 'JUMP' }), { id: 'pjc-q-otra', texto: 'JUMP no se vende ese día: quítala o elige otro día' });
+    });
+
+    test('`#882`: si solo SU TIEMPO no se vende, su «¿Cuánto tiempo?», nombrando la zona', () => {
+        assert.deepEqual(marcaDe('pjc-q-otra-tiempo', textos, { zona: 'JUMP' }), { id: 'pjc-q-otra-tiempo', texto: 'Ese tiempo de JUMP no se vende ese día: elige otro' });
     });
 
     test('lo que no se sabe decir no se dice: ni nota ni marca', () => {

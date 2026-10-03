@@ -20,8 +20,8 @@ import { horaCorta } from './vista.js';
 import { datosDeReserva, filasDeZona, pantallaCuando, preguntaCalcetines, respuestasDe } from './pantalla-cuando.js';
 import { campoDeEdad, menuElegido, packPorEdad, packsDeFiesta, pantallaCuandoFiesta } from './fiesta.js';
 import { cargarSinHora, complementosDe, conExtra, eleccionesDelBorrador, gruposComoFilas, quedanEn } from './complementos.js';
-import { cargarHorasDe, horasQueNoCaben, otraDeLaPantalla, otraNueva, otrasZonas } from './otra-zona.js';
-import { lineasDe, pedidoDe, resolverOtras } from './linea.js';
+import { cargarHorasDe, horasQueNoCaben, otraDeLaPantalla, otraDelDia, otraNueva, otrasZonas } from './otra-zona.js';
+import { lineasDe, pedidoDe, resolverOtrasConOferta } from './linea.js';
 
 export function usePantallaCero({ flow, compra, enCola, textos }) {
     const { catalogStore, timeStore, selectionStore, cartStore } = flow;
@@ -35,26 +35,44 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
     /** ¿Es una compra de ENTRADAS? La otra zona es solo suya (`otra-zona.md` §2: ni fiestas ni excursiones, el mockup). */
     const deEntradas = () => ! compra.borrador.fiesta && catalogStore.products.find((p) => p.id === compra.borrador.fila)?.type === 'entry';
 
-    /** La línea de la otra zona como la pide el pedido (`linea.js::pedidoDe`): su fila, su gente y su justificante. */
+    /** Los minutos de la fila del pedido (`duration_min`; sin ellos, ilimitada): de partida, el tiempo de la otra (`#882`). */
+    const duracionDelPedido = () => catalogStore.products.find((p) => p.id === compra.borrador.fila)?.duration_min ?? null;
+
+    /**
+     * La línea de la otra zona como la pide el pedido (`linea.js::pedidoDe`): su fila, su gente, su justificante (el de SU
+     * ficha) y, desde la K2·b (`#882`), lo elegido en su tarjeta: sus complementos y sus grupos.
+     */
     const otraDelPedido = () => {
         const o = compra.borrador.otra;
+        const ficha = compra.fichaOtra?.id === o?.fila ? compra.fichaOtra : null;
 
-        return o ? [{ fila: o.fila, n: o.n, guardian: compra.fichaOtra?.guardian_authorization ?? 'none' }] : [];
+        return o ? [{
+            fila: o.fila, n: o.n, guardian: ficha?.guardian_authorization ?? 'none',
+            extras: o.extras ?? [], elecciones: eleccionesDelBorrador(compra.gruposOtra, { elecciones: o.elecciones ?? {} }),
+        }] : [];
     };
 
     /**
      * **Con la otra zona, el presupuesto de TODAS las líneas** (`POST /orders/quote`, sin tocar la cesta: K2 de
-     * `otra-zona.md`): el total de la pantalla 0 es el suyo (`PAY-12`), nunca una suma. Sin ella, o sin hora, ninguno.
+     * `otra-zona.md`): el total de la pantalla 0 es el suyo (`PAY-12`), nunca una suma. Y, de paso, lo que su tarjeta pinta
+     * a esa hora (sus complementos, con su precio y si caben: `#882`). Sin ella, o sin hora, ninguno.
      */
     async function cotizar() {
         const b = compra.borrador;
 
-        if (! b.otra || ! b.hora || ! selectionStore.line) { compra.cotizacion = null; return; }
+        if (! b.otra || ! b.hora || ! selectionStore.line) { Object.assign(compra, { cotizacion: null, conHoraOtra: null }); return; }
+        const fila = b.otra.fila;
         const pedido = pedidoDe(b, { otras: otraDelPedido() });
-        const resueltosOtras = await resolverOtras({ api, pedido });
-        const r = resueltosOtras === null ? null
-            : await api.post('/orders/quote', { items: toApiItems(lineasDe(pedido, selectionStore.resolved, resueltosOtras)) });
+        const otras = await resolverOtrasConOferta({ api, pedido });
+        const r = otras === null ? null
+            : await api.post('/orders/quote', { items: toApiItems(lineasDe(pedido, selectionStore.resolved, otras.resueltos)) });
 
+        // Si mientras tanto la quitaron o cambió de tiempo, lo que llegó ya no es suyo: lo pinta la petición que viene detrás.
+        if (compra.borrador.otra?.fila !== fila) return;
+        const oferta = otras?.ofertas[fila] ?? null;
+
+        compra.conHoraOtra = oferta ? oferta.singles : null;
+        if (oferta?.groups.length) compra.gruposOtra = oferta.groups;
         compra.cotizacion = r?.ok ? r.data : null;
     }
 
@@ -68,20 +86,41 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
         if (b.otra && b.hora && horasQueNoCaben(compra.horasOtra, b.otra.n)(horaCorta(b.hora))) b.hora = null;
     }
 
-    /** La fila de la otra zona: su ficha (su justificante) y sus horas ese día, con la cesta de contexto (`AFORO-02`). */
+    /**
+     * La ficha de la fila de la otra zona —su justificante y sus complementos— y lo que resuelve SIN hora (sus complementos
+     * con su nota y sus grupos), si la que hay no es la suya (`#882`: su tiempo se cambia en la tarjeta). Lo elegido de otra
+     * fila que ésta no vende, fuera: otro producto, otros complementos (como `cargarFila`).
+     */
+    async function fichaDeOtra() {
+        const o = compra.borrador.otra;
+
+        if (! o || compra.fichaOtra?.id === o.fila) return;
+        const [ficha, sinHora] = await Promise.all([api.get(`/catalog/products/${o.fila}`), cargarSinHora({ api, productId: o.fila, quantity: o.n })]);
+
+        if (compra.borrador.otra?.fila !== o.fila) return;
+        Object.assign(compra, { fichaOtra: ficha?.ok ? ficha.data : null, sueltosOtra: sinHora.sueltos, gruposOtra: sinHora.grupos });
+        compra.borrador.otra = { ...compra.borrador.otra, extras: quedanEn(compra.borrador.otra.extras, compra.fichaOtra) };
+    }
+
+    /**
+     * Cambió lo de la otra zona y la línea del pedido NO (su resolución no depende de la otra): basta el presupuesto de
+     * todas. Si la hora se vació (la otra ya no cabe), la línea del pedido también se vacía (`resolverLinea`).
+     */
+    const recotizar = () => (compra.borrador.hora && selectionStore.line ? cotizar() : resolverLinea());
+
+    /** La fila de la otra zona: su ficha (`fichaDeOtra`) y sus horas ese día, con la cesta de contexto (`AFORO-02`). */
     async function cargarOtra() {
         const b = compra.borrador;
 
         if (! b.otra) return;
-        const [fichaOtra, horas] = await Promise.all([
-            api.get(`/catalog/products/${b.otra.fila}`),
+        const [horas] = await Promise.all([
             b.dia ? cargarHorasDe({ api, fila: b.otra.fila, dia: b.dia, lineas: cartStore.lines }) : null,
+            fichaDeOtra(),
         ]);
 
-        compra.fichaOtra = fichaOtra?.ok ? fichaOtra.data : null;
         compra.horasOtra = horas;
         caben();
-        await resolverLinea();
+        await recotizar();
     }
 
     /**
@@ -126,8 +165,8 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
     };
 
     /**
-     * Las horas de la fila y el día, con la cesta (`AFORO-02`) y, con la otra zona, también las suyas (en paralelo). Una hora
-     * que ya no cabe —la del pedido o la otra— se vacía.
+     * Las horas de la fila y el día, con la cesta (`AFORO-02`) y, con la otra zona, también las suyas (en paralelo), y su
+     * ficha si su tiempo cambió con el día (`otraDelDia`). Una hora que ya no cabe —la del pedido o la otra— se vacía.
      */
     async function cargarHoras() {
         const b = compra.borrador;
@@ -137,6 +176,7 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
         const [, horasOtra] = await Promise.all([
             timeStore.loadOffer({ api, productId: b.fila, date: b.dia, cartLines: cartStore.lines }),
             b.otra ? cargarHorasDe({ api, fila: b.otra.fila, dia: b.dia, lineas: cartStore.lines }) : null,
+            fichaDeOtra(),
         ]);
 
         compra.horasOtra = horasOtra;
@@ -230,11 +270,12 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
     async function situar(borrador, cargados = null) {
         if (borrador.fiesta) return situarFiesta(borrador);
         compra.borrador = borrador;
-        Object.assign(compra, { precios: {}, llegaron: [], horasOtra: null, fichaOtra: null, cotizacion: null });
+        Object.assign(compra, { precios: {}, llegaron: [], horasOtra: null, fichaOtra: null, cotizacion: null, sueltosOtra: [], conHoraOtra: null, gruposOtra: [] });
         if (! borrador.zona) return;
         const filas = filasDeZona(catalogStore.products, borrador.zona);
-        // Y la primera fila de cada OTRA zona de entradas (K2 de `otra-zona.md`): sus días dicen si se ofrece ese día.
-        const otras = filas[0]?.type === 'entry' ? otrasZonas(catalogStore.products, borrador.zona).map((z) => z.fila.id) : [];
+        // Y las filas de cada OTRA zona de entradas (K2 de `otra-zona.md`; todas desde la K2·b, `#882`): sus días dicen si se
+        // ofrece ese día y el precio de cada tiempo de su tarjeta.
+        const otras = filas[0]?.type === 'entry' ? otrasZonas(catalogStore.products, borrador.zona).flatMap((z) => z.filas.map((f) => f.id)) : [];
 
         // Mientras llegan los días, las horas enseñan su hueco (el esqueleto del diseño): nada salta después.
         compra.cargandoHoras = true;
@@ -285,7 +326,13 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
         compra.aviso = '';
         if (b.fiesta) return cambiarFiesta(campo, valor);
         if (campo === 'zona') return enCola(() => situar({ ...borradorDeIntencion({ type: 'zone', slug: valor }, catalogStore.products), elegirZona: b.elegirZona, dia: b.dia, n: b.n }));
-        if (campo === 'dia') { b.dia = valor; return enCola(cargarHoras); }
+        if (campo === 'dia') {
+            b.dia = valor;
+            // La otra zona, si su tiempo no se vende ese día y otro sí, al parecido (`#882`): nunca una opción apagada elegida.
+            b.otra = otraDelDia(b.otra, otrasZonas(catalogStore.products, b.zona), compra.precios, valor, duracionDelPedido());
+
+            return enCola(cargarHoras);
+        }
         if (campo === 'fila') { b.fila = Number(valor); return enCola(cargarFila); }
         if (campo === 'hora') { b.hora = horaDelMotor(timeStore.offered, valor); return enCola(resolverLinea); }
         if (campo === 'n') { b.n = valor; return b.hora ? enCola(cargarHoras) : null; }
@@ -296,12 +343,24 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
         if (campo === 'eleccion') { b.elecciones = { ...(b.elecciones ?? {}), [valor.grupo]: valor.valor }; return enCola(resolverLinea); }
         // Un dato de la reserva de un pack (`#839`): se escribe en el borrador y viaja al continuar; no cambia la oferta.
         if (campo === 'evento') { b.evento = { ...(b.evento ?? {}), [valor.key]: valor.valor }; return null; }
-        // La OTRA ZONA (K2 de `otra-zona.md`): añadirla —su primera fila, para una persona—, cambiar su gente o quitarla.
-        if (campo === 'otra') { b.otra = otraNueva(otrasZonas(catalogStore.products, b.zona), compra.precios, b.dia); return b.otra ? enCola(cargarOtra) : null; }
-        if (campo === 'otraN' && b.otra) { b.otra = { ...b.otra, n: valor }; caben(); return enCola(resolverLinea); }
+        // La OTRA ZONA (K2 de `otra-zona.md`; su tarjeta completa, K2·b de `#882`): añadirla —con el tiempo parecido al del
+        // pedido, para una persona—, cambiar su tiempo, su gente, sus complementos o sus grupos, o quitarla.
+        if (campo === 'otra') {
+            b.otra = otraNueva(otrasZonas(catalogStore.products, b.zona), compra.precios, b.dia, duracionDelPedido());
+
+            return b.otra ? enCola(cargarOtra) : null;
+        }
+        if (campo === 'otraFila' && b.otra) { b.otra = { ...b.otra, fila: Number(valor), elecciones: {} }; return enCola(cargarOtra); }
+        if (campo === 'otraN' && b.otra) { b.otra = { ...b.otra, n: valor }; caben(); return enCola(recotizar); }
+        if (campo === 'otraExtra' && b.otra) { b.otra = { ...b.otra, extras: conExtra(b.otra.extras, valor.id, valor.n) }; return enCola(cotizar); }
+        if (campo === 'otraEleccion' && b.otra) {
+            b.otra = { ...b.otra, elecciones: { ...(b.otra.elecciones ?? {}), [valor.grupo]: valor.valor } };
+
+            return enCola(cotizar);
+        }
         if (campo === 'quitarOtra') {
             b.otra = null;
-            Object.assign(compra, { horasOtra: null, fichaOtra: null, cotizacion: null });
+            Object.assign(compra, { horasOtra: null, fichaOtra: null, cotizacion: null, sueltosOtra: [], conHoraOtra: null, gruposOtra: [] });
 
             return null;
         }
@@ -354,8 +413,14 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
             })
             : pantallaCuando({
                 ...comun, productos: catalogStore.products, minimo: catalogStore.minQuantity, umbral: timeStore.lowMax, calcetin, ficha: deLaFila,
-                // La otra zona, solo en ENTRADAS (K2 de `otra-zona.md`), y el presupuesto de todas las líneas si la hay.
-                otra: deEntradas() ? otraDeLaPantalla({ borrador: b, productos: catalogStore.products, precios: compra.precios, horasOtra: compra.horasOtra, textos, locale: flow.locale }) : null,
+                // La otra zona, solo en ENTRADAS (K2 de `otra-zona.md`), y el presupuesto de todas las líneas si la hay. Su tarjeta,
+                // completa (`#882`): sus complementos —menos los calcetines, que se preguntan una vez para todos— y la estancia
+                // del pedido, para decir a qué hora sale cada grupo si no coinciden.
+                otra: deEntradas() ? otraDeLaPantalla({
+                    borrador: b, productos: catalogStore.products, precios: compra.precios, horasOtra: compra.horasOtra, fichaOtra: compra.fichaOtra,
+                    sueltosOtra: compra.sueltosOtra, conHoraOtra: compra.conHoraOtra, gruposOtra: compra.gruposOtra,
+                    principal: { duracion: duracionDelPedido(), complementos }, excluir: calcetin ? [calcetin.id] : [], textos, locale: flow.locale,
+                }) : null,
                 cotizacion: compra.cotizacion,
             });
     });

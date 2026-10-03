@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { complementosDe, conLaCesta, esHoraLlena, lineaDe, lineasDe, meterLinea, meterLineas, pedidoDe, resolverOtras } from './linea.js';
+import { complementosDe, conLaCesta, esHoraLlena, lineaDe, lineasDe, meterLinea, meterLineas, pedidoDe, resolverOtras, resolverOtrasConOferta } from './linea.js';
 
 /**
  * La línea de la compra de la isla (T3e·3 de `specs/isla-y-landing-nueva.md` §4.10): la cesta de la isla es SU
@@ -132,10 +132,18 @@ describe('la OTRA ZONA en el pedido (L2, `otra-zona.md` §4.1)', () => {
     test('las líneas de la otra zona: sin la fila del pedido (se funde en ella) ni repetidas, y sin las que no son nada', () => {
         const p = pedidoDe(borrador, { otras: [jump, { fila: 103, n: 2, guardian: 'required' }, { fila: 100, n: 3 }, { fila: 104, n: 0 }, { fila: 'x', n: 1 }] });
 
-        assert.deepEqual(p.otras, [{ fila: 103, n: 3, guardian: false, minimo: 1, maximo: null }], 'la misma fila, una línea con su gente sumada');
+        assert.deepEqual(p.otras, [{ fila: 103, n: 3, guardian: false, minimo: 1, maximo: null, extras: [], elecciones: [] }], 'la misma fila, una línea con su gente sumada');
         assert.equal(p.n, 5, 'la misma fila del pedido no es otra línea: es más gente en la suya');
         assert.equal(pedidoDe(borrador, { otras: [{ fila: 103, n: 1, guardian: 'required' }] }).otras[0].guardian, true, 'el justificante obligatorio viaja');
         assert.equal(pedidoDe(borrador).n, 2, 'sin otras, la gente de siempre');
+    });
+
+    test('`#882`: cada una lleva lo elegido en SU tarjeta —sus complementos y sus grupos—; al fundirse, los de la primera', () => {
+        const hora = { product_id: 140, quantity: 1, sobra: 'x' };
+        const menu = { group: 'menu', product_id: 7, sobra: 'y' };
+        const p = pedidoDe(borrador, { otras: [{ fila: 104, n: 1, extras: [hora], elecciones: [menu] }, { fila: 104, n: 2, extras: [{ product_id: 9, quantity: 3 }] }] });
+
+        assert.deepEqual(p.otras, [{ fila: 104, n: 3, guardian: false, minimo: 1, maximo: null, extras: [{ product_id: 140, quantity: 1 }], elecciones: [{ group: 'menu', product_id: 7 }] }]);
     });
 
     test('las líneas candidatas: la suya primero y las otras con el MISMO día y hora (D1-A) y lo que el servidor resolvió de cada una', () => {
@@ -195,6 +203,21 @@ describe('la OTRA ZONA en el pedido (L2, `otra-zona.md` §4.1)', () => {
         assert.deepEqual(await resolverOtras({ api, pedido: pedidoDe(borrador) }), {});
         assert.equal(llamadas.length, 1, 'sin otras, ninguna petición');
         assert.equal(await resolverOtras({ api: { post: async () => ({ ok: false }) }, pedido: p }), null, 'una que no contesta: no se mete a medias');
+    });
+
+    test('`#882`: con lo elegido en su tarjeta, y de vuelta también lo que su tarjeta pinta a esa hora (`ofertas`)', async () => {
+        const llamadas = [];
+        const singles = [{ product_id: 140, available: true, note: '8,00 €' }];
+        const groups = [{ key: 'menu', options: [] }];
+        const api = { post: async (ruta, cuerpo) => { llamadas.push([ruta, cuerpo]); return { ok: true, data: { selection: [{ product_id: 140, quantity: 1 }], singles, groups } }; } };
+        const p = pedidoDe(borrador, { otras: [{ fila: 104, n: 2, extras: [{ product_id: 140, quantity: 1 }], elecciones: [{ group: 'menu', product_id: 7 }] }] });
+
+        assert.deepEqual(await resolverOtrasConOferta({ api, pedido: p }), { resueltos: { 104: [{ product_id: 140, quantity: 1 }] }, ofertas: { 104: { singles, groups } } });
+        assert.deepEqual(llamadas, [['/catalog/products/104/addons', {
+            quantity: 2, date: '2026-09-26', time: '17:00:00', addons: [{ product_id: 140, quantity: 1 }], choices: [{ group: 'menu', product_id: 7 }],
+        }]]);
+        assert.deepEqual(await resolverOtrasConOferta({ api, pedido: pedidoDe(borrador) }), { resueltos: {}, ofertas: {} });
+        assert.equal(await resolverOtrasConOferta({ api: { post: async () => ({ ok: false }) }, pedido: p }), null);
     });
 
     test('las cantidades del pedido, las de la CESTA, leídas por PRODUCTO (con varias líneas, `lines[0]` ya no es la suya)', () => {

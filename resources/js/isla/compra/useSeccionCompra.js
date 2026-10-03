@@ -65,11 +65,12 @@ export function useSeccionCompra(props) {
      * reabre —`desdeHoy`: tal como se abrió, desde «Reservar para hoy» o no—.
      */
     // `sueltos`: los complementos del producto resueltos SIN día ni hora, con su nota (`complementos.js`, `#880`). La OTRA
-    // ZONA (K2 de `otra-zona.md`): `horasOtra` (lo que su fila ofrece ese día), `fichaOtra` (su justificante) y `cotizacion`
-    // (el presupuesto de TODAS las líneas, del servidor).
+    // ZONA (K2 de `otra-zona.md`): `horasOtra` (lo que su fila ofrece ese día), `fichaOtra` (su justificante y sus
+    // complementos), `cotizacion` (el presupuesto de TODAS las líneas, del servidor) y, desde la K2·b (`#882`), lo que su
+    // tarjeta pinta de sus complementos: `sueltosOtra` (sin hora), `conHoraOtra` (a esa hora) y `gruposOtra`.
     const compra = reactive({
         borrador: borradorDeIntencion(null, []), precios: {}, llegaron: [], fichas: {}, grupos: [], sueltos: [], cargandoHoras: false, intencion: null,
-        horasOtra: null, fichaOtra: null, cotizacion: null,
+        horasOtra: null, fichaOtra: null, cotizacion: null, sueltosOtra: [], conHoraOtra: null, gruposOtra: [],
         paso: 'cuando', aviso: '', ocupado: null, pedido: null, pagado: null, dir: null, cercanas: [], horaNueva: null,
         preparando: false, sinDatos: false, alEntrar: false, desde: null, desdeHoy: false,
     });

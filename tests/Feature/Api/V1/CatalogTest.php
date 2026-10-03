@@ -705,6 +705,40 @@ class CatalogTest extends ApiTestCase
         $this->getJson(self::ROOT.'/catalog/products/'.$entrada->id)->assertOk()->assertJsonPath('guest_form', false);
     }
 
+    /**
+     * `#882` (1.63.0): cada complemento dice cuánto ALARGA la estancia —con eso la compra dice a qué hora sale cada grupo—,
+     * con las reglas del dominio: un OCUPANTE («una hora más» de una entrada) alarga su duración UNA vez, se pidan cuantas
+     * se pidan; un EXTENSOR de cantidad fija, POR unidad (bloques); uno por invitado, una vez; y uno corriente, nada.
+     */
+    public function test_each_addon_says_how_long_it_stretches_the_stay(): void
+    {
+        $complemento = fn (string $nombre, array $atributos, int $cents) => $this->priced(
+            $this->product($nombre, array_merge(['type' => TicketType::TYPE_ADDON, 'zone_id' => null], $atributos)),
+            $cents,
+        );
+        $entrada = $this->priced($this->product('Entrada · 2 horas', ['duration_min' => 120]), 990);
+        $entrada->configurableAddons()->attach($complemento('Una hora más', ['duration_min' => 60, 'occupies_after_parent' => true], 500)->id, [
+            'quantity_mode' => 'fixed', 'max_qty' => 1, 'position' => 1,
+        ]);
+        $entrada->configurableAddons()->attach($complemento('Calcetines', ['duration_min' => null], 200)->id, [
+            'quantity_mode' => 'fixed', 'position' => 2,
+        ]);
+        $pack = $this->priced($this->product('Fiesta', ['type' => TicketType::TYPE_PACK, 'min_qty' => 8]), 1500);
+        $pack->configurableAddons()->attach($complemento('Media hora más', ['duration_min' => 30, 'extends_parent_stay' => true], 3000)->id, [
+            'quantity_mode' => 'fixed', 'max_qty' => 2, 'position' => 1,
+        ]);
+        $pack->configurableAddons()->attach($complemento('Hora extra', ['duration_min' => 60, 'extends_parent_stay' => true], 400)->id, [
+            'quantity_mode' => 'per_guest', 'position' => 2,
+        ]);
+        $alarga = fn (TicketType $producto): array => array_map(
+            fn (array $a): array => [$a['name'], $a['stay_minutes'], $a['stay_per_unit']],
+            $this->getJson(self::ROOT.'/catalog/products/'.$producto->id)->assertOk()->assertValidResponse(200)->json('addons'),
+        );
+
+        $this->assertSame([['Una hora más', 60, false], ['Calcetines', null, false]], $alarga($entrada));
+        $this->assertSame([['Media hora más', 30, true], ['Hora extra', 60, false]], $alarga($pack));
+    }
+
     /** Una entrada no pide datos de evento aunque alguien le deje un esquema suelto en BD. */
     public function test_an_entry_has_no_event_fields(): void
     {

@@ -72,5 +72,19 @@ final readonly class CatalogAddon
          * por el dominio para que ningún cliente la deduzca a ojo.
          */
         public bool $selectedByDefault,
+        /**
+         * Minutos que ALARGA la estancia de la línea al contratarlo (`#882`), o `null` si no la alarga:
+         * un OCUPANTE («una hora más» de una entrada: las que se quedan siguen en la franja siguiente)
+         * o un EXTENSOR (la fiesta sigue en su sala), reconocidos por el dominio
+         * (`AddonOccupancy::sellableOccupant()` y `sellableStayExtension()`), nunca por su nombre. Es lo
+         * que alarga UN bloque.
+         */
+        public ?int $stayMinutes,
+        /**
+         * ¿Alarga `stayMinutes` CADA unidad? Solo un extensor de cantidad fija (su cantidad son bloques
+         * de tiempo); un ocupante (su cantidad son entradas que se quedan) o un extensor por invitado
+         * alargan una vez, se pidan cuantas se pidan (`AddonOccupancy::blocksFor()`). Sin alargar, `false`.
+         */
+        public bool $stayPerUnit,
     ) {}
 }

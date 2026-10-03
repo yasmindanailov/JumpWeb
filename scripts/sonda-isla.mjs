@@ -259,7 +259,10 @@ try {
     const cercanas = await page.locator('[data-isla-scroll] button', { hasText: /^\d{2}:\d{2}/ }).allInnerTexts();
     ok('la hora se llena al pagar → «Esa hora ya no está libre. No se ha cobrado nada.»', /No se ha cobrado nada/.test(perdida), perdida.slice(0, 120));
     ok('con las horas cercanas del día (hasta cuatro, sin la perdida)', cercanas.length > 0 && cercanas.length <= 4 && ! cercanas.some((h) => h.startsWith(llena.hora)), `${llena.hora} → ${cercanas.map((h) => h.slice(0, 5)).join(', ')}`);
-    ok('en la banda de «Pagar», y «Elegir esta hora» apagado hasta elegir', (await paso()).includes('Pagar') && await accion(/^Elegir esta hora$/).isDisabled());
+    // Desde la M2 (`#881`) ningún botón se apaga sin decir por qué: «Elegir esta hora» sigue vivo y encima dice lo que falta.
+    const loQueFalta = await page.locator('[data-isla] [role="status"]').last().innerText().catch(() => '');
+    ok('en la banda de «Pagar», y «Elegir esta hora» VIVO con lo que falta encima (M2, `#881`)',
+        (await paso()).includes('Pagar') && ! await accion(/^Elegir esta hora$/).isDisabled() && /Elige una de estas horas/.test(loQueFalta), loQueFalta);
     ok('debajo sigue la línea que se estaba pagando, como en el diseño', /entrada/.test(await debajo()) && (await debajo()).includes(llena.hora), await debajo());
     ok('no nació ningún pedido: de verdad no se cobró nada', cuantosPedidos() === pedidosAntes, `${pedidosAntes} → ${cuantosPedidos()}`);
     await foto('2-hora-llena');

@@ -278,6 +278,11 @@ class CatalogReader implements ProductCatalog
                 continue;
             }
 
+            // Lo que alarga la estancia (`#882`): las reglas del dominio, no una copia. Y si cada unidad
+            // alarga, lo dice la MISMA regla que cuenta los bloques: dos unidades, ¿dos bloques?
+            $ocupa = AddonOccupancy::sellableOccupant($addon);
+            $extiende = AddonOccupancy::sellableStayExtension($addon);
+
             $rows[] = new CatalogAddon(
                 id: (int) $addon->id,
                 name: (string) $addon->tr('name'),
@@ -293,6 +298,8 @@ class CatalogReader implements ProductCatalog
                 choiceGroup: $pivot->choiceGroup(),
                 requiresAddonId: $pivot->requiresAddonId(),
                 selectedByDefault: isset($selected[(int) $addon->id]),
+                stayMinutes: $ocupa || $extiende ? (int) $addon->duration_min : null,
+                stayPerUnit: $extiende && AddonOccupancy::blocksFor($pivot, 2) === 2,
             );
         }
 

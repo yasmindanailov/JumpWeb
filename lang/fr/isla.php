@@ -185,6 +185,9 @@ return [
             'otra_no_cabe' => 'Il n’y a plus de place à :zona à cette heure',
             'otra_llena' => ':zona est désormais complet à cette heure. Choisissez une autre heure ou retirez-le.',
             'aviso_otra' => ':zona : :aviso',
+            'edades_de_a' => 'De :min à :max ans',
+            'edades_desde' => 'À partir de :min ans',
+            'edades_hasta' => 'Jusqu’à :max ans',
             'mas_fechas' => 'Plus de dates',
             'menos_fechas' => 'Fermer le calendrier',
             'quitar' => 'Retirer',
@@ -240,6 +243,7 @@ return [
             'codigo' => 'Saisissez les :n chiffres du code',
             'hora_libre' => 'Choisissez l’une de ces heures pour continuer',
             'otra' => ':zona n’est pas disponible ce jour-là : retirez-le ou choisissez un autre jour',
+            'otra_tiempo' => 'Cette durée de :zona n’est pas disponible ce jour-là : choisissez-en une autre',
         ],
         'datos' => [
             'banda' => 'Vos coordonnées',

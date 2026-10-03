@@ -22,7 +22,8 @@ import { t } from '../../sidebar/i18n.js';
 /**
  * Las líneas de la OTRA ZONA del pedido (L2, `otra-zona.md` §4.1): sin la fila del pedido y sin repetir fila —la misma fila
  * no es otra línea, es más gente: se FUNDE, como hace el servidor (`merges_with_index`)— y con lo que cada una pide (su
- * gente, si su justificante es obligatorio, su mínimo y lo que cabía a esa hora). Devuelve también lo que suma a la del pedido.
+ * gente, si su justificante es obligatorio, su mínimo, lo que cabía a esa hora y, desde la K2·b de `#882`, sus complementos
+ * y lo elegido en sus grupos: al fundirse, los de la primera). Devuelve también lo que suma a la del pedido.
  */
 function otrasDe(fila, otras) {
     const porFila = new Map();
@@ -37,7 +38,11 @@ function otrasDe(fila, otras) {
 
         porFila.set(o.fila, ya
             ? { ...ya, n: ya.n + n }
-            : { fila: o.fila, n, guardian: o.guardian === true || o.guardian === 'required', minimo: o.minimo ?? 1, maximo: o.maximo ?? null });
+            : {
+                fila: o.fila, n, guardian: o.guardian === true || o.guardian === 'required', minimo: o.minimo ?? 1, maximo: o.maximo ?? null,
+                extras: (Array.isArray(o.extras) ? o.extras : []).map((x) => ({ product_id: x.product_id, quantity: x.quantity })),
+                elecciones: (Array.isArray(o.elecciones) ? o.elecciones : []).map((c) => ({ group: c.group, product_id: c.product_id })),
+            });
     }
 
     return { otras: [...porFila.values()], aLaPrimera };
@@ -101,7 +106,7 @@ export function lineaDe(p, resueltos) {
 /**
  * Las LÍNEAS candidatas del pedido, en su orden (L2, `otra-zona.md` §4.1): la suya, con los complementos que resolvió el
  * servidor, y detrás las de la otra zona, con el MISMO día y la MISMA hora (D1-A, `#878`) y los complementos que el servidor
- * resolvió para cada una (los obligatorios o incluidos: de las otras, la isla no pregunta ninguno).
+ * resolvió para cada una (lo obligatorio o incluido y, desde `#882`, lo elegido en su tarjeta que quepa a esa hora).
  */
 export function lineasDe(p, resueltos, resueltosOtras = {}) {
     return [
@@ -120,21 +125,37 @@ export function lineasDe(p, resueltos, resueltosOtras = {}) {
 }
 
 /**
- * Lo que el servidor RESUELVE de cada línea de la otra zona (`selection` de `POST /catalog/products/{id}/addons`, con su
- * día, su hora y su gente: los complementos obligatorios o incluidos que la línea tiene que llevar), EN PARALELO. Si alguna
- * no contesta, `null`: no se mete un pedido a medias. Sin otras, `{}` y ninguna petición.
+ * Lo que el servidor RESUELVE de cada línea de la otra zona (`POST /catalog/products/{id}/addons`, con su día, su hora, su
+ * gente y lo elegido en su tarjeta —sus complementos y sus grupos, `#882`—), EN PARALELO: lo que la línea lleva
+ * (`resueltos`: su `selection`, lo obligatorio o incluido y lo pedido que cabe) y lo que su tarjeta pinta a esa hora
+ * (`ofertas`: sus `singles` y sus `groups`, con su precio y si caben). Si alguna no contesta, `null`: no se mete un pedido a
+ * medias. Sin otras, vacíos y ninguna petición.
  *
- * @returns {Promise<Record<number, Array<{product_id: number, quantity: number}>>|null>}
+ * @returns {Promise<{resueltos: Record<number, Array<{product_id: number, quantity: number}>>, ofertas: Record<number, {singles: Array, groups: Array}>}|null>}
  */
-export async function resolverOtras({ api, pedido }) {
+export async function resolverOtrasConOferta({ api, pedido }) {
     const otras = Array.isArray(pedido?.otras) ? pedido.otras : [];
     const respuestas = await Promise.all(otras.map((o) => api.post(`/catalog/products/${o.fila}/addons`, {
-        quantity: o.n, date: pedido.dia, time: pedido.hora, addons: [], choices: [],
+        quantity: o.n, date: pedido.dia, time: pedido.hora, addons: o.extras ?? [], choices: o.elecciones ?? [],
     })));
 
     if (respuestas.some((r) => ! r?.ok)) return null;
 
-    return Object.fromEntries(otras.map((o, i) => [o.fila, respuestas[i].data?.selection ?? []]));
+    return {
+        resueltos: Object.fromEntries(otras.map((o, i) => [o.fila, respuestas[i].data?.selection ?? []])),
+        ofertas: Object.fromEntries(otras.map((o, i) => [o.fila, { singles: respuestas[i].data?.singles ?? [], groups: respuestas[i].data?.groups ?? [] }])),
+    };
+}
+
+/**
+ * Lo que LLEVA cada línea de la otra zona (`resolverOtrasConOferta` sin su oferta): `{ [fila]: selection }`, o `null`.
+ *
+ * @returns {Promise<Record<number, Array<{product_id: number, quantity: number}>>|null>}
+ */
+export async function resolverOtras({ api, pedido }) {
+    const r = await resolverOtrasConOferta({ api, pedido });
+
+    return r === null ? null : r.resueltos;
 }
 
 /** Si el «no» del servidor a una línea es la HORA: completa o que ya no se ofrece (`CartLineProblem`). */

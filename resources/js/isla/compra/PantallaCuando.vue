@@ -7,7 +7,7 @@
  * hueco de la [Hora extra], desde `#880`, todos los demás complementos que se venden al reservar (`ComplementosCompra`).
  * Al cambiar de día, mientras llegan las horas, su hueco exacto (`EsqueletoCarga`), para que nada salte.
  *
- * Pinta y avisa (`cambiar(campo, valor)`, `otra`, `quitarOtra`): qué días, horas y tiempos hay, y sus precios,
+ * Pinta y avisa (`cambiar(campo, valor)`): qué días, horas y tiempos hay, y sus precios,
  * llegan hechos del motor. Con `modo: 'otra'` es «Añadir otra entrada»: el día y la hora ya están fijados.
  * `preguntas` son las del widget de la zona (`dia`, `hora`, `tiempo`, `cuantos`, `calcetines`): de la instalación; y
  * `datos`, lo que un pack pide al reservar (T6c·3, `#839`).
@@ -17,7 +17,6 @@ import PasoCompra from './PasoCompra.vue';
 import PreguntaCompra from './PreguntaCompra.vue';
 import DatoFijo from './DatoFijo.vue';
 import CantidadCompra from './CantidadCompra.vue';
-import { PASO } from './estilos.js';
 import IconoLucide from '../ui/IconoLucide.vue';
 import EnlaceSistema from '../ui/EnlaceSistema.vue';
 import DiasCompra from './DiasCompra.vue';
@@ -26,6 +25,7 @@ import TarjetasOpcion from '../ui/TarjetasOpcion.vue';
 import EsqueletoCarga from '../ui/EsqueletoCarga.vue';
 import AvisoDestacado from '../ui/AvisoDestacado.vue';
 import DatosReserva, { ComplementosCompra } from './datos-reserva.js';
+import TarjetaOtraZona from './TarjetaOtraZona.vue';
 
 defineProps({
     titulo: { type: String, required: true },
@@ -52,12 +52,14 @@ defineProps({
     // Con el motor (T3e·2), de los DATOS: `cuantos.min`/`max`, `calcetines.max`, el umbral de «quedan» (el aviso de
     // «casi llena» del panel) y si hay otra zona que ofrecer. Sin ellos, los valores del diseño (el banco).
     umbral: { type: Number, default: 6 },
-    // El enlace de la OTRA ZONA, ya escrito (K2 de `otra-zona.md`: la nombra con una sola, D3-B); `''`, ninguno.
+    // El enlace de la OTRA ZONA, ya escrito (K2 de `otra-zona.md`: la nombra con una sola, D3-B); `''`, ninguno. Y `otra`, su
+    // tarjeta, hecha (`otra-zona.js::otraDeLaPantalla`; completa desde la K2·b, `#882`).
     otraZona: { type: String, default: '' },
     // El «no» del servidor al continuar (T3e·3): la línea no cabe, las reservas en pausa… Arriba, como el de «Tus datos».
     aviso: { type: String, default: '' },
 });
-// La otra zona avisa como lo demás (`cambiar('otra')`, `cambiar('quitarOtra')`): la compra solo escucha `cambiar`.
+// La otra zona avisa como lo demás (`cambiar('otra')`, y su tarjeta `otraFila`, `otraN`, `otraExtra`, `otraEleccion` y
+// `quitarOtra`): la compra solo escucha `cambiar`.
 const emit = defineEmits(['cambiar']);
 const { t } = useTextos();
 </script>
@@ -201,29 +203,13 @@ const { t } = useTextos();
                 />
             </PreguntaCompra>
             <template v-if="!otraEntrada">
-                <!-- La tarjeta de la OTRA ZONA (K2 de `otra-zona.md`): su id es a donde lleva «lo que falta» (M2) si su zona
-                     no se vende ese día, y entonces su precio lo dice en rojo. -->
-                <section
+                <!-- La tarjeta de la OTRA ZONA (K2 de `otra-zona.md`; completa desde la K2·b, `#882`): una entrada en pequeño. -->
+                <TarjetaOtraZona
                     v-if="otra"
-                    id="pjc-q-otra"
-                    :style="{ display: 'grid', gap: '12px', padding: '14px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', background: 'var(--surface-card)' }"
-                >
-                    <div :style="{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }">
-                        <div :style="{ display: 'grid', gap: '2px' }">
-                            <h2 :style="PASO.pregunta">{{ otra.titulo }}</h2>
-                            <p :style="otra.bloquea ? PASO.falta : PASO.pista">{{ otra.precio }}</p>
-                        </div>
-                        <EnlaceSistema @click="emit('cambiar', 'quitarOtra')">{{ t('compra.cuando.quitar') }}</EnlaceSistema>
-                    </div>
-                    <CantidadCompra
-                        :model-value="otra.n"
-                        :min="1"
-                        :max="20"
-                        :uno="otra.uno"
-                        :varios="otra.varios"
-                        @update:model-value="emit('cambiar', 'otraN', $event)"
-                    />
-                </section>
+                    :otra="otra"
+                    :preguntas="preguntas"
+                    @cambiar="(campo, valor) => emit('cambiar', campo, valor)"
+                />
                 <EnlaceSistema
                     v-else-if="otraZona"
                     :style="{ justifySelf: 'start' }"

@@ -185,6 +185,9 @@ return [
             'otra_no_cabe' => 'There is no room in :zona at this time',
             'otra_llena' => ':zona is now full at that time. Choose another time or remove it.',
             'aviso_otra' => ':zona: :aviso',
+            'edades_de_a' => 'Ages :min to :max',
+            'edades_desde' => 'From :min years',
+            'edades_hasta' => 'Up to :max years',
             'mas_fechas' => 'More dates',
             'menos_fechas' => 'Close the calendar',
             'quitar' => 'Remove',
@@ -240,6 +243,7 @@ return [
             'codigo' => 'Enter the :n digits of the code',
             'hora_libre' => 'Choose one of these times to continue',
             'otra' => ':zona is not available that day: remove it or choose another day',
+            'otra_tiempo' => 'That :zona time is not available that day: choose another',
         ],
         'datos' => [
             'banda' => 'Your details',

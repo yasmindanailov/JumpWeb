@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.62.0
+  version: 1.63.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -9279,6 +9279,8 @@ components:
         - choice_group
         - requires_addon_id
         - selected_by_default
+        - stay_minutes
+        - stay_per_unit
       additionalProperties: false
       properties:
         id:
@@ -9335,6 +9337,21 @@ components:
           description: |
             Viene seleccionado de partida (el miembro por defecto de un grupo, o un obligatorio
             suelto). Lo decide el dominio para que ningún cliente lo adivine.
+        stay_minutes:
+          type: integer
+          nullable: true
+          description: |
+            **1.63.0** (`otra-zona.md` §4.7, `DECISIONES #882`). Minutos que ALARGA la estancia de la línea
+            al contratarlo, o `null` si no la alarga: un ocupante («una hora más» de una entrada: las que se
+            quedan siguen en la franja siguiente) o un extensor (la fiesta sigue en su sala), reconocidos
+            por el dominio y no por el nombre. Es lo que alarga UN bloque. Con él la compra dice a qué
+            hora sale cada grupo; si cabe y cuánto cuesta, lo sigue diciendo el servidor.
+        stay_per_unit:
+          type: boolean
+          description: |
+            **1.63.0**. ¿Alarga `stay_minutes` CADA unidad? Solo un extensor de cantidad fija (su
+            cantidad son bloques de tiempo). Un ocupante (su cantidad son entradas que se quedan) o un
+            extensor por invitado alargan una vez, se pidan cuantas se pidan. Sin alargar, `false`.
 
     LoginRequest:
       type: object

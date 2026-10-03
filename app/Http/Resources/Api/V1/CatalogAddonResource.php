@@ -40,6 +40,8 @@ class CatalogAddonResource extends JsonResource
             'choice_group' => $this->resource->choiceGroup,
             'requires_addon_id' => $this->resource->requiresAddonId,
             'selected_by_default' => $this->resource->selectedByDefault,
+            'stay_minutes' => $this->resource->stayMinutes,
+            'stay_per_unit' => $this->resource->stayPerUnit,
         ];
     }
 }

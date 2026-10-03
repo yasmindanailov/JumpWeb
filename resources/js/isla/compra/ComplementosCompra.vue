@@ -6,6 +6,8 @@
  * incluido, a la vista. Apagada, dice por qué; nunca viene marcada. Y los GRUPOS de elección que no tienen su pregunta
  * («esto o aquello», `#881`), con las tarjetas de opción del sistema. Pinta y avisa (`cambiar(id, n)`, `elegir(grupo,
  * producto)`): qué se ofrece y a qué precio lo dice el servidor.
+ * `ambito` y `nivel` (`#882`): la lista de la OTRA ZONA, dentro de su tarjeta, con sus ids y sus grupos aparte —un mismo
+ * complemento en las dos líneas no puede repetir `id` ni compartir grupo de radios— y sus títulos un nivel por debajo.
  */
 import { useTextos } from '../piezas/textos.js';
 import PreguntaCompra from './PreguntaCompra.vue';
@@ -16,6 +18,8 @@ import TarjetasOpcion from '../ui/TarjetasOpcion.vue';
 
 defineProps({
     items: { type: Array, required: true },
+    ambito: { type: String, default: '' },
+    nivel: { type: Number, default: 2 },
 });
 const emit = defineEmits(['cambiar', 'elegir']);
 const { t } = useTextos();
@@ -28,7 +32,7 @@ const { t } = useTextos();
     >
         <FilaMejora
             v-if="c.forma === 'si-no'"
-            :id="`pjc-q-extra-${c.id}`"
+            :id="`pjc-q-${ambito}extra-${c.id}`"
             :titulo="c.titulo"
             :descripcion="c.descripcion"
             :precio="c.precio"
@@ -40,7 +44,8 @@ const { t } = useTextos();
         <!-- Lo que se suma: apagado, su − / + se queda quieto (tope 0) y la pista dice por qué. -->
         <PreguntaCompra
             v-else-if="c.forma === 'cantidad'"
-            :id="`pjc-q-extra-${c.id}`"
+            :id="`pjc-q-${ambito}extra-${c.id}`"
+            :nivel="nivel"
             :titulo="c.titulo"
             :pista="c.disponible ? c.precio : c.porQue"
         >
@@ -56,11 +61,12 @@ const { t } = useTextos();
         <!-- Un grupo de elección («esto o aquello», `#881`): una pregunta con sus opciones; la elegida, la del servidor de serie. -->
         <PreguntaCompra
             v-else-if="c.forma === 'grupo'"
-            :id="`pjc-q-${c.id}`"
+            :id="`pjc-q-${ambito}${c.id}`"
+            :nivel="nivel"
             :titulo="c.titulo"
         >
             <TarjetasOpcion
-                :name="`pjc-${c.id}`"
+                :name="`pjc-${ambito}${c.id}`"
                 columns="1"
                 :model-value="c.valor"
                 :items="c.items"
@@ -69,7 +75,7 @@ const { t } = useTextos();
         </PreguntaCompra>
         <DatoFijo
             v-else
-            :id="`pjc-q-extra-${c.id}`"
+            :id="`pjc-q-${ambito}extra-${c.id}`"
             icono="check"
         >{{ c.precio ? `${c.titulo} · ${c.precio}` : c.titulo }}</DatoFijo>
     </template>

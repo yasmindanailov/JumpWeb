@@ -306,8 +306,8 @@ describe('la pantalla 0 de un pack sin edad (una excursión)', () => {
  * enlace, la tarjeta, las horas para todas las líneas, el resumen con « + », lo que falta y el dinero del presupuesto—.
  */
 describe('la otra zona, aplicada', () => {
-    const sinOtra = { enlace: '', tarjeta: null, bloquea: false, resumen: null, noCabe: () => false, notaHora: '', zona: '' };
-    const tarjeta = { titulo: 'Jump · 1 hora', precio: '8 € por entrada', n: 1, uno: 'entrada', varios: 'entradas' };
+    const sinOtra = { enlace: '', tarjeta: null, bloquea: false, falta: null, resumen: null, finPrincipal: null, noCabe: () => false, notaHora: '', zona: '' };
+    const tarjeta = { titulo: 'JUMP', pista: 'Desde 8 años', noSeVende: false, filas: [], fila: '103', n: 1, uno: 'entrada', varios: 'entradas', complementos: [] };
     const conOtra = (cambios = {}) => ({ ...sinOtra, tarjeta, resumen: 'Jump · 1 hora · 1 entrada', zona: 'JUMP', notaHora: 'En JUMP no caben a esta hora', ...cambios });
 
     test('sin la otra: el enlace que la nombra (o ninguno) y la pantalla de siempre', () => {
@@ -330,7 +330,7 @@ describe('la otra zona, aplicada', () => {
         const b = borrador({ hora: '17:00:00', otra: { fila: 103, n: 1 } });
         const listo = pantallaCuando(estado({ borrador: b, otra: conOtra(), linea: { total_cents: 1600 }, cotizacion: { total_cents: 2400, online_amount_cents: 2400 } }));
 
-        assert.deepEqual(listo.props.otra, { ...tarjeta, bloquea: false });
+        assert.deepEqual(listo.props.otra, tarjeta, 'su tarjeta, tal cual la hace `otra-zona.js`');
         assert.equal(listo.ck.summary, 'Kids · 1 hora · vie 25, 17:00 · 2 entradas + Jump · 1 hora · 1 entrada');
         assert.equal(listo.ck.total.replace(/\s/g, ' '), '24 €', 'el del presupuesto de las dos, no el de la suya (16 €)');
         assert.equal(listo.ck.today, null, 'sin señal, nada que pagar hoy aparte');
@@ -338,11 +338,24 @@ describe('la otra zona, aplicada', () => {
     });
 
     test('si su zona no se vende ese día, no se sigue: lo que falta es su tarjeta, nombrando la zona', () => {
-        const v = pantallaCuando(estado({ borrador: borrador({ hora: '17:00:00', otra: { fila: 103, n: 1 } }), otra: conOtra({ bloquea: true }), linea: { total_cents: 1600 } }));
+        const v = pantallaCuando(estado({ borrador: borrador({ hora: '17:00:00', otra: { fila: 103, n: 1 } }), otra: conOtra({ bloquea: true, falta: 'pjc-q-otra' }), linea: { total_cents: 1600 } }));
 
         assert.equal(v.listo, false);
         assert.equal(v.falta, 'pjc-q-otra');
         assert.equal(v.faltaZona, 'JUMP');
-        assert.equal(v.props.otra.bloquea, true);
+    });
+
+    test('`#882`: si solo su TIEMPO no se vende, lo que falta es su «¿Cuánto tiempo?»; antes, lo de la línea del pedido', () => {
+        const otra = conOtra({ bloquea: true, falta: 'pjc-q-otra-tiempo' });
+
+        assert.equal(pantallaCuando(estado({ borrador: borrador({ hora: '17:00:00', otra: { fila: 104, n: 1 } }), otra, linea: { total_cents: 1600 } })).falta, 'pjc-q-otra-tiempo');
+        assert.equal(pantallaCuando(estado({ borrador: borrador({ hora: null, otra: { fila: 104, n: 1 } }), otra })).falta, 'pjc-q-hora', 'la hora va antes');
+    });
+
+    test('`#882`: con estancias distintas, el resumen dice a qué hora sale cada grupo; la suya, tras su hora de entrada', () => {
+        const b = borrador({ hora: '17:00:00', otra: { fila: 103, n: 1 } });
+        const v = pantallaCuando(estado({ borrador: b, otra: conOtra({ resumen: 'Jump · 1 hora · 17:00⁠–⁠18:00 · 1 entrada', finPrincipal: '19:00' }), linea: { total_cents: 1600 } }));
+
+        assert.equal(v.ck.summary, 'Kids · 1 hora · vie 25, 17:00⁠–⁠19:00 · 2 entradas + Jump · 1 hora · 17:00⁠–⁠18:00 · 1 entrada', 'los tramos, sin partirse');
     });
 });

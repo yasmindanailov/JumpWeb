@@ -1,7 +1,7 @@
 # [SPEC] La otra zona — entradas de varias zonas en UNA compra de la isla
 
 > Estado: ✅ aprobada por el owner (02-10: D1-A, D2-A, D3-B; D4-A por el mockup, `#767`) → a implementar ·
-> Última actualización: 2026-10-02 · Decisión asociada: `#878` · Carril: plataforma · Es la L2 de `#876`
+> Última actualización: 2026-10-02 · Decisiones asociadas: `#878`, `#882` · Carril: plataforma · Es la L2 de `#876`
 > (`isla-y-landing-nueva.md` §4.28, punto 6).
 
 ## §0 · Antes de tocar
@@ -14,13 +14,13 @@
 - **Trampas**: (1) la cesta de la isla SUSTITUYE su línea porque el recibo no tenía «quitar» (`#692`, T3e·3): una
   línea más exige poder quitarla en «Pagar», y el mockup no lo trae (D2). (2) Cada línea se valida con las anteriores
   en `items` y la candidata FUERA (`cart.js::validateLine`), o compite consigo misma. (3) Los pesos, a ras de su techo:
-  la compra 199,61 de 201 y los pasos 56,01 de 57 (`SidebarBundleBudgetTest`, tras la K2, 02-10). (4) La hora
+  la compra 204,81 de 206 y los pasos 56,17 de 57 (`SidebarBundleBudgetTest`, tras la K2·b, 02-10). (4) La hora
   llena (`#822`) y la vuelta del banco, con dos líneas.
-- **Estado**: ✅ aprobada (`#878`). **K1 ✅ · K2 ✅** (02-10 noche, §4.6: el modelo y la cesta; la pantalla 0); sigue K3.
-  ➕ `#881`: con ella, los grupos de elección que la isla no pinta —uno en una ENTRADA o un segundo en un pack—: su modelo,
-  en la K1; su pregunta, K2.
-- **Invariantes**: `PAY-12`, `PAY-20`, `AFORO-01`, `AFORO-02`, sin tocar el servidor ni el `CRITICAL_RE`; la compra
-  entera con la pasarela de pruebas y la BD, sí (§6).
+- **Estado**: ✅ aprobada (`#878`). **K1 ✅ · K2 ✅** (02-10 noche, §4.6) · **K2·b ✅** (`#882`, §4.7: la tarjeta, una
+  entrada completa; visto bueno del owner, 03-10); sigue K3. ➕ `#881`: los grupos de elección, su modelo en la K1 y su
+  pregunta en la K2.
+- **Invariantes**: `PAY-12`, `PAY-20`, `AFORO-01`, `AFORO-02`, sin el `CRITICAL_RE`; del servidor, solo un dato de
+  lectura en la ficha (`stay_minutes`, contrato 1.63.0, `#882`); la compra entera con la pasarela de pruebas (§6).
 
 ## 1. Contexto — medido el 02-10
 
@@ -124,7 +124,8 @@ decide el mockup (`#767`).
   de eventos, del SPA; se le pide por el buzón antes de K2.
 
 ### 4.6 Las tandas
-**K1** el modelo y la cesta, sin pantalla nueva (pruebas de nodo) → **K2** la pantalla 0 → **K3** «Pagar» y quitar →
+**K1** el modelo y la cesta, sin pantalla nueva (pruebas de nodo) → **K2** la pantalla 0 (y su tarjeta completa, la
+**K2·b** de `#882`, §4.7) → **K3** «Pagar» y quitar →
 **K4** la hora llena, la vuelta del banco y la compra entera en la sonda. Cada una, al ojo del owner en vivo.
 ➕ `#881` (`[DECIDIDO owner]`, 02-10): en K1 y K2, los GRUPOS DE ELECCIÓN que la M1 de `#880` no pinta —uno en una entrada o
 un segundo en un pack—: la elección de cada grupo en el borrador y en la línea, y su pregunta con `TarjetasOpcion`, como el
@@ -160,11 +161,49 @@ nombra a JUMP un sábado, su tarjeta (11,20 € por entrada), el resumen con « 
 aparte (19,20 €), más gente → 30,40 €, «Continuar» con las DOS líneas en la cesta a la misma hora, y «Quitar»; las sondas de la
 M1, M2 y M3 y `sonda-conversion` 22/22, sin cambios.
 
+### 4.7 La tarjeta, una entrada completa (K2·b, `#882`, `[DECIDIDO owner]` 02-10 noche)
+Visto K2, el owner preguntó si la entrada añadida depende del tiempo o de la hora extra de la del pedido (no: su primera
+fila —1 hora— para una persona, sin complementos) y pidió «el diseño profesional, para conversión y máxima claridad».
+Propuesto y aprobado («lo hacemos así»):
+- **La tarjeta**: su ZONA; para quién (las edades de su fila, del panel); «¿Cuánto tiempo?» con los de su zona y su precio
+  de ese día; «¿Cuántos?»; sus complementos —la hora extra de su tiempo— (la regla de la M1, `#880`), NUNCA marcados; y
+  «Quitar». Con las piezas de la pantalla (sin diseño nuevo): sus preguntas, h3 bajo su nombre.
+- **El tiempo de partida**: el MISMO que el de la entrada del pedido o, si su zona no lo tiene, el más largo sin pasarse
+  (una ilimitada no tiene tope); si todos se pasan, el primero. Por `duration_min`, no por el nombre. Es la decisión que
+  el cliente ya tomó, con su precio a la vista: no una venta escondida. Si después cambia el del pedido, el suyo NO se
+  mueve solo; si al cambiar de día su tiempo no se vende y otro de su zona sí, toma el parecido.
+- **Los calcetines**: una sola pregunta para todo el pedido (el mismo producto en las dos zonas).
+- **El resumen**: si los grupos salen a horas distintas, cada uno dice su tramo («11:00–13:00», sin partirse al final de
+  una línea); una ilimitada no tiene hora de salida. La estancia: la de su fila más lo que la alarga lo ELEGIDO y
+  disponible a esa hora.
+- **Fuera**: la lista de todas las entradas con su − / + (otro diseño, el del canvas) y las mezclas dentro de una zona
+  (la K3, «Añadir otra entrada»).
+
+**K2·b, hecha (02-10 noche; visto bueno del owner el 03-10: «continúa con rigor»; «¿Cuántos venís?» en la tarjeta, como
+arriba, a su revisión de textos del final).** Servidor: la ficha de cada complemento dice cuánto ALARGA la
+estancia —`stay_minutes` y `stay_per_unit` en `CatalogAddon`, contrato **1.63.0** (la 1.62.0 es del SPA, `#914`)—, con las reglas del dominio
+(`AddonOccupancy::sellableOccupant()`, `sellableStayExtension()` y `blocksFor()`, sin copiarlas; `CatalogReader` no está en
+el `CRITICAL_RE`). Isla: `otra-zona.js` (`filaParecida`, `otraNueva` con la duración del pedido, `otraDelDia`, `edadesDe`,
+`finDe`, la tarjeta y los tramos), `complementos.js::estancia`, `pantalla-cuando.js` (`opcionesDeTiempo`, la misma para la
+pantalla 0 y la tarjeta; `rangoHorario`), `linea.js` (la otra línea lleva sus complementos y sus grupos;
+`resolverOtrasConOferta`), `usePantallaCero` (su ficha y sus sueltos al cambiar de fila; `recotizar`: lo de la otra no
+re-resuelve la del pedido) y `TarjetaOtraZona.vue`. Si solo SU TIEMPO no se vende ese día, lo que falta es su «¿Cuánto
+tiempo?» (`pjc-q-otra-tiempo`, M2). **Medido**: `CatalogTest` (la prueba nueva; dos mutaciones muerden), JS 1.784 (cuatro
+mutaciones muerden), las guardas (la compra 199,61 → 204,81, techo 206); una sonda desechable a 390 y 1280, sus 16
+comprobaciones funcionales en verde —Kids 2 h → Jump 2 h y la ilimitada → 2 h; su hora extra apagada hasta la hora y nunca
+marcada; h3; ningún id repetido; los tramos; el total = el presupuesto del servidor pedido aparte (37,60 €); a 1 hora, su
+hora extra fuera; la cesta con la hora extra en la línea de Jump; el pedido a ilimitada no la mueve—; la de su consola, roja
+solo por las 429 de la propia sonda (66 peticiones en ~40 s, límite 60/min por IP; añadirla cuesta 3 y cambiar su tiempo
+con hora, 5). Sin datos locales para «solo su tiempo no se vende» (Jump vende sus dos tiempos los mismos días): solo por
+pruebas. M1 12/12, M2 13/13, M3 11/11, `sonda-conversion` 22/22 y `sonda-isla` 26/26 (su comprobación de «Elegir esta
+hora», al día con la M2 de `#881`: viva, con lo que falta encima).
+
 ## 5. Impacto en invariantes
 - `PAY-12` y `PAY-20`: el recibo pinta el presupuesto del servidor y no suma nada.
 - `AFORO-01` y `AFORO-02`: el servidor no cambia; la oferta sale de `SlotOffer` por producto y el bloqueo de las dos
   zonas ya existe. Si K1 necesitara tocar `CartLineValidator` u `OrderCreator` (están en el `CRITICAL_RE`), se para, se
-  avisa y se corre con `VERIFY_CONC=1`.
+  avisa y se corre con `VERIFY_CONC=1`. La K2·b (`#882`) solo AÑADE un dato de lectura a la ficha (`stay_minutes`): el
+  aforo no lo lee; si la hora extra cabe lo sigue diciendo el servidor a esa hora.
 - RGPD: ninguno nuevo; los menores de las entradas Kids, en «Quién firma el descargo» (`#875`).
 
 ## 6. Plan de verificación empírica
@@ -181,3 +220,4 @@ M1, M2 y M3 y `sonda-conversion` 22/22, sin cambios.
 ## 7. Revisión y decisión
 - 02-10: borrador del agente, medido. El mismo día, el owner elige D1-A, D2-A y D3-B (D4-A, del mockup): ✅ y `#878`.
   Sigue K1.
+- 02-10 noche: vista la K2, el owner aprueba la tarjeta COMPLETA (§4.7, `#882`): la K2·b, antes de la K3.

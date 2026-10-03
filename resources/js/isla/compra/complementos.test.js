@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { cargarSinHora, complementosDe, conExtra, deLaFicha, eleccionesDelBorrador, elegido, formaDe, gruposComoFilas, quedanEn } from './complementos.js';
+import { cargarSinHora, complementosDe, conExtra, deLaFicha, eleccionesDelBorrador, elegido, estancia, formaDe, gruposComoFilas, quedanEn } from './complementos.js';
 
 /**
  * Los complementos de la pantalla 0 de la isla (M1 de `specs/isla-y-landing-nueva.md` §4.29, `#880`): todos los que se
@@ -106,6 +106,29 @@ describe('las filas', () => {
         const [fila] = complementosDe({ ficha: { addons: [incluidos] }, sinHora: [{ product_id: 110, note: 'Incluido' }], conHora: null, extras: [], textos });
 
         assert.deepEqual([fila.forma, fila.disponible, fila.precio, fila.porQue], ['fijo', false, 'Incluido', '']);
+    });
+});
+
+describe('cuánto dura la estancia (`#882`)', () => {
+    // «Una hora más en Jump» (un ocupante: alarga 60 una vez) y una media hora de sala por bloques (un extensor fijo).
+    const horaMas = { id: 140, name: 'Una hora más en Jump', max_quantity: 1, allow_extra: true, stay_minutes: 60, stay_per_unit: false };
+    const mediaHora = { id: 318, name: 'Media hora más', max_quantity: 3, allow_extra: true, stay_minutes: 30, stay_per_unit: true };
+
+    test('cada fila dice lo que alarga, de su ficha (el dominio, no el nombre); lo que no alarga, nada', () => {
+        const filas = complementosDe({ ficha: { addons: [calcetines, horaMas, mediaHora] }, extras: [], sinHora: [], conHora: null, textos });
+
+        assert.deepEqual(filas.map((f) => [f.id, f.minutos, f.porUnidad]), [[110, null, false], [140, 60, false], [318, 30, true]]);
+        assert.equal(complementosDe({ ficha: { addons: [{ ...horaMas, stay_minutes: 0 }] }, textos })[0].minutos, null, 'cero no alarga');
+    });
+
+    test('la de su fila más lo ELEGIDO y disponible: una vez, o cada unidad si es por bloques; sin fin, `null`', () => {
+        assert.equal(estancia(120, []), 120);
+        assert.equal(estancia(120, [{ n: 1, minutos: 60, porUnidad: false }]), 180, 'la hora extra, una vez');
+        assert.equal(estancia(120, [{ n: 3, minutos: 60, porUnidad: false }]), 180, 'un ocupante: su cantidad son entradas, no horas');
+        assert.equal(estancia(120, [{ n: 2, minutos: 30, porUnidad: true }]), 180, 'por bloques: cada unidad');
+        assert.equal(estancia(120, [{ n: 0, minutos: 60, porUnidad: false }, { n: 2, minutos: null }, { forma: 'grupo' }]), 120, 'sin elegir, o sin alargar, nada');
+        assert.equal(estancia(null, [{ n: 1, minutos: 60 }]), null, 'una ilimitada no tiene fin');
+        assert.equal(estancia(undefined), null);
     });
 });
 

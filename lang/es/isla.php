@@ -219,6 +219,10 @@ return [
             'otra_no_cabe' => 'En :zona no caben a esta hora',
             'otra_llena' => 'En :zona ya no queda sitio a esa hora. Elige otra hora o quítala.',
             'aviso_otra' => ':zona: :aviso',
+            // K2·b (`#882`): bajo el nombre de su zona, para quién es (las edades de su fila, del panel).
+            'edades_de_a' => 'De :min a :max años',
+            'edades_desde' => 'Desde :min años',
+            'edades_hasta' => 'Hasta :max años',
             // Bajo la tira de días, el calendario de meses para lo que ella no enseña (`#830`).
             'mas_fechas' => 'Más fechas',
             'menos_fechas' => 'Cerrar el calendario',
@@ -287,6 +291,7 @@ return [
             'codigo' => 'Escribe las :n cifras del código',
             'hora_libre' => 'Elige una de estas horas para continuar',
             'otra' => ':zona no se vende ese día: quítala o elige otro día',
+            'otra_tiempo' => 'Ese tiempo de :zona no se vende ese día: elige otro',
         ],
         'datos' => [
             'banda' => 'Tus datos',
