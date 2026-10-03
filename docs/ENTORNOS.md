@@ -523,8 +523,13 @@ instalación de un cliente. Si se configura a mano deja de ser una prueba del pr
 > ojo: `/cookies` con su listado en tarjetas.
 > ❗ **Los TEXTOS LEGALES de producción** (`specs/textos-legales.md`, `#863`→`#865`): la privacidad y las condiciones de
 > PlayJump se editaron a mano y publican dos frases FALSAS (el descargo «no se gestiona en esta web»; los invitados «se
-> eliminan» tras la fiesta): se corrigen AQUÍ, en la v2.0.0 (`#865`), con un script por huella como el de `/cookies`
-> (futuro, spec §4.3·4) y SOLO si la poda de `#863` va en la misma versión.
+> eliminan» tras la fiesta): se corrigen AQUÍ, en la v2.0.0 (`#865`), y la poda de `#863` va en la misma versión
+> (`guest-data:forget`). El script gitignorado `aplicar-produccion-legales.php` (del `storage/app/` del owner; se sube y
+> se corre como el de `/cookies`, DESPUÉS del `migrate`) cambia 36 frases en es/en/fr —la contraseña, el descargo, los
+> invitados a los 14 días, el muro de redes, los perfiles, la ODR y el desistimiento; en inglés, la conservación estaba en
+> español— con valor esperado por fila (la frase vieja, una vez exacta), en una transacción; la segunda pasada ABORTA.
+> Ensayado el 03-10 contra una copia del texto vivo (`probar-legales.php`, en transacción revertida): 36/36 y cero restos.
+> Luego, a ojo: `/privacidad` y `/condiciones` en los tres idiomas. El texto NUEVO entero (spec §4.2) sigue pendiente.
 > ❗ **Las CONTRASEÑAS de los clientes se borran AQUÍ** (A5d de `specs/acceso-con-codigo.md` §4.12, `#869`; el owner, 02-10:
 > «eso será al desplegar»): el `migrate` de la v2.0.0 (`erase_customer_passwords`) pone `NULL` en las de las cuentas sin rol
 > del panel —desde la A5b nadie entra con ellas— y deja las del personal. MEDIR antes y después por SSH (tinker):

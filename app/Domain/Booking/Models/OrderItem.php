@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 
 /**
@@ -50,6 +51,9 @@ class OrderItem extends Model
 
     /** La posición de la ficha de quien cumple en las reservas que la tienen ({@see hasHonoreeRow()}, `#747`). */
     public const HONOREE_ROW_INDEX = 0;
+
+    /** Los datos de los invitados, 14 días después de la visita ({@see forgetGuestsOfPastVisits}, `#863`). */
+    public const GUEST_DATA_RETENTION_DAYS = 14;
 
     protected $guarded = [];
 
@@ -731,6 +735,46 @@ class OrderItem extends Model
         $base = $this->slot?->date?->copy()->endOfDay() ?? now();
 
         return $base->addDays(14);
+    }
+
+    /**
+     * **Los datos de los invitados se borran 14 días después de la visita** (`specs/textos-legales.md` §4.4, `DECISIONES
+     * #863`, `[DECIDIDO owner]`): nombres y, si el pack los pide, alergias de menores (art. 9) no viven hasta la supresión.
+     * Vacía `guest_data` y `event_data` como `User::anonymize()` (`RGPD-01`), pero por fecha y de todas las cuentas; el
+     * pedido conserva cantidades e importes.
+     *
+     * ⚠️ El MISMO plazo que el enlace del post-form ({@see guestFormLinkExpiresAt}) y que las respuestas de la invitación
+     * (`InvitationReply::RETENTION_DAYS`): cuando se borra, ya nadie puede abrir el formulario. La fecha se compara en la
+     * zona del PARQUE. Sin franja no hay visita que contar: esas líneas no llevan invitados.
+     * ⚠️ El dinero no se mueve: el suplemento de edades lee la falta de datos como silencio, no como «sin cargo»
+     * (`MixedPartySurcharge::derivationGoverns`), y un `update` por consulta no despierta a ningún observador.
+     */
+    public static function forgetGuestsOfPastVisits(): int
+    {
+        $cutoff = DisplayTime::now()->subDays(self::GUEST_DATA_RETENTION_DAYS)->toDateString();
+
+        $items = static::query()
+            ->select('order_items.id')
+            ->join('slots', 'slots.id', '=', 'order_items.slot_id')
+            ->whereDate('slots.date', '<', $cutoff)
+            ->where(fn (Builder $q) => $q->whereNotNull('order_items.guest_data')->orWhereNotNull('order_items.event_data'))
+            ->pluck('order_items.id');
+
+        if ($items->isEmpty()) {
+            return 0;
+        }
+
+        // Los rastros VIEJOS de `event_data_updated` pudieron guardar el nombre del homenajeado: se redactan como en la
+        // supresión (`RGPD-01` (6)); su `payload_hash` se queda.
+        DB::table('audit_logs')
+            ->where('action', 'order_items.event_data_updated')
+            ->where('target_type', (new self)->getMorphClass())
+            ->whereIn('target_id', $items)
+            ->update(['payload' => null]);
+
+        return static::query()->whereIn('id', $items)->toBase()->update([
+            'guest_data' => null, 'event_data' => null, 'updated_at' => now(),
+        ]);
     }
 
     /**

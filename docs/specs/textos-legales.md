@@ -17,8 +17,11 @@
   (159 formas): va de «vous». (3) La plataforma ODR cerró el 20-07-2025. (4) Un tratamiento con consentimiento no lo
   legitima el texto: se pide aparte. (5) Se escribe para la v2.0.0: sin contraseña (A5).
 - **Estado**: ⬜; lo revisa el owner (§7: D1–D10), después la asesoría (`[PENDIENTE: asesoría]`) y después el código.
+  ▶ 03-10 (v2.0.0): PRIMERO, fuera lo FALSO de producción (§1.3·1–6 y ·8, es/en/fr) con un script por frase de la
+  instalación (`ENTORNOS.md` §6) y la poda de `#863` ✅ (§4.4). ⚠️ El texto DE FÁBRICA (`LegalContent`) sigue con esas
+  frases: una instalación nueva las publica hasta el texto nuevo (§4.3·1 y ·3).
 - **Invariantes**: RGPD-01 (lo que la supresión hace es lo que el texto promete), RGPD-03 y RGPD-07; `#863` le da a
-  RGPD-01 una poda (los invitados, a los 14 días): sin ella, el apartado 6 no se publica (§4.4). `#864`: sin aviso.
+  RGPD-01 una poda (los invitados, a los 14 días): ✅ hecha (`guest-data:forget`, §4.4). `#864`: sin aviso.
 
 ## 1. Contexto y problema (medido el 2026-10-01)
 
@@ -280,9 +283,11 @@ Solo cambia su francés (de «vous»). Su español no dice nada falso medido hoy
 
 ### 4.4 Lo que el texto NO arregla (código aparte, con su propia tanda)
 
-- **`#863` (D1, decidida)**: una poda nueva de `guest_data`/`event_data` 14 días después de la fiesta (como
-  `InvitationReply`), con su guarda y su mutación; toca RGPD-01. ⚠️ Hasta que exista, el apartado 6 de la privacidad
-  nueva no se puede publicar: prometería lo que el código no hace (la misma falta que §1.3·2).
+- ✅ **`#863` (D1, decidida; HECHA el 03-10)**: `OrderItem::forgetGuestsOfPastVisits()` vacía `guest_data`/`event_data` 14
+  días después de la visita (zona del parque; el mismo plazo que el enlace del post-form y que `InvitationReply`) y redacta
+  los rastros viejos de `event_data_updated`; la corre `guest-data:forget` cada noche a las 04:50 (`deploy.sh`: 14 tareas).
+  `GuestDataRetentionTest` con su control; tres mutaciones muerden (plazo inclusivo, UTC en vez del parque, rastro sin
+  redactar). El dinero no se mueve: el suplemento de edades lee la falta de datos como silencio.
 - **D9**: `audit_logs` no tiene plazo: una poda (propuesta: 24 meses, como el consentimiento de cookies).
 - **El aviso de desistimiento en la compra**, antes de pagar (art. 97.1.n): una línea en el paso de pagar de la isla y del
   cajón. [PENDIENTE: asesoría — si basta con las Condiciones aceptadas]

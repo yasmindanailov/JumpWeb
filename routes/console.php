@@ -146,6 +146,14 @@ Schedule::command('email-sends:trim')
     ->withoutOverlapping();
 
 /*
+ * Los datos de los INVITADOS (nombres y alergias de menores) se borran 14 días después de la visita (`#863`,
+ * `[DECIDIDO owner]`, `specs/textos-legales.md` §4.4). ❗ Una tarea MÁS: las «esperadas» de `deploy.sh` suben a 14.
+ */
+Schedule::command('guest-data:forget')
+    ->dailyAt('04:50')
+    ->withoutOverlapping();
+
+/*
  * Auditoría Fase 1 (2026-06-12) — Regeneración RODANTE de franjas (`slots`).
  *
  * Causa de fondo del bug del calendario: nadie regeneraba franjas, así que `slots` solo cubría
