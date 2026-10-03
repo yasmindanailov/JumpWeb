@@ -66,6 +66,10 @@ Ninguna es teórica: todas salen de algo que este código hace hoy.
    servidor de pruebas: es el riesgo RGPD más caro que tiene este producto (`INVARIANTES` §3).
 3. ⚠️ **El correo no sale.** `MAIL_MAILER=log` o un buzón trampa. Los seeds llevan direcciones con
    pinta de reales y los avisos de pedido son `ShouldQueue`: con SMTP real, se envían.
+   ▶ **El buzón trampa existe desde `#883`** (03-10): `MAIL_ONLY_TO=dir1,dir2` y el correo solo sale hacia esas
+   direcciones (`RestrictMailRecipients`: quita las demás y, sin ninguna, no envía). Con él, staging envía DE VERDAD por el
+   mismo `sendmail` que producción —**son la misma máquina**, `sys1.hosturbo.net`, medido— para medir cuánto tarda un
+   código. La guarda acepta un correo real solo con la lista; en producción, la contraria: la lista VACÍA.
 4. **No indexable.** Un staging indexado compite en Google con el sitio del cliente que se instale
    mañana. La vía es el **`robots.txt` con `Disallow: /`**, que es responsabilidad del DESPLIEGUE, no
    del producto (§4, `#102(d)`): el del repo dice `Disallow:` (vacío = permitir todo) a propósito,

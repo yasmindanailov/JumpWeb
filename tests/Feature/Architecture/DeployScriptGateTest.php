@@ -129,6 +129,8 @@ class DeployScriptGateTest extends TestCase
             'valida el .env remoto' => ['guard_errors', 'Las seis guardas de ENTORNOS §2 se comprueban, no se suponen.'],
             'nunca sube el .env' => ["--exclude='/.env'", 'Subir el .env local tumbaría cuatro guardas de golpe y metería secretos de dev.'],
             'guarda 3 · el correo no sale' => ['r_mail=$(env_get MAIL_MAILER)', 'Con SMTP real, los 22 ShouldQueue envían a las direcciones del seed.'],
+            'guarda 3 · un correo real, solo con el buzón trampa' => ['[[ "$r_mail" == "log" || "$r_mail" == "array" || -n "$r_only_to" ]]', 'Staging puede enviar de verdad (medir cuánto tarda un código, `#883`) SOLO hacia `MAIL_ONLY_TO`: sin la lista, sus cuentas de prueba y la dirección del parque recibirían correo.'],
+            'producción · sin buzón trampa' => ['[[ -z "$r_only_to" ]]', 'Con `MAIL_ONLY_TO` en producción, a los clientes no les llega ningún correo: ni el código para entrar (`#883`).'],
             'guarda 1 · Redsys no en live' => ['redsys_env=$(remote_php', 'Es el único fallo de la lista que cuesta DINERO: cobraría con tarjetas reales.'],
             'guarda 4 · repone el robots.txt' => ["> '\$REMOTE_ROOT/public/robots.txt'", 'El del repo PERMITE indexar a propósito: cada rsync tumba la guarda si no se repone.'],
             'guarda 4 · lo verifica por HTTP' => ['Disallow: /', 'Verificar el fichero no basta: si el docroot no fuera el esperado, nadie avisaría.'],

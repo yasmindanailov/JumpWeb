@@ -117,6 +117,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | El BUZÓN TRAMPA de una instalación de pruebas (`DECISIONES #883`)
+    |--------------------------------------------------------------------------
+    |
+    | Con direcciones aquí (separadas por comas), el correo SOLO sale hacia ellas: a
+    | cualquier otro destinatario no le llega nada (`RestrictMailRecipients`). Es lo
+    | que deja a staging enviar de verdad, por el mismo servidor que producción, sin
+    | escribir a nadie más (la guarda 3 de `scripts/deploy.sh`). VACÍO = sin límite:
+    | producción, siempre (su guarda lo exige; con una lista, los clientes no
+    | recibirían nada).
+    |
+    */
+
+    'only_to' => array_values(array_filter(array_map('trim', explode(',', (string) env('MAIL_ONLY_TO', ''))))),
+
+    /*
+    |--------------------------------------------------------------------------
     | Sin Markdown (la R1c del rediseño, `specs/correos-rediseno.md` §4.1.4)
     |--------------------------------------------------------------------------
     |

@@ -76,6 +76,7 @@ use App\Domain\Platform\Contracts\VisitFacts;
 use App\Domain\Platform\Listeners\ApplyBusinessSender;
 use App\Domain\Platform\Listeners\RecordEmailSend;
 use App\Domain\Platform\Listeners\RecordEmailSent;
+use App\Domain\Platform\Listeners\RestrictMailRecipients;
 use App\Domain\Platform\Models\AnalyticsEvent;
 use App\Domain\Platform\Models\AnalyticsGoal;
 use App\Domain\Platform\Models\AnalyticsSession;
@@ -306,6 +307,8 @@ class AppServiceProvider extends ServiceProvider
         // consultar `settings` en peticiones que no envían nada: `MessageSending` solo se dispara
         // cuando hay un correo de verdad, y también desde el worker de la cola.
         Event::listen(MessageSending::class, ApplyBusinessSender::class);
+        // Y el BUZÓN TRAMPA (`#883`): con `MAIL_ONLY_TO`, el correo solo sale hacia esas direcciones (staging). Vacío, nada.
+        Event::listen(MessageSending::class, RestrictMailRecipients::class);
 
         // morphMap FORZADO (Fase 2, prerequisito de la modularización — DEUDA §Alta): las columnas
         // polimórficas (`payments.payable_type`, `prices.priceable_type`, `audit_logs.target_type`)

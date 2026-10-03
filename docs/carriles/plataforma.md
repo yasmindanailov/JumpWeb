@@ -4,7 +4,7 @@
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
 > **820–849 AGOTADA con `#849`** → **850–879 AGOTADA con `#879`** → sigue en **880–909** (del owner, 02-10 noche; de
-> `#880` a `#899` en `decisiones/800-899.md`, de `#900` en adelante en `900-999.md`) · Último usado: **`#882`** · Spec:
+> `#880` a `#899` en `decisiones/800-899.md`, de `#900` en adelante en `900-999.md`) · Último usado: **`#883`** · Spec:
 > `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador;
 > `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-10-02 noche** (todo con el visto bueno del owner: **su
 > lista del 02-10, L1→L5** —`#876`→`#879`, §4.28; el código de la L2, por hacer—, el zip (6) de este carril, ENTERO —Z6a→Z6g,

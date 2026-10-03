@@ -358,6 +358,8 @@ env_get() { sshx "grep -E '^[[:space:]]*$1=' '$REMOTE_ROOT/.env' | tail -1 | cut
 r_env=$(env_get APP_ENV);      r_debug=$(env_get APP_DEBUG)
 r_url=$(env_get APP_URL);      r_queue=$(env_get QUEUE_CONNECTION)
 r_mail=$(env_get MAIL_MAILER); r_key=$(env_get APP_KEY)
+# El BUZÓN TRAMPA (`#883`): con direcciones, el correo solo sale hacia ellas (`RestrictMailRecipients`).
+r_only_to=$(env_get MAIL_ONLY_TO)
 
 guard_errors=()
 [[ "$r_key" != "" ]]                        || guard_errors+=("APP_KEY vacío → generar con: echo \"base64:\$(openssl rand -base64 32)\"  (en frío NO vale key:generate: necesita vendor/)")
@@ -372,6 +374,9 @@ guard_errors=()
 if [[ "${DEPLOY_PRODUCTION:-0}" == "1" ]]; then
     [[ "$r_mail" != "log" && "$r_mail" != "array" ]] \
         || guard_errors+=("PRODUCCIÓN · MAIL_MAILER='$r_mail' — el correo NO saldría y nadie podría verificar su cuenta ni firmar.")
+    # Y SIN buzón trampa (`#883`): con `MAIL_ONLY_TO`, a los clientes no les llegaría ningún correo (ni el código para entrar).
+    [[ -z "$r_only_to" ]] \
+        || guard_errors+=("PRODUCCIÓN · MAIL_ONLY_TO tiene direcciones — el correo solo saldría hacia ellas: a los clientes no les llegaría nada. Vacíala.")
     # GUARDA 10 · el PANEL en su dirección SECRETA (`#850`, `docs/specs/panel-a-salvo.md` §4.2): sin `PANEL_PATH` el panel
     # quedaría en `/admin`, a la vista de cualquiera. 8 a 64 caracteres [a-z0-9-] y distinta de `admin`. ⚠️ Su valor NO se
     # imprime cuando está bien: es la dirección secreta.
@@ -379,8 +384,9 @@ if [[ "${DEPLOY_PRODUCTION:-0}" == "1" ]]; then
     [[ "$r_panel" =~ ^[a-z0-9][a-z0-9-]{7,63}$ && "$r_panel" != "admin" ]] \
         || guard_errors+=("GUARDA 10 · PANEL_PATH no vale — el panel quedaría a la vista: una dirección secreta de 8 a 64 caracteres [a-z0-9-], distinta de 'admin' (specs/panel-a-salvo.md §4.2).")
 else
-    [[ "$r_mail" == "log" || "$r_mail" == "array" ]] \
-        || guard_errors+=("GUARDA 3 · MAIL_MAILER='$r_mail' — EL CORREO SALDRÍA. Los seeds llevan direcciones con pinta de reales. Usa 'log' o un buzón trampa.")
+    # Un correo real en staging, SOLO con el buzón trampa (`#883`): sale únicamente hacia las direcciones de `MAIL_ONLY_TO`.
+    [[ "$r_mail" == "log" || "$r_mail" == "array" || -n "$r_only_to" ]] \
+        || guard_errors+=("GUARDA 3 · MAIL_MAILER='$r_mail' — EL CORREO SALDRÍA. Los seeds llevan direcciones con pinta de reales. Usa 'log' o el buzón trampa (MAIL_ONLY_TO con tus direcciones, #883).")
 fi
 
 if [[ ${#guard_errors[@]} -gt 0 ]]; then
