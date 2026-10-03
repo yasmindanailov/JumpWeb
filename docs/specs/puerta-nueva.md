@@ -562,7 +562,10 @@ A/B). **Y la TRADUCIDA, fuera** (`#874`, de plataforma, 02-10): la copiada que G
 de su autor, como la ambigua del Perfil; `copied()` pasa por `Testimonial::untranslated()` (su prueba y su mutante, 1/1).
 Pruebas: `ReviewKeywordsTest` (10, en `tests/Unit`), `GateReviewOfTheDayTest` (15), `GateReviewSettingsTest` (4) y
 `GateKioskTest` +1. Arnés: 45 mutantes, 45/45 (los 44 y el de `#874`, solo; `SOLO='reseña' PARALELO=` con su
-filtro: ~10 s por mutante; con `--parallel` y un filtro pequeño cada proceso vuelve a migrar y eran 72 s). **Lo destapó el
+filtro: ~10 s por mutante; con `--parallel` y un filtro pequeño cada proceso vuelve a migrar y eran 72 s); **re-pasados los
+45 el 03-10, ya con `#874` dentro: 45/45 (7 min 40 s)**. ✅ **El arnés ENTERO (130), innecesario** (el owner, 03-10): cada
+mutante mordió con el filtro de su tanda —uno más ancho solo puede añadir mordiscos— y desde la P3 solo cambió la reseña,
+que es esta tanda. **Lo destapó el
 arnés**: `published_at` es una FECHA y SQLite la guarda como texto con su hora, así que comparada con «2026-09-02» el día
 del borde entraba con `>` y con `>=` por igual en la suite y no en MySQL → `whereDate`. Y dos veces la prueba, no el código:
 «atentas» no empieza por «atentos», y «palabra4» casa «palabra41» por su principio (como debe). Sonda 261/261 en los cuatro

@@ -62,11 +62,11 @@ portada y no cuenta nada hasta la v2.0.0.
    ⚠️ El código, como la isla (`#812`): manda el servidor; si plataforma lo cambia, el cajón lo sigue.
 1b. ✅ **Lo del zip (6) que el owner repartió al SPA** (`#861`; `isla-y-landing-nueva.md` §4.27), EN `main` con el visto
    bueno: `LinkIsland` (§4.18), la imagen de la invitación (§4.19; 🟦 hasta verla en WhatsApp) y **la Puerta entera**
-   (`puerta-nueva.md` §4.4; montaje y sonda, `CARRIL-SPA.md` §8 (27)). ▶ **Queda el arnés ENTERO de la Puerta, DE NOCHE**
-   (bloquea la local ~45 min, medido; el 02-10 se paró a 22/129, todos mordían): `bash scripts/mutar-puerta-p1.sh` sin
-   `SOLO`, hoy **130** mutantes; nadie mira ni edita la local mientras corre; después, `npm run build` y `build:ssr`; el
-   resultado, a la spec §4.4 y aquí. Su historia por tandas, mudada verbatim a `CARRIL-SPA.md` §9 (02-10).
-   ▶ **Lo siguiente, de día: la R1c de los correos** («retomar» 2), con el `#875` dentro.
+   (`puerta-nueva.md` §4.4; montaje y sonda, `CARRIL-SPA.md` §8 (27)). ✅ **Su arnés, cerrado** (03-10, el owner eligió):
+   la tanda de la reseña, lo único tocado desde la P3 (`#874`), re-pasada, **45/45** (7 min 40 s); el ENTERO (130, ~45 min),
+   innecesario: cada mutante ya mordió con el filtro de su tanda y uno más ancho solo puede añadir mordiscos. Su historia por
+   tandas, mudada verbatim a `CARRIL-SPA.md` §9 (02-10).
+   ▶ **Lo siguiente: la R1c de los correos** («retomar» 2; su «al detalle», `correos-rediseno.md` §4.1.4).
 2. ▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4; `#789`, `#800`→`#804`)**: ✅ R1a, R1b y **R1·T** en `main` (la
    R1·T revisada: §4.2.2; su sonda y el medidor de bloques, `CARRIL-SPA` §8 (26)). Del zip (6) (`#861`): el 8, «482-913 es tu
    código para entrar» sin botón; «Quién firma el descargo» en el 1 y el 3 (la isla ya lo dice, `#875`:
