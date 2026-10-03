@@ -12,6 +12,7 @@ use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
+use App\Domain\Platform\Services\DisplayTime;
 use App\Notifications\GuestFormRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -87,6 +88,11 @@ class PostFormDemandSurfacesTest extends TestCase
      */
     public function test_an_expired_cutoff_keeps_the_email_quiet(): void
     {
+        // ⏰ Desde `#912` el plazo de lo que se añade es UNO, el de la lista: 24 h antes de la fiesta. La de este caso es mañana
+        // a las 10:00 (`party()`), así que con el reloj REAL la lista seguía abierta hasta las 10:00 de hoy y el caso caía
+        // (medido el 03-10 con `TEST_CLOCK`: rojo a las 07:20, verde a las 11:00). Se ancla a mediodía de hoy, en la hora del
+        // parque: ya venció.
+        $this->travelTo(now(DisplayTime::timezone())->setTime(12, 0));
         $item = $this->party(daysAhead: 1);
         $this->attachPostFormAddon($item->ticketType, cutoff: 48);
 
