@@ -147,15 +147,17 @@ class BrandedMailMessage extends MailMessage
      *                        DEVOLUCIONES: «una devolución no es un color, es un signo y una fecha».
      * @param  array<string,string>  $datos  el resguardo, normalmente de `EmailSlip`. Vacío = sin él,
      *                                       que es lo correcto en los correos de CUENTA: ahí no hay reserva.
+     * @param  string  $titular  la clave del titular dentro del grupo: `headline`, o una de sus variantes (`headline_grupo`)
+     *                           cuando el mismo correo tiene varias caras (la R2b); siempre del MISMO grupo.
      */
-    public function hero(string $grupo, string $tono = 'info', array $datos = [], array $reemplazos = []): static
+    public function hero(string $grupo, string $tono = 'info', array $datos = [], array $reemplazos = [], string $titular = 'headline'): static
     {
         $this->viewData['hero'] = [
             // La chapa, SOLO si el grupo la tiene (la R1c): los correos de código no llevan, como su diseño —el titular ya
             // dice el hecho—. Sin clave, `__()` devolvería la CLAVE: falla hacia invisible, como el adelanto de abajo.
             'chapa' => Lang::has($grupo.'.badge') ? (string) __($grupo.'.badge') : '',
             'tono' => $tono,
-            'titulo' => (string) __($grupo.'.headline', $reemplazos),
+            'titulo' => (string) __($grupo.'.'.$titular, $reemplazos),
             'datos' => $datos,
         ];
 
@@ -370,6 +372,17 @@ class BrandedMailMessage extends MailMessage
     public function small(string $texto): static
     {
         return $this->bloque(['tipo' => 'linea', 'lineas' => [$texto]]);
+    }
+
+    /**
+     * El HTML que el correo compone él mismo (el LIBRO del pedido, `EmailBookBlock`), en su sitio del cuerpo: el bloque de
+     * marcado de la R1, con el rol de enlace en sus `<a>`. Vacío, no hay bloque.
+     */
+    public function markup(Htmlable $html): static
+    {
+        $marcado = trim($html->toHtml());
+
+        return $marcado === '' ? $this : $this->bloque(['tipo' => 'marcado', 'html' => $marcado]);
     }
 
     /** El botón principal, en su sitio del cuerpo (uno por correo, `#803`). */

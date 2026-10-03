@@ -41,6 +41,8 @@ class LedgerSingleSourceTest extends TestCase
         'app/Domain/Booking/Services/EmailBookBlock.php',
         'resources/views/emails/partials/book.blade.php',
         'app/Notifications/OrderConfirmation.php',
+        // La R2b de los correos: el resguardo de cada reserva, del libro de la reserva (`#916`).
+        'app/Notifications/Support/MailReservation.php',
         'app/Notifications/OrderItemModified.php',
         'app/Notifications/OrderItemRefunded.php',
         'app/Notifications/OrderRefunded.php',

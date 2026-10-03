@@ -110,15 +110,21 @@ class CreateManualOrderDoneTest extends TestCase
         $componente = $this->crear($cliente, cantidad: 2, producto: $this->pack, justificante: true);
         $resumen = $componente->instance()->doneSummary();
 
-        // CONTROL del propio caso: si el sujeto no disparara los tres correos, comparar ceros con
+        // CONTROL del propio caso: si el sujeto no disparara los correos, comparar ceros con
         // ceros daría verde con la pantalla informando cualquier cosa.
         Notification::assertSentTo($cliente, OrderConfirmation::class);
-        $this->assertSame(1, $this->enviadas($cliente, GuestFormRequest::class), 'el sujeto no pidió el formulario de invitados');
         $this->assertSame(1, $this->enviadas($cliente, GuardianAuthorizationRequest::class), 'el sujeto no pidió el justificante');
+        // ⚠️ El formulario de invitados va DENTRO de la confirmación desde la R2b (`#915`, «el 2, un correo»): ya no sale aparte.
+        $this->assertSame(0, $this->enviadas($cliente, GuestFormRequest::class), 'el formulario ya no sale en un correo propio');
+        $confirmacion = Notification::sent($cliente, OrderConfirmation::class)->first()->toMail($cliente);
+        $enLaConfirmacion = collect($confirmacion->viewData['cuerpo'])->where('tipo', 'pasos')
+            ->flatMap(static fn (array $b): array => array_column($b['pasos'], 'url'))
+            ->map(static fn (string $url): string => strtok($url, '?#'))->unique()->count();
+        $this->assertSame(1, $enLaConfirmacion, 'el sujeto no pidió el formulario de invitados');
 
         $this->assertSame(
             [$this->enviadas($cliente, OrderConfirmation::class),
-                $this->enviadas($cliente, GuestFormRequest::class),
+                $enLaConfirmacion,
                 $this->enviadas($cliente, GuardianAuthorizationRequest::class)],
             [$this->marcados($resumen, 'confirmation'),
                 $this->marcados($resumen, 'guest_form'),

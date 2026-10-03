@@ -31,14 +31,17 @@ final class MailTextCatalog
     public const IDIOMA_BASE = 'es';
 
     /**
-     * clave del correo → [clase, tipo, tramos de idioma]. El orden, el de la pantalla dentro de cada tipo. Un tramo puede ser
-     * UN texto (`emails.verify_pending_email.ignore`): el correo usa ese y no sus hermanos.
+     * clave del correo → [clase, tipo, tramos de idioma, y —si los tiene— sus COMPOSITORES]. El orden, el de la pantalla dentro
+     * de cada tipo. Un tramo puede ser UN texto (`emails.verify_pending_email.ignore`): el correo usa ese y no sus hermanos.
+     * Un compositor es la clase que pinta parte de SUS textos por él (`MailReservation`, la R2b): cuenta como suya en la guarda
+     * de «cada texto lo pinta su correo y nadie más».
      *
-     * @var array<string, array{0: class-string, 1: string, 2: list<string>}>
+     * @var array<string, array{0: class-string, 1: string, 2: list<string>, 3?: list<class-string>}>
      */
     public const CORREOS = [
         // ── La reserva ──
-        'order_confirmation' => [N\OrderConfirmation::class, 'reserva', ['emails.order_confirmation']],
+        // La R2b (`#915`): sus tres caras —su cabecera en dos grupos— y el cuerpo de la reserva, que comparten.
+        'order_confirmation' => [N\OrderConfirmation::class, 'reserva', ['emails.reservado', 'emails.fiesta_reservada', 'emails.reserva'], [MailReservation::class]],
         'visit_eve_notice' => [N\VisitEveNotice::class, 'reserva', ['emails.visit_eve']],
         'order_payment_declined' => [N\OrderPaymentDeclined::class, 'reserva', ['emails.order_declined']],
         'order_expired_without_payment' => [N\OrderExpiredWithoutPayment::class, 'reserva', ['emails.order_expired_without_payment']],
@@ -88,6 +91,18 @@ final class MailTextCatalog
     public static function existe(string $correo): bool
     {
         return isset(self::CORREOS[$correo]);
+    }
+
+    /**
+     * Las clases que pintan los textos de un correo: su notificación y sus compositores.
+     *
+     * @return list<class-string>
+     */
+    public static function compositores(string $correo): array
+    {
+        $entrada = self::CORREOS[$correo] ?? null;
+
+        return $entrada === null ? [] : [$entrada[0], ...($entrada[3] ?? [])];
     }
 
     /**
@@ -158,10 +173,17 @@ final class MailTextCatalog
      */
     public static function etiqueta(string $clave): string
     {
-        $ultimo = substr($clave, (int) strrpos($clave, '.') + 1);
+        $corte = (int) strrpos($clave, '.');
+        $ultimo = substr($clave, $corte + 1);
         $propia = 'admin.mail_texts.bloques.'.$ultimo;
+        $nombre = Lang::has($propia) ? (string) __($propia) : Str::headline($ultimo);
 
-        return Lang::has($propia) ? (string) __($propia) : Str::headline($ultimo);
+        // Un correo con varias CARAS (la confirmación: unas entradas o un grupo, o una fiesta) tiene un asunto y un titular por
+        // cara: cada uno dice de cuál es, por su grupo (`admin.mail_texts.caras.<grupo>`).
+        $grupo = substr($clave, 0, $corte);
+        $cara = 'admin.mail_texts.caras.'.substr($grupo, (int) strrpos($grupo, '.') + 1);
+
+        return Lang::has($cara) ? $nombre.' · '.__($cara) : $nombre;
     }
 
     /** Olvida el índice (tras cambiar los ficheros de fábrica en una prueba). */

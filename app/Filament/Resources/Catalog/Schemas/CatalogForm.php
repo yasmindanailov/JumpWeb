@@ -273,6 +273,15 @@ class CatalogForm
                 ->visible(fn (Get $get): bool => $get('type') === TicketType::TYPE_ADDON)
                 ->helperText(__('admin.catalog.reservation_note_hint')),
 
+            // «ANTES DE VENIR», LO DE ESTE PRODUCTO (la R2b de `correos-rediseno.md` §4.3): las líneas que el correo de la reserva
+            // suma a las suyas («Todos los profesores entran gratis»). Una por línea, como las ventajas; solo en lo que se reserva.
+            Textarea::make("before_visit_{$locale}")
+                ->label(__('admin.catalog.field_before_visit'))
+                ->rows(3)
+                ->maxLength(600)
+                ->visible(fn (Get $get): bool => $get('type') !== TicketType::TYPE_ADDON)
+                ->helperText(__('admin.catalog.before_visit_hint')),
+
             // LOS REGALOS (`#589`) viven en PROMOCIONES desde `#770`: aquí solo se ENSEÑAN, para que quien edita
             // la ficha sepa qué se anuncia con ella y dónde cambiarlo. Una sola vez, en la pestaña del español.
             Placeholder::make('gifts_managed_in_promotions')

@@ -125,6 +125,45 @@ class DisplayTime
     }
 
     /**
+     * El día con su nombre y su MES, para una frase: «sábado 26 de septiembre» (la R2 de `specs/correos-rediseno.md` §4.3:
+     * el asunto de la reserva y el resguardo, con `ucfirst`). Lleva el mes porque se lee en la bandeja, donde «sábado 26» no
+     * dice de qué mes (`#506`). Como {@see dayLabel()}, sin zona: es una fecha CIVIL. El orden de cada idioma, el suyo.
+     */
+    public static function dayAndMonth(DateTimeInterface|string|null $value): string
+    {
+        if ($value === null || $value === '') {
+            return '';
+        }
+
+        try {
+            $carbon = $value instanceof DateTimeInterface ? Carbon::instance($value) : Carbon::parse($value);
+        } catch (\Throwable) {
+            return '';
+        }
+        $locale = app()->getLocale();
+
+        return $carbon->locale($locale)->isoFormat(str_starts_with($locale, 'es') ? 'dddd D [de] MMMM' : 'dddd D MMMM');
+    }
+
+    /**
+     * La HOJA del calendario de un día (el `BookingCard` del diseño): «sáb», «26», «sep». El gemelo de `hojaDelDia()` de la
+     * isla (Mi cuenta): sin los puntos de las abreviaturas, en minúscula y el mes en tres letras.
+     *
+     * @return array{dow: string, n: string, month: string}
+     */
+    public static function calendarSheet(DateTimeInterface|string $value): array
+    {
+        $carbon = ($value instanceof DateTimeInterface ? Carbon::instance($value) : Carbon::parse($value))->locale(app()->getLocale());
+        $corto = static fn (string $texto): string => mb_strtolower(rtrim($texto, '.'));
+
+        return [
+            'dow' => $corto($carbon->isoFormat('ddd')),
+            'n' => $carbon->isoFormat('D'),
+            'month' => mb_substr($corto($carbon->isoFormat('MMM')), 0, 3),
+        ];
+    }
+
+    /**
      * **«21 de septiembre de 2026»**: la fecha larga, en el idioma de la petición y **en la zona
      * del parque** (`#734`, el «a fecha de» de la cifra de reseñas).
      *

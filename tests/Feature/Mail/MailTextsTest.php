@@ -23,7 +23,8 @@ class MailTextsTest extends TestCase
 {
     use RefreshDatabase;
 
-    private const CLAVE = 'emails.order_confirmation.intro';
+    /** Un párrafo con un dato del cliente (`:code`): el del pago denegado. */
+    private const CLAVE = 'emails.order_declined.intro';
 
     public function test_the_translator_goes_through_the_mail_text_loader(): void
     {
@@ -176,14 +177,14 @@ class MailTextsTest extends TestCase
     public function test_a_row_for_a_key_outside_the_catalog_is_never_painted(): void
     {
         // Ni lo legal (el pie), ni el saludo que ya no sale, ni una clave de la WEB: el cargador solo toca lo editable.
-        foreach (['emails.pie.fuera' => null, 'emails.order_confirmation.greeting' => null, 'account.exists_mail.greeting' => null] as $clave => $_) {
+        foreach (['emails.pie.fuera' => null, 'emails.order_declined.greeting' => null, 'account.exists_mail.greeting' => null] as $clave => $_) {
             $this->assertFalse(MailTextCatalog::esEditable($clave), $clave);
         }
-        $greeting = trans('emails.order_confirmation.greeting', [], 'es');
-        MailText::query()->create(['key' => 'emails.order_confirmation.greeting', 'locale' => 'es', 'text' => 'PISADO']);
+        $greeting = trans('emails.order_declined.greeting', [], 'es');
+        MailText::query()->create(['key' => 'emails.order_declined.greeting', 'locale' => 'es', 'text' => 'PISADO']);
         $this->invalidar();
 
-        $this->assertSame($greeting, trans('emails.order_confirmation.greeting', [], 'es'));
+        $this->assertSame($greeting, trans('emails.order_declined.greeting', [], 'es'));
     }
 
     public function test_a_row_in_a_language_without_its_factory_text_is_skipped_not_broken(): void

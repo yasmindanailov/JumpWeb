@@ -14,6 +14,7 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\WaiverSignature;
 use App\Domain\Identity\Services\WaiverProof;
 use App\Domain\Platform\Models\Survey;
+use App\Domain\Platform\Services\DisplayTime;
 use App\Notifications as N;
 use Closure;
 use Illuminate\Notifications\Notification;
@@ -38,7 +39,7 @@ final class MailPreviews
      * Los motivos por los que no hay vista previa (sus textos, `admin.mail_texts.sin_caso.*`). Los cuatro últimos, de una
      * situación que necesita un caso real de su CLASE (R1·T2, `#809`): eso lo decide el catálogo del parque y no se finge.
      */
-    public const MOTIVOS = ['pedido', 'reserva', 'fiesta', 'firma', 'encuesta', 'error', 'pedido_entradas', 'pedido_cumpleanos', 'fiesta_con_extras', 'firma_de_reserva'];
+    public const MOTIVOS = ['pedido', 'reserva', 'fiesta', 'firma', 'encuesta', 'error', 'pedido_entradas', 'pedido_grupo', 'pedido_cumpleanos', 'pedido_varias', 'fiesta_con_extras', 'firma_de_reserva'];
 
     /** Entre cuántos casos recientes se busca uno de una clase (R1·T2): acota la consulta, que se hace al pintar. */
     public const RECIENTES = 200;
@@ -127,8 +128,12 @@ final class MailPreviews
             ->whereHas('items', static fn ($q) => $q->whereNull('parent_item_id')->whereNotNull('slot_id'))
             ->latest('id');
         $pedido = static fn (): ?Order => $pedidos()->first();
-        $pedidoDe = static fn (bool $conLista): ?Order => $pedidos()->limit(self::RECIENTES)->get()
-            ->first(static fn (Order $o): bool => $o->needsGuestForm() === $conLista);
+        // El último pedido de una CLASE de la confirmación (la R2b): su cara (`MailReservation::cara()`) o varias reservas. Con
+        // lo que la cara lee ya cargado: si no, serían consultas por cada uno de los recientes.
+        $pedidoDe = static fn (callable $es): ?Order => $pedidos()
+            ->with(['items.ticketType', 'items.slot', 'adjustments', 'payments.refunds', 'user'])
+            ->limit(self::RECIENTES)->get()
+            ->first(static fn (Order $o): bool => $es(new MailReservation($o)));
         $reserva = static fn (?Order $o): ?OrderItem => $o?->items()->whereNull('parent_item_id')->whereNotNull('slot_id')->first();
         $fiestas = static fn () => OrderItem::query()
             ->whereNull('parent_item_id')->whereNotNull('slot_id')
@@ -145,25 +150,31 @@ final class MailPreviews
         $conFiesta = static fn (Closure $hacer): Closure => static fn (User $quienMira, string $locale, ?string $s): Notification|string => ($f = $fiesta()) !== null ? $hacer($f, $s) : 'fiesta';
 
         return [
-            // Con o sin lista de invitados lo decide el catálogo: un caso real de su clase. «Sin un día único», en memoria: las
-            // franjas del caso, fuera (`singleVisitDate()` y el resguardo leen lo cargado).
+            // La R2b: la CARA (unas entradas, un grupo, una fiesta) y las varias reservas las decide el catálogo —un caso real de
+            // su clase—; lo demás, un cambio en memoria sobre él: el titular aún sin menores (la tarea de quién firma), quien
+            // cumple con o sin nombre, la fiesta sin invitación digital y una reserva para dentro de un rato (fuera de plazo).
             'order_confirmation' => static function (User $quienMira, string $locale, ?string $s) use ($pedido, $pedidoDe): Notification|string {
-                $o = match ($s) {
-                    'entradas' => $pedidoDe(false),
-                    'cumpleanos' => $pedidoDe(true),
+                $cara = static fn (string $c): callable => static fn (MailReservation $r): bool => $r->cara() === $c;
+                $fiesta = in_array($s, ['cumple_con_nombre', 'cumple_sin_nombre', 'sin_invitacion', 'fuera_de_plazo'], true);
+                $o = match (true) {
+                    $s === 'entradas' => $pedidoDe($cara(MailReservation::ENTRADAS)),
+                    $s === 'grupo' => $pedidoDe($cara(MailReservation::GRUPO)),
+                    $s === 'varias' => $pedidoDe(static fn (MailReservation $r): bool => $r->reservas()->count() > 1),
+                    $s === 'con_extras' => $pedidoDe(static fn (MailReservation $r): bool => $r->extras() !== null),
+                    $fiesta => $pedidoDe($cara(MailReservation::FIESTA)),
                     default => $pedido(),
                 };
                 if ($o === null) {
-                    return match ($s) {
-                        'entradas' => 'pedido_entradas',
-                        'cumpleanos' => 'pedido_cumpleanos',
+                    return match (true) {
+                        $s === 'entradas' => 'pedido_entradas',
+                        $s === 'grupo' => 'pedido_grupo',
+                        $s === 'varias' => 'pedido_varias',
+                        $s === 'con_extras' => 'fiesta_con_extras',
+                        $fiesta => 'pedido_cumpleanos',
                         default => 'pedido',
                     };
                 }
-                if ($s === 'sin_un_dia') {
-                    $o->load(['items.ticketType', 'items.slot']);
-                    $o->items->each(static fn (OrderItem $i) => $i->setRelation('slot', null));
-                }
+                self::situarConfirmacion($o, $s);
 
                 return new N\OrderConfirmation($o);
             },
@@ -300,5 +311,51 @@ final class MailPreviews
                 return new N\SurveyInvitation($encuesta, 'token-de-ejemplo');
             },
         ];
+    }
+
+    /**
+     * Las situaciones de la confirmación que son un CAMBIO EN MEMORIA sobre su caso (la R2b), nunca guardado:
+     *  · «unas entradas»: el titular, aún sin menores a su cargo —la tarea de quién firma (`#875`)—;
+     *  · quien cumple, con su nombre o aún sin él (el asunto de la fiesta): su ficha 0 y el campo del homenajeado, como la
+     *    víspera (`honoreeName()` lee los dos);
+     *  · la fiesta sin invitación digital (un paso: el formulario);
+     *  · «fuera de plazo»: la reserva, para dentro de una hora y con un plazo de cambio de un día —ya no se puede cambiar, y
+     *    el plazo de la lista también pasó—.
+     */
+    private static function situarConfirmacion(Order $o, ?string $s): void
+    {
+        $o->loadMissing(['items.ticketType', 'items.slot', 'user']);
+        $reservas = $o->items->whereNull('parent_item_id')->filter(static fn (OrderItem $i): bool => $i->slot !== null);
+        $fiesta = $reservas->first(static fn (OrderItem $i): bool => $i->isGuestFormReservation());
+
+        if ($s === 'entradas' && $o->user !== null) {
+            $o->user->setRelation('dependents', $o->user->dependents()->getRelated()->newCollection());
+        }
+        if ($fiesta !== null && in_array($s, ['cumple_con_nombre', 'cumple_sin_nombre'], true)) {
+            $nombre = $s === 'cumple_con_nombre' ? (string) __('admin.mail_texts.ejemplo_nombre') : '';
+            $clave = $fiesta->ticketType?->guestNameFieldKey();
+            if ($clave !== null) {
+                $fichas = $fiesta->guestData();
+                $fichas[OrderItem::HONOREE_ROW_INDEX] = [$clave => $nombre];
+                $fiesta->setAttribute('honoree_row', true);
+                $fiesta->setAttribute('guest_data', $fichas);
+            }
+            $homenajeado = $fiesta->ticketType?->celebrantNameFieldKey();
+            if ($homenajeado !== null) {
+                $fiesta->setAttribute('event_data', [$homenajeado => $nombre] + (is_array($fiesta->event_data) ? $fiesta->event_data : []));
+            }
+        }
+        if ($fiesta !== null && $s === 'sin_invitacion') {
+            $fiesta->ticketType?->setAttribute('guest_invitation', false);
+        }
+        if ($s === 'fuera_de_plazo') {
+            // En punto (entre una y dos horas): «a las 11:51» se leería como un fallo de la vista previa.
+            $dentroDeUnaHora = DisplayTime::now()->addHours(2)->startOfHour();
+            $reservas->each(static function (OrderItem $i) use ($dentroDeUnaHora): void {
+                $i->slot->setAttribute('date', $dentroDeUnaHora->copy()->startOfDay());
+                $i->slot->setAttribute('start_time', $dentroDeUnaHora->format('H:i:00'));
+                $i->ticketType?->setAttribute('cancellation_cutoff_hours', 24);
+            });
+        }
     }
 }

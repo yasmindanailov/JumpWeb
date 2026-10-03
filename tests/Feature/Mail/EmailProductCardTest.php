@@ -79,11 +79,9 @@ class EmailProductCardTest extends TestCase
 
         $html = (new OrderConfirmation($order))->toMail($user)->render();
 
-        // El resguardo, con sus rótulos y su dato.
-        $this->assertStringContainsString(__('emails.slip.what'), $html);
-        $this->assertStringContainsString(__('emails.slip.order'), $html);
-        $this->assertStringContainsString('Cumpleaños Kids', $html);
-        $this->assertStringContainsString('8 invitados', $html);
+        // El resguardo de CAMPOS (la R2b): qué y cuántos, como Mi cuenta, y el número del pedido.
+        $this->assertStringContainsString('Cumpleaños Kids · 8 invitados', $html);
+        $this->assertStringContainsString(__('emails.reserva.number_label', ['code' => 'JJ-CARD01']), $html);
 
         // Y NO la tarjeta, que aquí duplicaba.
         // ⚠️ Se acota a la CLASE EMITIDA, no a la subcadena: «product-card» aparece también dentro
@@ -95,8 +93,8 @@ class EmailProductCardTest extends TestCase
         // ❗ Ni un emoji: el sistema del canvas no usa ninguno en ningún correo.
         $this->assertSame(0, preg_match('/[\x{1F300}-\x{1FAFF}]/u', $html), 'un correo no lleva emojis');
 
-        // La lógica condicional NO se rompió: el pack con guest_fields sigue prometiendo el post-form.
-        $this->assertStringContainsString('datos de los invitados', $html);
+        // La lógica condicional NO se rompió: el pack con guest_fields lleva el formulario, ahora en sus PASOS (`#915`).
+        $this->assertStringContainsString(__('emails.reserva.action_form'), $html);
     }
 
     public function test_an_entry_says_its_quantity_in_the_slip(): void
@@ -121,8 +119,8 @@ class EmailProductCardTest extends TestCase
 
         $html = (new OrderConfirmation($order->fresh()))->toMail($user)->render();
 
-        // La cantidad delante, como en «Mis pedidos» — ahora en el RESGUARDO, no en una tarjeta.
-        $this->assertStringContainsString('2× Entrada 1h', $html);
+        // La cantidad con su sustantivo, como Mi cuenta («Kids 1 hora · 2 niños») — en el RESGUARDO, no en una tarjeta.
+        $this->assertStringContainsString('Entrada 1h · '.trans_choice('tickets.entries_count', 2, ['count' => 2]), $html);
         $this->assertSame(0, preg_match('/[\x{1F300}-\x{1FAFF}]/u', $html), 'un correo no lleva emojis');
     }
 

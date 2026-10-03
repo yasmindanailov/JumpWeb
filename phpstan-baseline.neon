@@ -1143,29 +1143,17 @@ parameters:
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
 			identifier: property.notFound
-			count: 6
+			count: 5
 			path: app/Domain/Payments/Services/RedsysReturnHandler.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user\.$#'
 			identifier: property.notFound
-			count: 5
+			count: 4
 			path: app/Domain/Payments/Services/RedsysReturnHandler.php
 
 		-
 			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:guardianReservations\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Domain/Payments/Services/RedsysReturnHandler.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:guestFormItems\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Domain/Payments/Services/RedsysReturnHandler.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:needsGuestForm\(\)\.$#'
 			identifier: method.notFound
 			count: 1
 			path: app/Domain/Payments/Services/RedsysReturnHandler.php

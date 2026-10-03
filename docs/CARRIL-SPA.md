@@ -751,6 +751,15 @@ Del zip (6) (`#861`): el 8, «482-913 es tu
    `themes/brand.css` y el layout viejo (§4.1.1). El cajón ya dice «Tu cumpleaños» (`#792`, 29-09, visto por el owner).
    ▶ (03-10) Hecho desde entonces: el 8 (plataforma, Z6g·1), las dos horas del 12 (la R1c) y el molde viejo fuera (la R1c).
 
+### El punto 5 de «retomar» (los rojos de `audit-clock.sh`), cerrado (mudado VERBATIM de `carriles/spa.md` el 2026-10-03, 10:53, su techo)
+
+5. ✅ **Los tres rojos de `audit-clock.sh` (27-09), ARREGLADOS el 03-10** (`TESTING.md` §2.septies): `InvitationSharingTest`
+   era una BOMBA (la fiesta del fixture, el 04-10 a las 17:00, con el reloj real: el gate, rojo desde el domingo a las 19:00),
+   `ScheduleFactsTest` caía en el último minuto del día del parque y `GoogleReviewImagesTest` comparaba el reloj del disco con
+   el de prueba; con su filtro, 10/10 fronteras (49 casos). ✅ Y el barrido ENTERO (03-10, con permiso del owner, 35 min):
+   las 10 fronteras verdes y, en el cruce de la medianoche UTC, dos casos MÍOS de P1 (`#912`) que ponían `main` rojo cada
+   mañana hasta las 10 h: los ancló plataforma a la vez (`7891a2b1`); yo, el parámetro muerto de sus ayudantes (`TESTING.md` §2.septies).
+
 ### Avisos a plataforma del 25→27-09 (mudados VERBATIM de `carriles/spa.md` el 2026-10-03, mañana, su techo)
 
 ### ❗❗ Para el carril de PLATAFORMA (emisor: SPA, 2026-09-25 → 27-09)

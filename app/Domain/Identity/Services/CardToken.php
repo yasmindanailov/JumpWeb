@@ -56,6 +56,18 @@ final class CardToken
         return strtr($upper, ['I' => '1', 'L' => '1', 'O' => '0']);
     }
 
+    /**
+     * El token en grupos de CUATRO, para DICTARLO en la puerta si la cámara falla («JW0X 3K9M …»): el gemelo de
+     * `tokenGroups()` del cajón (Mi cuenta) para el correo (la R2). Agruparlo no cambia lo que vale: el mostrador lo teclea y
+     * {@see normalize()} quita los espacios.
+     */
+    public static function grouped(string $token): string
+    {
+        $limpio = (string) preg_replace('/[^0-9A-Z]/', '', strtoupper($token));
+
+        return implode(' ', str_split($limpio, 4) ?: []);
+    }
+
     /** ¿Tiene la longitud y el prefijo de un carné? Lo justo para DETECTAR que es un carné (no que sea válido). */
     public static function looksLike(string $normalized): bool
     {

@@ -61,6 +61,7 @@ class EditCatalog extends EditRecord
     /** Campos i18n/JSON cuyo cambio se audita solo por nombre (no se vuelca el contenido). */
     private const TEXT_FIELDS = [
         'name', 'description', 'period_label', 'badge', 'features', 'event_fields', 'guest_fields', 'reservation_note',
+        'before_visit',
     ];
 
     /** @var array<string,mixed> Diff capturado en `mutateFormDataBeforeSave` para auditar en `afterSave`. */

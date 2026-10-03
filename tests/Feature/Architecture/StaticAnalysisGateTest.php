@@ -24,7 +24,7 @@ class StaticAnalysisGateTest extends TestCase
      * el número aquí en el mismo commit. Si el test te pide SUBIRLO, has metido un error nuevo en la
      * línea base en vez de arreglarlo.
      */
-    private const FROZEN_ERRORS = 432;   // P3·1 (`#914`): los seis `->pivot` dinámicos de `PostFormAddons`, ya por `addonPivot()` tipado
+    private const FROZEN_ERRORS = 428;   // R2b (`#916`): el formulario de invitados ya no sale aparte al pagar (cuatro, con él)
 
     private function config(): string
     {

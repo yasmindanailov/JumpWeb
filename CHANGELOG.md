@@ -6,6 +6,22 @@
 > **interno**. Producción despliega solo etiquetas (guarda 8 de `scripts/deploy.sh`); staging despliega
 > `main`. Una versión se corta con la skill `/release`.
 
+## Sin publicar
+
+### Para las instancias
+
+- **MENOR: la confirmación de una reserva es el correo del diseño** (la R2b de `correos-rediseno.md` §4.3, `#915`, `#916`):
+  unas entradas, un grupo o una fiesta, con su resguardo, el QR dentro, «Antes de venir» y el plazo; la fiesta, UN correo
+  con la lista de invitados dentro (el formulario ya no sale aparte al pagar). ▶ **Lo que el parque PUEDE hacer**: en cada
+  producto, «Antes de venir» (una línea por cosa: «Todos los profesores entran gratis»), y en sus complementos su aviso
+  («Tenéis :n pares de calcetines…»). ⚠️ Lo editado en «Textos de los correos» para la confirmación VIEJA no pasa: sus
+  textos son otros (`emails.reservado`, `emails.fiesta_reservada`, `emails.reserva`).
+
+### Interno
+
+- `MailReservation` compone lo de una reserva para los correos (del libro de cada reserva, `#916`); `ticket_types.before_visit`
+  (migración). Arnés `scripts/mutar-correo-r2b.sh`.
+
 ## v2.0.0 · 2026-10-03
 
 La versión GRANDE del programa «producto e instancias» (`#670`: no se despliega en piezas): la landing deja el producto

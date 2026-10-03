@@ -9,7 +9,6 @@ use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Mail\PaymentIncidentMail;
 use App\Notifications\GuardianAuthorizationRequest;
-use App\Notifications\GuestFormRequest;
 use App\Notifications\OrderConfirmation;
 use App\Notifications\OrderPaymentDeclined;
 use App\Notifications\OrderProcessedAfterExpiration;
@@ -401,40 +400,22 @@ class RedsysReturnHandler
                 ]);
             }
 
-            // Post-form de datos por invitado (#217): si la reserva incluye un pack que lo pide,
-            // email aparte con el enlace firmado para rellenarlo. Aislado en su propio try/catch.
-            try {
-                $orderFor->loadMissing('items.ticketType');
-                if ($orderFor->needsGuestForm()) {
-                    // Individualizado POR RESERVA (#217): un email por cada pack que pide el post-form
-                    // y aún está pendiente (un pedido con dos cumpleaños → dos emails).
-                    foreach ($orderFor->guestFormItems() as $reservation) {
-                        if ($reservation->needsGuestForm()) {
-                            $orderFor->user->notify(new GuestFormRequest($reservation));
-                        }
-                    }
-                }
-            } catch (Throwable $e) {
-                Log::warning('redsys.return.guest_form_mail_failed', [
-                    'source' => $source,
-                    'order_id' => $orderFor->id,
-                    'error' => $e->getMessage(),
-                ]);
-            }
+            // ⚠️ El formulario de invitados (#217) YA NO sale aparte: desde la R2b va DENTRO de la confirmación, en sus
+            // pasos —un enlace firmado por cada fiesta del pedido— (`#915`: «el 2, un correo»). `GuestFormRequest` sigue
+            // para el reenvío desde la ficha del pedido.
 
             // El enlace del JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.3,
             // T7): UNO por pedido —es «el papelito de la excursión»— y solo si el pedido nació con la
             // marca, o sea si el cliente marcó la casilla o el producto la exige. Un pedido normal no
             // recibe nada.
             //
-            // ⚠️ **En su propio try/catch, como su hermano de arriba**: un fallo del correo no puede
+            // ⚠️ **En su propio try/catch, como la confirmación de arriba**: un fallo del correo no puede
             // tumbar el cierre de un cobro que el banco ya autorizó. La reserva existe; el acuse es
             // una cortesía que la cola reintenta.
             try {
                 // ⚠️ **UNO POR RESERVA marcada desde `#401`, no uno por pedido.** Lo cazó el owner:
                 // compró una excursión y una entrada, las dos con menores invitados, y recibió UN
-                // correo con UN enlace que decía dos fechas. Es exactamente la forma de su hermano
-                // `GuestFormRequest`, dos bloques más arriba.
+                // correo con UN enlace que decía dos fechas.
                 foreach ($orderFor->guardianReservations() as $reservation) {
                     $orderFor->user->notify(new GuardianAuthorizationRequest($reservation));
                 }

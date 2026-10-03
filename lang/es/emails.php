@@ -139,24 +139,65 @@ return [
         'badge' => 'Email cambiado',
         'headline' => 'El email de tu cuenta ha cambiado',
     ],
-    'order_confirmation' => [
-        'subject' => 'Reserva confirmada · :day · :code',
-        'subject_no_date' => 'Reserva confirmada · :code',
-        'preheader' => 'Dentro está tu resguardo y tu QR. Calcetines antideslizantes y llegar 10 min antes.',
-        'badge' => 'Reserva confirmada',
-        'headline' => 'Nos vemos el :day',
-        'headline_no_date' => 'Reserva confirmada',
-        'greeting' => '¡Hola!',
-        'intro' => '¡Pago recibido y reserva confirmada! Ya está todo listo para tu visita. Tu nº de pedido es :code — guárdalo, te lo pedirán en el parque.',
-        'paid_at' => 'Fecha del cobro: :when',
-        'notice_title' => 'Antes de venir',
-        'notice_body' => 'Calcetines antideslizantes obligatorios (se compran allí), y el descargo de responsabilidad se firma una vez, desde el móvil. Ven 10 minutos antes.',
-        // Fase 6 · subsistema A: el QR del cliente va adjunto (PNG).
-        'card_attached' => 'Adjuntamos tu QR (carne-qr.png): enséñalo en la entrada y te atenderemos al momento. Es personal y no caduca; si lo pierdes, puedes renovarlo desde tu cuenta.',
-        'action' => 'Ver mis reservas',
-        'paid_confirmation' => 'Te esperamos en la fecha y hora que elegiste. Puedes ver todos los detalles desde «Mis reservas», en tu cuenta.',
-        'paid_confirmation_guest_form' => 'Te esperamos en la fecha y hora que elegiste. En breve te pediremos por email los datos de los invitados; también puedes completarlos cuando quieras desde «Mis reservas», en tu cuenta.',
-        'outro' => '¿Alguna duda antes de tu visita? Escríbenos, estamos encantados de ayudarte.',
+    /*
+     * LA RESERVA HECHA (la R2b, `specs/correos-rediseno.md` §4.3; el 1, el 1b y el 2 del diseño): un correo con TRES caras
+     * (`MailReservation::cara()`). Su cabecera, en dos grupos —el de unas entradas o un grupo, y el de una fiesta, que no lleva
+     * chapa—; su cuerpo, en `reserva` (abajo), que comparten y que usará la víspera.
+     */
+    'reservado' => [
+        'subject' => 'Reservado: :day a las :time · :product',
+        // Con varias reservas, el número: un día y una hora solos esconderían las otras (`#506`).
+        'subject_varias' => 'Reservado: :count reservas · nº :code',
+        // ⚠️ Sin datos variables y sin repetir el asunto (`#506`).
+        'preheader' => 'Tu QR va dentro, con lo que hay que saber antes de venir.',
+        'badge' => 'Reservado',
+        'headline' => '¡Nos vemos el :day!',
+        'headline_grupo' => '¡Os esperamos el :day!',
+        'headline_varias' => '¡Reservado!',
+    ],
+    'fiesta_reservada' => [
+        'subject' => 'Fiesta reservada: :day a las :time · :product',
+        'subject_nombre' => 'Fiesta reservada: :day a las :time · el cumple de :name',
+        'preheader' => 'Lo que queda antes de la fiesta, con sus fechas.',
+        'headline' => '¡Fiesta reservada!',
+    ],
+    'reserva' => [
+        // El resguardo: el número, el precio, las filas de dinero (las del libro de la reserva) y sus dos enlaces.
+        'number_label' => 'Nº :code',
+        'paid_label' => ':amount pagados',
+        'per_person_label' => ':amount por persona',
+        'deposit_label' => 'Señal pagada',
+        'rest_label' => 'El día de la visita',
+        'rest_party_label' => 'El día de la fiesta',
+        'directions_label' => 'Cómo llegar',
+        'calendar_label' => 'Añadir al calendario',
+        // El QR, dentro (y adjunto): los textos de Mi cuenta.
+        'qr_title' => 'Enséñalo en la puerta: ahí está todo.',
+        'qr_dictate_label' => 'Si la cámara falla, dicta este código:',
+        'action_qr' => 'Abrir Mi QR',
+        // «Antes de venir»: quién firma (`#875`), con sus enlaces por nombre; y la hora.
+        'before_title' => 'Antes de venir',
+        'minors' => '**Menores a tu cargo:** [añádelos y firma por ellos](menores), si aún no están en tu cuenta. Un minuto.',
+        'adults' => '**Otros adultos:** cada uno firma el suyo, desde casa o en el mostrador.',
+        'arrival' => 'Tu tiempo empieza a las :time: llegad unos minutos antes.',
+        'arrival_group' => 'Llegad unos minutos antes de las :time.',
+        // Los pasos de una fiesta: el formulario de invitados y la invitación.
+        'steps_title' => 'Ahora, dos cosas',
+        'steps_one_title' => 'Ahora, una cosa',
+        'step_form' => 'Rellena el formulario de invitados, hasta el :day: quién viene, edades y alergias.',
+        'step_form_open' => 'Rellena el formulario de invitados: quién viene, edades y alergias.',
+        'action_form' => 'Rellenar el formulario',
+        'step_invite' => 'Comparte la invitación por WhatsApp: los padres confirman y firman ellos.',
+        'action_invite' => 'Compartir la invitación',
+        'extras' => 'Y si quieres, en el mismo formulario puedes pedir extras para la fiesta (:extras). Se pagan en el parque el día de la fiesta.',
+        // «Si cambian los planes»: el plazo de la reserva (el de Mi cuenta), con el WhatsApp y el teléfono del parque.
+        'changes_title' => 'Si cambian los planes',
+        'changes' => 'Puedes cambiar o cancelar hasta el :day a las :time: [escríbenos por WhatsApp](whatsapp) o llámanos al [:phone](tel).',
+        'changes_refund' => 'Puedes cambiar o cancelar hasta el :day a las :time, y te devolvemos la señal: [escríbenos por WhatsApp](whatsapp) o llámanos al [:phone](tel).',
+        'changes_open' => 'Si necesitas cambiar o cancelar, [escríbenos por WhatsApp](whatsapp) o llámanos al [:phone](tel).',
+        'changes_late' => 'Ya no se puede cambiar ni cancelar; si ha surgido algo, [escríbenos por WhatsApp](whatsapp) o llámanos al [:phone](tel).',
+        // El pie la pinta en negrita, tal cual: sin negrita propia (`_label`).
+        'replies_label' => 'Responde a este correo si tienes cualquier duda.',
     ],
     'guardian_authorization' => [
         'subject' => 'Justificante firmado',

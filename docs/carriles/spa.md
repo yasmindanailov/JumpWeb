@@ -2,13 +2,13 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **910–939** (del owner, 02-10; 790–819 agotada con `#819`) · Último usado: **`#915`** (el siguiente, `#916`) · La banda está dada de alta en la
+> Banda: **910–939** (del owner, 02-10; 790–819 agotada con `#819`) · Último usado: **`#916`** (el siguiente, `#917`) · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs:
 > **`acceso-con-codigo.md` §0** (la A4 del cajón ✅ en `main`) · `correos-rediseno.md` §0 ·
 > `fiesta-sistema-nuevo.md` §4.17–§4.21 · `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7
 > (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md` §4.11 · `celebracion-e-invitacion.md` §0 ·
-> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-02, 23:30
-> (la lista del owner —filas 4 y 8 de `#876`, P1→P4 de `#912`→`#914`— EN `main` con su visto bueno; el arnés de la Puerta, de noche).
+> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-03, 10:53
+> (la R2a y la R2b de los correos, construidas en `wip/correos-r2a`, esperan el ojo del owner en Mailpit).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
@@ -69,11 +69,15 @@ portada y no cuenta nada hasta la v2.0.0.
    ▶ **Lo siguiente: la R1c de los correos** («retomar» 2; su «al detalle», `correos-rediseno.md` §4.1.4).
 2. ▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4; `#789`, `#800`→`#804`)**: ✅ R1a, R1b y **R1·T** en `main` (la
    R1·T revisada: §4.2.2; su sonda y el medidor de bloques, `CARRIL-SPA` §8 (26)). ✅ **R1c EN `main`** (03-10, §4.1.4,
-   visto bueno del owner; arnés 12/12). ▶▶ **AHORA, LA R2** (§4.3, `#915`: el 3 siempre, el 2 uno, Bizum si lo hay): R2a la
-   base → R2b el 1 y el 1b → R2c el 2 → R2d el 3 y el 4 → R2e el 5 y el 6 → R3 el 2b → C1 los comerciales (11, el 12
-   ampliado, 13a/b, 6b) → C2 las felicitaciones (su copy, con el owner) → C3 las ocasiones; y la analítica (3). «Quién firma»
-   (`#875`), dentro de la R2. Cada tanda, «al detalle» medido → `wip/` → arnés → ojo en Mailpit (`banco-correos.php`). El
-   resto del punto (el zip (6), el 7, los grupos 8–10, T2·9), mudado verbatim a `CARRIL-SPA.md` §9 (03-10).
+   visto bueno del owner; arnés 12/12). ▶▶ **AHORA, LA R2** (§4.3, `#915`, `#916`): 🟦 **R2a y R2b CONSTRUIDAS en
+   `wip/correos-r2a`** (03-10; la R2b es el 1, el 1b y el 2 —la R2c entró en ella—; suite 6903 verde, arnés
+   `mutar-correo-r2b.sh` 12/12): ▶ **esperan el OJO del owner en Mailpit** (`SITUACION=<situación> php
+   scripts/banco-correos.php OrderConfirmation` y `… MuestraR2b`) y, con su visto bueno, a `main` (`RedsysReturnHandler` está
+   en el `CRITICAL_RE`: `redsys:verify-concurrency` y `VERIFY_CONC=1`). Después: R2d el 3 y el 4 → R2e el 5 y el 6 → R3 el
+   2b → C1 los comerciales (11, el 12 ampliado, 13a/b, 6b) → C2 las felicitaciones (su copy, con el owner) → C3 las
+   ocasiones; y la analítica (3). Cada tanda, «al detalle» medido → `wip/` → arnés → ojo en Mailpit. ▶ DATO de PlayJump tras
+   desplegar la R2b: «Antes de venir» de la excursión (panel → producto) y el aviso de los calcetines. El resto del punto
+   (el zip (6), el 7, los grupos 8–10, T2·9), mudado verbatim a `CARRIL-SPA.md` §9 (03-10).
 3. ⏸ **LA ANALÍTICA PARA DECIDIR (`#755`, `specs/analitica-para-decidir.md`), EN PAUSA tras la T4**: ✅ el defecto de
    `OccupancyReport::missing()` que midió plataforma (29-09: contaba robots y personal), ARREGLADO en la TA·0 (`cleanEvents()`,
    `84524415`; comprobado el 03-10). Y de la A1 de plataforma (`#853`): el
@@ -92,12 +96,7 @@ portada y no cuenta nada hasta la v2.0.0.
    `CARRIL-SPA.md` §9 (02-10 noche).
 4. ✅ **LA FIESTA DEL SISTEMA NUEVO**: en código sin nada pendiente; su punto entero (el zip nuevo, lo que está a prueba, las
    reglas en pie), mudado verbatim a `CARRIL-SPA.md` §9 (30-09).
-5. ✅ **Los tres rojos de `audit-clock.sh` (27-09), ARREGLADOS el 03-10** (`TESTING.md` §2.septies): `InvitationSharingTest`
-   era una BOMBA (la fiesta del fixture, el 04-10 a las 17:00, con el reloj real: el gate, rojo desde el domingo a las 19:00),
-   `ScheduleFactsTest` caía en el último minuto del día del parque y `GoogleReviewImagesTest` comparaba el reloj del disco con
-   el de prueba; con su filtro, 10/10 fronteras (49 casos). ✅ Y el barrido ENTERO (03-10, con permiso del owner, 35 min):
-   las 10 fronteras verdes y, en el cruce de la medianoche UTC, dos casos MÍOS de P1 (`#912`) que ponían `main` rojo cada
-   mañana hasta las 10 h: los ancló plataforma a la vez (`7891a2b1`); yo, el parámetro muerto de sus ayudantes (`TESTING.md` §2.septies).
+5. ✅ Los rojos de `audit-clock.sh`, cerrados el 03-10: su punto, mudado verbatim a `CARRIL-SPA.md` §9.
 6. **La invitación, lo que su ✅ NO cubre** (el `.ics` en un teléfono, el Turnstile real, `§7.2·R12`, `og:image` con bandas) y
    **los diez puntos de `§10.4.7·B`** (empieza por la RAÍZ: `matches()` y `takeSlotFor()` no son la misma regla).
 7. De la Fase 4: el **ojo del owner en un teléfono de verdad** · el cuaderno de entrega del cajón · el botón del sistema.

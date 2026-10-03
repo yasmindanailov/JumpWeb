@@ -131,12 +131,12 @@ class DepositSurfacesTest extends TestCase
      *   · `Support\DepositFoundationTest`, para el cimiento.
      */
 
-    public function test_confirmation_email_shows_the_book_with_the_deposit_paid_and_the_rest_at_the_park(): void
+    public function test_confirmation_email_shows_the_deposit_paid_and_the_rest_at_the_park_in_its_slip(): void
     {
-        // T3·3 del LIBRO (D-T3·5): el correo de confirmación pinta el libro del pedido AL ENVIAR — la
-        // reserva como línea de valor, la señal como cobro y el resto como saldo «a pagar en el
-        // parque». Sustituye a las tres líneas de canal («Señal pagada online» / «Pendiente de pago
-        // en el parque» / «Total pagado»), que componían el mismo dinero por su cuenta.
+        // Desde la R2b (`correos-rediseno.md` §4.3) el dinero va en el RESGUARDO, del libro de la reserva (`MailReservation`):
+        // la señal cobrada y, en negrita, lo del día —las tres condiciones de `shows_deposit_note`—. El libro entero solo va
+        // si al pedido le pasó algo después (aquí, recién pagado, no). Lo que se vigila desde T3·3 sigue: no se anuncia como
+        // pagado lo que no se cobró.
         $order = $this->creator->createPendingOrder($this->user, [
             ['ticket_type_id' => $this->dep->id, 'date' => $this->date, 'time' => '10:00:00', 'qty' => 1],
         ]);
@@ -145,19 +145,17 @@ class DepositSurfacesTest extends TestCase
 
         App::setLocale('es');
         $mail = (new OrderConfirmation($order->fresh()))->toMail($this->user);
-        $body = implode(' | ', array_map(fn ($l) => (string) $l, $mail->introLines));
+        $resguardo = collect($mail->viewData['cuerpo'])->firstWhere('tipo', 'resguardo');
 
-        $this->assertStringContainsString(__('tickets.journal.email_title'), $body);
-        $this->assertStringContainsString(__('tickets.journal.booking'), $body);
-        $this->assertStringContainsString('+180,00', $body);                            // lo que vale
-        $this->assertStringContainsString(__('tickets.journal.paid_online'), $body);
-        $this->assertStringContainsString('+30,00', $body);                             // la señal cobrada
-        $this->assertStringContainsString('data-book-balance="pay_at_park"', $body);
-        $this->assertStringContainsString(__('tickets.journal.balance_pay_at_park'), $body);
-        $this->assertStringContainsString('150,00', $body);                             // el resto
-        // No anuncia «Total pagado: 180,00» (sería falso: solo se cobró la señal).
-        $this->assertStringNotContainsString('Total pagado', $body);
-        $this->assertStringNotContainsString('Señal pagada online', $body);
+        $this->assertSame([
+            [__('emails.reserva.deposit_label'), "30\u{00A0}€", false],
+            [__('emails.reserva.rest_label'), "150\u{00A0}€", true],   // el resto, en negrita: es lo que queda
+        ], $resguardo['dinero']);
+        $this->assertSame(__('emails.reserva.per_person_label', ['amount' => "180\u{00A0}€"]), $resguardo['precio']);
+        // No anuncia «180 € pagados» (sería falso: solo se cobró la señal) ni pinta el libro entero de un pedido recién pagado.
+        $html = (string) $mail->render();
+        $this->assertStringNotContainsString(__('emails.reserva.paid_label', ['amount' => "180\u{00A0}€"]), $html);
+        $this->assertStringNotContainsString('data-book', $html);
     }
 
     public function test_the_park_balance_includes_the_addon_children_of_a_deposit_product(): void
@@ -204,14 +202,14 @@ class DepositSurfacesTest extends TestCase
         $order->items()->first()->markCancelled($this->user); // cancela una línea → online<total, pero SIN señal
 
         App::setLocale('es');
-        $mail = (new OrderConfirmation($order->fresh()))->toMail($this->user);
-        $body = implode(' | ', array_map(fn ($l) => (string) $l, $mail->introLines));
+        // Le PASÓ algo después de pagarse (una cancelación): desde la R2b el libro entero va detrás de los resguardos.
+        $body = (string) (new OrderConfirmation($order->fresh()))->toMail($this->user)->render();
 
         $this->assertStringContainsString(__('tickets.journal.booking'), $body);
         $this->assertStringContainsString('−40,00', $body);                                     // la cancelación
         $this->assertStringContainsString('data-book-balance="refund_at_park"', $body);
         $this->assertStringNotContainsString(__('tickets.journal.balance_pay_at_park'), $body);
-        $this->assertStringNotContainsString('Señal pagada online', $body);
+        $this->assertStringNotContainsString(__('emails.reserva.deposit_label'), $body, 'sin señal, ninguna fila de señal');
     }
 
     public function test_reservation_slip_balance_box_says_the_deposit_rest_is_paid_at_the_park(): void

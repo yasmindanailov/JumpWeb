@@ -18,7 +18,14 @@
  * vista previa de «Textos de los correos»—, y los textos que el parque guardó en el panel salen en lo que llega.
  */
 
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderAdjustment;
+use App\Domain\Booking\Models\Slot;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\User;
+use App\Domain\Payments\Models\Payment;
+use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\QrCode;
 use App\Mail\ContactMessageMail;
 use App\Mail\PaymentIncidentMail;
@@ -28,6 +35,7 @@ use App\Notifications\Support\MailPreviews;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Mail\Mailable;
 use Illuminate\Notifications\Notification as Correo;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
@@ -48,10 +56,54 @@ $correos = ['GoogleBusinessLocationChanged' => static fn () => new N\GoogleBusin
 // El idioma del cliente elige el caso cuando el correo trae el suyo (la copia de una autorización: una firma en ese idioma).
 $locale = (string) ($cliente->locale ?: config('app.locale'));
 // ⚠️ Con su tercer argumento, la «Situación» de la vista previa (R1·T2, `#809`): `null` es el caso de siempre. Sin él, quince
-// correos se saltaban con «Too few arguments» (medido al construir la R1c, el 03-10).
+// correos se saltaban con «Too few arguments» (medido al construir la R1c, el 03-10). `SITUACION=entradas …` pide otra.
+$situacion = getenv('SITUACION') ?: null;
 foreach (MailPreviews::constructores() as $clave => $crear) {
-    $correos[Str::studly($clave)] = static fn () => $crear($cliente, $locale, null);
+    $correos[Str::studly($clave)] = static fn () => $crear($cliente, $locale, $situacion);
 }
+
+// LAS MUESTRAS DE LA R2b (§4.3): las caras de «Reservado» que la base local puede no tener —un GRUPO (una excursión) con su
+// señal y un pedido de VARIAS reservas—, montadas DENTRO de una transacción que se deshace tras enviar (el bucle de abajo):
+// llega el correo, no queda nada. Datos de EJEMPLO sobre la primera zona y el cliente de sondas.
+$pedidoDeMuestra = static function (User $cliente, string $codigo, array $lineas, int $resto = 0): Order {
+    $total = array_sum(array_map(static fn (array $l): int => $l[2] * $l[3], $lineas));
+    $pedido = Order::create(['user_id' => $cliente->id, 'code' => $codigo, 'status' => Order::STATUS_PAID, 'subtotal' => $total, 'tax' => 0, 'total' => $total, 'currency' => 'EUR', 'paid_at' => now()]);
+    foreach ($lineas as [$tipo, $franja, $cantidad, $precio]) {
+        $linea = $pedido->items()->create(['ticket_type_id' => $tipo->id, 'slot_id' => $franja->id, 'quantity' => $cantidad, 'unit_price' => $precio, 'seats' => $cantidad]);
+    }
+    if ($resto > 0) {
+        $pedido->adjustments()->create(['order_item_id' => $linea->id, 'type' => OrderAdjustment::TYPE_DEPOSIT_SPLIT, 'amount_cents' => $resto, 'currency' => 'EUR', 'reason' => 'deposit_split', 'applied_by' => $cliente->id]);
+    }
+    Payment::create(['payable_type' => $pedido->getMorphClass(), 'payable_id' => $pedido->id, 'provider' => 'redsys', 'amount' => $total - $resto, 'currency' => 'EUR', 'status' => Payment::STATUS_PAID, 'paid_at' => now()]);
+
+    return $pedido->fresh();
+};
+$franjaDeMuestra = static function (int $dias, string $hora): Slot {
+    $zona = Zone::query()->orderBy('id')->firstOrFail();
+
+    return Slot::query()->firstOrCreate(
+        ['zone_id' => $zona->id, 'date' => DisplayTime::today()->addDays($dias)->toDateString(), 'start_time' => $hora],
+        ['end_time' => sprintf('%02d:00:00', (int) substr($hora, 0, 2) + 2), 'capacity' => 100, 'online_capacity' => 100],
+    );
+};
+$correos['MuestraR2bGrupo'] = static function () use ($cliente, $pedidoDeMuestra, $franjaDeMuestra): Correo {
+    $excursion = TicketType::create([
+        'zone_id' => Zone::query()->orderBy('id')->value('id'), 'type' => TicketType::TYPE_PACK, 'name' => ['es' => 'Excursión 2 horas (muestra)'],
+        'duration_min' => 120, 'seats_per_unit' => 1, 'min_qty' => 10, 'max_qty' => 80, 'is_sellable' => false, 'is_active' => false, 'position' => 99,
+        'cancellation_cutoff_hours' => 120, 'deposit_refundable_in_time' => true,
+        'before_visit' => ['es' => ['Todos los profesores entran gratis: no hay que contarlos.', 'Los calcetines van incluidos: os los damos al llegar.']],
+    ]);
+
+    return new N\OrderConfirmation($pedidoDeMuestra($cliente, 'R-MUESTRA1B', [[$excursion, $franjaDeMuestra(17, '10:00:00'), 60, 1500]], resto: 80000));
+};
+$correos['MuestraR2bVarias'] = static function () use ($cliente, $pedidoDeMuestra, $franjaDeMuestra): Correo {
+    $entrada = TicketType::create([
+        'zone_id' => Zone::query()->orderBy('id')->value('id'), 'type' => TicketType::TYPE_ENTRY, 'name' => ['es' => 'Jump 1 hora (muestra)'],
+        'duration_min' => 60, 'seats_per_unit' => 1, 'is_sellable' => false, 'is_active' => false, 'position' => 99, 'cancellation_cutoff_hours' => 24,
+    ]);
+
+    return new N\OrderConfirmation($pedidoDeMuestra($cliente, 'R-MUESTRAV', [[$entrada, $franjaDeMuestra(8, '11:00:00'), 2, 1200], [$entrada, $franjaDeMuestra(9, '17:00:00'), 3, 1200]]));
+};
 // Los dos avisos al EQUIPO (la R1c, §4.1.4): `Mailable` y no notificaciones, con datos de EJEMPLO (nada de la base).
 $correos['ContactMessageMail'] = static fn () => new ContactMessageMail([
     'name' => 'Ana Ruiz', 'email' => 'ana@example.com', 'phone' => '600 11 22 33', 'topic' => 'groups',
@@ -73,7 +125,7 @@ $correos['MuestraDeBloquesR2a'] = static fn () => new class extends Correo
 
     public function toMail(object $notifiable): BrandedMailMessage
     {
-        return (new BrandedMailMessage)->subject('Muestra de bloques · R2a')->hero('emails.order_confirmation', 'ok', [], ['day' => 'sábado 26'])
+        return (new BrandedMailMessage)->subject('Muestra de bloques · R2a')->hero('emails.reservado', 'ok', [], ['day' => 'sábado 26'])
             ->links(['whatsapp' => 'https://wa.me/34600000000', 'menores' => url('/#mi-cuenta/hijos')])
             ->slip(['dow' => 'sáb', 'n' => '26', 'month' => 'sep'], 'Sábado 26 de septiembre', '17:00', 'Kids 1 hora · 2 niños', '24 € pagados', 'Nº R-7K2P4',
                 [], [['Cómo llegar', 'https://www.google.com/maps', 'map-pin'], ['Añadir al calendario', url('/'), 'calendar-plus']])
@@ -101,6 +153,11 @@ foreach ($correos as $nombre => $crear) {
     if ($filtro !== '' && ! str_contains($nombre, $filtro)) {
         continue;
     }
+    // Las muestras que MONTAN datos (la R2b), en su transacción: se deshace tras enviar.
+    $monta = str_starts_with($nombre, 'MuestraR2b');
+    if ($monta) {
+        DB::beginTransaction();
+    }
     try {
         $correo = $crear();
         if ($correo instanceof Mailable) {
@@ -122,6 +179,10 @@ foreach ($correos as $nombre => $crear) {
     } catch (Throwable $e) {
         $fallos++;
         echo "  ✗ {$nombre}: ".mb_substr($e->getMessage(), 0, 160)."\n";
+    } finally {
+        if ($monta) {
+            DB::rollBack();
+        }
     }
 }
 

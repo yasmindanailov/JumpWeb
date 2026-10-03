@@ -35,7 +35,7 @@ trait InteractsWithCatalogForm
      * lista para guardar (aquí) y para rellenar (`EditCatalog`): con dos, un campo nuevo se guardaría
      * y no volvería a salir en el formulario, o al revés, sin que nada fallara.
      */
-    protected const I18N_LIST_FIELDS = ['features', 'menu_drink', 'menu_food', 'menu_sweet'];
+    protected const I18N_LIST_FIELDS = ['features', 'menu_drink', 'menu_food', 'menu_sweet', 'before_visit'];
 
     /** @var array<int,?string> Importes (€) por rate_type_id capturados del form para el upsert. */
     protected array $priceInputs = [];
@@ -433,6 +433,9 @@ trait InteractsWithCatalogForm
     {
         if ($type !== TicketType::TYPE_ADDON) {
             $data['reservation_note'] = null;
+        } else {
+            // «Antes de venir» (la R2b) es de lo que se RESERVA: un complemento va con su aviso, arriba.
+            $data['before_visit'] = null;
         }
 
         $data['deposit_refundable_in_time'] = $type === TicketType::TYPE_PACK && (bool) ($data['deposit_refundable_in_time'] ?? false);

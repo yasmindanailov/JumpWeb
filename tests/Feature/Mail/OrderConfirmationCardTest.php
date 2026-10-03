@@ -64,7 +64,10 @@ class OrderConfirmationCardTest extends TestCase
         $this->assertSame('image/png', $attachment['options']['mime']);
         $this->assertStringStartsWith("\x89PNG", $attachment['data'], 'un PNG de verdad, no un SVG');
         $this->assertGreaterThan(500, strlen($attachment['data']));
-        $this->assertContains(__('emails.order_confirmation.card_attached'), $mail->introLines, 'el correo dice que va adjunto');
+        // Y DENTRO (la R2b): la misma imagen en su bloque, con el código para dictar en grupos.
+        $qr = collect($mail->viewData['cuerpo'])->firstWhere('tipo', 'qr');
+        $this->assertSame($attachment['data'], $qr['png'], 'el QR de dentro y el adjunto son el mismo');
+        $this->assertSame(CardToken::grouped((string) $card->plainToken()), $qr['codigo']);
 
         // Un reenvío no emite otro carné.
         (new OrderConfirmation($order))->toMail($user);
@@ -72,14 +75,16 @@ class OrderConfirmationCardTest extends TestCase
         $this->assertTrue(CardToken::isWellFormed((string) $card->plainToken()));
     }
 
-    public function test_the_line_exists_in_the_three_languages_and_differs(): void
+    public function test_the_qr_texts_exist_in_the_three_languages_and_differ(): void
     {
-        $texts = [];
-        foreach (['es', 'en', 'fr'] as $locale) {
-            $this->assertTrue(Lang::has('emails.order_confirmation.card_attached', $locale, false), "falta en {$locale}");
-            $texts[$locale] = Lang::get('emails.order_confirmation.card_attached', [], $locale);
+        foreach (['emails.reserva.qr_title', 'emails.reserva.qr_dictate_label', 'emails.reserva.action_qr'] as $clave) {
+            $texts = [];
+            foreach (['es', 'en', 'fr'] as $locale) {
+                $this->assertTrue(Lang::has($clave, $locale, false), "{$clave}: falta en {$locale}");
+                $texts[$locale] = Lang::get($clave, [], $locale);
+            }
+            $this->assertCount(3, array_unique($texts), "{$clave}: existir no es estar traducido");
         }
-        $this->assertCount(3, array_unique($texts), 'existir no es estar traducido');
     }
 
     /** §8.1: la clave rotada degrada —el correo sale SIN el adjunto— en vez de romper el envío. */
@@ -97,7 +102,8 @@ class OrderConfirmationCardTest extends TestCase
         }
 
         $this->assertSame([], $mail->rawAttachments);
-        $this->assertNotContains(__('emails.order_confirmation.card_attached'), $mail->introLines);
+        $this->assertNull(collect($mail->viewData['cuerpo'])->firstWhere('tipo', 'qr'), 'ni dentro: sin carné que pintar, sin QR');
+        $this->assertNotNull(collect($mail->viewData['cuerpo'])->firstWhere('tipo', 'resguardo'), 'CONTROL: el correo sale, con su resguardo');
         $this->assertSame(1, CustomerCard::count(), 'y no se emite otro por debajo: el titular rota el suyo');
     }
 }

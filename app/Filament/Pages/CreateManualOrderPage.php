@@ -1643,6 +1643,8 @@ class CreateManualOrderPage extends Page
             //
             // ⚠️ El enlace viaja aunque el correo haya salido: el cliente que dice «no me ha llegado»
             // está delante, y el operador ya tiene aquí lo que necesita sin ir a la ficha.
+            // ▶ Desde la R2b el formulario de invitados sale DENTRO de la confirmación (sus pasos, `#915`): «enviado» sigue
+            // siendo verdad —le llega con ella—, y su fila sigue aquí por el enlace.
             'deliverables' => [
                 [
                     'kind' => 'confirmation',

@@ -259,6 +259,8 @@ class TicketType extends Model
         // señal se devuelve al cancelar en plazo. Datos de la instalación, no política del producto.
         'reservation_note' => 'array',
         'deposit_refundable_in_time' => 'boolean',
+        // «Antes de venir» de un producto principal (la R2b de `correos-rediseno.md` §4.3): una lista i18n, como `features`.
+        'before_visit' => 'array',
         // La Puerta (`specs/puerta-nueva.md` §4.4, la P2; D14): el complemento que se ENTREGA allí, como los calcetines.
         'handed_at_gate' => 'boolean',
         'featured' => 'boolean',
@@ -428,6 +430,18 @@ class TicketType extends Model
     public function featureLines(): array
     {
         return $this->lineasDe('features');
+    }
+
+    /**
+     * **«Antes de venir», lo de este producto** (la R2b de `specs/correos-rediseno.md` §4.3), en el idioma activo y sin
+     * vacíos: lo que el correo de la reserva añade a las líneas que salen de los datos —«Todos los profesores entran gratis»—.
+     * Lo escribe el panel de cada instalación; sin nada, el correo dice solo lo suyo.
+     *
+     * @return list<string>
+     */
+    public function beforeVisitLines(): array
+    {
+        return $this->lineasDe('before_visit');
     }
 
     /**

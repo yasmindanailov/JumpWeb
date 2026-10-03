@@ -112,8 +112,10 @@ class EmailBookBlockTest extends TestCase
      */
     public function test_a_resend_after_an_edit_says_the_new_balance(): void
     {
+        // Recién pagada, sin historia: el resguardo lo dice todo («20 € pagados») y el libro entero no va (la R2b).
         $before = $this->body(new OrderConfirmation($this->order));
-        $this->assertStringContainsString('data-book-balance="settled"', $before);
+        $this->assertStringNotContainsString('data-book', $before);
+        $this->assertStringContainsString(e(__('emails.reserva.paid_label', ['amount' => "20\u{00A0}€"])), $before);
         $this->assertStringNotContainsString(__('tickets.journal.balance_pay_at_park'), $before);
 
         // El operador sube la entrada de 2 a 3 desde el panel…
@@ -165,15 +167,14 @@ class EmailBookBlockTest extends TestCase
      * producto sano. Lo correcto no era re-apuntarlo al sitio nuevo, sino mirar **lo que recibe
      * una persona** — así este helper tampoco se quedará ciego el día que otro de los cinco
      * correos mueva su libro.
+     * ▶ Desde la R2b, el correo PINTADO: la confirmación pone sus bloques en el cuerpo en orden (el libro, un bloque de
+     * marcado tras los resguardos) y ya no tiene «líneas». Es, literalmente, lo que recibe una persona.
      */
     private function body(Notification $notification): string
     {
         /** @var MailMessage $mail */
         $mail = $notification->toMail($this->customer);
 
-        return collect($mail->introLines)
-            ->concat($mail->outroLines)
-            ->map(fn ($l) => (string) $l)
-            ->implode(' ');
+        return (string) $mail->render();
     }
 }

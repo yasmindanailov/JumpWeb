@@ -604,13 +604,22 @@ class OrderItem extends Model
         $type = $this->ticketType;
         $nameKey = $type?->guestNameFieldKey();
         $name = $nameKey === null ? '' : trim((string) ($this->guestData()[self::HONOREE_ROW_INDEX][$nameKey] ?? ''));
-        $celebrantKey = $type?->celebrantNameFieldKey();
-        if ($name === '' && $celebrantKey !== null) {
-            $value = (is_array($this->event_data) ? $this->event_data : [])[$celebrantKey] ?? null;
-            $name = is_scalar($value) ? trim((string) $value) : '';
-        }
 
-        return $name;
+        return $name !== '' ? $name : (string) $this->celebrantName();
+    }
+
+    /**
+     * **El nombre del homenajeado que se escribió AL RESERVAR** —el campo del homenajeado de la reserva, por TIPO
+     * (`celebrantNameFieldKey()`)—, cuente o no como invitado; `null` sin campo o sin respuesta. Lo que dice el asunto de
+     * «¡Fiesta reservada!» (la R2b: «el cumple de Vera»), cuando la lista aún no existe.
+     */
+    public function celebrantName(): ?string
+    {
+        $key = $this->ticketType?->celebrantNameFieldKey();
+        $value = $key === null ? null : ((is_array($this->event_data) ? $this->event_data : [])[$key] ?? null);
+        $name = is_scalar($value) ? trim((string) $value) : '';
+
+        return $name !== '' ? $name : null;
     }
 
     /**

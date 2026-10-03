@@ -9,7 +9,6 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Notifications\GuardianAuthorizationRequest;
-use App\Notifications\GuestFormRequest;
 use App\Notifications\OrderConfirmation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -119,25 +118,8 @@ class ManualOrderFulfiller
                 ]);
             }
 
-            // Post-form de datos por invitado (#217): mismo email con enlace firmado si la reserva
-            // (creada en local) incluye un pack que pide esos datos. Aislado en su try/catch.
-            try {
-                $order->loadMissing('items.ticketType');
-                if ($order->needsGuestForm()) {
-                    // Individualizado POR RESERVA (#217): un email por cada pack que pide el post-form.
-                    foreach ($order->guestFormItems() as $reservation) {
-                        if ($reservation->needsGuestForm()) {
-                            $order->user->notify(new GuestFormRequest($reservation));
-                        }
-                    }
-                }
-            } catch (Throwable $e) {
-                Log::warning('manual_order.guest_form_mail_failed', [
-                    'order_id' => $order->id,
-                    'order_code' => $order->code,
-                    'error' => $e->getMessage(),
-                ]);
-            }
+            // ⚠️ El formulario de invitados (#217) va DENTRO de la confirmación desde la R2b (sus pasos, `#915`: «el 2, un
+            // correo»), como en la compra en línea; `GuestFormRequest` sigue para el reenvío desde la ficha del pedido.
 
             // El enlace del JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.3).
             //

@@ -18,6 +18,7 @@ use App\Domain\Payments\Services\RedsysReturnOutcome;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Models\Setting;
 use App\Mail\PaymentIncidentMail;
+use App\Notifications\GuestFormRequest;
 use App\Notifications\OrderConfirmation;
 use App\Notifications\OrderPaymentDeclined;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -378,6 +379,28 @@ class RedsysReturnHandlerTest extends TestCase
         // qr_tokens únicos (no colisión).
         $tokens = Ticket::where('order_id', $payment->payable_id)->pluck('qr_token')->toArray();
         $this->assertSame(count($tokens), count(array_unique($tokens)));
+    }
+
+    /**
+     * `#915` (b), «el 2, UN correo» (la R2b de `correos-rediseno.md` §4.3): al pagar una FIESTA sale la confirmación con sus
+     * pasos —el formulario de invitados, firmado— y el formulario ya NO sale en un correo aparte (`GuestFormRequest` queda
+     * para el reenvío del panel). CONTROL: la confirmación sí lleva el paso, con el enlace del formulario de esa reserva.
+     */
+    public function test_an_authorized_party_gets_one_mail_with_the_guest_form_inside(): void
+    {
+        Notification::fake();
+        [$payment, $user, , $type] = $this->setupPaidableOrder(amount: 15000, seats: 10);
+        $type->forceFill(['type' => TicketType::TYPE_PACK, 'min_qty' => 1, 'max_qty' => 20, 'guest_fields' => TicketType::DEFAULT_GUEST_FIELDS])->save();
+
+        $this->handler->process($this->makeSignedReturnPayload($payment, '0000'));
+
+        Notification::assertSentToTimes($user, OrderConfirmation::class, 1);
+        Notification::assertNotSentTo($user, GuestFormRequest::class);
+        $confirmacion = Notification::sent($user, OrderConfirmation::class)->first()->toMail($user);
+        $pasos = collect($confirmacion->viewData['cuerpo'])->firstWhere('tipo', 'pasos');
+        $reserva = OrderItem::query()->where('order_id', $payment->payable_id)->firstOrFail();
+        $this->assertNotNull($pasos, 'la confirmación de una fiesta lleva sus pasos');
+        $this->assertStringStartsWith(strtok($reserva->guestFormSignedUrl(), '?'), $pasos['pasos'][0]['url']);
     }
 
     public function test_response_outside_0000_to_0099_with_signature_valid_is_denied(): void

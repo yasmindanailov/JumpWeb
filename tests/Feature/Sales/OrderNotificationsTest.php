@@ -3,19 +3,14 @@
 namespace Tests\Feature\Sales;
 
 use App\Domain\Booking\Models\Order;
-use App\Domain\Booking\Models\TicketType;
-use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
-use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Analytics\EmailUtm;
 use App\Notifications\OrderCancelled;
-use App\Notifications\OrderConfirmation;
 use App\Notifications\OrderExpiredWithoutPayment;
 use App\Notifications\OrderPaymentDeclined;
 use App\Notifications\OrderRefunded;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Lang;
 use Tests\TestCase;
 
@@ -48,34 +43,9 @@ class OrderNotificationsTest extends TestCase
         ]);
     }
 
-    public function test_confirmation_mentions_guest_form_only_when_the_order_needs_it(): void
-    {
-        App::setLocale('es');
-
-        // Entrada (sin post-form): el email NO promete pedir los datos de los invitados.
-        $entry = $this->makeOrder('JJ-ENTRY01');
-        $this->assertStringNotContainsString(
-            'datos de los invitados',
-            (new OrderConfirmation($entry))->toMail($entry->user)->render(),
-        );
-
-        // Pack con `guest_fields` (post-form): el email SÍ lo menciona.
-        $zone = Zone::create(['slug' => 'cumpleanos', 'name' => ['es' => 'Cumpleaños'], 'is_active' => true]);
-        $pack = TicketType::create([
-            'name' => ['es' => 'Cumpleaños'], 'zone_id' => $zone->id, 'type' => TicketType::TYPE_PACK,
-            'duration_min' => 120, 'is_sellable' => true, 'is_active' => true,
-            'guest_fields' => [['key' => 'nombre', 'label' => ['es' => 'Nombre'], 'type' => 'text', 'required' => true]],
-        ]);
-        $packOrder = $this->makeOrder('JJ-PACK01');
-        $packOrder->items()->create([
-            'ticket_type_id' => $pack->id, 'slot_id' => null,
-            'quantity' => 10, 'seats' => 10, 'unit_price' => 1500,
-        ]);
-        $this->assertStringContainsString(
-            'datos de los invitados',
-            (new OrderConfirmation($packOrder->fresh()))->toMail($packOrder->user)->render(),
-        );
-    }
+    // ⚠️ Lo de la CONFIRMACIÓN (si habla del formulario de invitados, la fecha del cobro) se fue con la R2b: su correo es el
+    // diseño y sus casos viven en `Mail\ReservationMailTest` —los pasos de una fiesta, solo en una fiesta—. La fecha del
+    // cobro ya no es una línea: el diseño no la lleva, y cuando al pedido le ha pasado algo la dice el libro, con su fecha.
 
     public function test_order_payment_declined_renders_subject_intro_reason_and_cta(): void
     {
@@ -182,36 +152,5 @@ class OrderNotificationsTest extends TestCase
                 );
             }
         }
-    }
-
-    public function test_order_confirmation_includes_paid_at_in_display_timezone(): void
-    {
-        // Audit #114 G8 — `OrderConfirmation` ahora incluye la fecha del cobro formateada
-        // en la TZ de presentación (#111). Antes el email no mostraba fecha; el cliente
-        // tenía que ir a "Mis pedidos" para verla.
-        Setting::create(['key' => 'display_timezone', 'value' => 'Europe/Madrid', 'group' => 'display']);
-        $order = $this->makeOrder('JJ-CONF01');
-        // paid_at = 05:47 UTC → debe mostrarse como 07:47 (CEST en mayo).
-        $order->forceFill(['status' => Order::STATUS_PAID, 'paid_at' => '2026-05-28 05:47:00'])->save();
-
-        $mail = (new OrderConfirmation($order))->toMail($order->user)->toArray();
-        $body = implode("\n", $mail['introLines'] ?? []);
-
-        $this->assertStringContainsString('28/05/2026 07:47', $body);
-        $this->assertStringNotContainsString('28/05/2026 05:47', $body, 'NO debe mostrar el datetime en UTC');
-    }
-
-    public function test_order_confirmation_omits_paid_at_line_when_null(): void
-    {
-        // Defense in depth: si por alguna razón `paid_at` está null (caso defensivo),
-        // el email se renderiza sin esa línea — no rompe.
-        $order = $this->makeOrder('JJ-CONF02');
-        // paid_at queda null por defecto.
-
-        $mail = (new OrderConfirmation($order))->toMail($order->user)->toArray();
-        $body = implode("\n", $mail['introLines'] ?? []);
-
-        // No debe contener "Fecha del cobro" (es decir, la línea opcional).
-        $this->assertStringNotContainsString(__('emails.order_confirmation.paid_at', ['when' => '']), $body);
     }
 }

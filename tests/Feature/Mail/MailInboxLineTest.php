@@ -43,21 +43,24 @@ class MailInboxLineTest extends TestCase
      * —el titular ya dice el hecho y el código va en su bloque—. ⚠️ Esta lista solo encoge, y su caso exige que de verdad no
      * la lleven: una chapa olvidada aquí sería una pieza que nadie mira.
      */
-    private const SIN_CHAPA = ['emails.login_code', 'emails.confirmation_code', 'emails.verify_pending_email_code'];
+    private const SIN_CHAPA = ['emails.login_code', 'emails.confirmation_code', 'emails.verify_pending_email_code', 'emails.fiesta_reservada'];
 
     /**
      * Los grupos del diccionario que gobiernan un correo, LEÍDOS DE LA FUENTE y no de una lista a
      * mano: una lista escrita aquí envejece en silencio, y un correo nuevo tiene que entrar solo.
+     * ▶ TODOS los de cada fichero: un correo con varias caras (la confirmación, la R2b) tiene una cabecera por cara, y leer
+     * solo la primera dejaba la otra sin guarda.
      *
-     * @return array<string,string> notificación → grupo (`OrderCancelled` → `emails.order_cancelled`)
+     * @return list<array{0: string, 1: string}> notificación y grupo (`OrderCancelled`, `emails.order_cancelled`)
      */
     private function grupos(): array
     {
         $grupos = [];
         foreach ((array) glob(app_path('Notifications/*.php')) as $f) {
             $src = (string) file_get_contents((string) $f);
-            if (preg_match("/->hero\(\s*'([^']+)'/", $src, $m) === 1) {
-                $grupos[basename((string) $f, '.php')] = $m[1];
+            preg_match_all("/->hero\(\s*'([^']+)'/", $src, $m);
+            foreach (array_unique($m[1]) as $grupo) {
+                $grupos[] = [basename((string) $f, '.php'), $grupo];
             }
         }
 
@@ -103,7 +106,7 @@ class MailInboxLineTest extends TestCase
     public function test_every_mail_has_its_inbox_pieces_in_the_three_languages(): void
     {
         $faltan = $sobran = [];
-        foreach ($this->grupos() as $notificacion => $grupo) {
+        foreach ($this->grupos() as [$notificacion, $grupo]) {
             $sinChapa = in_array($grupo, self::SIN_CHAPA, true);
             foreach (['es', 'en', 'fr'] as $loc) {
                 foreach (['preheader', 'badge', 'headline', 'subject'] as $pieza) {
@@ -121,7 +124,7 @@ class MailInboxLineTest extends TestCase
 
         $this->assertSame([], $faltan, "piezas de bandeja sin escribir:\n".implode("\n", $faltan));
         $this->assertSame([], $sobran, "chapas en correos que no la llevan (SIN_CHAPA):\n".implode("\n", $sobran));
-        $this->assertSame(self::SIN_CHAPA, array_values(array_intersect(self::SIN_CHAPA, $this->grupos())), 'SIN_CHAPA nombra un grupo que ya no es de ningún correo');
+        $this->assertSame(self::SIN_CHAPA, array_values(array_intersect(self::SIN_CHAPA, array_column($this->grupos(), 1))), 'SIN_CHAPA nombra un grupo que ya no es de ningún correo');
     }
 
     /**
@@ -135,7 +138,7 @@ class MailInboxLineTest extends TestCase
     public function test_no_inbox_line_carries_a_placeholder(): void
     {
         $con = [];
-        foreach ($this->grupos() as $grupo) {
+        foreach ($this->grupos() as [, $grupo]) {
             foreach (['es', 'en', 'fr'] as $loc) {
                 $texto = (string) Lang::get($grupo.'.preheader', [], $loc);
                 foreach ($this->placeholders($texto) as $p) {
@@ -164,7 +167,7 @@ class MailInboxLineTest extends TestCase
     public function test_no_inbox_line_just_repeats_its_own_subject(): void
     {
         $repiten = [];
-        foreach ($this->grupos() as $notificacion => $grupo) {
+        foreach ($this->grupos() as [$notificacion, $grupo]) {
             foreach (['es', 'en', 'fr'] as $loc) {
                 $asunto = $this->palabrasPlenas((string) Lang::get($grupo.'.subject', [], $loc));
                 $linea = $this->palabrasPlenas((string) Lang::get($grupo.'.preheader', [], $loc));
@@ -207,7 +210,7 @@ class MailInboxLineTest extends TestCase
     public function test_no_inbox_line_is_longer_than_the_preview(): void
     {
         $largas = [];
-        foreach ($this->grupos() as $grupo) {
+        foreach ($this->grupos() as [, $grupo]) {
             foreach (['es', 'en', 'fr'] as $loc) {
                 $texto = (string) Lang::get($grupo.'.preheader', [], $loc);
                 if (mb_strlen($texto) > self::TOPE_ADELANTO) {
@@ -232,13 +235,12 @@ class MailInboxLineTest extends TestCase
     public function test_every_subject_placeholder_is_passed_by_its_notification(): void
     {
         $sueltos = [];
-        foreach ($this->grupos() as $notificacion => $grupo) {
+        foreach ($this->grupos() as [$notificacion, $grupo]) {
             $src = (string) file_get_contents(app_path("Notifications/$notificacion.php"));
 
-            foreach (['subject', 'subject_no_date'] as $clave) {
-                if (! Lang::has($grupo.'.'.$clave, 'es')) {
-                    continue;
-                }
+            // TODOS los asuntos del grupo (`subject`, `subject_no_date`, `subject_varias`…): cada variante es un asunto.
+            $asuntos = array_filter(array_keys((array) Lang::get($grupo, [], 'es')), static fn (int|string $k): bool => str_starts_with((string) $k, 'subject'));
+            foreach ($asuntos as $clave) {
                 $pedidos = $this->placeholders((string) Lang::get($grupo.'.'.$clave, [], 'es'));
                 if ($pedidos === []) {
                     continue;
@@ -297,12 +299,10 @@ class MailInboxLineTest extends TestCase
     public function test_no_subject_repeats_the_business_name(): void
     {
         $con = [];
-        foreach ($this->grupos() as $grupo) {
+        foreach ($this->grupos() as [, $grupo]) {
             foreach (['es', 'en', 'fr'] as $loc) {
-                foreach (['subject', 'subject_no_date'] as $clave) {
-                    if (! Lang::has($grupo.'.'.$clave, $loc)) {
-                        continue;
-                    }
+                $asuntos = array_filter(array_keys((array) Lang::get($grupo, [], $loc)), static fn (int|string $k): bool => str_starts_with((string) $k, 'subject'));
+                foreach ($asuntos as $clave) {
                     if (in_array('park', $this->placeholders((string) Lang::get($grupo.'.'.$clave, [], $loc)), true)) {
                         $con[] = "$grupo ($loc).$clave";
                     }
@@ -326,7 +326,7 @@ class MailInboxLineTest extends TestCase
     {
         $html = $this->renderConfirmation();
 
-        $linea = (string) Lang::get('emails.order_confirmation.preheader', [], 'es');
+        $linea = (string) Lang::get('emails.reservado.preheader', [], 'es');
         $posLinea = strpos($html, $linea);
         $posCabecera = strpos($html, 'data-bloque="cabecera"');
 

@@ -3,7 +3,9 @@
 namespace Tests\Feature\Mail;
 
 use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderAdjustment;
 use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Content\Services\MailTextRules;
 use App\Domain\Identity\Models\LegalDocumentVersion;
@@ -12,6 +14,8 @@ use App\Domain\Identity\Services\GuardianAuthorizationSigner;
 use App\Domain\Identity\Services\LegalDocumentPublisher;
 use App\Domain\Identity\Services\WaiverSettings;
 use App\Domain\Identity\Services\WaiverSignatureRequest;
+use App\Domain\Payments\Models\Payment;
+use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Models\Survey;
 use App\Notifications\Support\MailPreviews;
 use App\Notifications\Support\MailSituations;
@@ -44,10 +48,16 @@ class MailPreviewsTest extends TestCase
      * @var array<string, array<string, list<string>>>
      */
     private const SITUACION_HACE_SALIR = [
+        // La reserva hecha (la R2b): cada cara y cada caso de su dinero, de quién firma, de los pasos y del plazo.
         'order_confirmation' => [
-            'entradas' => ['emails.order_confirmation.paid_confirmation'],
-            'cumpleanos' => ['emails.order_confirmation.paid_confirmation_guest_form'],
-            'sin_un_dia' => ['emails.order_confirmation.subject_no_date', 'emails.order_confirmation.headline_no_date'],
+            'entradas' => ['emails.reservado.subject', 'emails.reservado.headline', 'emails.reserva.paid_label', 'emails.reserva.minors', 'emails.reserva.adults', 'emails.reserva.arrival', 'emails.reserva.changes', 'emails.reserva.replies_label'],
+            'grupo' => ['emails.reservado.headline_grupo', 'emails.reserva.per_person_label', 'emails.reserva.deposit_label', 'emails.reserva.rest_label', 'emails.reserva.arrival_group', 'emails.reserva.changes_refund'],
+            'cumple_con_nombre' => ['emails.fiesta_reservada.subject_nombre', 'emails.fiesta_reservada.headline', 'emails.reserva.steps_title', 'emails.reserva.step_form', 'emails.reserva.step_invite', 'emails.reserva.rest_party_label'],
+            'cumple_sin_nombre' => ['emails.fiesta_reservada.subject'],
+            'sin_invitacion' => ['emails.reserva.steps_one_title'],
+            'con_extras' => ['emails.reserva.extras'],
+            'varias' => ['emails.reservado.subject_varias', 'emails.reservado.headline_varias', 'emails.reserva.changes_open'],
+            'fuera_de_plazo' => ['emails.reserva.changes_late', 'emails.reserva.step_form_open'],
         ],
         'visit_eve_notice' => [
             'cumple_con_nombre' => ['emails.visit_eve.honoree'],
@@ -139,21 +149,21 @@ class MailPreviewsTest extends TestCase
     {
         ['host' => $host] = $this->mountParty();
 
-        $es = MailPreviews::pintar('order_confirmation', 'es', ['emails.order_confirmation.intro' => 'BORRADOR {code}'], $host);
+        $es = MailPreviews::pintar('order_confirmation', 'es', ['emails.reserva.number_label' => 'BORRADOR {code}'], $host);
         $this->assertStringContainsString('BORRADOR R-', $es['html'] ?? '');
         // (El claro ya NOMBRA `data-ogsc` en sus reglas para Outlook.com: lo que cambia en oscuro es la etiqueta `<html>`.)
         $this->assertStringNotContainsString('<html data-ogsc', $es['html'] ?? '');
 
         // En otro idioma, el correo EN ese idioma con su borrador; el español no se cuela. Y la página sigue en el suyo.
         $idioma = app()->getLocale();
-        $en = MailPreviews::pintar('order_confirmation', 'en', ['emails.order_confirmation.intro' => 'DRAFT {code}'], $host, oscuro: true);
+        $en = MailPreviews::pintar('order_confirmation', 'en', ['emails.reserva.number_label' => 'DRAFT {code}'], $host, oscuro: true);
         $this->assertNotSame('en', $idioma, 'el caso necesita otro idioma en la petición');
         $this->assertSame($idioma, app()->getLocale());
         $this->assertStringContainsString('DRAFT R-', $en['html'] ?? '');
         $this->assertStringNotContainsString('BORRADOR', $en['html'] ?? '');
         $this->assertStringContainsString('<html data-ogsc data-ogsb', $en['html'] ?? '');
         // Y tras pintar, el traductor vuelve a lo guardado (nada).
-        $this->assertStringNotContainsString('BORRADOR', trans('emails.order_confirmation.intro', ['code' => 'R-1'], 'es'));
+        $this->assertStringNotContainsString('BORRADOR', trans('emails.reserva.number_label', ['code' => 'R-1'], 'es'));
     }
 
     /**
@@ -172,10 +182,16 @@ class MailPreviewsTest extends TestCase
      */
     public function test_every_situation_paints_its_texts_no_block_is_a_phantom_and_every_conditional_one_says_when(): void
     {
+        $this->ajustesDelParque();
         ['host' => $host, 'reservation' => $conExtras, 'document' => $version] = $this->mountParty();
         $this->extra($conExtras->ticketType, 'Cubo de refrescos', 1200);
         $this->firma($host, $conExtras, $version);
-        ['reservation' => $fiesta] = $this->mountParty(); // la ÚLTIMA fiesta, sin extras: «con extras» tiene que buscar la otra
+        // La confirmación (la R2b) busca por CLASE —un grupo, varias reservas— antes que la última fiesta y las entradas, que
+        // tienen que seguir siendo lo ÚLTIMO.
+        $this->grupo($host, $conExtras);
+        $this->varias($host, $conExtras);
+        ['order' => $ultimaFiesta, 'reservation' => $fiesta] = $this->mountParty(); // la ÚLTIMA fiesta, sin extras: «con extras» tiene que buscar la otra
+        $this->conSenal($ultimaFiesta, $host, 2000);
         $this->entradas($host, $fiesta); // el ÚLTIMO pedido, sin lista: «un cumpleaños» tiene que buscar uno con ella
         Survey::create([
             'key' => 'que-tal', 'name' => ['es' => '¿Qué tal?'], 'kind' => Survey::KIND_EXTERNAL, 'active' => true,
@@ -242,10 +258,13 @@ class MailPreviewsTest extends TestCase
         ['host' => $host] = $this->mountParty();
 
         $this->assertSame(['motivo' => 'pedido_entradas'], MailPreviews::pintar('order_confirmation', 'es', [], $host, false, 'entradas'));
+        $this->assertSame(['motivo' => 'pedido_grupo'], MailPreviews::pintar('order_confirmation', 'es', [], $host, false, 'grupo'));
+        $this->assertSame(['motivo' => 'pedido_varias'], MailPreviews::pintar('order_confirmation', 'es', [], $host, false, 'varias'));
+        $this->assertSame(['motivo' => 'fiesta_con_extras'], MailPreviews::pintar('order_confirmation', 'es', [], $host, false, 'con_extras'));
         $this->assertSame(['motivo' => 'fiesta_con_extras'], MailPreviews::pintar('guest_form_request', 'es', [], $host, false, 'con_extras'));
         $this->assertSame(['motivo' => 'firma_de_reserva'], MailPreviews::pintar('guardian_authorization_signed', 'es', [], $host, false, 'firma_de_reserva'));
         // CONTROL: la de siempre y una que es un cambio de ejemplo, sí.
-        $this->assertArrayHasKey('html', MailPreviews::pintar('order_confirmation', 'es', [], $host, false, 'cumpleanos'));
+        $this->assertArrayHasKey('html', MailPreviews::pintar('order_confirmation', 'es', [], $host, false, 'cumple_con_nombre'));
         $this->assertArrayHasKey('html', MailPreviews::pintar('guest_form_request', 'es', [], $host, false, 'sin_invitacion'));
     }
 
@@ -351,20 +370,102 @@ class MailPreviewsTest extends TestCase
         ], WaiverSignatureRequest::web('10.0.0.1', 'UA'));
     }
 
-    /** Un pedido PAGADO de unas entradas (sin lista de invitados), en la franja de una fiesta: el último pedido del caso. */
+    /**
+     * Un pedido PAGADO de unas entradas (sin lista de invitados), en la franja de una fiesta: el último pedido del caso. Con
+     * su plazo de cambio (un día) y su cobro: el libro cuadra y la reserva dice «pagados» (la R2b).
+     */
     private function entradas(User $cliente, OrderItem $fiesta): Order
     {
         $tipo = TicketType::create([
             'zone_id' => $fiesta->slot->zone_id, 'type' => TicketType::TYPE_ENTRY, 'name' => ['es' => 'Entrada 1 hora'],
             'duration_min' => 60, 'seats_per_unit' => 1, 'is_sellable' => true, 'is_active' => true, 'position' => 9,
+            'cancellation_cutoff_hours' => 24,
         ]);
+
+        return $this->pedidoPagado($cliente, 'R-ENTRAD', [[$tipo, $fiesta->slot_id, 2, 800]]);
+    }
+
+    /** Lo que el panel tiene del parque: el teléfono, el WhatsApp, el correo y el mapa (los enlaces y el pie de la R2). */
+    private function ajustesDelParque(): void
+    {
+        foreach (['contact.phone' => '600 123 456', 'contact.whatsapp' => '+34 600 123 456', 'contact.email' => 'hola@parque.test', 'address.maps_url' => 'https://maps.example.test/parque'] as $clave => $valor) {
+            Setting::query()->updateOrCreate(['key' => $clave], ['value' => $valor]);
+        }
+        Setting::flushMemo();
+    }
+
+    /** Un GRUPO (un pack sin lista de invitados: una excursión) que paga señal, la devuelve en plazo y tiene tres días de plazo. */
+    private function grupo(User $cliente, OrderItem $fiesta): Order
+    {
+        $tipo = TicketType::create([
+            'zone_id' => $fiesta->slot->zone_id, 'type' => TicketType::TYPE_PACK, 'name' => ['es' => 'Excursión 2 horas'],
+            'duration_min' => 120, 'seats_per_unit' => 1, 'min_qty' => 10, 'max_qty' => 80, 'is_sellable' => true, 'is_active' => true,
+            'position' => 10, 'cancellation_cutoff_hours' => 72, 'deposit_refundable_in_time' => true,
+        ]);
+
+        return $this->pedidoPagado($cliente, 'R-GRUPO', [[$tipo, $fiesta->slot_id, 20, 1500]], resto: 20000);
+    }
+
+    /** VARIAS reservas en dos días: la misma entrada, en la franja de la fiesta y en otra del día siguiente. */
+    private function varias(User $cliente, OrderItem $fiesta): Order
+    {
+        $tipo = TicketType::create([
+            'zone_id' => $fiesta->slot->zone_id, 'type' => TicketType::TYPE_ENTRY, 'name' => ['es' => 'Entrada libre'],
+            'duration_min' => 60, 'seats_per_unit' => 1, 'is_sellable' => true, 'is_active' => true, 'position' => 11,
+        ]);
+        $otra = Slot::query()->create([
+            'zone_id' => $fiesta->slot->zone_id, 'date' => $fiesta->slot->date->copy()->addDay()->toDateString(),
+            'start_time' => '11:00:00', 'end_time' => '12:00:00', 'capacity' => 50, 'online_capacity' => 50,
+        ]);
+
+        return $this->pedidoPagado($cliente, 'R-VARIAS', [[$tipo, $fiesta->slot_id, 1, 900], [$tipo, $otra->id, 2, 900]]);
+    }
+
+    /** El pedido de una fiesta, con su SEÑAL: el total que cuadra con su línea, el resto al parque y la señal cobrada. */
+    private function conSenal(Order $pedido, User $cliente, int $resto): void
+    {
+        $total = (int) $pedido->items()->get()->sum(static fn (OrderItem $i): int => $i->chargedSubtotalCents());
+        $pedido->forceFill(['subtotal' => $total, 'total' => $total])->save();
+        $pedido->adjustments()->create([
+            'order_item_id' => $pedido->items()->value('id'), 'type' => OrderAdjustment::TYPE_DEPOSIT_SPLIT, 'amount_cents' => $resto,
+            'currency' => 'EUR', 'reason' => 'deposit_split', 'applied_by' => $cliente->id,
+        ]);
+        $this->cobro($pedido, $total - $resto);
+    }
+
+    /**
+     * Un pedido PAGADO cuyo libro CUADRA (I1–I4 de `OrderBook`): el total, sus líneas, el resto al parque si hay señal y el
+     * cobro de lo demás.
+     *
+     * @param  list<array{0: TicketType, 1: int, 2: int, 3: int}>  $lineas  producto, franja, cantidad y precio
+     */
+    private function pedidoPagado(User $cliente, string $codigo, array $lineas, int $resto = 0): Order
+    {
+        $total = array_sum(array_map(static fn (array $l): int => $l[2] * $l[3], $lineas));
         $pedido = Order::create([
-            'user_id' => $cliente->id, 'code' => 'R-ENTRAD', 'status' => Order::STATUS_PAID,
-            'subtotal' => 1600, 'tax' => 0, 'total' => 1600, 'currency' => 'EUR', 'paid_at' => now(),
+            'user_id' => $cliente->id, 'code' => $codigo, 'status' => Order::STATUS_PAID,
+            'subtotal' => $total, 'tax' => 0, 'total' => $total, 'currency' => 'EUR', 'paid_at' => now(),
         ]);
-        $pedido->items()->create(['ticket_type_id' => $tipo->id, 'slot_id' => $fiesta->slot_id, 'quantity' => 2, 'unit_price' => 800, 'seats' => 2]);
+        foreach ($lineas as [$tipo, $franja, $cantidad, $precio]) {
+            $linea = $pedido->items()->create(['ticket_type_id' => $tipo->id, 'slot_id' => $franja, 'quantity' => $cantidad, 'unit_price' => $precio, 'seats' => $cantidad]);
+        }
+        if ($resto > 0) {
+            $pedido->adjustments()->create([
+                'order_item_id' => $linea->id, 'type' => OrderAdjustment::TYPE_DEPOSIT_SPLIT, 'amount_cents' => $resto,
+                'currency' => 'EUR', 'reason' => 'deposit_split', 'applied_by' => $cliente->id,
+            ]);
+        }
+        $this->cobro($pedido, $total - $resto);
 
         return $pedido;
+    }
+
+    private function cobro(Order $pedido, int $importe): void
+    {
+        Payment::create([
+            'payable_type' => $pedido->getMorphClass(), 'payable_id' => $pedido->id, 'provider' => 'redsys', 'amount' => $importe,
+            'currency' => 'EUR', 'status' => Payment::STATUS_PAID, 'paid_at' => now(), 'gateway_order' => '17'.$pedido->id.'0001',
+        ]);
     }
 
     /** @return array<string, int> filas por tabla de lo que un correo podría escribir */

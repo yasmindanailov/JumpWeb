@@ -29,11 +29,12 @@ class EmailTextsPageTest extends TestCase
     use MountsAParty;
     use RefreshDatabase;
 
-    private const CORREO = 'order_confirmation';
+    /** El correo de ejemplo: uno con un PÁRRAFO que lleva el número del pedido y un asunto que también (`{code}`). */
+    private const CORREO = 'order_payment_declined';
 
-    private const INTRO = 'emails.order_confirmation.intro';
+    private const INTRO = 'emails.order_declined.intro';
 
-    private const ASUNTO = 'emails.order_confirmation.subject';
+    private const ASUNTO = 'emails.order_declined.subject';
 
     protected function setUp(): void
     {
@@ -114,7 +115,7 @@ class EmailTextsPageTest extends TestCase
             ->actingAs($this->con(['emails.edit_texts']))
             ->test(EmailTexts::class)
             ->set('textos.es.'.self::INTRO, 'Sin el código del pedido')
-            ->set('textos.es.'.self::ASUNTO, 'Asunto propio {code} {day}')
+            ->set('textos.es.'.self::ASUNTO, 'Asunto propio {code}')
             ->call('guardar')
             ->assertHasErrors(['textos.es.'.self::INTRO]);
 
@@ -279,7 +280,7 @@ class EmailTextsPageTest extends TestCase
         $pagina = Livewire::withQueryParams(['correo' => self::CORREO])
             ->actingAs($this->con(['emails.edit_texts']))
             ->test(EmailTexts::class)
-            ->set('textos.es.'.self::ASUNTO, '**Asunto** propio {code} {day}')
+            ->set('textos.es.'.self::ASUNTO, '**Asunto** propio {code}')
             ->call('guardar')
             ->assertHasErrors(['textos.es.'.self::ASUNTO]);
 
@@ -294,7 +295,7 @@ class EmailTextsPageTest extends TestCase
     {
         // Una fila que hoy no pasaría las reglas (la negrita en el asunto, de antes de la regla) no sale: la lista la cuenta
         // «desfasada» y su bloque lo dice. Es el mismo filtro que el cargador.
-        MailText::query()->create(['key' => self::ASUNTO, 'locale' => 'es', 'text' => '**Asunto** propio {code} {day}']);
+        MailText::query()->create(['key' => self::ASUNTO, 'locale' => 'es', 'text' => '**Asunto** propio {code}']);
         $editor = $this->con(['emails.edit_texts']);
         $desfasados = static fn (): int => collect(Livewire::actingAs($editor)->test(EmailTexts::class)->instance()->tipos())
             ->flatMap(static fn (array $t) => $t['items'])->firstWhere('correo', self::CORREO)['desfasados'];
@@ -304,7 +305,7 @@ class EmailTextsPageTest extends TestCase
             ->assertSee('Desfasado: sale el de fábrica');
 
         // CONTROL: la misma fila sin la negrita está al día.
-        MailText::query()->where('key', self::ASUNTO)->update(['text' => 'Asunto propio {code} {day}']);
+        MailText::query()->where('key', self::ASUNTO)->update(['text' => 'Asunto propio {code}']);
         $this->assertSame(0, $desfasados());
     }
 

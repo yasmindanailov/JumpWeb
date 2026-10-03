@@ -48,19 +48,21 @@ class MailTextCatalogTest extends TestCase
         $fantasmas = [];
         $compartidas = [];
         $total = 0;
-        foreach (MailTextCatalog::CORREOS as $correo => [$clase]) {
-            $suya = (string) realpath((string) (new \ReflectionClass($clase))->getFileName());
-            $propia = $fuentes[$suya] ?? '';
+        foreach (array_keys(MailTextCatalog::CORREOS) as $correo) {
+            // Lo SUYO: su notificación y los compositores que pintan parte de sus textos por ella (`MailReservation`, la R2b).
+            $suyas = array_map(static fn (string $clase): string => (string) realpath((string) (new \ReflectionClass($clase))->getFileName()), MailTextCatalog::compositores($correo));
+            $propia = implode("\n", array_map(static fn (string $f): string => $fuentes[$f] ?? '', $suyas));
             foreach (MailTextCatalog::claves($correo) as $clave) {
                 $total++;
                 $ultimo = substr($clave, (int) strrpos($clave, '.') + 1);
-                // La cabecera deriva `.badge`, `.headline` y `.preheader` de su grupo (`BrandedMailMessage::hero`).
-                $deCabecera = in_array($ultimo, ['badge', 'headline', 'preheader'], true) && str_contains($propia, 'hero(');
+                // La cabecera deriva `.badge`, `.headline` —y sus variantes, `headline_grupo`— y `.preheader` de su grupo
+                // (`BrandedMailMessage::hero`); que de verdad se pinten lo mide el censo (`MailPreviewsTest`).
+                $deCabecera = ($ultimo === 'badge' || $ultimo === 'preheader' || str_starts_with($ultimo, 'headline')) && str_contains($propia, 'hero(');
                 if (! str_contains($propia, "'{$clave}'") && ! $deCabecera) {
                     $fantasmas[] = $clave;
                 }
                 foreach ($fuentes as $fichero => $codigo) {
-                    if ($fichero !== $suya && str_contains($codigo, "'{$clave}'")) {
+                    if (! in_array($fichero, $suyas, true) && str_contains($codigo, "'{$clave}'")) {
                         $compartidas[] = "{$clave} (también en {$fichero})";
                     }
                 }
@@ -80,7 +82,7 @@ class MailTextCatalogTest extends TestCase
             // Fragmentos sueltos: el nombre de reserva de un producto borrado (va también al ASUNTO) y los importes rotulados
             'emails.order_item_cancelled.product_fallback', 'emails.mixed_party_surcharge.amount_discount',
             'emails.mixed_party_surcharge.amount_surcharge',
-            'emails.order_confirmation.greeting', 'emails.order_declined.reason_prefix', // lo que no se pinta
+            'emails.order_declined.greeting', 'emails.order_declined.reason_prefix', // lo que no se pinta
             'emails.verify_pending_email.action', // el botón del correo nuevo, que se fue con su enlace (A5, `#869`)
         ] as $clave) {
             $this->assertFalse(MailTextCatalog::esEditable($clave), $clave);

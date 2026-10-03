@@ -527,8 +527,9 @@ del brief, TAL CUAL (§0), sobre la plantilla de la R1. Fuente: `paginas/correos
 - **R2a · la base**: los siete bloques, los roles, los enlaces por nombre (con su regla en R1·T), los iconos que faltan
   (`calendar-plus`, `users`, `user-round-plus`, `footprints`, `pen-line`, `banknote`, `reply`, `graduation-cap`, `ruler`), el
   QR incrustado, el `.ics` firmado y el `replyTo`. Sin cambiar aún ningún correo: el banco los pinta con un correo de muestra.
-- **R2b · el 1 y el 1b** · **R2c · el 2** (un correo con sus dos pasos; `GuestFormRequest` se queda para el REENVÍO del
-  panel) · **R2d · el 3 (siempre) y el 4** · **R2e · el 5 y el 6**.
+- **R2b · el 1, el 1b y el 2** (03-10: la R2c entró aquí —los tres son `OrderConfirmation`, y dejar la fiesta en la
+  versión vieja habría obligado a condicionar cada texto viejo solo para el intermedio—; `GuestFormRequest` se queda para el
+  REENVÍO del panel) · **R2d · el 3 (siempre) y el 4** · **R2e · el 5 y el 6**.
 - **Después, el punto 3** del owner: la R3 (el 2b), C1 los comerciales, C2 las felicitaciones (su copy, con el owner antes)
   y la analítica (T6 cohortes → T7 pérdidas → T8 satisfacción).
 
@@ -556,6 +557,34 @@ queda algo); (b) el 2, UN correo (hoy dos); (c) en el 5, Bizum solo si el parque
   de lo que no es texto (`MailThemeTest`), con sus controles; las guardas de color, oscuro, radios y fuentes recorren ya un
   correo con todos los bloques (y cazaron tres radios a mano: los círculos, a píldora). Arnés `scripts/mutar-correo-r2a.sh`
   **12/12** con su control (82 s). La muestra, en Mailpit: `php scripts/banco-correos.php Muestra`.
+
+**🟦 La R2b, construida (03-10, en `wip/correos-r2a`; al ojo en Mailpit) — `#916`, del agente y vetable**:
+- **Un correo, tres CARAS** (`MailReservation::cara()`, la regla de «¡Reservado!» de la isla): una FIESTA si alguna reserva
+  lleva lista de invitados; un GRUPO si alguna es un pack sin ella (la excursión); si no, unas ENTRADAS. Su cabecera, en dos
+  grupos editables (`emails.reservado`, con chapa; `emails.fiesta_reservada`, sin ella, como el diseño) y su cuerpo en
+  `emails.reserva`, que compone `MailReservation` (lo usará la víspera, el 3). Los textos de la confirmación vieja se van.
+- **Cada reserva, su resguardo** (hoja, hora, «qué · cuántos» como Mi cuenta, número); el QR UNO, tras el primero (claro en la
+  fiesta: su trabajo son los pasos) y ADJUNTO; con varias reservas, «Reservado: N reservas · nº …», «¡Reservado!» y el plazo
+  sin fecha. El asunto lleva el MES (`#506`), aunque el 1 del diseño diga «sábado 26».
+- **El dinero, del LIBRO de cada reserva**: con señal (las tres condiciones de `shows_deposit_note`), «Señal pagada» y lo del
+  día en negrita, y en un grupo «15 € por persona»; pagada entera, «24 € pagados»; un libro que no cuadra, su frase («en
+  revisión») y ningún importe. El libro ENTERO solo si al pedido le pasó algo después (un reenvío tras un cambio, D-T3·5);
+  la línea «Fecha del cobro» se va (el diseño no la lleva; con historia, el libro la dice).
+- **«Antes de venir»** (no en la fiesta): quién firma (`#875`; la tarea de los menores solo sin ninguno ACTIVO), lo comprado
+  (el aviso del complemento; los calcetines, sus huellas) y lo de cada PRODUCTO —campo nuevo `ticket_types.before_visit`,
+  «Antes de venir» en el panel, una línea por cosa, con el icono `info`: las líneas de la excursión son de cada parque—, y
+  la hora con una sola reserva.
+- **«Si cambian los planes»**: el plazo de Mi cuenta, «y te devolvemos la señal» solo si el producto lo promete Y nació con
+  ella; pasado, que ya no se puede; WhatsApp con el mensaje de cambio ya escrito y el teléfono. Sin teléfono, sin sección.
+- **La fiesta, UN correo** (`#915`, b): sus pasos —la lista firmada, hasta el plazo de `GuestCountPolicy`, y la invitación
+  en el mismo formulario— y «Y si quieres» con los extras que el formulario ofrece; ni el pago (`RedsysReturnHandler`) ni el
+  pedido del mostrador mandan ya el formulario aparte. Responder llega al parque en el 1 y el 1b (el 2 no lo lleva).
+- Verificación: `ReservationMailTest` (7, con controles), el censo de la vista previa en sus NUEVE situaciones (`grupo`,
+  `varias`, `con_extras`, `fuera_de_plazo`…, `MailPreviewsTest`), el pago de una fiesta (`RedsysReturnHandlerTest`) y las 35
+  pruebas de la confirmación vieja re-apuntadas a lo que vigilaban; suite entera verde (6903). Arnés
+  `scripts/mutar-correo-r2b.sh` **12/12** con su control (99 s; su primer superviviente apretó «en revisión»). Muestras en
+  Mailpit: `SITUACION=<situación> php scripts/banco-correos.php OrderConfirmation` y `… MuestraR2b` (un grupo con señal y
+  varias reservas, montados en una transacción que se deshace).
 
 ## 7. Revisión y decisión
 
