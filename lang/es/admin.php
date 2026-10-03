@@ -5256,6 +5256,7 @@ return [
             'notice_title' => 'Aviso: título', 'notice_body' => 'Aviso: texto', 'contact' => 'Contacto', 'ignore' => 'Si no fuiste tú',
             'next_steps' => 'Próximos pasos', 'what_means' => 'Qué significa', 'retry' => 'Volver a intentarlo', 'hold_note' => 'Nota sobre la plaza',
             'validity' => 'Validez del código', 'for' => 'Para qué es el código', 'editable' => 'Se puede cambiar',
+            'code_label' => 'Etiqueta del código',
             'share' => 'Compartir', 'extras' => 'Extras', 'guests' => 'Invitados', 'honoree' => 'Quien cumple', 'honoree_unnamed' => 'Quien cumple (sin nombre)',
             'booking' => 'La reserva', 'when' => 'Cuándo', 'when_manual' => 'Cuándo (pedido del parque)', 'paid_at' => 'Fecha del cobro',
             'paid_confirmation' => 'Pago confirmado', 'paid_confirmation_guest_form' => 'Pago confirmado (con lista de invitados)',
@@ -5275,6 +5276,7 @@ return [
         // Lo que significa cada variable, debajo de cada bloque.
         'variables' => [
             'action' => '(lo que se confirma)', 'amount' => '(el importe)', 'code' => '(el código)', 'count' => '(cuántos)',
+            'digits' => '(las cifras del código)',
             'day' => '(el día)', 'done' => '(las hechas)', 'edad' => '(la edad)', 'hora' => '(la hora)', 'mes' => '(el mes)',
             'minutes' => '(los minutos)', 'name' => '(el nombre)', 'new' => '(lo nuevo)', 'nombre' => '(el nombre del niño)',
             'old' => '(lo de antes)', 'park' => '(el nombre del parque)', 'precio' => '(el precio)', 'product' => '(el producto)',

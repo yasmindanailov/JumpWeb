@@ -30,15 +30,13 @@ class MailMoldTest extends TestCase
 
     /**
      * Correos que NO pasan por el molde, cada uno con su motivo.
-     * ⚠️ Esta lista **solo encoge**.
+     * ⚠️ Esta lista **solo encoge**, y desde la R1c (`specs/correos-rediseno.md` §4.1.4) está VACÍA: los dos avisos al
+     * equipo (`ContactMessageMail`, `PaymentIncidentMail`), que se pintaban con vista propia, componen hoy un
+     * `BrandedMailMessage` y pintan la plantilla como todos.
+     *
+     * @var array<string, string>
      */
-    private const FUERA_DEL_MOLDE = [
-        // Los dos avisos internos al PARQUE: se pintan con vista propia (`emails/*.blade.php`), no
-        // con `MailMessage`, así que no tienen dónde encajar una cabecera. Su texto no se toca
-        // (regla del canvas) y su vestido sí se hizo en la T1.
-        'ContactMessageMail' => 'aviso interno con vista propia',
-        'PaymentIncidentMail' => 'aviso interno con vista propia',
-    ];
+    private const FUERA_DEL_MOLDE = [];
 
     /** @return array<string,string> nombre corto → código fuente */
     private function correos(): array

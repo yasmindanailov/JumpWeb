@@ -150,7 +150,9 @@ class BrandedMailMessage extends MailMessage
     public function hero(string $grupo, string $tono = 'info', array $datos = [], array $reemplazos = []): static
     {
         $this->viewData['hero'] = [
-            'chapa' => (string) __($grupo.'.badge'),
+            // La chapa, SOLO si el grupo la tiene (la R1c): los correos de código no llevan, como su diseño —el titular ya
+            // dice el hecho—. Sin clave, `__()` devolvería la CLAVE: falla hacia invisible, como el adelanto de abajo.
+            'chapa' => Lang::has($grupo.'.badge') ? (string) __($grupo.'.badge') : '',
             'tono' => $tono,
             'titulo' => (string) __($grupo.'.headline', $reemplazos),
             'datos' => $datos,
@@ -220,6 +222,25 @@ class BrandedMailMessage extends MailMessage
             'titulo' => $titulo,
             'tono' => $tono,
             'texto' => $texto,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * EL CÓDIGO de un solo uso (la R1c, `specs/correos-rediseno.md` §4.1.4; el `codigo()` del diseño, el 8 del zip (6)):
+     * grande, en la familia mono y sobre el sutil, con su etiqueta y la nota de su caducidad. Es la ACCIÓN de su correo —se
+     * escribe donde se pidió—, así que va donde iría el botón, y ninguno lleva los dos.
+     *
+     * ⚠️ El código NO es un texto del parque: no se edita y nadie lo puede quitar del correo. La etiqueta (`*_label`, sin
+     * negrita) y la nota (un párrafo: con ella) sí, desde el panel (R1·T).
+     */
+    public function code(string $etiqueta, string $codigo, ?string $nota = null): static
+    {
+        $this->viewData['code'] = [
+            'etiqueta' => $etiqueta,
+            'codigo' => $codigo,
+            'nota' => $nota,
         ];
 
         return $this;

@@ -174,6 +174,21 @@ class AvisameDeFechasEnvioTest extends TestCase
         $this->assertStringNotContainsString('por niño', $sin);
     }
 
+    /**
+     * El texto de FÁBRICA no promete horas (la R1c, `correos-rediseno.md` §4.1.4): desde `#873` las dos horas se reparten
+     * —saltan y luego meriendan— y cuánto dura cada parte es de cada parque (los «90 minutos» de PlayJump, en el panel).
+     */
+    public function test_the_factory_text_promises_no_hours(): void
+    {
+        foreach (['es', 'en', 'fr'] as $locale) {
+            foreach (['fiesta.cumple_mail.preheader', 'fiesta.cumple_mail.linea'] as $clave) {
+                $texto = (string) __($clave, [], $locale);
+                $this->assertSame(0, preg_match('/\d|horas|hours|heures/iu', $texto), "{$clave} ({$locale}) promete horas: «{$texto}»");
+            }
+        }
+        $this->assertStringContainsString('luego', (string) __('fiesta.cumple_mail.linea', [], 'es'), 'el orden sí: primero saltan y luego meriendan');
+    }
+
     public function test_the_panel_lists_them_and_deletes_on_request(): void
     {
         $this->seed(RoleSeeder::class);

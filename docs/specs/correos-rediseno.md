@@ -272,6 +272,17 @@ una sonda por tanda; los comerciales con su prueba de consentimiento y de «una 
   texto y AA en claro y en oscuro (`MailThemeTest`); el censo del panel (`MailTextCatalog`) con la etiqueta y la nota. Arnés
   `scripts/mutar-correo-r1c.sh`, por mutante y con su filtro (minutos). En `wip/correos-r1c`; al ojo del owner en Mailpit
   (`php scripts/banco-correos.php`): los dos avisos y los tres de código, en claro y en oscuro.
+- **🟦 Lo construido (03-10, en `wip/correos-r1c`; al ojo del owner en Mailpit)**: el bloque `codigo` (`MailDocument`, sus dos
+  vistas, la familia `mono` de `MailTheme`, el verbo `BrandedMailMessage::code()`) en sus tres correos, con `code_label`
+  («Código de :digits cifras», sin negrita por ser `*_label`) y la `validity` de siempre como nota; su titular, el texto de
+  la chapa de antes, y la chapa, fuera (`hero()` la pinta solo si su clave existe, como el adelanto). Los dos avisos al
+  equipo, con la plantilla y sus textos al diccionario (es, en, fr); el mensaje del visitante, un párrafo por línea.
+  ⚠️⚠️ **Medido al construir**: el `Mailable` se construye en la PETICIÓN, donde `SetLocale` pisa `config('app.locale')`
+  con el idioma del visitante; fijar ahí su idioma lo habría mandado en francés. Nada del idioma se decide al construirlo:
+  se pinta en la cola, en el del negocio (`StaffMailsTest` lo fija). El molde viejo, fuera; `MailMoldTest` sin excepciones;
+  el 12 sin horas. **Y de paso**: `scripts/banco-correos.php` saltaba 15 de sus correos desde la R1·T2 (los constructores
+  de la vista previa piden la «Situación»): arreglado, 32/32 a Mailpit. Verificación: `CodeMailsTest` 4, `StaffMailsTest` 3
+  y el 12 (todos con su control); suite 6882; Larastan y Pint limpios. Arnés escrito (13 y su control), sin correr.
 
 ### 4.2 Los textos, editables desde el panel — pregunta del owner (29-09), análisis sin código
 

@@ -64,14 +64,15 @@ return [
     ],
     /*
      * EL CÓDIGO PARA ENTRAR (A1 de `specs/acceso-con-codigo.md`, `#848`): solo el código, sin enlace. Va en el asunto
-     * —se lee en el aviso del móvil sin abrir el correo— y es el titular. La línea de adelanto no lleva la cifra de los
-     * minutos: el molde no le pasa reemplazos (la dice el cuerpo, desde `LoginCodes::TTL_MINUTES`).
+     * —se lee en el aviso del móvil sin abrir el correo— y en su BLOQUE, bajo el titular, sin chapa (la R1c, el 8 del zip
+     * (6)): `code_label` es su etiqueta y `validity`, su nota. La línea de adelanto no lleva la cifra de los minutos: el
+     * molde no le pasa reemplazos (la dice el cuerpo, desde `LoginCodes::TTL_MINUTES`).
      */
     'login_code' => [
         'subject' => ':code es tu código para entrar',
         'preheader' => 'Escríbelo donde lo pediste. Si no lo has pedido tú, ignora este correo.',
-        'badge' => 'Tu código para entrar',
-        'headline' => ':code',
+        'headline' => 'Tu código para entrar',
+        'code_label' => 'Código de :digits cifras',
         'validity' => 'Escríbelo en la pantalla donde lo pediste. Vale :minutes minutos y una sola vez.',
         'ignore' => 'Si no lo has pedido tú, ignora este correo: sin este código nadie puede entrar en tu cuenta.',
     ],
@@ -82,8 +83,8 @@ return [
     'confirmation_code' => [
         'subject' => ':code es tu código para confirmar',
         'preheader' => 'Escríbelo donde lo pediste. Si no lo has pedido tú, no se lo des a nadie.',
-        'badge' => 'Tu código para confirmar',
-        'headline' => ':code',
+        'headline' => 'Tu código para confirmar',
+        'code_label' => 'Código de :digits cifras',
         'for' => 'Es para :action.',
         'actions' => [
             'delete_account' => 'borrar tu cuenta',
@@ -109,12 +110,12 @@ return [
     'verify_pending_email' => [
         'ignore' => 'Si no has pedido este cambio, puedes ignorar este correo: tu cuenta seguirá usando el email anterior.',
     ],
-    // El mismo correo, con el CÓDIGO (A2b, `#856`): el código es el titular. Sin botón desde la A5.
+    // El mismo correo, con el CÓDIGO (A2b, `#856`), en su bloque (la R1c). Sin botón desde la A5.
     'verify_pending_email_code' => [
         'subject' => ':code es el código de tu nuevo email',
         'preheader' => 'Escríbelo donde pediste el cambio. Si no lo has pedido tú, ignora este correo.',
-        'badge' => 'Confirma tu nuevo email',
-        'headline' => ':code',
+        'headline' => 'Confirma tu nuevo email',
+        'code_label' => 'Código de :digits cifras',
         'intro' => 'Has pedido cambiar el email de tu cuenta a este. Escribe el código en la pantalla donde lo pediste.',
         'validity' => 'El código vale :minutes minutos y una sola vez.',
     ],
@@ -441,5 +442,43 @@ return [
         'badge' => 'Para pasárselo a los padres',
         'headline' => 'Un enlace para todos los padres',
         'notice_title' => 'Pásales este enlace',
+    ],
+    /*
+     * LOS DOS AVISOS AL EQUIPO (la R1c, `specs/correos-rediseno.md` §4.1.4): con la plantilla, en el idioma del PARQUE y NO
+     * editables desde el panel (la R1·T es de los correos al cliente). El de contacto lleva el `replyTo` de quien escribe.
+     */
+    'contact_message' => [
+        'subject_no_topic' => 'Nuevo mensaje de contacto',
+        'preheader' => 'Si respondes a este correo, le contestas directamente a quien escribe.',
+        'badge' => 'Mensaje de la web',
+        'headline' => 'Te escribe :name',
+        'name' => 'Nombre',
+        'email' => 'Correo',
+        'phone' => 'Teléfono',
+        'topic' => 'Tema',
+        'languages' => ['es' => 'español', 'en' => 'inglés', 'fr' => 'francés'],
+        'sent_from' => 'Enviado desde el formulario de contacto · idioma: :language · :when',
+    ],
+    'payment_incident' => [
+        'subject' => '⚠️ Incidencia de cobro (:label) — pedido :code',
+        'preheader' => 'Un cobro capturado en el banco que no casa con su reserva: hay que revisarlo.',
+        'badge' => 'Incidencia de cobro',
+        'headline' => ':title',
+        'labels' => ['duplicate' => 'cobro duplicado/huérfano', 'overbooked' => 'cobro tras caducar'],
+        'titles' => ['duplicate' => 'Cobro duplicado o huérfano', 'overbooked' => 'Cobro llegado tras caducar la reserva'],
+        'order' => 'Pedido',
+        'order_status' => 'Estado del pedido',
+        'gateway_order' => 'Nº de operación (pasarela)',
+        'payment_id' => 'ID de pago',
+        'source' => 'Origen',
+        'duplicate' => [
+            'title' => 'Procede una devolución manual',
+            'body' => 'El banco **capturó un cobro** que no casa con una reserva cumplible (el pedido ya estaba pagado por otro pago, cancelado o reembolsado). Es un **cargo duplicado o huérfano**: el cliente ha sido cobrado y procede una **devolución manual** desde el portal de Redsys.',
+        ],
+        'overbooked' => [
+            'title' => 'Hay que contactar al cliente',
+            'body' => 'Una notificación de pago **autorizada** llegó **después de que la reserva caducara**. El cobro se capturó en el banco, pero la plaza pudo cederse a otro cliente. Hay que **contactar al cliente** para reagendar o devolver el cobro.',
+        ],
+        'footer' => 'Aviso automático del sistema · queda registrado en el panel (Sistema → Incidencias) · :when',
     ],
 ];

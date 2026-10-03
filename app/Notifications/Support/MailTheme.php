@@ -79,6 +79,9 @@ final class MailTheme
     public const FUENTES = [
         'titular' => "'Arial Black','Helvetica Neue',Helvetica,Arial,sans-serif",
         'texto' => "'Helvetica Neue',Helvetica,Arial,sans-serif",
+        // La del código de un solo uso (la R1c, el `codigo()` del diseño): cifras de ancho fijo, que se leen y se copian sin
+        // confundir un 1 con una l.
+        'mono' => "ui-monospace,Menlo,Consolas,'Courier New',monospace",
     ];
 
     /** @var array<string, self> una por firma de hojas: ruta + `filemtime` */

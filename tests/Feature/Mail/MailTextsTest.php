@@ -140,20 +140,21 @@ class MailTextsTest extends TestCase
     public function test_a_row_that_would_not_pass_the_rules_today_is_not_painted(): void
     {
         // Lo que pidió plataforma (30-09): un correo de código no sale sin su código, ni aunque la fila llegue a la base por
-        // otra puerta. Y una negrita donde el molde no la pinta, tampoco: el cargador aplica las reglas de GUARDAR.
-        MailText::query()->create(['key' => 'emails.login_code.headline', 'locale' => 'es', 'text' => 'Tu código']);
-        MailText::query()->create(['key' => 'emails.login_code.subject', 'locale' => 'es', 'text' => '**{code}** para entrar']);
+        // otra puerta (desde la R1c el código va en su bloque, que no se edita; el ASUNTO lo sigue llevando). Y una negrita
+        // donde el molde no la pinta, tampoco: el cargador aplica las reglas de GUARDAR.
+        MailText::query()->create(['key' => 'emails.login_code.subject', 'locale' => 'es', 'text' => 'Tu código para entrar']);
+        MailText::query()->create(['key' => 'emails.login_code.code_label', 'locale' => 'es', 'text' => '**Código** de {digits} cifras']);
         $this->invalidar();
 
-        $this->assertSame('482 913', trans('emails.login_code.headline', ['code' => '482 913'], 'es'));
-        $this->assertStringNotContainsString('**', trans('emails.login_code.subject', ['code' => '482 913'], 'es'));
+        $this->assertSame('482-913 es tu código para entrar', trans('emails.login_code.subject', ['code' => '482-913'], 'es'));
+        $this->assertSame('Código de 6 cifras', trans('emails.login_code.code_label', ['digits' => 6], 'es'));
 
         // CONTROL: las mismas filas, en regla, sí se pintan.
-        MailText::query()->where('key', 'emails.login_code.headline')->update(['text' => 'Código: {code}']);
         MailText::query()->where('key', 'emails.login_code.subject')->update(['text' => '{code} para entrar']);
+        MailText::query()->where('key', 'emails.login_code.code_label')->update(['text' => 'Tu código, de {digits} cifras']);
         $this->invalidar();
-        $this->assertSame('Código: 482 913', trans('emails.login_code.headline', ['code' => '482 913'], 'es'));
-        $this->assertSame('482 913 para entrar', trans('emails.login_code.subject', ['code' => '482 913'], 'es'));
+        $this->assertSame('482-913 para entrar', trans('emails.login_code.subject', ['code' => '482-913'], 'es'));
+        $this->assertSame('Tu código, de 6 cifras', trans('emails.login_code.code_label', ['digits' => 6], 'es'));
     }
 
     public function test_a_row_for_a_key_outside_the_catalog_is_never_painted(): void

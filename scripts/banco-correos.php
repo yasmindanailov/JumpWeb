@@ -19,10 +19,14 @@
  */
 
 use App\Domain\Identity\Models\User;
+use App\Mail\ContactMessageMail;
+use App\Mail\PaymentIncidentMail;
 use App\Notifications as N;
 use App\Notifications\Support\MailPreviews;
 use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Mail\Mailable;
 use Illuminate\Notifications\Notification as Correo;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
@@ -37,13 +41,24 @@ if (($idioma = getenv('IDIOMA')) !== false && $idioma !== '') {
 }
 
 // Los del cliente, de la fuente de la vista previa; el del EQUIPO, que no está en su catálogo, aquí. El nombre, el de la clase.
-/** @var array<string, Closure(): (Correo|string)> */
+/** @var array<string, Closure(): (Correo|Mailable|string)> */
 $correos = ['GoogleBusinessLocationChanged' => static fn () => new N\GoogleBusinessLocationChanged('Ficha nueva', 'Ficha de antes', 'Ana')];
 // El idioma del cliente elige el caso cuando el correo trae el suyo (la copia de una autorización: una firma en ese idioma).
 $locale = (string) ($cliente->locale ?: config('app.locale'));
+// ⚠️ Con su tercer argumento, la «Situación» de la vista previa (R1·T2, `#809`): `null` es el caso de siempre. Sin él, quince
+// correos se saltaban con «Too few arguments» (medido al construir la R1c, el 03-10).
 foreach (MailPreviews::constructores() as $clave => $crear) {
-    $correos[Str::studly($clave)] = static fn () => $crear($cliente, $locale);
+    $correos[Str::studly($clave)] = static fn () => $crear($cliente, $locale, null);
 }
+// Los dos avisos al EQUIPO (la R1c, §4.1.4): `Mailable` y no notificaciones, con datos de EJEMPLO (nada de la base).
+$correos['ContactMessageMail'] = static fn () => new ContactMessageMail([
+    'name' => 'Ana Ruiz', 'email' => 'ana@example.com', 'phone' => '600 11 22 33', 'topic' => 'groups',
+    'message' => "Somos un colegio.\n¿Podemos venir un jueves de mayo con 40 niños?", 'locale' => 'fr',
+]);
+$correos['PaymentIncidentMail'] = static fn () => new PaymentIncidentMail([
+    'kind' => 'duplicate', 'action' => 'refund', 'order_id' => 0, 'order_code' => 'R-7K2P4', 'order_status' => 'paid',
+    'payment_id' => 0, 'gateway_order' => '0000600031', 'source' => 'notification',
+]);
 
 $enviados = $fallos = 0;
 foreach ($correos as $nombre => $crear) {
@@ -52,6 +67,13 @@ foreach ($correos as $nombre => $crear) {
     }
     try {
         $correo = $crear();
+        if ($correo instanceof Mailable) {
+            Mail::to($cliente->email)->sendNow($correo);   // sin la cola, como el resto
+            $enviados++;
+            echo "  ✓ {$nombre}\n";
+
+            continue;
+        }
         if (! $correo instanceof Correo) {
             $fallos++;
             echo "  ✗ {$nombre}: no hay caso en la base local ({$correo})\n";

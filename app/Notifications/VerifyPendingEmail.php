@@ -51,10 +51,15 @@ class VerifyPendingEmail extends Notification implements ChoosesRecipient, Hides
 
         return (new BrandedMailMessage($this))
             ->subject(__('emails.verify_pending_email_code.subject', ['code' => $code]))
-            ->hero('emails.verify_pending_email_code', 'warn', [], ['code' => $code])
+            ->hero('emails.verify_pending_email_code', 'warn')
             ->line(__('emails.verify_pending_email_code.intro'))
-            ->line(__('emails.verify_pending_email_code.validity', ['minutes' => LoginCodes::TTL_MINUTES]))
-            ->line(__('emails.verify_pending_email.ignore'));
+            // El código en su bloque (la R1c), como el de entrar.
+            ->code(
+                __('emails.verify_pending_email_code.code_label', ['digits' => LoginCodes::LENGTH]),
+                $code,
+                __('emails.verify_pending_email_code.validity', ['minutes' => LoginCodes::TTL_MINUTES]),
+            )
+            ->outro(__('emails.verify_pending_email.ignore'));
     }
 
     /** @return list<string> */

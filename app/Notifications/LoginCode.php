@@ -20,10 +20,11 @@ use Illuminate\Notifications\Notification;
  * `defer()`. Es `ShouldQueue` igualmente (`PAY-14`): quien lo notificara por el camino normal lo encolaría, que es lo
  * seguro; el envío inmediato es una decisión del flujo que lo pide, escrita allí.
  *
- * ⚠️ El código viaja en el asunto (se lee en el aviso del móvil sin abrir el correo: la cola de la puerta) y como titular,
- * PARTIDO en dos grupos de tres con guion, «482-913», para dictarlo y copiarlo (`LoginCodes::shown()`, la forma de los
- * tres correos con código); el servidor acepta las dos (`LoginCodes::consume()`). En la
- * copia del registro de correos salientes va tapado ({@see HidesSecretsInCopy}).
+ * ⚠️ El código viaja en el asunto (se lee en el aviso del móvil sin abrir el correo: la cola de la puerta) y en su BLOQUE
+ * (la R1c, el 8 del zip (6): la cabecera dice «Tu código para entrar» y el código va grande y en mono, debajo), PARTIDO en
+ * dos grupos de tres con guion, «482-913», para dictarlo y copiarlo (`LoginCodes::shown()`, la forma de los tres correos
+ * con código); el servidor acepta las dos (`LoginCodes::consume()`). En la copia del registro de correos salientes va
+ * tapado ({@see HidesSecretsInCopy}).
  */
 class LoginCode extends Notification implements HidesSecretsInCopy, ShouldQueue
 {
@@ -45,10 +46,14 @@ class LoginCode extends Notification implements HidesSecretsInCopy, ShouldQueue
 
         return (new BrandedMailMessage($this))
             ->subject(__('emails.login_code.subject', ['code' => $code]))
-            // Sin RESGUARDO, como el resto de los de cuenta: el código ES el titular.
-            ->hero('emails.login_code', 'info', [], ['code' => $code])
-            ->line(__('emails.login_code.validity', ['minutes' => LoginCodes::TTL_MINUTES]))
-            ->line(__('emails.login_code.ignore'));
+            // Sin RESGUARDO, como el resto de los de cuenta: el hecho es el código, en su bloque.
+            ->hero('emails.login_code', 'info')
+            ->code(
+                __('emails.login_code.code_label', ['digits' => LoginCodes::LENGTH]),
+                $code,
+                __('emails.login_code.validity', ['minutes' => LoginCodes::TTL_MINUTES]),
+            )
+            ->outro(__('emails.login_code.ignore'));
     }
 
     /**

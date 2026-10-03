@@ -117,24 +117,14 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Markdown Mail Settings
+    | Sin Markdown (la R1c del rediseño, `specs/correos-rediseno.md` §4.1.4)
     |--------------------------------------------------------------------------
     |
-    | Tema CSS de los correos generados por `MailMessage` / Markdown mail.
-    | `brand` (en `resources/views/vendor/mail/html/themes/`) replica
-    | los tokens del sistema visual de la web: bg crema, fg casi negro,
-    | acento naranja (zona Jump). Coherente con la marca, sin dependencias.
-    | Personalización futura desde el panel admin: paleta editable
-    | (`docs/07-PANEL-ADMIN.md`, decisión #102).
+    | Ningún correo del producto pasa por el Markdown de Laravel: todos pintan
+    | la plantilla del diseño (`BrandedMailMessage::VISTAS`, sus bloques en
+    | `resources/views/correo/`), también los dos avisos al equipo. El tema
+    | `brand` y las vistas publicadas de `vendor/mail` se retiraron con ella.
     |
     */
-
-    'markdown' => [
-        'theme' => 'brand',
-
-        'paths' => [
-            resource_path('views/vendor/mail'),
-        ],
-    ],
 
 ];

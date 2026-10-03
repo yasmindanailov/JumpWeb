@@ -39,6 +39,13 @@ class MailInboxLineTest extends TestCase
     private const TOPE_ADELANTO = 85;
 
     /**
+     * Los correos SIN chapa, a propósito (la R1c, `specs/correos-rediseno.md` §4.1.4): los de CÓDIGO, como el 8 del zip (6)
+     * —el titular ya dice el hecho y el código va en su bloque—. ⚠️ Esta lista solo encoge, y su caso exige que de verdad no
+     * la lleven: una chapa olvidada aquí sería una pieza que nadie mira.
+     */
+    private const SIN_CHAPA = ['emails.login_code', 'emails.confirmation_code', 'emails.verify_pending_email_code'];
+
+    /**
      * Los grupos del diccionario que gobiernan un correo, LEÍDOS DE LA FUENTE y no de una lista a
      * mano: una lista escrita aquí envejece en silencio, y un correo nuevo tiene que entrar solo.
      *
@@ -95,11 +102,17 @@ class MailInboxLineTest extends TestCase
      */
     public function test_every_mail_has_its_inbox_pieces_in_the_three_languages(): void
     {
-        $faltan = [];
+        $faltan = $sobran = [];
         foreach ($this->grupos() as $notificacion => $grupo) {
+            $sinChapa = in_array($grupo, self::SIN_CHAPA, true);
             foreach (['es', 'en', 'fr'] as $loc) {
                 foreach (['preheader', 'badge', 'headline', 'subject'] as $pieza) {
-                    if (! Lang::has($grupo.'.'.$pieza, $loc, false)) {
+                    $hay = Lang::has($grupo.'.'.$pieza, $loc, false);
+                    if ($pieza === 'badge' && $sinChapa) {
+                        if ($hay) {
+                            $sobran[] = "$notificacion ($loc): $grupo.badge";
+                        }
+                    } elseif (! $hay) {
                         $faltan[] = "$notificacion ($loc): $grupo.$pieza";
                     }
                 }
@@ -107,6 +120,8 @@ class MailInboxLineTest extends TestCase
         }
 
         $this->assertSame([], $faltan, "piezas de bandeja sin escribir:\n".implode("\n", $faltan));
+        $this->assertSame([], $sobran, "chapas en correos que no la llevan (SIN_CHAPA):\n".implode("\n", $sobran));
+        $this->assertSame(self::SIN_CHAPA, array_values(array_intersect(self::SIN_CHAPA, $this->grupos())), 'SIN_CHAPA nombra un grupo que ya no es de ningún correo');
     }
 
     /**

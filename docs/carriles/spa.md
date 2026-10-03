@@ -68,7 +68,8 @@ portada y no cuenta nada hasta la v2.0.0.
    tandas, mudada verbatim a `CARRIL-SPA.md` §9 (02-10).
    ▶ **Lo siguiente: la R1c de los correos** («retomar» 2; su «al detalle», `correos-rediseno.md` §4.1.4).
 2. ▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4; `#789`, `#800`→`#804`)**: ✅ R1a, R1b y **R1·T** en `main` (la
-   R1·T revisada: §4.2.2; su sonda y el medidor de bloques, `CARRIL-SPA` §8 (26)). Del zip (6) (`#861`): el 8, «482-913 es tu
+   R1·T revisada: §4.2.2; su sonda y el medidor de bloques, `CARRIL-SPA` §8 (26)). 🟦 **R1c HECHA en `wip/correos-r1c`**
+   (03-10, §4.1.4; 32/32 en Mailpit). ▶ Su OJO y, con permiso, `mutar-correo-r1c.sh`; después, `main`. Del zip (6) (`#861`): el 8, «482-913 es tu
    código para entrar» sin botón; «Quién firma el descargo» en el 1 y el 3 (la isla ya lo dice, `#875`:
    «menores a tu cargo», nunca «tus hijos»; lo mío, las dos líneas del 1, el 3 y lo que diga el cajón); las dos horas (90 + 30; y las de `lang/*/fiesta.php`,
    `preheader` y `linea`: Z6e `#873`). ✅ **La R1·T2** (`#809`:

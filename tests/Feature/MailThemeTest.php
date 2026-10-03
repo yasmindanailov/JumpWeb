@@ -144,6 +144,8 @@ class MailThemeTest extends TestCase
             ->line('**Uno** dos.')
             ->line(new HtmlString('Porque sí. <a href="https://x.test/baja">Baja</a>'))
             ->notice('Ojo', 'Esto importa.', $tono)
+            // El código (la R1c): ningún correo lo lleva con un botón, pero el recorrido tiene que ver los dos.
+            ->code('Código de 6 cifras', '482-913', 'Vale **10** minutos.')
             ->action('Ver', 'https://example.test/x')
             ->line('Cierre.')
             ->render();
@@ -241,10 +243,16 @@ class MailThemeTest extends TestCase
 
     // ── El motor ─────────────────────────────────────────────────────────────────────────────────
 
-    /** El tema de Markdown sigue activo: lo usan los dos avisos internos (`Mail/`) hasta la R1c. */
-    public function test_brand_theme_is_active_in_mail_config(): void
+    /**
+     * Sin Markdown en ningún sitio (la R1c): el tema `brand` y las vistas publicadas de `vendor/mail` se retiraron con los
+     * dos avisos al equipo ya en la plantilla. (Sustituye a la guarda de que el tema seguía activo «hasta la R1c».)
+     */
+    public function test_no_mail_paints_with_the_markdown_mold_any_more(): void
     {
-        $this->assertSame('brand', config('mail.markdown.theme'));
+        // ⚠️ Sin el bloque en `config/mail.php`, Laravel pone el suyo de fábrica (`default`): lo que no vuelve es el NUESTRO.
+        $this->assertNotSame('brand', config('mail.markdown.theme'), 'el tema `brand` de config/mail.php ha vuelto');
+        $this->assertDirectoryDoesNotExist(resource_path('views/vendor/mail'), 'las vistas del Markdown de Laravel han vuelto');
+        $this->assertFileDoesNotExist(resource_path('views/vendor/notifications/email.blade.php'));
     }
 
     public function test_the_mold_paints_with_the_template_and_not_with_markdown(): void

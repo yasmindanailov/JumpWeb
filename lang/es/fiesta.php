@@ -383,12 +383,15 @@ return [
         'para_cumple' => 'Es para :n, que cumple. Escribe su nombre y sus apellidos como los pondrías en un documento.',
     ],
     // «EL CUMPLE SE ACERCA» (`avisame-de-fechas.md` §4.3, `#750`; el correo nº 12 del mockup): comercial, solo con la casilla.
+    // ⚠️ SIN cifra de horas (la R1c, `correos-rediseno.md` §4.1.4): desde `#873` las dos horas se reparten —saltan y luego
+    // meriendan— y los minutos de cada parte son de cada parque. El orden vale en cualquiera; los «90 minutos» de PlayJump, en el
+    // panel (el texto es editable, R1·T).
     'cumple_mail' => [
         'subject' => ':nombre cumple :edad en :mes: ¿lo celebramos aquí?',
         'badge' => 'Su cumple',
         'headline' => 'El cumple de :nombre, resuelto',
-        'preheader' => 'Dos horas saltando, merienda y regalos. Tú solo traes a los invitados.',
-        'linea' => 'Dos horas a su ritmo, con monitores; merienda para cada niño, mesa reservada y regalos. Los padres, tranquilos.',
+        'preheader' => 'Saltan, meriendan y se llevan regalos. Tú solo traes a los invitados.',
+        'linea' => 'Primero saltan en su zona, con monitores, y luego, merienda para cada niño; mesa reservada y regalos. Los padres, tranquilos.',
         'desde' => 'Desde :precio por niño, y solo pagas los que vengan.',
         'pronto' => 'Los fines de semana cercanos se llenan pronto: mira los días libres.',
         'boton' => 'Ver días libres',

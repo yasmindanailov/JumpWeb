@@ -18,8 +18,8 @@ use Illuminate\Contracts\Support\Htmlable;
  *
  * ▶ **Los bloques de la R1a son los que usan los 28 hoy** —cabecera, resguardo de filas, texto, aviso, botón, línea y
  * pie— y uno de paso, `marcado`, para el HTML que un correo compone él mismo (el libro del pedido, la ficha de producto,
- * los enlaces de baja de los dos comerciales). QR, pasos, lista, sección… nacen con su primer consumidor (R2, C1): una
- * pieza no se declara antes que su consumidor (`#503`).
+ * los enlaces de baja de los dos comerciales). La R1c suma el `codigo`, con sus tres consumidores (los correos de código).
+ * QR, pasos, lista, sección… nacen con su primer consumidor (R2, C1): una pieza no se declara antes que su consumidor (`#503`).
  *
  * ⚠️ **Todo se ESCAPA**, y el único formato que se entiende es la negrita `**así**`, la que ya escribía
  * `CustomerAccountCreated`: antes cada línea pasaba por Markdown y un `_` o un `*` de un dato del cliente (un correo con
@@ -32,6 +32,7 @@ final class MailDocument
         'cabecera' => 'cabecera',
         'resguardo' => 'hecho',
         'texto' => 'hecho',
+        'codigo' => 'accion',
         'boton' => 'accion',
         'aviso' => 'detalle',
         'linea' => 'detalle',
@@ -133,6 +134,16 @@ final class MailDocument
                 'titulo' => (string) ($data['notice']['titulo'] ?? ''),
                 'texto' => (string) ($data['notice']['texto'] ?? ''),
                 'tono' => self::TONOS[$data['notice']['tono'] ?? 'info'] ?? 'info',
+            ];
+        }
+
+        // El CÓDIGO de un solo uso (la R1c): la acción de su correo, en el sitio del botón —ninguno lleva los dos—.
+        if (is_array($data['code'] ?? null)) {
+            $bloques[] = [
+                'tipo' => 'codigo',
+                'etiqueta' => (string) ($data['code']['etiqueta'] ?? ''),
+                'codigo' => (string) ($data['code']['codigo'] ?? ''),
+                'nota' => is_string($data['code']['nota'] ?? null) && $data['code']['nota'] !== '' ? $data['code']['nota'] : null,
             ];
         }
 

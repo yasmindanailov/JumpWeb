@@ -4324,6 +4324,7 @@ return [
             'notice_title' => '提示：标题', 'notice_body' => '提示：内容', 'contact' => '联系方式', 'ignore' => '如果不是你本人',
             'next_steps' => '后续步骤', 'what_means' => '含义', 'retry' => '再试一次', 'hold_note' => '名额说明',
             'validity' => '验证码有效期', 'for' => '验证码用途', 'editable' => '可以修改',
+            'code_label' => '验证码标签',
             'share' => '分享', 'extras' => '附加项目', 'guests' => '宾客', 'honoree' => '寿星', 'honoree_unnamed' => '寿星（无名字）',
             'booking' => '预订', 'when' => '时间', 'when_manual' => '时间（乐园下单）', 'paid_at' => '付款日期',
             'paid_confirmation' => '付款已确认', 'paid_confirmation_guest_form' => '付款已确认（含宾客名单）',
@@ -4342,6 +4343,7 @@ return [
         ],
         'variables' => [
             'action' => '（要确认的操作）', 'amount' => '（金额）', 'code' => '（代码）', 'count' => '（数量）',
+            'digits' => '（验证码位数）',
             'day' => '（日期）', 'done' => '（已完成的）', 'edad' => '（年龄）', 'hora' => '（时间）', 'mes' => '（月份）',
             'minutes' => '（分钟）', 'name' => '（名字）', 'new' => '（新的）', 'nombre' => '（孩子的名字）',
             'old' => '（原来的）', 'park' => '（乐园名称）', 'precio' => '（价格）', 'product' => '（产品）',
