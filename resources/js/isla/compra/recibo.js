@@ -68,19 +68,21 @@ export function resumenDeLaCesta(quote, { textos = {}, locale = 'es', fiesta = t
 /**
  * El RECIBO de «Pagar» (`PjcPagar`): cada línea con su cantidad cambiable, el complemento por cantidad (los
  * calcetines) con la suya, el resto de complementos que el servidor resolvió, y el total. Sin calcetines, la línea
- * que los ofrece. El `id` de cada fila dice qué se cambia: `l{index}` la gente, `a{index}-{producto}` los pares.
+ * que los ofrece. El `id` de cada fila dice qué se cambia, por su PRODUCTO (con varias líneas, la posición no dice cuál
+ * es cuál): `l{producto}` la gente de esa línea, `a{línea}-{complemento}` los pares.
  *
  * De una FIESTA (T3e·5): el menú elegido va en el rótulo del pack («Pack Kids · Menú 1») si no cuesta nada, y en su
  * propia fila si cuesta (su importe es del servidor: sumarlo al precio por niño sería componer dinero); debajo, la
  * señal y lo que queda para el parque.
  *
  * ⚠️ Las cantidades que se ven son las del PEDIDO (cambian al pulsar, como en la pantalla 0) y los importes, los del
- * presupuesto (llegan cuando el servidor responde). Solo la línea del pedido se cambia aquí: es la única de la cesta
- * de la isla (`linea.js`), y cualquier otra se pintaría sin control.
+ * presupuesto (llegan cuando el servidor responde). Se cambian la línea del pedido y, desde la K3 de `otra-zona.md`
+ * (§4.3), las AÑADIDAS (`pedido.otras`), cada una con su − / + y «Quitar» (D2-A, `#878`: la primera no se quita, es el
+ * pedido); cualquier otra se pintaría sin control. «Añadir otra entrada» (`otraEntrada`), solo en ENTRADAS (`entradas`).
  *
- * @param {{quote: object|null, pedido: object|null, textos?: object, locale?: string}} e
+ * @param {{quote: object|null, pedido: object|null, textos?: object, locale?: string, entradas?: boolean}} e
  */
-export function reciboDe({ quote, pedido, textos = {}, locale = 'es' }) {
+export function reciboDe({ quote, pedido, textos = {}, locale = 'es', entradas = false }) {
     const p = pares(textos);
     const calcetin = pedido?.calcetin ?? null;
     const elegidos = new Set((pedido?.elecciones ?? []).map((x) => Number(x.product_id)));
@@ -89,16 +91,18 @@ export function reciboDe({ quote, pedido, textos = {}, locale = 'es' }) {
 
     for (const l of quote?.lines ?? []) {
         const delPedido = pedido !== null && pedido !== undefined && l.product_id === pedido.fila;
+        const anadida = delPedido ? null : (pedido?.otras ?? []).find((o) => o.fila === l.product_id) ?? null;
         const u = unidad(textos, l.is_pack === true, pedido?.fiesta !== false);
         const menu = (l.addons ?? []).find((a) => elegidos.has(Number(a.product_id))) ?? null;
         const menuEnElRotulo = menu !== null && Number(menu.subtotal_cents) === 0;
 
         lineas.push({
-            id: `l${l.index}`,
+            id: `l${l.product_id}`,
             label: menuEnElRotulo ? `${l.product_name} · ${menu.product_name}` : l.product_name,
             sub: l.unit_price_cents === null ? '' : textoCon(textos, 'compra.pagar.precio_por', { precio: euros(l.unit_price_cents, locale), unidad: u.uno }),
             value: euros(l.subtotal_cents, locale),
-            control: delPedido ? { n: pedido.n, min: pedido.minimo ?? 1, max: Math.max(pedido.maximo ?? pedido.n, pedido.n), ...u } : null,
+            control: delPedido ? { n: pedido.n, min: pedido.minimo ?? 1, max: Math.max(pedido.maximo ?? pedido.n, pedido.n), ...u }
+                : (anadida ? { n: anadida.n, min: anadida.minimo ?? 1, max: Math.max(anadida.maximo ?? 20, anadida.n), ...u, quitar: true } : null),
         });
 
         for (const a of l.addons ?? []) {
@@ -107,7 +111,7 @@ export function reciboDe({ quote, pedido, textos = {}, locale = 'es' }) {
 
             conCalcetines ||= esCalcetin;
             lineas.push({
-                id: `a${l.index}-${a.product_id}`,
+                id: `a${l.product_id}-${a.product_id}`,
                 label: a.product_name,
                 sub: esCalcetin ? textoCon(textos, 'compra.pagar.precio_el', { precio: euros(calcetin.price_cents, locale), unidad: p.uno }) : '',
                 value: euros(a.subtotal_cents, locale),
@@ -126,7 +130,7 @@ export function reciboDe({ quote, pedido, textos = {}, locale = 'es' }) {
         nota: hoyPagas(online, quote?.total_cents, { textos, locale })
             ? textoCon(textos, pedido?.fiesta === false ? 'compra.pagar.senal_visita' : 'compra.pagar.senal', { senal: euros(online, locale), resto: euros(resto, locale) })
             : '',
-        otraEntrada: false,
+        otraEntrada: entradas === true,
         calcetines: calcetin && ! conCalcetines ? {
             texto: `${texto(textos, 'compra.cuando.pregunta_calcetines')} ${textoCon(textos, 'compra.cuando.pista_calcetines', { precio: euros(calcetin.price_cents, locale) })}`,
             ...p,
@@ -152,9 +156,24 @@ export function marcasDe(urls) {
         });
 }
 
-/** Qué cambia una fila del recibo: la gente (`{ n }`) o los pares (`{ cal }`). */
-export function cambioDe(id, n) {
-    return String(id).startsWith('l') ? { n } : { cal: n };
+/**
+ * Qué cambia una fila del recibo (su `id`, por producto): la gente de la línea del pedido (`{ n }`), la de una AÑADIDA
+ * (`{ otras }`, la K3 de `otra-zona.md`) o los pares (`{ cal }`).
+ */
+export function cambioDe(id, n, pedido = null) {
+    const s = String(id);
+
+    if (! s.startsWith('l')) return { cal: n };
+    const fila = Number(s.slice(1));
+
+    return ! pedido || fila === pedido.fila ? { n } : { otras: (pedido.otras ?? []).map((o) => (o.fila === fila ? { ...o, n } : o)) };
+}
+
+/** «Quitar» una línea AÑADIDA (D2-A, `#878`; su `id`, `l{producto}`): el pedido sin ella. La del pedido no se quita. */
+export function quitarDe(id, pedido) {
+    const fila = Number(String(id).slice(1));
+
+    return { otras: (pedido?.otras ?? []).filter((o) => o.fila !== fila) };
 }
 
 /**

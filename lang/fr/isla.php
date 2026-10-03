@@ -188,6 +188,8 @@ return [
             'edades_de_a' => 'De :min à :max ans',
             'edades_desde' => 'À partir de :min ans',
             'edades_hasta' => 'Jusqu’à :max ans',
+            'ya_en_la_reserva' => 'Déjà dans la réservation',
+            'se_suma' => 'Déjà dans la réservation : s’y ajoute',
             'mas_fechas' => 'Plus de dates',
             'menos_fechas' => 'Fermer le calendrier',
             'quitar' => 'Retirer',
@@ -244,6 +246,7 @@ return [
             'hora_libre' => 'Choisissez l’une de ces heures pour continuer',
             'otra' => ':zona n’est pas disponible ce jour-là : retirez-le ou choisissez un autre jour',
             'otra_tiempo' => 'Cette durée de :zona n’est pas disponible ce jour-là : choisissez-en une autre',
+            'tiempo' => 'Choisissez la durée pour continuer',
         ],
         'datos' => [
             'banda' => 'Vos coordonnées',

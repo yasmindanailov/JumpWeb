@@ -1,7 +1,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { calcetinDe, cargarDiasDeFilas, cargarFichas, horaDelMotor, horaQueCabe, primerDia } from './oferta.js';
-import { borradorDeIntencion, sigueSola } from './intencion.js';
+import { borradorDeIntencion, conOtras, sigueSola } from './intencion.js';
 
 /**
  * Lo que la pantalla 0 de la isla pide al motor (T3e de `specs/isla-y-landing-nueva.md` §4.10). La API se dobla:
@@ -122,6 +122,27 @@ describe('la intención de la landing', () => {
             [{ type: 'linea', continuar: true }, { type: 'fiesta', continuar: true }, { type: 'fiesta' }, { type: 'product', continuar: true }, null].map(sigueSola),
             [true, true, false, false, false],
         );
+    });
+});
+
+describe('las líneas añadidas del borrador, en LISTA (K3 de `otra-zona.md` §4.3)', () => {
+    test('un borrador nuevo nace sin ninguna', () => {
+        assert.deepEqual(borradorDeIntencion(null, []).otras, []);
+        assert.equal('otra' in borradorDeIntencion(null, []), false);
+    });
+
+    test('uno guardado con UNA `otra` (la K2: la vuelta de Google o del banco) se lee igual, con lo que no guardaba', () => {
+        const viejo = { zona: 'kids', fila: 100, otra: { fila: 103, n: 2 } };
+
+        assert.deepEqual(conOtras(viejo), { zona: 'kids', fila: 100, otras: [{ fila: 103, n: 2, extras: [], elecciones: {} }] });
+        assert.deepEqual(conOtras({ zona: 'kids', otra: null }).otras, []);
+    });
+
+    test('la lista se queda, sin las que no son nada; sin borrador, el mismo', () => {
+        const otras = [{ fila: 103, n: 1, extras: [{ product_id: 140, quantity: 1 }], elecciones: {} }, { fila: 'x', n: 1 }, null];
+
+        assert.deepEqual(conOtras({ zona: 'kids', otras }).otras, [otras[0]]);
+        assert.equal(conOtras(null), null);
     });
 });
 

@@ -31,7 +31,7 @@ defineProps({
     // Sin «Tus datos» delante (`#785`): con qué cuenta se compra («Reservas como Ana»), pegado al titular.
     como: { type: String, default: '' },
 });
-const emit = defineEmits(['cantidad', 'otra', 'calcetines']);
+const emit = defineEmits(['cantidad', 'quitar', 'otra', 'calcetines']);
 const { t } = useTextos();
 </script>
 
@@ -61,14 +61,21 @@ const { t } = useTextos();
             :note="nota"
         >
             <template #control="{ linea }">
-                <CantidadCompra
-                    :model-value="linea.control.n"
-                    :min="linea.control.min"
-                    :max="linea.control.max"
-                    :uno="linea.control.uno"
-                    :varios="linea.control.varios"
-                    @update:model-value="emit('cantidad', linea.id, $event)"
-                />
+                <!-- Una línea AÑADIDA (K3 de `otra-zona.md`) lleva «Quitar» junto a su − / + (D2-A, `#878`); la del pedido, no. -->
+                <div :style="{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }">
+                    <CantidadCompra
+                        :model-value="linea.control.n"
+                        :min="linea.control.min"
+                        :max="linea.control.max"
+                        :uno="linea.control.uno"
+                        :varios="linea.control.varios"
+                        @update:model-value="emit('cantidad', linea.id, $event)"
+                    />
+                    <EnlaceSistema
+                        v-if="linea.control.quitar"
+                        @click="emit('quitar', linea.id)"
+                    >{{ t('compra.cuando.quitar') }}</EnlaceSistema>
+                </div>
             </template>
         </ResumenPrecio>
         <EnlaceSistema

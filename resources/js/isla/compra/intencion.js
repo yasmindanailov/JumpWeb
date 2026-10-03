@@ -9,10 +9,24 @@
 
 /**
  * El borrador de la pantalla 0 en blanco: sin zona, una persona, sin calcetines (`startCuando` del diseño), sin ningún
- * otro complemento (`extras`, la lista de `complementos.js`, `#880`) y sin nada elegido en los grupos de elección más allá
- * del menú de una fiesta (`elecciones`, `#881`).
+ * otro complemento (`extras`, la lista de `complementos.js`, `#880`), sin nada elegido en los grupos de elección más allá
+ * del menú de una fiesta (`elecciones`, `#881`) y sin líneas añadidas (`otras`, la otra zona y «Añadir otra entrada»: K3 de
+ * `otra-zona.md` §4.3, una LISTA).
  */
-export const borradorVacio = () => ({ modo: 'nuevo', zona: null, elegirZona: false, dia: null, hora: null, fila: null, n: 1, cal: 0, extras: [], elecciones: {}, otra: null });
+export const borradorVacio = () => ({ modo: 'nuevo', zona: null, elegirZona: false, dia: null, hora: null, fila: null, n: 1, cal: 0, extras: [], elecciones: {}, otras: [] });
+
+/**
+ * El borrador con sus líneas añadidas en LISTA (`otras`, K3 de `otra-zona.md` §4.3): uno guardado con la forma de antes —una
+ * sola `otra`, la K2; la vuelta de Google o del banco lo trae de la pestaña— se lee igual, y cada línea con sus complementos
+ * y sus grupos aunque no los guardara. Sin borrador, el mismo.
+ */
+export function conOtras(borrador) {
+    if (! borrador || typeof borrador !== 'object') return borrador;
+    const { otra, ...resto } = borrador;
+    const otras = Array.isArray(borrador.otras) ? borrador.otras : (otra ? [otra] : []);
+
+    return { ...resto, otras: otras.filter((o) => Number.isInteger(o?.fila)).map((o) => ({ extras: [], elecciones: {}, ...o })) };
+}
 
 /**
  * El de una FIESTA (T3e·5, `fiesta.js`): sin edad, sin día —una fiesta no nace «para hoy»—, los niños en el mínimo del

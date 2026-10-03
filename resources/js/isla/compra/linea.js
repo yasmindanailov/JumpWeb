@@ -17,7 +17,7 @@
  */
 import { addLine } from '../../sidebar/cart.js';
 import { lineProblems } from '../../sidebar/line-problems.js';
-import { t } from '../../sidebar/i18n.js';
+import { t, tp } from '../../sidebar/i18n.js';
 
 /**
  * Las líneas de la OTRA ZONA del pedido (L2, `otra-zona.md` §4.1): sin la fila del pedido y sin repetir fila —la misma fila
@@ -209,6 +209,46 @@ export async function meterLineas({ api, lineas, cartStore, messages = {} }) {
  */
 export function meterLinea({ api, pedido, resueltos, resueltosOtras = {}, cartStore, messages = {} }) {
     return meterLineas({ api, lineas: lineasDe(pedido, resueltos, resueltosOtras), cartStore, messages });
+}
+
+/**
+ * El «no» del servidor a una línea del pedido (`meterLineas`): el de la suya, tal cual; el de una línea AÑADIDA, con el nombre
+ * de su zona —«En JUMP ya no queda sitio a esa hora…» si es la hora, o el aviso del motor detrás de su zona— (K2 de
+ * `otra-zona.md`; desde la K3 también al cambiarla en «Pagar» o al añadirla con «Añadir otra entrada»).
+ */
+export function avisoDeLinea(r, pedido, { productos = [], textos = {} } = {}) {
+    if (! r?.fila || r.fila === pedido?.fila) return r?.aviso ?? '';
+    const zona = (Array.isArray(productos) ? productos : []).find((p) => p.id === r.fila)?.zone?.name ?? '';
+
+    return r.horaLlena ? tp(textos, 'compra.cuando.otra_llena', { zona }) : tp(textos, 'compra.cuando.aviso_otra', { zona, aviso: r.aviso });
+}
+
+/**
+ * Las líneas añadidas del PEDIDO, como las lleva el BORRADOR de la pantalla 0 (K3 de `otra-zona.md` §4.3): tras cambiarlas en
+ * «Pagar», volver atrás enseña sus tarjetas tal cual (su fila, su gente, sus complementos y, por grupo, lo elegido).
+ */
+export const borradorDeOtras = (otras) => (Array.isArray(otras) ? otras : []).map((o) => ({
+    fila: o.fila,
+    n: o.n,
+    extras: (o.extras ?? []).map((x) => ({ product_id: x.product_id, quantity: x.quantity })),
+    elecciones: Object.fromEntries((o.elecciones ?? []).map((c) => [c.group, String(c.product_id)])),
+}));
+
+/**
+ * **«Añadir otra entrada»** (K3 de `otra-zona.md` §4.3; `continuarCuando` del mockup): el cambio del pedido con la línea
+ * nueva. Su fila ya está —la del pedido o una añadida—: es más gente en ella (la misma fila no es otra línea, `otrasDe`);
+ * si no, una línea más, al final, con su justificante y lo elegido en ella.
+ *
+ * @param {object} pedido  el de ahora
+ * @param {{fila: number, n: number, extras?: Array, elecciones?: Array, guardian?: boolean|string}} nueva
+ */
+export function conNuevaLinea(pedido, nueva) {
+    const otras = Array.isArray(pedido?.otras) ? pedido.otras : [];
+
+    if (nueva.fila === pedido.fila) return { n: pedido.n + nueva.n };
+    if (otras.some((o) => o.fila === nueva.fila)) return { otras: otras.map((o) => (o.fila === nueva.fila ? { ...o, n: o.n + nueva.n } : o)) };
+
+    return { otras: [...otras, ...otrasDe(pedido.fila, [nueva]).otras] };
 }
 
 /**

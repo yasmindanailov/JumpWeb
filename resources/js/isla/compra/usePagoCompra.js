@@ -18,8 +18,8 @@ import { t } from '../../sidebar/i18n.js';
 import { useCardStore } from '../../sidebar/stores/card.js';
 import { cardImageUrl } from '../../sidebar/account/card.js';
 import { cajonHost } from '../../sidebar/host-bridge.js';
-import { complementosDe, conLaCesta, meterLinea, resolverOtras } from './linea.js';
-import { cambioDe } from './recibo.js';
+import { avisoDeLinea, borradorDeOtras, complementosDe, conLaCesta, meterLinea, resolverOtras } from './linea.js';
+import { cambioDe, quitarDe } from './recibo.js';
 import { destinoDeTarea } from './pasos.js';
 
 /** Los «no» de `POST /orders` que dicen que la HORA se llenó: la de una entrada y la de una fiesta. */
@@ -35,8 +35,10 @@ export function usePagoCompra({ flow, props, textos = {}, compra, enCola, alPaga
      * Rehace el pedido con otra gente u otros pares: los complementos RESUELTOS de nuevo por el servidor (los hay que
      * dependen de la cantidad) y sus líneas validadas y presupuestadas otra vez —también las de la otra zona (L2,
      * `otra-zona.md`), que van a la misma hora—. La cantidad se ve cambiar al momento —como en la pantalla 0— y el dinero,
-     * cuando llega; si el servidor dice que no, vuelve lo de antes. Con OTRA HORA es lo mismo, para todas (T3e·6: la que se
-     * elige tras llenarse la primera; D1-A, `#878`). Dice si el servidor lo aceptó.
+     * cuando llega; si el servidor dice que no, vuelve lo de antes —y el aviso nombra la zona de la línea que no cupo—. Con
+     * OTRA HORA es lo mismo, para todas (T3e·6: la que se elige tras llenarse la primera; D1-A, `#878`). Desde la K3, también
+     * la gente de una línea AÑADIDA, quitarla o sumar una («Añadir otra entrada»), y el borrador de la pantalla 0 lo sigue:
+     * volver atrás enseña lo mismo. Dice si el servidor lo aceptó.
      */
     async function rehacer(cambio) {
         const antes = compra.pedido;
@@ -57,19 +59,21 @@ export function usePagoCompra({ flow, props, textos = {}, compra, enCola, alPaga
 
         if (! r.ok) {
             compra.pedido = antes;
-            compra.aviso = r.aviso;
+            compra.aviso = avisoDeLinea(r, p, { productos: flow.catalogStore.products, textos });
 
             return false;
         }
 
         compra.pedido = conLaCesta(p, cartStore.lines);
-        Object.assign(compra.borrador, { n: compra.pedido.n, cal: p.cal, hora: p.hora });
+        Object.assign(compra.borrador, { n: compra.pedido.n, cal: p.cal, hora: p.hora, otras: borradorDeOtras(compra.pedido.otras) });
 
         return true;
     }
 
-    const cantidad = (id, n) => enCola(() => rehacer(cambioDe(id, n)));
+    const cantidad = (id, n) => enCola(() => rehacer(cambioDe(id, n, compra.pedido)));
     const calcetines = (n) => enCola(() => rehacer({ cal: n }));
+    // «Quitar» una línea añadida (D2-A, `#878`): el pedido sin ella, validado otra vez.
+    const quitar = (id) => enCola(() => rehacer(quitarDe(id, compra.pedido)));
 
     /**
      * «Pagar N € con tarjeta». ⚠️ `accept_terms` viaja SIEMPRE (`#692`·2, «Al pagar aceptas las condiciones»): el
@@ -187,5 +191,5 @@ export function usePagoCompra({ flow, props, textos = {}, compra, enCola, alPaga
         if (props.urls?.terms) window.open(props.urls.terms, '_blank', 'noopener');
     }
 
-    return { listo, qrSrc, salidas, rehacer, cantidad, calcetines, pagar, salir, reintentar, guardarQr, miQr, menores, tarea, escribir, condiciones };
+    return { listo, qrSrc, salidas, rehacer, cantidad, calcetines, quitar, pagar, salir, reintentar, guardarQr, miQr, menores, tarea, escribir, condiciones };
 }

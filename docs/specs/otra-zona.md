@@ -14,11 +14,11 @@
 - **Trampas**: (1) la cesta de la isla SUSTITUYE su línea porque el recibo no tenía «quitar» (`#692`, T3e·3): una
   línea más exige poder quitarla en «Pagar», y el mockup no lo trae (D2). (2) Cada línea se valida con las anteriores
   en `items` y la candidata FUERA (`cart.js::validateLine`), o compite consigo misma. (3) Los pesos, a ras de su techo:
-  la compra 204,81 de 206 y los pasos 56,17 de 57 (`SidebarBundleBudgetTest`, tras la K2·b, 02-10). (4) La hora
-  llena (`#822`) y la vuelta del banco, con dos líneas.
-- **Estado**: ✅ aprobada (`#878`). **K1 ✅ · K2 ✅** (02-10 noche, §4.6) · **K2·b ✅** (`#882`, §4.7: la tarjeta, una
-  entrada completa; visto bueno del owner, 03-10); sigue K3. ➕ `#881`: los grupos de elección, su modelo en la K1 y su
-  pregunta en la K2.
+  la compra 212,95 de 214 y los pasos bajo 57 (`SidebarBundleBudgetTest`, tras la K3, 03-10). (4) La hora llena
+  (`#822`) y la vuelta del banco, con dos líneas.
+- **Estado**: ✅ aprobada (`#878`). **K1 ✅ · K2 ✅** (§4.6) · **K2·b ✅** (`#882`, §4.7) · **K3 ✅** (03-10, §4.3: varias
+  líneas, «Pagar» y «Añadir otra entrada»; visto bueno del owner); sigue K4. ➕ `#881`: los grupos de elección, su modelo
+  en la K1 y su pregunta en la K2.
 - **Invariantes**: `PAY-12`, `PAY-20`, `AFORO-01`, `AFORO-02`, sin el `CRITICAL_RE`; del servidor, solo un dato de
   lectura en la ficha (`stay_minutes`, contrato 1.63.0, `#882`); la compra entera con la pasarela de pruebas (§6).
 
@@ -112,6 +112,31 @@ decide el mockup (`#767`).
   las añadidas (D2-A).
 - «Añadir otra entrada» abre la pantalla 0 en modo «otra» (día y hora fijos; «¿Qué zona?» solo con tres o más; «Cuánto
   tiempo»; «Cuántos») y «Continuar» suma la línea —o la cantidad, si es la misma fila— y vuelve a «Pagar».
+- **Al hacerla (03-10, K3; lo técnico, del agente, `#630`)**: (1) el borrador lleva una LISTA de líneas añadidas
+  (`otras`, no una `otra`): cada una es una tarjeta de la pantalla 0 (§4.7) y volver atrás no pierde nada —el mockup
+  rehacía el pedido desde la pantalla 0 y perdía lo añadido en «Pagar»—; un borrador guardado con la forma de antes (la
+  vuelta de Google o del banco) se lee igual. (2) «¿Qué zona?» con DOS zonas o más, no solo con tres: lo dicho al owner en
+  `#882` —«las mezclas dentro de una zona (un Jump de 1 h y otro de 2 h) las cubre la K3»—; de partida, la otra zona (el
+  mockup) y su tiempo parecido al de la primera línea (§4.7). (3) Su pie, el del pedido de ahora (el mockup); el precio de
+  la nueva, en sus opciones. (4) Si no cabe a esa hora, lo dice con el nombre de su zona; proponer las cercanas para
+  todas es la K4. (5) De partida, el tiempo parecido entre los que AÚN NO están en la reserva (quien pulsa quiere algo
+  nuevo); uno que ya está se puede elegir y suma gente a su línea («Ya está en la reserva: se suma a ella»). En las
+  tarjetas de la pantalla 0, en cambio, el tiempo que ya está se ve apagado («Ya está en la reserva»): allí no se suma.
+
+**K3, hecha (03-10; visto bueno del owner: «Está perfecto»).** El borrador con su LISTA (`intencion.js::conOtras`, que lee también la forma
+de antes); `otra-zona.js` con una tarjeta por línea —también de la zona del pedido—, lo que falta con su índice
+(`pjc-q-otra-<i>`, `pjc-q-otra-tiempo-<i>`; `falta.js` por prefijo), el porqué de una hora con la zona de la que no cabe y
+los tramos si ALGUNA estancia no coincide; `usePantallaCero`, lo de cada fila en mapas (`horasOtras`, `fichasOtras`…) y las
+acciones con su índice. «Pagar» (`recibo.js`): las filas por PRODUCTO (`l<id>`), cada línea con su − / +, «Quitar» en las
+añadidas (D2-A) y «Añadir otra entrada» en entradas; `usePagoCompra` cambia y quita cualquiera (`cambioDe`, `quitarDe`), el
+aviso nombra su zona (`linea.js::avisoDeLinea`) y el borrador lo sigue (`borradorDeOtras`). «Añadir otra entrada»:
+`otra-entrada.js` (puro) y `useOtraEntrada.js` (su ficha, su oferta a esa hora, los días que falten), «Continuar» rehace el
+pedido entero (`linea.js::conNuevaLinea`: otra línea o más gente en la suya). **Medido**: JS 1.807 (`otra-entrada.test.js`
+nuevo; cuatro mutaciones muerden: sin «Quitar», sin sumar a la suya, de partida lo que ya está y el tiempo ya en la reserva
+sin apagar), las guardas (la compra 204,81 → 212,95, techo 214); una sonda desechable a 390 y 1280, 14/14 —«Quitar» solo
+en la añadida, los totales = el presupuesto del servidor pedido aparte (29,60 €, 40,80 €, 47,20 €), de partida Jump 1 h, el
+mismo tiempo suma, la flecha vuelve sin cambiar nada y la pantalla 0 recuerda lo de «Pagar»—; K2·b 19/19, M1 12/12, M2
+13/13, M3 11/11, `sonda-conversion` 22/22 y `sonda-isla` 26/26.
 
 ### 4.4 La hora llena y la vuelta del banco
 - `#822` con varias líneas: las horas cercanas son las que caben para TODAS.

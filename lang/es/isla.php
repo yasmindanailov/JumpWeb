@@ -223,6 +223,10 @@ return [
             'edades_de_a' => 'De :min a :max años',
             'edades_desde' => 'Desde :min años',
             'edades_hasta' => 'Hasta :max años',
+            // K3: en una tarjeta, el tiempo que YA está en la reserva (el del pedido o el de otra tarjeta): más gente en la suya.
+            'ya_en_la_reserva' => 'Ya está en la reserva',
+            // K3: en «Añadir otra entrada», el tiempo que ya está en la reserva se puede elegir: suma gente a su línea.
+            'se_suma' => 'Ya está en la reserva: se suma a ella',
             // Bajo la tira de días, el calendario de meses para lo que ella no enseña (`#830`).
             'mas_fechas' => 'Más fechas',
             'menos_fechas' => 'Cerrar el calendario',
@@ -292,6 +296,7 @@ return [
             'hora_libre' => 'Elige una de estas horas para continuar',
             'otra' => ':zona no se vende ese día: quítala o elige otro día',
             'otra_tiempo' => 'Ese tiempo de :zona no se vende ese día: elige otro',
+            'tiempo' => 'Elige cuánto tiempo para continuar',
         ],
         'datos' => [
             'banda' => 'Tus datos',

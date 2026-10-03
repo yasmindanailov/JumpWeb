@@ -17,12 +17,14 @@ export const FALTA = Symbol('falta');
 /** La pregunta de la hora llena (`PantallaPerdida`): no es una `PreguntaCompra`, pero se marca igual. */
 export const PERDIDA = 'pjc-perdida';
 
-// De la pregunta de la pantalla 0 (`pantalla-cuando.js` y `fiesta.js::falta`) a su frase. `pjc-q-otra`: la tarjeta de la
-// OTRA ZONA cuando su zona no se vende ese día (K2 de `otra-zona.md`); `pjc-q-otra-tiempo`, su «¿Cuánto tiempo?» cuando
-// solo su tiempo no se vende (K2·b, `#882`). Las dos frases llevan `:zona`.
-const FRASES = {
-    'pjc-q-zona': 'zona', 'pjc-q-dia': 'dia', 'pjc-q-hora': 'hora', 'pjc-q-edad': 'edad', 'pjc-q-otra': 'otra', 'pjc-q-otra-tiempo': 'otra_tiempo',
-};
+// De la pregunta de la pantalla 0 (`pantalla-cuando.js` y `fiesta.js::falta`) a su frase.
+// `pjc-q-tiempo`: «Añadir otra entrada» sin un tiempo que se venda ese día (K3 de `otra-zona.md`).
+const FRASES = { 'pjc-q-zona': 'zona', 'pjc-q-dia': 'dia', 'pjc-q-hora': 'hora', 'pjc-q-edad': 'edad', 'pjc-q-tiempo': 'tiempo' };
+// Y de las tarjetas de las líneas añadidas, por su PREFIJO (`otra-zona.js`, una por línea desde la K3, con su índice):
+// `pjc-q-otra-<i>`, la tarjeta cuando su zona no se vende ese día (K2); `pjc-q-otra-tiempo-<i>`, su «¿Cuánto tiempo?»
+// cuando solo su tiempo no se vende (K2·b, `#882`). Las dos frases llevan `:zona`. La más larga, primero.
+const PREFIJOS = [['pjc-q-otra-tiempo-', 'otra_tiempo'], ['pjc-q-otra-', 'otra']];
+const claveDe = (falta) => FRASES[falta] ?? PREFIJOS.find(([p]) => typeof falta === 'string' && falta.startsWith(p) && /^\d+$/.test(falta.slice(p.length)))?.[1];
 
 /**
  * Lo que se MARCA por lo que falta: un dato de la reserva de un pack (`pjc-dato-<clave>`, `#839`) marca su bloque
@@ -35,7 +37,7 @@ export const preguntaDeFalta = (falta) => (typeof falta === 'string' && falta.st
  * nombra su frase (la de la otra zona, `:zona`).
  */
 export function textoDeFalta(falta, textos = {}, params = {}) {
-    const clave = preguntaDeFalta(falta) === 'pjc-q-datos' ? 'datos' : FRASES[falta];
+    const clave = preguntaDeFalta(falta) === 'pjc-q-datos' ? 'datos' : claveDe(falta);
 
     return clave ? textoCon(textos, `compra.falta.${clave}`, params) : '';
 }

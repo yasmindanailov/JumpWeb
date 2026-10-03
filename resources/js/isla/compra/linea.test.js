@@ -1,6 +1,9 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { complementosDe, conLaCesta, esHoraLlena, lineaDe, lineasDe, meterLinea, meterLineas, pedidoDe, resolverOtras, resolverOtrasConOferta } from './linea.js';
+import {
+    avisoDeLinea, borradorDeOtras, complementosDe, conLaCesta, conNuevaLinea, esHoraLlena, lineaDe, lineasDe, meterLinea, meterLineas, pedidoDe,
+    resolverOtras, resolverOtrasConOferta,
+} from './linea.js';
 
 /**
  * La línea de la compra de la isla (T3e·3 de `specs/isla-y-landing-nueva.md` §4.10): la cesta de la isla es SU
@@ -218,6 +221,34 @@ describe('la OTRA ZONA en el pedido (L2, `otra-zona.md` §4.1)', () => {
         }]]);
         assert.deepEqual(await resolverOtrasConOferta({ api, pedido: pedidoDe(borrador) }), { resueltos: {}, ofertas: {} });
         assert.equal(await resolverOtrasConOferta({ api: { post: async () => ({ ok: false }) }, pedido: p }), null);
+    });
+
+    test('K3: el «no» del servidor a una línea añadida, con el nombre de su zona; el de la suya, tal cual', () => {
+        const productos = [{ id: 103, zone: { name: 'JUMP' } }];
+        const textos = { compra: { cuando: { otra_llena: 'En :zona ya no queda sitio a esa hora.', aviso_otra: ':zona: :aviso' } } };
+        const p = pedidoDe(borrador, { otras: [jump] });
+
+        assert.equal(avisoDeLinea({ fila: 103, horaLlena: true, aviso: 'x' }, p, { productos, textos }), 'En JUMP ya no queda sitio a esa hora.');
+        assert.equal(avisoDeLinea({ fila: 103, horaLlena: false, aviso: 'Ya no se vende.' }, p, { productos, textos }), 'JUMP: Ya no se vende.');
+        assert.equal(avisoDeLinea({ fila: 100, aviso: 'El suyo.' }, p, { productos, textos }), 'El suyo.');
+        assert.equal(avisoDeLinea({ aviso: 'Sin fila.' }, p), 'Sin fila.');
+    });
+
+    test('K3: las añadidas del pedido, como las lleva el borrador (lo elegido por grupo, como lo guarda la tarjeta)', () => {
+        const otras = [{ fila: 104, n: 2, guardian: false, minimo: 1, maximo: null, extras: [{ product_id: 140, quantity: 1 }], elecciones: [{ group: 'menu', product_id: 7 }] }];
+
+        assert.deepEqual(borradorDeOtras(otras), [{ fila: 104, n: 2, extras: [{ product_id: 140, quantity: 1 }], elecciones: { menu: '7' } }]);
+        assert.deepEqual(borradorDeOtras(undefined), []);
+    });
+
+    test('K3: «Añadir otra entrada» —una línea más al final, o más gente en la suya si su tiempo ya estaba (la del pedido también)—', () => {
+        const p = pedidoDe(borrador, { otras: [jump] });
+
+        assert.deepEqual(conNuevaLinea(p, { fila: 104, n: 2, guardian: 'required', extras: [{ product_id: 140, quantity: 1 }] }).otras.map((o) => [o.fila, o.n, o.guardian, o.extras.length]), [
+            [103, 1, false, 0], [104, 2, true, 1],
+        ]);
+        assert.deepEqual(conNuevaLinea(p, { fila: 103, n: 2 }), { otras: [{ ...p.otras[0], n: 3 }] }, 'Jump 1 h otra vez: 3 en la suya');
+        assert.deepEqual(conNuevaLinea(p, { fila: 100, n: 1 }), { n: 3 }, 'el tiempo del pedido: más gente en él');
     });
 
     test('las cantidades del pedido, las de la CESTA, leídas por PRODUCTO (con varias líneas, `lines[0]` ya no es la suya)', () => {

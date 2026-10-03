@@ -115,13 +115,13 @@ export function preguntaCalcetines(calcetin, n, { textos = {}, locale = 'es' } =
  * La PANTALLA 0 de las entradas, «Cuándo y cuántos» (`PjcCuando`): sus props y la descripción del paso.
  *
  * @param {object} e  el estado, todo plano:
- *   `borrador` ({ zona, elegirZona, dia, hora, fila, n, cal, extras, otra, evento }) · `productos` (el catálogo tal cual) ·
+ *   `borrador` ({ zona, elegirZona, dia, hora, fila, n, cal, extras, otras, evento }) · `productos` (el catálogo tal cual) ·
  *   `precios` ({ [id]: días ofrecidos }) · `horas` (las ofrecidas de la fila y el día) · `cargandoHoras` ·
  *   `maximo` (lo que cabe a esa hora, o `null`) · `minimo` · `umbral` (el «casi llena» del panel) ·
  *   `calcetin` (el complemento por cantidad de la fila, o `null`) · `complementos` (las filas de los demás, hechas:
  *   `complementos.js`) · `ficha` (la de la fila: su tope y lo que pide al reservar) · `linea` (la que resolvió el
- *   servidor) · `otra` (lo de la OTRA ZONA, hecho: `otra-zona.js::otraDeLaPantalla`, K2 de `otra-zona.md`) ·
- *   `cotizacion` (el presupuesto de TODAS las líneas, con la otra zona; sin ella, `null`) · `textos` · `locale` · `hoy`.
+ *   servidor) · `otra` (lo de las líneas añadidas, hecho: `otra-zona.js::otraDeLaPantalla`, K2 y K3 de `otra-zona.md`) ·
+ *   `cotizacion` (el presupuesto de TODAS las líneas, con alguna añadida; sin ninguna, `null`) · `textos` · `locale` · `hoy`.
  */
 export function pantallaCuando(e) {
     const { borrador: b, textos, locale } = e;
@@ -137,12 +137,13 @@ export function pantallaCuando(e) {
         ? { uno: t('compra.cuando.persona'), varios: t('compra.cuando.personas') }
         : { uno: t('compra.cuando.entrada'), varios: t('compra.cuando.entradas') };
     const datos = esPack ? datosDeReserva(e.ficha, b.evento) : [];
-    // La otra zona (K2): sin ella, nada; con ella, su tarjeta, si se vende ese día, en qué horas cabe y, si los grupos salen
-    // a horas distintas, a cuál sale el del pedido (`finPrincipal`, `#882`).
-    const otra = e.otra ?? { enlace: '', tarjeta: null, bloquea: false, falta: null, resumen: null, finPrincipal: null, noCabe: () => false, notaHora: '', zona: '' };
+    // Las líneas añadidas (K2; varias desde la K3): sin ellas, nada; con ellas, sus tarjetas, si se venden ese día, en qué horas
+    // caben y, si los grupos salen a horas distintas, a cuál sale el del pedido (`finPrincipal`, `#882`).
+    const otra = e.otra ?? { enlace: '', tarjetas: [], bloquea: false, falta: null, faltaZona: '', resumen: null, finPrincipal: null, porQueNoCabe: () => '' };
+    const conOtras = (b.otras ?? []).length > 0;
     const listo = Boolean(fila && b.dia && b.hora) && datosCompletos(datos) && ! otra.bloquea;
-    // Con la otra zona, el dinero es el del presupuesto de TODAS las líneas (`PAY-12`): hasta que llega, sin total.
-    const dinero = b.otra ? (e.cotizacion ?? null) : null;
+    // Con líneas añadidas, el dinero es el del presupuesto de TODAS (`PAY-12`): hasta que llega, sin total.
+    const dinero = conOtras ? (e.cotizacion ?? null) : null;
 
     const props = {
         // Sin entradas, la zona no está en «¿Qué zona?»: su nombre, tal cual (el de una excursión no es «Entrada …»).
@@ -161,9 +162,12 @@ export function pantallaCuando(e) {
         dias: fila ? tiraDias(e.precios?.[fila.id], { hoy: e.hoy, locale, textos, elegido: b.dia }) : [],
         calendario: fila ? calendarioDeTira(e.precios?.[fila.id], { dia: b.dia, hoy: e.hoy, locale }) : null,
         dia: b.dia,
-        // Las horas en las que caben TODAS las líneas, cada una en su zona (D1-A): donde la otra no cabe, apagada y con su porqué.
-        horas: horasDelSelector(e.horas, { gente: b.n, textos })
-            .map((h) => (h.disabled || ! otra.noCabe(h.time) ? h : { ...h, disabled: true, note: otra.notaHora })),
+        // Las horas en las que caben TODAS las líneas, cada una en su zona (D1-A): donde alguna no cabe, apagada y con su porqué.
+        horas: horasDelSelector(e.horas, { gente: b.n, textos }).map((h) => {
+            const nota = h.disabled ? '' : otra.porQueNoCabe(h.time);
+
+            return nota ? { ...h, disabled: true, note: nota } : h;
+        }),
         hora: horaCorta(b.hora),
         cargando: Boolean(e.cargandoHoras),
         filas: opcionesDeTiempo(filas, { precios: e.precios, dia: b.dia, elegida: fila, hora: b.hora, linea: e.linea, textos, locale }),
@@ -173,8 +177,9 @@ export function pantallaCuando(e) {
         // Los demás complementos que se venden al reservar (`#880`; la hora extra, en el hueco que el diseño le dejó):
         // llegan hechos de `complementos.js`.
         complementos: e.complementos ?? [],
-        // La OTRA ZONA (K2, `otra-zona.md`): su tarjeta o, sin ella, el enlace que la nombra (D3-B; `''`, ninguno).
-        otra: otra.tarjeta,
+        // Las líneas añadidas (K2; varias desde la K3, `otra-zona.md` §4.3): una tarjeta cada una o, sin ninguna, el enlace que
+        // nombra la otra zona (D3-B; `''`, ninguno).
+        otras: otra.tarjetas,
         umbral: e.umbral || 6,
         otraZona: otra.enlace,
     };
@@ -186,9 +191,9 @@ export function pantallaCuando(e) {
             + (otra.resumen ? ` + ${otra.resumen}` : '')
         : null;
     const sinContestar = datos.find((d) => d.required && d.valor.trim() === '');
-    const total = b.otra ? dinero?.total_cents : e.linea?.total_cents;
+    const total = conOtras ? dinero?.total_cents : e.linea?.total_cents;
     // Lo que se paga hoy, si no es todo (la señal de un pack): del presupuesto del servidor, de la línea o de todas.
-    const hoy = b.otra
+    const hoy = conOtras
         ? (dinero && dinero.online_amount_cents < dinero.total_cents ? dinero.online_amount_cents : null)
         : (e.linea?.has_deposit ? e.linea.deposit_cents : null);
 
@@ -196,12 +201,12 @@ export function pantallaCuando(e) {
         props,
         listo,
         // Lo PRIMERO que falta para continuar, por su `id` en la pantalla: a donde la capa lleva la vista (`ir-a.js`, el owner
-        // 28-09) al llegar con la selección hecha y al pulsar «Continuar» sin estar lista. De un dato, su CAMPO. La otra zona
-        // que no se vende ese día, su tarjeta (`pjc-q-otra`) o, si solo su tiempo, su «¿Cuánto tiempo?» (`pjc-q-otra-tiempo`,
-        // `#882`), con el nombre de su zona (`faltaZona`).
+        // 28-09) al llegar con la selección hecha y al pulsar «Continuar» sin estar lista. De un dato, su CAMPO. Una línea
+        // añadida que no se vende ese día, su tarjeta (`pjc-q-otra-<i>`) o, si solo su tiempo, su «¿Cuánto tiempo?»
+        // (`pjc-q-otra-tiempo-<i>`, `#882`), con el nombre de su zona (`faltaZona`).
         falta: listo ? null : (b.elegirZona && ! b.zona ? 'pjc-q-zona' : ! fila ? null : ! b.dia ? 'pjc-q-dia' : ! b.hora ? 'pjc-q-hora'
             : (sinContestar ? `pjc-dato-${sinContestar.key}` : (otra.falta ?? null))),
-        faltaZona: otra.zona ?? '',
+        faltaZona: otra.faltaZona ?? '',
         ck: {
             key: 'cuando',
             stepStrong: '',

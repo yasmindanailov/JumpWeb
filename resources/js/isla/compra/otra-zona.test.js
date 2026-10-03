@@ -39,7 +39,7 @@ const textos = {
             otra_no_cabe: 'En :zona no caben a esta hora',
             no_disponible: 'No se vende este día',
             ahorro: ':importe menos que dos de 1 hora',
-            edades_de_a: 'De :min a :max años', edades_desde: 'Desde :min años', edades_hasta: 'Hasta :max años',
+            edades_de_a: 'De :min a :max años', edades_desde: 'Desde :min años', edades_hasta: 'Hasta :max años', ya_en_la_reserva: 'Ya está en la reserva',
             extra_sin_hora: 'Elige la hora para saber si cabe.', extra_no: 'Ese día, a las :hora, no se puede añadir.',
         },
     },
@@ -164,104 +164,143 @@ describe('lo que pinta la pantalla 0', () => {
         ],
     };
     const conHora140 = [{ product_id: 140, note: '8,00 € por entrada que se queda', available: true }];
-    const pantalla = (b, extra = {}) => otraDeLaPantalla({ borrador: { zona: 'kids', dia: sab, hora: null, ...b }, productos, precios, textos, locale: 'es', ...extra });
+    // El pedido, Kids 2 horas (101), el sábado; sus líneas añadidas, en LISTA (K3).
+    const pantalla = (b, extra = {}) => otraDeLaPantalla({ borrador: { zona: 'kids', fila: 101, dia: sab, hora: null, otras: [], ...b }, productos, precios, textos, locale: 'es', ...extra });
+    const linea = (fila, n = 1, extras = []) => ({ fila, n, extras, elecciones: {} });
 
-    test('sin la otra: el enlace la NOMBRA con una sola zona que vende ese día (D3-B); sin ninguna, nada', () => {
-        const con = pantalla({ otra: null });
+    test('sin líneas añadidas: el enlace NOMBRA la otra zona si es una y vende ese día (D3-B); sin ninguna, nada', () => {
+        const con = pantalla({});
 
         assert.equal(con.enlace, '¿Alguien va a JUMP? Añádelo a la misma reserva');
-        assert.equal(con.tarjeta, null);
-        assert.equal(pantalla({ dia: dom, otra: null }).enlace, '', 'ese día no se vende: no se ofrece');
-        assert.equal(pantalla({ dia: null, otra: null }).enlace, '', 'sin día, nada que prometer');
+        assert.deepEqual(con.tarjetas, []);
+        assert.equal(pantalla({ dia: dom }).enlace, '', 'ese día no se vende: no se ofrece');
+        assert.equal(pantalla({ dia: null }).enlace, '', 'sin día, nada que prometer');
+        assert.equal(pantalla({ otras: [linea(103)] }).enlace, '', 'con una, las demás se añaden desde «Pagar» (K3)');
     });
 
     test('con dos zonas o más que venden ese día, el genérico', () => {
         const tres = [...productos, { id: 120, type: 'entry', name: 'Ninja · 1 hora', zone: { slug: 'ninja', name: 'NINJA' }, duration_min: 60 }];
 
-        assert.equal(otraDeLaPantalla({ borrador: { zona: 'kids', dia: sab, otra: null }, productos: tres, precios: { ...precios, 120: [{ date: sab, price_cents: 900 }] }, textos }).enlace,
+        assert.equal(otraDeLaPantalla({ borrador: { zona: 'kids', dia: sab, otras: [] }, productos: tres, precios: { ...precios, 120: [{ date: sab, price_cents: 900 }] }, textos }).enlace,
             '¿Alguien va a la otra zona? Añádelo a la misma reserva');
     });
 
-    test('con la otra: su tarjeta —su zona, para quién, sus tiempos con su precio de ese día, el elegido y su gente—', () => {
-        const v = pantalla({ otra: { fila: 103, n: 2, extras: [], elecciones: {} } });
+    test('con una: su tarjeta —su zona, para quién, sus tiempos con su precio de ese día, el elegido y su gente—', () => {
+        const v = pantalla({ otras: [linea(103, 2)] });
+        const [t0] = v.tarjetas;
 
         assert.equal(v.enlace, '');
-        assert.deepEqual([v.tarjeta.titulo, v.tarjeta.pista, v.tarjeta.noSeVende, v.tarjeta.fila, v.tarjeta.n], ['JUMP', 'Desde 8 años', false, '103', 2]);
-        assert.deepEqual(v.tarjeta.filas.map((f) => [f.value, f.title, espacios(f.price), f.disabled, espacios(f.highlight)]), [
+        assert.deepEqual([t0.indice, t0.titulo, t0.pista, t0.noSeVende, t0.fila, t0.n], [0, 'JUMP', 'Desde 8 años', false, '103', 2]);
+        assert.deepEqual(t0.filas.map((f) => [f.value, f.title, espacios(f.price), f.disabled, espacios(f.highlight)]), [
             ['103', 'Jump · 1 hora', '8 €', false, ''],
             ['104', 'Jump · 2 horas', '14 €', false, '2 € menos que dos de 1 hora'],
         ]);
         assert.equal(v.resumen, 'Jump · 1 hora · 2 entradas');
-        assert.deepEqual([v.bloquea, v.falta], [false, null]);
+        assert.deepEqual([v.bloquea, v.falta, v.faltaZona], [false, null, '']);
     });
 
     test('si su zona NO se vende ese día, la tarjeta lo dice en rojo y lo que falta es ella (sin quitarla a escondidas)', () => {
-        const v = pantalla({ dia: dom, otra: { fila: 103, n: 1 } });
+        const v = pantalla({ dia: dom, otras: [linea(103)] });
 
-        assert.deepEqual([v.bloquea, v.falta, v.tarjeta.pista, v.tarjeta.noSeVende], [true, 'pjc-q-otra', 'JUMP no se vende este día', true]);
-        assert.equal(pantalla({ dia: dom, otra: { fila: 103, n: 1 } }, { precios: { 100: [] } }).bloquea, false, 'sin sus días todavía, no se dice');
+        assert.deepEqual([v.bloquea, v.falta, v.faltaZona, v.tarjetas[0].pista, v.tarjetas[0].noSeVende], [true, 'pjc-q-otra-0', 'JUMP', 'JUMP no se vende este día', true]);
+        assert.equal(pantalla({ dia: dom, otras: [linea(103)] }, { precios: { 100: [] } }).bloquea, false, 'sin sus días todavía, no se dice');
     });
 
     test('si solo SU TIEMPO no se vende ese día, lo que falta es su «¿Cuánto tiempo?», con esa opción apagada', () => {
-        const v = pantalla({ dia: lun, otra: { fila: 104, n: 1 } });
+        const v = pantalla({ dia: lun, otras: [linea(104)] });
 
-        assert.deepEqual([v.bloquea, v.falta, v.tarjeta.noSeVende, v.tarjeta.pista], [true, 'pjc-q-otra-tiempo', false, 'Desde 8 años']);
-        assert.deepEqual(v.tarjeta.filas.map((f) => [f.value, f.disabled, f.description]), [['103', false, ''], ['104', true, 'No se vende este día']]);
+        assert.deepEqual([v.bloquea, v.falta, v.tarjetas[0].noSeVende, v.tarjetas[0].pista], [true, 'pjc-q-otra-tiempo-0', false, 'Desde 8 años']);
+        assert.deepEqual(v.tarjetas[0].filas.map((f) => [f.value, f.disabled, f.description]), [['103', false, ''], ['104', true, 'No se vende este día']]);
     });
 
     test('sus COMPLEMENTOS: los de SU ficha, menos los que se preguntan para todos; sin hora, esperan; nunca marcados', () => {
-        const b = { otra: { fila: 104, n: 1, extras: [], elecciones: {} } };
-        const sinHora = pantalla(b, { fichaOtra: ficha104, excluir: [110] }).tarjeta.complementos;
+        const b = { otras: [linea(104)] };
+        const sinHora = pantalla(b, { fichasOtras: { 104: ficha104 }, excluir: [110] }).tarjetas[0].complementos;
 
         assert.deepEqual(sinHora.map((c) => [c.id, c.forma, c.disponible, c.marcada, c.porQue, c.minutos]), [[140, 'si-no', false, false, 'Elige la hora para saber si cabe.', 60]]);
-        assert.deepEqual(pantalla(b, { fichaOtra: { ...ficha104, id: 103 }, excluir: [110] }).tarjeta.complementos, [], 'la ficha de OTRA fila (llegando) no pinta nada');
+        assert.deepEqual(pantalla(b, { fichasOtras: { 104: { ...ficha104, id: 103 } }, excluir: [110] }).tarjetas[0].complementos, [], 'la ficha de OTRA fila (llegando) no pinta nada');
     });
 
     test('con hora, lo que el servidor ofrece a esa hora: con su precio, y lo elegido, marcado', () => {
-        const v = pantalla({ hora: '11:00:00', otra: { fila: 104, n: 1, extras: [{ product_id: 140, quantity: 1 }], elecciones: {} } },
-            { fichaOtra: ficha104, excluir: [110], conHoraOtra: conHora140 });
-        const [hora140] = v.tarjeta.complementos;
+        const conLaSuya = [linea(104, 1, [{ product_id: 140, quantity: 1 }])];
+        const v = pantalla({ hora: '11:00:00', otras: conLaSuya }, { fichasOtras: { 104: ficha104 }, excluir: [110], conHoraOtras: { 104: conHora140 } });
+        const [hora140] = v.tarjetas[0].complementos;
 
         assert.deepEqual([hora140.disponible, hora140.marcada, hora140.n, hora140.precio], [true, true, 1, '8,00 € por entrada que se queda']);
-        assert.equal(pantalla({ hora: '11:00:00', otra: { fila: 104, n: 1, extras: [{ product_id: 140, quantity: 1 }] } }, { fichaOtra: ficha104, excluir: [110], conHoraOtra: [] })
-            .tarjeta.complementos[0].porQue, 'Ese día, a las 11:00, no se puede añadir.', 'a esa hora no cabe: apagada y diciendo por qué');
+        assert.equal(pantalla({ hora: '11:00:00', otras: conLaSuya }, { fichasOtras: { 104: ficha104 }, excluir: [110], conHoraOtras: { 104: [] } })
+            .tarjetas[0].complementos[0].porQue, 'Ese día, a las 11:00, no se puede añadir.', 'a esa hora no cabe: apagada y diciendo por qué');
     });
 
     test('si los grupos salen a horas DISTINTAS, cada uno dice la suya; si coinciden, nada que decir', () => {
         const kids2h = { duracion: 120, complementos: [] };
-        const conHora = (otra, principal = kids2h, extra = {}) => pantalla({ hora: '11:00:00', otra }, { principal, fichaOtra: ficha104, excluir: [110], conHoraOtra: conHora140, ...extra });
+        const conHora = (otras, principal = kids2h) => pantalla({ hora: '11:00:00', otras }, { principal, fichasOtras: { 104: ficha104 }, excluir: [110], conHoraOtras: { 104: conHora140 } });
 
-        const una = conHora({ fila: 103, n: 1 });
+        const una = conHora([linea(103)]);
         assert.deepEqual([plano(una.resumen), una.finPrincipal], ['Jump · 1 hora · 11:00–12:00 · 1 entrada', '13:00'], 'Kids 2 h y Jump 1 h');
         assert.match(una.resumen, /11:00⁠–⁠12:00/, 'el tramo no se parte al final de una línea (uniones de palabra)');
 
-        const iguales = conHora({ fila: 104, n: 2, extras: [] });
+        const iguales = conHora([linea(104, 2)]);
         assert.deepEqual([iguales.resumen, iguales.finPrincipal], ['Jump · 2 horas · 2 entradas', null], 'las dos de 2 horas: salen juntos');
 
-        const suExtra = conHora({ fila: 104, n: 1, extras: [{ product_id: 140, quantity: 1 }] });
+        const suExtra = conHora([linea(104, 1, [{ product_id: 140, quantity: 1 }])]);
         assert.deepEqual([plano(suExtra.resumen), suExtra.finPrincipal], ['Jump · 2 horas · 11:00–14:00 · 1 entrada', '13:00'], 'su hora extra la alarga');
 
-        const laDelPedido = conHora({ fila: 104, n: 1, extras: [] }, { duracion: 120, complementos: [{ n: 1, minutos: 60, porUnidad: false }] });
+        const laDelPedido = conHora([linea(104)], { duracion: 120, complementos: [{ n: 1, minutos: 60, porUnidad: false }] });
         assert.deepEqual([plano(laDelPedido.resumen), laDelPedido.finPrincipal], ['Jump · 2 horas · 11:00–13:00 · 1 entrada', '14:00'], 'y la del pedido, la suya');
 
-        const ilimitada = conHora({ fila: 104, n: 1, extras: [] }, { duracion: null, complementos: [] });
+        const ilimitada = conHora([linea(104)], { duracion: null, complementos: [] });
         assert.deepEqual([plano(ilimitada.resumen), ilimitada.finPrincipal], ['Jump · 2 horas · 11:00–13:00 · 1 entrada', null], 'una ilimitada no tiene hora de salida');
 
-        const sinHora = pantalla({ otra: { fila: 103, n: 1 } }, { principal: kids2h });
+        const sinHora = pantalla({ otras: [linea(103)] }, { principal: kids2h });
         assert.deepEqual([sinHora.resumen, sinHora.finPrincipal], ['Jump · 1 hora · 1 entrada', null], 'sin hora, nada que decir');
     });
 
     test('la hora extra que NO cabe a esa hora no alarga nada (solo cuenta lo elegido Y disponible)', () => {
-        const v = pantalla({ hora: '11:00:00', otra: { fila: 104, n: 1, extras: [{ product_id: 140, quantity: 1 }] } },
-            { principal: { duracion: 120, complementos: [] }, fichaOtra: ficha104, excluir: [110], conHoraOtra: [] });
+        const v = pantalla({ hora: '11:00:00', otras: [linea(104, 1, [{ product_id: 140, quantity: 1 }])] },
+            { principal: { duracion: 120, complementos: [] }, fichasOtras: { 104: ficha104 }, excluir: [110], conHoraOtras: { 104: [] } });
 
         assert.deepEqual([v.resumen, v.finPrincipal], ['Jump · 2 horas · 1 entrada', null]);
     });
 
-    test('las horas en las que la otra no cabe, apagadas con su porqué', () => {
-        const v = pantalla({ otra: { fila: 103, n: 3 } }, { horasOtra: [{ time: '17:00:00', available: 2, sellable: true }] });
+    test('las horas en las que alguna no cabe, apagadas con su porqué; sin su oferta todavía, ninguna', () => {
+        const horasOtras = { 103: [{ time: '17:00:00', available: 2, sellable: true }] };
 
-        assert.equal(v.noCabe('17:00'), true, 'quedan 2 y van 3');
-        assert.equal(v.notaHora, 'En JUMP no caben a esta hora');
+        assert.equal(pantalla({ otras: [linea(103, 3)] }, { horasOtras }).porQueNoCabe('17:00'), 'En JUMP no caben a esta hora', 'quedan 2 y van 3');
+        assert.equal(pantalla({ otras: [linea(103, 1)] }, { horasOtras }).porQueNoCabe('18:00'), 'En JUMP no caben a esta hora', 'su zona no la ofrece');
+        assert.equal(pantalla({ otras: [linea(103, 1)] }, { horasOtras }).porQueNoCabe('17:00'), '', 'cabe');
+        assert.equal(pantalla({ otras: [linea(103, 1)] }).porQueNoCabe('17:00'), '', 'sin su oferta todavía, no se apaga');
+        assert.equal(pantalla({}).porQueNoCabe('17:00'), '', 'sin líneas añadidas, nada');
+    });
+
+    test('K3: VARIAS líneas —una tarjeta cada una, con su índice—, también de la zona del pedido; el tiempo ya en la reserva, apagado', () => {
+        // Kids 2 h (el pedido) + Jump 1 h + Kids 1 h (añadida en «Pagar»: la misma zona, otro tiempo).
+        const v = pantalla({ otras: [linea(103, 2), linea(100)] });
+
+        assert.deepEqual(v.tarjetas.map((t) => [t.indice, t.titulo, t.fila, t.pista]), [[0, 'JUMP', '103', 'Desde 8 años'], [1, 'KIDS', '100', 'De 4 a 7 años']]);
+        assert.deepEqual(v.tarjetas[1].filas.map((f) => [f.value, f.disabled, f.description]), [
+            ['100', false, ''], ['101', true, 'Ya está en la reserva'], ['102', false, ''],
+        ], 'en la de Kids, la del pedido (2 h), apagada: sería más gente en ella');
+        assert.equal(v.resumen, 'Jump · 1 hora · 2 entradas + Kids · 1 hora · 1 entrada');
+
+        const dosJump = pantalla({ otras: [linea(104), linea(103)] });
+        assert.deepEqual(dosJump.tarjetas.map((t) => t.filas.map((f) => [f.value, f.disabled])), [[['103', true], ['104', false]], [['103', false], ['104', true]]], 'la de la otra tarjeta, también');
+    });
+
+    test('K3: lo que falta es la PRIMERA que no se vende, con su índice y su zona; el porqué de una hora, la zona de la que no cabe', () => {
+        const conLunes = { ...precios, 100: [...precios[100], { date: lun, price_cents: 1000 }] };
+        // El lunes, Jump solo vende 1 hora: la segunda (Jump 2 h) no se vende ese día; la primera (Kids 1 h), sí.
+        const v = pantalla({ dia: lun, otras: [linea(100), linea(104)] }, {
+            precios: conLunes, horasOtras: { 100: [{ time: '17:00:00', available: 9 }], 104: [{ time: '17:00:00', available: 0 }] },
+        });
+
+        assert.deepEqual([v.bloquea, v.falta, v.faltaZona], [true, 'pjc-q-otra-tiempo-1', 'JUMP']);
+        assert.equal(v.porQueNoCabe('17:00'), 'En JUMP no caben a esta hora');
+    });
+
+    test('K3: si ALGUNA estancia no coincide, cada línea dice su tramo (también la que coincide con el pedido)', () => {
+        const v = pantalla({ hora: '11:00:00', otras: [linea(104), linea(103)] }, { principal: { duracion: 120, complementos: [] } });
+
+        assert.equal(plano(v.resumen), 'Jump · 2 horas · 11:00–13:00 · 1 entrada + Jump · 1 hora · 11:00–12:00 · 1 entrada');
+        assert.equal(v.finPrincipal, '13:00');
     });
 });

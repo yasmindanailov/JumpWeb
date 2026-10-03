@@ -22,16 +22,18 @@ import { horaCorta, precioDelDia } from './vista.js';
 import { filasDeZona, opcionesDeTiempo, rangoHorario, zonasConEntradas } from './pantalla-cuando.js';
 import { complementosDe, estancia, gruposComoFilas } from './complementos.js';
 
-/** Las OTRAS zonas de entradas (todas menos la del pedido), cada una con sus filas —sus tiempos, en el orden del catálogo—. */
-export function otrasZonas(productos, zona) {
+/** Las zonas de entradas, TODAS, cada una con sus filas —sus tiempos, en el orden del catálogo—. */
+export function zonasConFilas(productos) {
     return zonasConEntradas(productos)
-        .filter((z) => z.slug !== zona)
         .map((z) => ({ slug: z.slug, name: z.name, filas: filasDeZona(productos, z.slug) }))
         .filter((z) => z.filas.length > 0);
 }
 
+/** Las OTRAS zonas de entradas: todas menos la del pedido (las del enlace «¿Alguien va a…?»). */
+export const otrasZonas = (productos, zona) => zonasConFilas(productos).filter((z) => z.slug !== zona);
+
 /** Las filas de una zona que se VENDEN ese día (con precio ese día). Sin sus días todavía, ninguna: no se promete. */
-const queSeVenden = (zona, precios, dia) => zona.filas.filter((f) => precioDelDia(precios, f.id, dia) !== null);
+export const queSeVenden = (zona, precios, dia) => zona.filas.filter((f) => precioDelDia(precios, f.id, dia) !== null);
 
 /** Las zonas que se venden ese día: alguna de sus filas tiene precio ese día. */
 export const conOfertaElDia = (zonas, precios, dia) => (Array.isArray(zonas) ? zonas : []).filter((z) => queSeVenden(z, precios, dia).length > 0);
@@ -70,9 +72,10 @@ export function otraNueva(zonas, precios, dia, duracion) {
 }
 
 /**
- * La otra línea tras CAMBIAR DE DÍA: si su tiempo no se vende ese día y otro de su zona sí, el parecido (la regla de
+ * Una línea añadida tras CAMBIAR DE DÍA: si su tiempo no se vende ese día y otro de su zona sí, el parecido (la regla de
  * `otraNueva`), con su gente y sin lo elegido de la fila anterior —otro producto, otros complementos—; si no, la misma (si
  * su zona entera no se vende, la tarjeta lo dice). Sin los días de su fila todavía, la misma: no se mueve lo que quizá se venda.
+ * `zonas`: TODAS las de entradas (`zonasConFilas`): desde la K3 una línea puede ser de la zona del pedido.
  */
 export function otraDelDia(otra, zonas, precios, dia, duracion) {
     if (! otra || ! dia || ! Array.isArray(precios?.[otra.fila]) || precioDelDia(precios, otra.fila, dia) !== null) return otra;
@@ -127,76 +130,103 @@ export function horasQueNoCaben(ofrecidasOtra, n) {
 }
 
 /**
- * **Lo de la otra zona en la pantalla 0**, hecho: el enlace (o `''`), la tarjeta (o `null`), si la de la tarjeta no se vende
- * ese día (`bloquea`: no se puede continuar sin quitarla o cambiar de día), su parte del resumen («Jump · 1 hora · 1
- * entrada»; con estancias distintas, con su hora de salida: «Jump · 1 hora · 11:00–12:00 · 1 entrada»), a qué hora sale
- * entonces el grupo del pedido (`finPrincipal`) y qué horas apagar (`noCabe(hora)`), con su porqué.
+ * Una LÍNEA AÑADIDA del borrador, vista: su zona y su fila (entre TODAS las de entradas: desde la K3 puede ser la del pedido,
+ * con otro tiempo), si no se vende ese día —su zona entera (`zonaNo`) o solo su tiempo (`filaNo`), ya con sus días—, sus
+ * complementos (los de SU ficha, menos los que la pantalla pregunta para todos) y su estancia.
+ */
+function lineaVista(o, e, todas) {
+    const b = e.borrador;
+    const zona = todas.find((z) => z.filas.some((f) => f.id === o.fila)) ?? null;
+    const fila = zona?.filas.find((f) => f.id === o.fila) ?? null;
+    const vendidas = zona && b.dia ? queSeVenden(zona, e.precios, b.dia) : [];
+    const llegaron = (f) => Array.isArray(e.precios?.[f.id]);
+    const ficha = e.fichasOtras?.[o.fila] ?? null;
+    const complementos = [
+        ...gruposComoFilas(e.gruposOtras?.[o.fila], { elecciones: o.elecciones ?? {} }),
+        ...complementosDe({
+            ficha: ficha?.id === o.fila ? ficha : null, excluir: e.excluir ?? [], extras: o.extras ?? [],
+            sinHora: e.sueltosOtras?.[o.fila], conHora: b.hora ? (e.conHoraOtras?.[o.fila] ?? null) : null, hora: horaCorta(b.hora), textos: e.textos,
+        }),
+    ];
+
+    return {
+        o, zona, fila, complementos,
+        zonaNo: Boolean(b.dia && zona) && zona.filas.every(llegaron) && vendidas.length === 0,
+        filaNo: Boolean(b.dia && fila) && llegaron(fila) && ! vendidas.includes(fila),
+        estancia: estancia(fila?.duration_min, complementos),
+        noCabe: horasQueNoCaben(e.horasOtras?.[o.fila], o.n),
+    };
+}
+
+/**
+ * **Lo de las líneas añadidas en la pantalla 0**, hecho (K2 de `otra-zona.md` §4.2; su tarjeta completa, K2·b, §4.7;
+ * VARIAS, K3, §4.3): el enlace a la otra zona (o `''`: en cuanto hay una línea, más se añaden desde «Pagar»), una tarjeta
+ * por línea (`tarjetas`), si alguna no se vende ese día (`bloquea`) y lo que falta entonces (`falta` y `faltaZona`: la
+ * PRIMERA; su tarjeta si no se vende su zona, su «¿Cuánto tiempo?» si solo su tiempo), su parte del resumen («Jump · 1 hora ·
+ * 1 entrada»; si las estancias no coinciden, cada una con su tramo), a qué hora sale el grupo del pedido (`finPrincipal`) y,
+ * de una hora, por qué no cabe (`porQueNoCabe(hora)`: la zona de la primera que no cabe; `''`, caben todas).
+ * ⚠️ En una tarjeta, el tiempo que YA está en la reserva —el del pedido o el de otra tarjeta— se ve apagado: la misma fila
+ * no es otra línea, es más gente en la suya (`linea.js::otrasDe`).
  *
- * @param {object} e  `borrador` ({ zona, dia, hora, otra: { fila, n, extras, elecciones } }) · `productos` · `precios`
- *   ({ [id]: días }) · `horasOtra` (la oferta de su fila ese día, o `null`) · `fichaOtra` (la ficha de su fila: sus
- *   complementos) · `sueltosOtra` (sus complementos resueltos sin hora) · `conHoraOtra` (resueltos con su hora, o `null`) ·
- *   `gruposOtra` (sus grupos de elección, `#881`) · `principal` ({ duracion, complementos }: la fila del pedido y sus filas
- *   de complementos, para su estancia) · `excluir` (ids que la pantalla ya pregunta para todos: los calcetines) · `textos` ·
- *   `locale`
+ * @param {object} e  `borrador` ({ zona, fila, dia, hora, otras: [{ fila, n, extras, elecciones }] }) · `productos` ·
+ *   `precios` ({ [id]: días }) · y, POR FILA: `horasOtras` (su oferta ese día), `fichasOtras` (su ficha), `sueltosOtras` (sus
+ *   complementos sin hora), `conHoraOtras` (a esa hora) y `gruposOtras` (sus grupos, `#881`) · `principal` ({ duracion,
+ *   complementos }: los del pedido, para su estancia) · `excluir` (lo que se pregunta para todos: los calcetines) · `textos`
+ *   · `locale`
  */
 export function otraDeLaPantalla(e) {
     const { borrador: b, textos, locale } = e;
     const t = (clave) => texto(textos, clave);
     const tp = (clave, p) => textoCon(textos, clave, p);
-    const zonas = otrasZonas(e.productos, b.zona);
     const unidad = { uno: t('compra.cuando.entrada'), varios: t('compra.cuando.entradas') };
+    const otras = Array.isArray(b.otras) ? b.otras : [];
 
-    if (! b.otra) {
-        const conDia = b.dia ? conOfertaElDia(zonas, e.precios, b.dia) : [];
+    if (otras.length === 0) {
+        const conDia = b.dia ? conOfertaElDia(otrasZonas(e.productos, b.zona), e.precios, b.dia) : [];
         const enlace = conDia.length === 1 ? tp('compra.cuando.otra_zona_de', { zona: conDia[0].name }) : (conDia.length > 1 ? t('compra.cuando.otra_zona') : '');
 
-        return { enlace, tarjeta: null, bloquea: false, falta: null, resumen: null, finPrincipal: null, noCabe: () => false, notaHora: '' };
+        return { enlace, tarjetas: [], bloquea: false, falta: null, faltaZona: '', resumen: null, finPrincipal: null, porQueNoCabe: () => '' };
     }
 
-    const zona = zonas.find((z) => z.filas.some((f) => f.id === b.otra.fila)) ?? null;
-    const fila = zona?.filas.find((f) => f.id === b.otra.fila) ?? null;
-    const vendidas = zona && b.dia ? queSeVenden(zona, e.precios, b.dia) : [];
-    const llegaron = (f) => Array.isArray(e.precios?.[f.id]);
-    // Lo que no se vende ese día, ya con sus días: su zona ENTERA (la tarjeta lo dice en rojo) o solo SU TIEMPO (su opción lo
-    // dice, apagada; `otraDelDia` lo evita al cambiar de día). Con cualquiera, no se continúa: lo que falta es eso (M2).
-    const zonaNo = Boolean(b.dia && zona) && zona.filas.every(llegaron) && vendidas.length === 0;
-    const filaNo = Boolean(b.dia && fila) && llegaron(fila) && ! vendidas.includes(fila);
-    const n = b.otra.n;
-    const hora = horaCorta(b.hora);
-    const complementos = [
-        ...gruposComoFilas(e.gruposOtra, { elecciones: b.otra.elecciones ?? {} }),
-        ...complementosDe({
-            ficha: e.fichaOtra?.id === b.otra.fila ? e.fichaOtra : null, excluir: e.excluir ?? [], extras: b.otra.extras ?? [],
-            sinHora: e.sueltosOtra, conHora: b.hora ? (e.conHoraOtra ?? null) : null, hora, textos,
-        }),
-    ];
-    // ¿Salen a horas distintas? Cada estancia con lo que la alarga (la hora extra elegida y que cabe): si no coinciden, cada
-    // grupo dice su hora de salida (una ilimitada no tiene).
-    const suya = estancia(fila?.duration_min, complementos);
+    const todas = zonasConFilas(e.productos);
+    const lineas = otras.map((o) => lineaVista(o, e, todas));
+    // ¿Salen a horas distintas? Cada estancia con lo que la alarga (la hora extra elegida y que cabe): si alguna no coincide,
+    // cada grupo dice su tramo (una ilimitada no tiene hora de salida).
     const delPedido = estancia(e.principal?.duracion, e.principal?.complementos);
-    const distintas = Boolean(b.hora) && suya !== delPedido;
-    const rango = distintas && suya !== null ? rangoHorario(hora, finDe(b.hora, suya)) : null;
+    const distintas = Boolean(b.hora) && new Set([delPedido, ...lineas.map((l) => l.estancia)]).size > 1;
+    const hora = horaCorta(b.hora);
+    const usadas = new Set([b.fila, ...otras.map((o) => o.fila)].map(String));
+    const primera = lineas.findIndex((l) => l.zonaNo || l.filaNo);
 
     return {
         enlace: '',
-        tarjeta: {
-            titulo: zona?.name ?? '',
+        tarjetas: lineas.map((l, i) => ({
+            indice: i,
+            titulo: l.zona?.name ?? '',
             // Para quién es; si su zona no se vende ese día, eso, en rojo (`noSeVende`).
-            pista: zonaNo ? tp('compra.cuando.otra_no_vende', { zona: zona?.name ?? '' }) : edadesDe(fila, textos),
-            noSeVende: zonaNo,
-            filas: zona ? opcionesDeTiempo(zona.filas, { precios: e.precios, dia: b.dia, textos, locale }) : [],
-            fila: String(b.otra.fila),
-            n,
+            pista: l.zonaNo ? tp('compra.cuando.otra_no_vende', { zona: l.zona?.name ?? '' }) : edadesDe(l.fila, textos),
+            noSeVende: l.zonaNo,
+            filas: l.zona ? opcionesDeTiempo(l.zona.filas, { precios: e.precios, dia: b.dia, textos, locale })
+                .map((f) => (f.value !== String(l.o.fila) && usadas.has(f.value) ? { ...f, disabled: true, description: t('compra.cuando.ya_en_la_reserva') } : f)) : [],
+            fila: String(l.o.fila),
+            n: l.o.n,
             ...unidad,
-            complementos,
-        },
-        bloquea: zonaNo || filaNo,
-        // A dónde lleva «lo que falta» (M2): la tarjeta, si su zona no se vende ese día; si solo su tiempo, su «¿Cuánto tiempo?».
-        falta: zonaNo ? 'pjc-q-otra' : (filaNo ? 'pjc-q-otra-tiempo' : null),
-        zona: zona?.name ?? '',
-        resumen: fila ? [fila.name, rango, `${n} ${n === 1 ? unidad.uno : unidad.varios}`].filter(Boolean).join(' · ') : null,
+            complementos: l.complementos,
+        })),
+        bloquea: primera >= 0,
+        // A dónde lleva «lo que falta» (M2): la primera que no se vende ese día; su tarjeta, o su «¿Cuánto tiempo?».
+        falta: primera < 0 ? null : (lineas[primera].zonaNo ? `pjc-q-otra-${primera}` : `pjc-q-otra-tiempo-${primera}`),
+        faltaZona: primera < 0 ? '' : (lineas[primera].zona?.name ?? ''),
+        resumen: lineas.filter((l) => l.fila).map((l) => [
+            l.fila.name,
+            distintas && l.estancia !== null ? rangoHorario(hora, finDe(b.hora, l.estancia)) : null,
+            `${l.o.n} ${l.o.n === 1 ? unidad.uno : unidad.varios}`,
+        ].filter(Boolean).join(' · ')).join(' + ') || null,
         finPrincipal: distintas && delPedido !== null ? finDe(b.hora, delPedido) : null,
-        noCabe: horasQueNoCaben(e.horasOtra, n),
-        notaHora: tp('compra.cuando.otra_no_cabe', { zona: zona?.name ?? '' }),
+        porQueNoCabe: (h) => {
+            const l = lineas.find((x) => x.noCabe(h));
+
+            return l ? tp('compra.cuando.otra_no_cabe', { zona: l.zona?.name ?? '' }) : '';
+        },
     };
 }

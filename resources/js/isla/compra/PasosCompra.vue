@@ -22,7 +22,7 @@ import CabeceraDesenlace from '../ui/CabeceraDesenlace.vue';
 
 const {
     ck, paso, esperando, authStore, outcomeStore, datos, pantallaDatos, pantallaEntrar, aGoogle, pago, listo, recibo, fallido,
-    perdida, elegirNueva,
+    perdida, elegirNueva, otraEntrada,
 } = inject(COMPRA);
 // Apple sigue de corchete apagado (`#683`): su botón no se pinta, así que solo Google llega aquí.
 const proveedor = (via) => via === 'google' && aGoogle();
@@ -71,6 +71,8 @@ const alCorreo = () => ck.value.onBack?.();
         v-else-if="paso === 'pagar'"
         v-bind="recibo"
         @cantidad="pago.cantidad"
+        @quitar="pago.quitar"
+        @otra="otraEntrada.abrir"
         @calcetines="pago.calcetines"
     />
     <template v-else-if="paso === 'banco'">

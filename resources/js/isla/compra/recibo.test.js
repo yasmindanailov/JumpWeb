@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { cambioDe, hoyPagas, lineaListo, marcasDe, reciboDe, resumenDe, resumenDeLaCesta, resumenDelPedido } from './recibo.js';
+import { cambioDe, hoyPagas, lineaListo, marcasDe, quitarDe, reciboDe, resumenDe, resumenDeLaCesta, resumenDelPedido } from './recibo.js';
 
 /**
  * El recibo y las líneas de la compra de la isla (T3e·3 de `specs/isla-y-landing-nueva.md` §4.10). El presupuesto y
@@ -35,7 +35,7 @@ describe('el recibo de «Pagar»', () => {
 
         assert.equal(r.lineas.length, 1);
         assert.deepEqual({ ...r.lineas[0], sub: nb(r.lineas[0].sub), value: nb(r.lineas[0].value) }, {
-            id: 'l0', label: 'Kids · 1 hora', sub: '8 € por entrada', value: '16 €',
+            id: 'l100', label: 'Kids · 1 hora', sub: '8 € por entrada', value: '16 €',
             control: { n: 2, min: 1, max: 12, uno: 'entrada', varios: 'entradas' },
         });
         assert.equal(nb(r.total), '16 €');
@@ -54,7 +54,7 @@ describe('el recibo de «Pagar»', () => {
 
         assert.equal(con.calcetines, null);
         assert.deepEqual({ ...con.lineas[1], sub: nb(con.lineas[1].sub), value: nb(con.lineas[1].value) }, {
-            id: 'a0-110', label: 'Calcetines antideslizantes', sub: '2 € el par', value: '4 €', control: { n: 2, min: 0, max: 40, uno: 'par', varios: 'pares' },
+            id: 'a100-110', label: 'Calcetines antideslizantes', sub: '2 € el par', value: '4 €', control: { n: 2, min: 0, max: 40, uno: 'par', varios: 'pares' },
         });
         assert.equal(nb(con.total), '20 €');
     });
@@ -78,9 +78,41 @@ describe('el recibo de «Pagar»', () => {
         assert.equal(reciboDe({ quote: quote([]), pedido: { ...pedido, n: 5, maximo: 3 }, textos }).lineas[0].control.max, 5);
     });
 
-    test('cada fila dice qué cambia', () => {
-        assert.deepEqual(cambioDe('l0', 3), { n: 3 });
-        assert.deepEqual(cambioDe('a0-110', 1), { cal: 1 });
+    test('cada fila dice qué cambia, por su PRODUCTO', () => {
+        assert.deepEqual(cambioDe('l100', 3, pedido), { n: 3 });
+        assert.deepEqual(cambioDe('a100-110', 1, pedido), { cal: 1 });
+        assert.deepEqual(cambioDe('l100', 3), { n: 3 }, 'sin pedido, la gente');
+    });
+});
+
+describe('«Pagar» con LÍNEAS AÑADIDAS (K3 de `otra-zona.md` §4.3)', () => {
+    const jump = { fila: 103, n: 1, guardian: false, minimo: 1, maximo: null, extras: [], elecciones: [] };
+    const conJump = { ...pedido, otras: [jump] };
+    const lineaJump = {
+        index: 1, product_id: 103, product_name: 'Jump · 1 hora', is_pack: false, date: '2026-09-26', time: '17:00:00', quantity: 1,
+        unit_price_cents: 1120, subtotal_cents: 1120, has_deposit: false, deposit_cents: 1120, gate_remainder_cents: 0, addons: [], icon: 'ticket',
+    };
+    const dos = { lines: [linea(), lineaJump], total_cents: 2720, online_amount_cents: 2720 };
+
+    test('cada una con su − / + y «Quitar» (D2-A); la del pedido, sin «Quitar»: es el pedido', () => {
+        const r = reciboDe({ quote: dos, pedido: conJump, textos, entradas: true });
+
+        assert.deepEqual(r.lineas.map((l) => [l.id, l.label, l.control?.n, l.control?.quitar ?? false]), [['l100', 'Kids · 1 hora', 2, false], ['l103', 'Jump · 1 hora', 1, true]]);
+        assert.deepEqual([r.lineas[1].control.min, r.lineas[1].control.max], [1, 20], 'sin tope suyo, el de la tarjeta');
+        assert.equal(nb(r.total), '27,20 €', 'el total, el del presupuesto de las dos');
+    });
+
+    test('«Añadir otra entrada», solo en ENTRADAS', () => {
+        assert.equal(reciboDe({ quote: dos, pedido: conJump, textos, entradas: true }).otraEntrada, true);
+        assert.equal(reciboDe({ quote: dos, pedido: conJump, textos }).otraEntrada, false, 'una fiesta o una excursión, no');
+    });
+
+    test('cambiar la gente de una añadida cambia SOLO la suya; «Quitar», el pedido sin ella', () => {
+        const dosAnadidas = { ...pedido, otras: [jump, { ...jump, fila: 104, n: 2 }] };
+
+        assert.deepEqual(cambioDe('l103', 3, dosAnadidas), { otras: [{ ...jump, n: 3 }, { ...jump, fila: 104, n: 2 }] });
+        assert.deepEqual(quitarDe('l103', dosAnadidas), { otras: [{ ...jump, fila: 104, n: 2 }] });
+        assert.deepEqual(quitarDe('l104', { ...pedido, otras: [] }), { otras: [] });
     });
 });
 
@@ -125,7 +157,7 @@ describe('el recibo de una FIESTA (T3e·5)', () => {
         const r = reciboDe({ quote: quote({ id: 108, nombre: 'Menú 2', importe: 2000, gratis: 0, resto: 11950 }, 16950), pedido: { ...pedido, elecciones: [{ group: 'menu', product_id: 108 }] }, textos });
 
         assert.equal(r.lineas[0].label, 'Pack Kids');
-        assert.deepEqual({ ...r.lineas[1], value: nb(r.lineas[1].value) }, { id: 'a0-108', label: 'Menú 2', sub: '', value: '20 €', control: null });
+        assert.deepEqual({ ...r.lineas[1], value: nb(r.lineas[1].value) }, { id: 'a105-108', label: 'Menú 2', sub: '', value: '20 €', control: null });
         assert.equal(nb(r.nota), 'Hoy pagas 50 € de señal; el resto, 119,50 €, el día de la fiesta.');
     });
 

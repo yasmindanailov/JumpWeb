@@ -188,6 +188,8 @@ return [
             'edades_de_a' => 'Ages :min to :max',
             'edades_desde' => 'From :min years',
             'edades_hasta' => 'Up to :max years',
+            'ya_en_la_reserva' => 'Already in the booking',
+            'se_suma' => 'Already in the booking: added to it',
             'mas_fechas' => 'More dates',
             'menos_fechas' => 'Close the calendar',
             'quitar' => 'Remove',
@@ -244,6 +246,7 @@ return [
             'hora_libre' => 'Choose one of these times to continue',
             'otra' => ':zona is not available that day: remove it or choose another day',
             'otra_tiempo' => 'That :zona time is not available that day: choose another',
+            'tiempo' => 'Choose how long to continue',
         ],
         'datos' => [
             'banda' => 'Your details',

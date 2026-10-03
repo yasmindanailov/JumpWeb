@@ -48,12 +48,12 @@ defineProps({
     calcetines: { type: Object, default: null },
     // Los demás complementos que se venden al reservar (`#880`), hechos por `complementos.js`.
     complementos: { type: Array, default: () => [] },
-    otra: { type: Object, default: null },
+    otras: { type: Array, default: () => [] },
     // Con el motor (T3e·2), de los DATOS: `cuantos.min`/`max`, `calcetines.max`, el umbral de «quedan» (el aviso de
     // «casi llena» del panel) y si hay otra zona que ofrecer. Sin ellos, los valores del diseño (el banco).
     umbral: { type: Number, default: 6 },
-    // El enlace de la OTRA ZONA, ya escrito (K2 de `otra-zona.md`: la nombra con una sola, D3-B); `''`, ninguno. Y `otra`, su
-    // tarjeta, hecha (`otra-zona.js::otraDeLaPantalla`; completa desde la K2·b, `#882`).
+    // El enlace de la OTRA ZONA, ya escrito (K2 de `otra-zona.md`: la nombra con una sola, D3-B); `''`, ninguno. Y `otras`, las
+    // tarjetas de las líneas añadidas, hechas (`otra-zona.js::otraDeLaPantalla`; completas desde la K2·b, `#882`; la K3).
     otraZona: { type: String, default: '' },
     // El «no» del servidor al continuar (T3e·3): la línea no cabe, las reservas en pausa… Arriba, como el de «Tus datos».
     aviso: { type: String, default: '' },
@@ -183,9 +183,9 @@ const { t } = useTextos();
                 />
             </PreguntaCompra>
             <!-- [Hora extra]: el diseño deja su hueco rayado tras los calcetines; aquí van TODOS los demás complementos que
-                 se venden al reservar (`#880`), la hora extra entre ellos. -->
+                 se venden al reservar (`#880`), la hora extra entre ellos. También en «Añadir otra entrada» (K3): los de la nueva. -->
             <ComplementosCompra
-                v-if="!otraEntrada && complementos.length"
+                v-if="complementos.length"
                 :items="complementos"
                 @cambiar="(id, n) => emit('cambiar', 'extra', { id, n })"
                 @elegir="(grupo, valor) => emit('cambiar', 'eleccion', { grupo, valor })"
@@ -203,15 +203,17 @@ const { t } = useTextos();
                 />
             </PreguntaCompra>
             <template v-if="!otraEntrada">
-                <!-- La tarjeta de la OTRA ZONA (K2 de `otra-zona.md`; completa desde la K2·b, `#882`): una entrada en pequeño. -->
+                <!-- Las LÍNEAS AÑADIDAS (K2 de `otra-zona.md`; completas desde la K2·b, `#882`; varias desde la K3): una tarjeta
+                     cada una, una entrada en pequeño. Sin ninguna, el enlace a la otra zona. -->
                 <TarjetaOtraZona
-                    v-if="otra"
-                    :otra="otra"
+                    v-for="o in otras"
+                    :key="`${o.indice}-${o.fila}`"
+                    :otra="o"
                     :preguntas="preguntas"
                     @cambiar="(campo, valor) => emit('cambiar', campo, valor)"
                 />
                 <EnlaceSistema
-                    v-else-if="otraZona"
+                    v-if="otraZona"
                     :style="{ justifySelf: 'start' }"
                     @click="emit('cambiar', 'otra')"
                 >

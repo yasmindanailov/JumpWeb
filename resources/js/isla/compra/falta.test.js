@@ -19,6 +19,7 @@ const textos = {
             hora_libre: 'Elige una de estas horas para continuar',
             otra: ':zona no se vende ese día: quítala o elige otro día',
             otra_tiempo: 'Ese tiempo de :zona no se vende ese día: elige otro',
+            tiempo: 'Elige cuánto tiempo para continuar',
         },
     },
 };
@@ -36,12 +37,21 @@ describe('la pantalla 0', () => {
         assert.deepEqual(marcaDe('pjc-dato-centro', textos), { id: 'pjc-q-datos', texto: 'Rellena los datos de la reserva para continuar' });
     });
 
-    test('la otra zona que no se vende ese día (K2 de `otra-zona.md`): su tarjeta, nombrando la zona', () => {
-        assert.deepEqual(marcaDe('pjc-q-otra', textos, { zona: 'JUMP' }), { id: 'pjc-q-otra', texto: 'JUMP no se vende ese día: quítala o elige otro día' });
+    test('una línea añadida que no se vende ese día (K2 de `otra-zona.md`): su tarjeta —con su índice, K3—, nombrando la zona', () => {
+        assert.deepEqual(marcaDe('pjc-q-otra-0', textos, { zona: 'JUMP' }), { id: 'pjc-q-otra-0', texto: 'JUMP no se vende ese día: quítala o elige otro día' });
+        assert.deepEqual(marcaDe('pjc-q-otra-12', textos, { zona: 'JUMP' }).id, 'pjc-q-otra-12', 'cualquier índice');
     });
 
     test('`#882`: si solo SU TIEMPO no se vende, su «¿Cuánto tiempo?», nombrando la zona', () => {
-        assert.deepEqual(marcaDe('pjc-q-otra-tiempo', textos, { zona: 'JUMP' }), { id: 'pjc-q-otra-tiempo', texto: 'Ese tiempo de JUMP no se vende ese día: elige otro' });
+        assert.deepEqual(marcaDe('pjc-q-otra-tiempo-1', textos, { zona: 'JUMP' }), { id: 'pjc-q-otra-tiempo-1', texto: 'Ese tiempo de JUMP no se vende ese día: elige otro' });
+    });
+
+    test('K3: «Añadir otra entrada» sin un tiempo que se venda ese día: su «¿Cuánto tiempo?»', () => {
+        assert.deepEqual(marcaDe('pjc-q-tiempo', textos), { id: 'pjc-q-tiempo', texto: 'Elige cuánto tiempo para continuar' });
+    });
+
+    test('las tarjetas, solo con su índice: sin él, o con otra cosa detrás, no se sabe decir', () => {
+        assert.deepEqual(['pjc-q-otra', 'pjc-q-otra-tiempo', 'pjc-q-otra-x1', 'pjc-q-otra-tiempo-'].map((f) => textoDeFalta(f, textos, { zona: 'JUMP' })), ['', '', '', '']);
     });
 
     test('lo que no se sabe decir no se dice: ni nota ni marca', () => {

@@ -1034,7 +1034,12 @@ class SidebarBundleBudgetTest extends TestCase
     // 199,61 → 204,81 (base: la medida de la K2, `34bfb840`, que es el `HEAD`; los pasos, 56,01 → 56,17, bajo su techo). El
     // techo, a 206. ⚠️ Con esto, la noche suma +17,64 kB (187,17 → 204,81): la M4 (cargar la compra al ABRIRLA) es lo
     // siguiente tras la L2.
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 206;
+    // K3 de la L2 (`otra-zona.md` §4.3): VARIAS líneas añadidas —el borrador con su lista (`intencion.js::conOtras`), una
+    // tarjeta cada una (`otra-zona.js`, `usePantallaCero`)—, «Pagar» con su − / + y «Quitar» en cada una (`recibo.js`) y
+    // «Añadir otra entrada» (`otra-entrada.js`, `useOtraEntrada.js`). Medido 204,81 → 212,95 (base: la medida de la K2·b,
+    // `508db23a`; los commits del SPA de en medio solo tocan `resources/js/fiesta/`, fuera del grafo de la compra). El techo,
+    // a 214. ⚠️⚠️ La noche, +25,78 kB (187,17 → 212,95): la M4 ya no espera, va justo tras la K4.
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 214;
 
     // T4d·4 (`specs/isla-y-landing-nueva.md` §4.12): la CALCULADORA de una página, entrada propia que la página pide
     // (`scripts` de `<x-pagina>`) y se monta al acercarse su pieza. Su DESCARGA entera, como la mide el navegador que

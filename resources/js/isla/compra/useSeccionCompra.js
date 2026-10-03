@@ -25,9 +25,10 @@ import { useSuperficie } from './useSuperficie.js';
 import { useDatosCompra } from './useDatosCompra.js';
 import { usePagoCompra } from './usePagoCompra.js';
 import { usePantallaCero } from './usePantallaCero.js';
-import { borradorDeIntencion, sigueSola } from './intencion.js';
+import { useOtraEntrada } from './useOtraEntrada.js';
+import { borradorDeIntencion, conOtras, sigueSola } from './intencion.js';
 import { euros, horasCercanas, horasDelSelector } from './vista.js';
-import { conLaCesta, meterLinea, pedidoDe, resolverOtras } from './linea.js';
+import { avisoDeLinea, conLaCesta, meterLinea, pedidoDe, resolverOtras } from './linea.js';
 import { alPrincipio, irA } from './ir-a.js';
 import { FALTA, PERDIDA, conFalta, faltaDeEntrada, faltaDePerdida, marcaDe, sigueLaMarca } from './falta.js';
 import { lineaListo, marcasDe, reciboDe, resumenDeLaCesta, resumenDelPedido } from './recibo.js';
@@ -64,13 +65,16 @@ export function useSeccionCompra(props) {
      * primera visita»), y la flecha de la pantalla 0 vuelve a ella; o el SELECTOR de planes (`#831`), y la flecha lo
      * reabre —`desdeHoy`: tal como se abrió, desde «Reservar para hoy» o no—.
      */
-    // `sueltos`: los complementos del producto resueltos SIN día ni hora, con su nota (`complementos.js`, `#880`). La OTRA
-    // ZONA (K2 de `otra-zona.md`): `horasOtra` (lo que su fila ofrece ese día), `fichaOtra` (su justificante y sus
-    // complementos), `cotizacion` (el presupuesto de TODAS las líneas, del servidor) y, desde la K2·b (`#882`), lo que su
-    // tarjeta pinta de sus complementos: `sueltosOtra` (sin hora), `conHoraOtra` (a esa hora) y `gruposOtra`.
+    // `sueltos`: los complementos del producto resueltos SIN día ni hora, con su nota (`complementos.js`, `#880`). Las
+    // LÍNEAS AÑADIDAS (la otra zona, K2 de `otra-zona.md`; varias desde la K3), POR FILA: `horasOtras` (lo que ofrece ese día),
+    // `fichasOtras` (su justificante y sus complementos), `sueltosOtras` (sin hora), `conHoraOtras` (a esa hora) y
+    // `gruposOtras` (`#882`); y `cotizacion`, el presupuesto de TODAS las líneas, del servidor.
     const compra = reactive({
         borrador: borradorDeIntencion(null, []), precios: {}, llegaron: [], fichas: {}, grupos: [], sueltos: [], cargandoHoras: false, intencion: null,
-        horasOtra: null, fichaOtra: null, cotizacion: null, sueltosOtra: [], conHoraOtra: null, gruposOtra: [],
+        cotizacion: null, horasOtras: {}, fichasOtras: {}, sueltosOtras: {}, conHoraOtras: {}, gruposOtras: {},
+        // «Añadir otra entrada» (K3 de `otra-zona.md`, `useOtraEntrada.js`): la pantalla 0 en modo «otra» desde «Pagar», la
+        // línea nueva y lo que el servidor resuelve de ella a la hora del pedido.
+        modo: null, nueva: null, nuevaOferta: null,
         paso: 'cuando', aviso: '', ocupado: null, pedido: null, pagado: null, dir: null, cercanas: [], horaNueva: null,
         preparando: false, sinDatos: false, alEntrar: false, desde: null, desdeHoy: false,
     });
@@ -85,8 +89,14 @@ export function useSeccionCompra(props) {
     // Un PACK es lo único que pide el teléfono (`#787`: el servidor lo exige con cualquiera, `TicketType::anyPack`): una
     // fiesta y, desde la T6c·3, una excursión, que se vende por la pantalla de las entradas.
     const esPack = () => Boolean(compra.borrador.fiesta) || catalogStore.products.find((p) => p.id === compra.borrador.fila)?.type === 'pack';
+    // ¿Es una compra de ENTRADAS —la fila del pedido es una entrada—? Solo ellas tienen «Añadir otra entrada» (K3 de `otra-zona.md`).
+    const esDeEntradas = () => ! compra.borrador.fiesta && catalogStore.products.find((p) => p.id === (compra.pedido?.fila ?? compra.borrador.fila))?.type === 'entry';
     const datos = useDatosCompra({ flow, props, textos, esFiesta: esPack });
     const pago = usePagoCompra({ flow, props, textos, compra, enCola, alPagarMal, alLlenarse });
+    const otraEntrada = useOtraEntrada({ flow, compra, enCola, textos, pago });
+    // La vista del paso «cuando»: la de la pantalla 0 o, en «Añadir otra entrada», la suya (con la misma forma).
+    const enOtra = () => compra.modo === 'otra' && compra.nueva !== null;
+    const vistaCuando = computed(() => (enOtra() ? otraEntrada.vista.value : vista.value));
     const { vista, situar, cambiar, cargarHoras, extrasDelPedido } = usePantallaCero({ flow, compra, enCola, textos });
 
     /**
@@ -123,13 +133,15 @@ export function useSeccionCompra(props) {
     const marca = ref(null);
 
     provide(FALTA, marca);
-    watch(() => vista.value.falta, (falta) => { if (marca.value?.id !== PERDIDA && ! sigueLaMarca(marca.value, falta)) marca.value = null; });
+    watch(() => vistaCuando.value.falta, (falta) => { if (marca.value?.id !== PERDIDA && ! sigueLaMarca(marca.value, falta)) marca.value = null; });
     watch(paso, () => { marca.value = null; });
     watch(() => compra.horaNueva, (hora) => { if (hora && marca.value?.id === PERDIDA) marca.value = null; });
+    // «Añadir otra entrada» es del paso «cuando»: salir de él (a «Pagar», a un desenlace…) la cierra.
+    watch(paso, (ahora) => { if (ahora !== 'cuando' && compra.modo) Object.assign(compra, { modo: null, nueva: null, nuevaOferta: null }); });
 
     /** Pulsar sin estar listo: la caja va a lo que falta (`ir-a.js`) y lo marca (con lo que su frase nombra: la otra zona). */
     function aLoQueFalta(falta) {
-        marca.value = marcaDe(falta, textos, { zona: vista.value.faltaZona ?? '' });
+        marca.value = marcaDe(falta, textos, { zona: vistaCuando.value.faltaZona ?? '' });
         irA(falta);
     }
 
@@ -172,7 +184,10 @@ export function useSeccionCompra(props) {
      */
     async function reanudar({ compra: guardada }) {
         if (! guardada?.borrador?.zona) return empezar(null);
-        Object.assign(compra, { borrador: { ...guardada.borrador }, pedido: guardada.pedido ?? null, paso: 'cuando', preparando: true, aviso: '' });
+        // Las líneas añadidas, en LISTA (K3 de `otra-zona.md`): una marca dejada con una sola `otra` se lee igual.
+        Object.assign(compra, {
+            borrador: conOtras({ ...guardada.borrador }), pedido: guardada.pedido ?? null, paso: 'cuando', preparando: true, aviso: '', modo: null, nueva: null, nuevaOferta: null,
+        });
         datos.preparar();
         // La vuelta que NO salió (T5e·2, `#779`: canceló en Google, esa cuenta ya es de otra…) lo dice en «Tus datos», con
         // su aviso de siempre; antes se volvía al mismo sitio sin decir nada. La que salió no necesita aviso: sigue a pagar.
@@ -237,7 +252,7 @@ export function useSeccionCompra(props) {
         const sola = sigueSola(intencion);
 
         Object.assign(compra, {
-            paso: 'cuando', aviso: '', pedido: null, pagado: null, preparando: sola, sinDatos: false, alEntrar: false,
+            paso: 'cuando', aviso: '', pedido: null, pagado: null, preparando: sola, sinDatos: false, alEntrar: false, modo: null, nueva: null, nuevaOferta: null,
             // De dónde nace (su flecha, `volverDeLaPantallaCero`): de Mi cuenta (T5f) o del selector de planes (`#831`).
             desde: ['cuenta', 'selector'].includes(intencion?.desde) ? intencion.desde : null,
             desdeHoy: intencion?.desdeHoy === true,
@@ -252,17 +267,6 @@ export function useSeccionCompra(props) {
     onMounted(applyIntent);
 
     // ── Los pasos ────────────────────────────────────────────────────────────────────────────────────
-
-    /**
-     * El «no» del servidor a una línea del pedido: el suyo, tal cual; el de una línea de la OTRA ZONA, con su nombre —«En JUMP
-     * ya no queda sitio a esa hora…» si es la hora, o el aviso del motor detrás de su zona— (K2 de `otra-zona.md`).
-     */
-    function avisoDeLinea(r, pedido) {
-        if (! r.fila || r.fila === pedido.fila) return r.aviso;
-        const zona = catalogStore.products.find((p) => p.id === r.fila)?.zone?.name ?? '';
-
-        return r.horaLlena ? tp(textos, 'compra.cuando.otra_llena', { zona }) : tp(textos, 'compra.cuando.aviso_otra', { zona, aviso: r.aviso });
-    }
 
     /** «Continuar» de la pantalla 0: la línea a la cesta (la sustituye, `linea.js`) y la admisión del motor. */
     async function continuar() {
@@ -298,7 +302,7 @@ export function useSeccionCompra(props) {
             }
             // El «no» del servidor se pinta ARRIBA de la pantalla 0: la capa sube a él (se continúa desde abajo). El de una
             // línea de la otra zona, nombrándola (K2 de `otra-zona.md`).
-            if (! r.ok) { compra.aviso = avisoDeLinea(r, pedido); alPrincipio(); return; }
+            if (! r.ok) { compra.aviso = avisoDeLinea(r, pedido, { productos: catalogStore.products, textos }); alPrincipio(); return; }
             compra.pedido = conLaCesta(pedido, cartStore.lines);
             await admitir();
         } finally {
@@ -528,7 +532,27 @@ export function useSeccionCompra(props) {
 
     watch(() => rango(paso.value, datos.estado.vista, datos.estado.ent.paso), (ahora, antes) => { compra.dir = direccion(antes, ahora); });
 
+    /**
+     * El pie de «Añadir otra entrada» (K3 de `otra-zona.md`; el mockup): la banda de la pantalla 0, lo de debajo del pedido de
+     * ahora (la cesta presupuestada: la nueva aún no está), «Continuar» —que la suma y vuelve a «Pagar»— y la flecha, a «Pagar»
+     * sin ella. Sin estar lista, lo que falta, como en la pantalla 0 (M2, `#881`).
+     */
+    function ckDeOtra() {
+        const o = otraEntrada.vista.value;
+        const pantalla = {
+            key: 'otra', stepStrong: '', step: t(textos, 'compra.cuando.banda'), progress: null, note: null,
+            ...deLaCesta(cartStore.quote), dir: compra.dir, onBack: otraEntrada.volver, onClose: cerrar,
+            action: {
+                label: t(textos, 'compra.cuando.continuar'), disabled: false, onClick: o.listo ? otraEntrada.continuar : () => aLoQueFalta(o.falta),
+                loading: compra.ocupado === 'otra' ? t(textos, 'pieza.cargando') : false,
+            },
+        };
+
+        return o.listo ? pantalla : conFalta(pantalla, marcaDe(o.falta, textos, { zona: o.faltaZona ?? '' }), () => aLoQueFalta(o.falta));
+    }
+
     const ck = computed(() => {
+        if (paso.value === 'cuando' && enOtra()) return ckDeOtra();
         if (paso.value === 'cuando') {
             const c = vista.value.ck;
 
@@ -636,12 +660,16 @@ export function useSeccionCompra(props) {
         abierta, textos, ck, paso, esperando, compra, flow, authStore, outcomeStore,
         preparando: computed(() => compra.preparando),
         fiesta: computed(() => Boolean(compra.borrador.fiesta)),
-        cuando: computed(() => ({ ...vista.value.props, aviso: compra.aviso })), cambiar,
+        // La pantalla del paso «cuando»: la 0 o, desde «Pagar», «Añadir otra entrada» (K3), con su vista y sus cambios.
+        cuando: computed(() => ({ ...vistaCuando.value.props, aviso: compra.aviso })),
+        cambiar: (campo, valor) => (enOtra() ? otraEntrada.cambiar(campo, valor) : cambiar(campo, valor)),
+        otraEntrada,
         datos, pantallaDatos, pantallaEntrar, aGoogle, pago, listo,
         // Las formas de pago, bajo el botón de «Pagar» (`JuntoPagar`, `#786`).
         marcas,
         recibo: computed(() => ({
-            ...reciboDe({ quote: cartStore.quote, pedido: compra.pedido, textos, locale: flow.locale }), aviso: compra.aviso,
+            // «Añadir otra entrada» (K3 de `otra-zona.md`), solo en ENTRADAS: ni fiestas ni excursiones (el mockup).
+            ...reciboDe({ quote: cartStore.quote, pedido: compra.pedido, textos, locale: flow.locale, entradas: esDeEntradas() }), aviso: compra.aviso,
             // Sin «Tus datos» delante (`#785`), «Pagar» dice con qué cuenta se compra: en un móvil compartido, la última
             // ocasión de verlo (lo que hacía el «Hola, Ana» de «Tus datos»).
             como: compra.sinDatos && datos.contexto.context?.first_name ? tp(textos, 'compra.pagar.como', { nombre: datos.contexto.context.first_name }) : '',
