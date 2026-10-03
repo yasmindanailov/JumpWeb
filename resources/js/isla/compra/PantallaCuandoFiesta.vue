@@ -11,7 +11,7 @@ import PreguntaCompra from './PreguntaCompra.vue';
 import DatoFijo from './DatoFijo.vue';
 import CantidadCompra from './CantidadCompra.vue';
 import DiasCompra from './DiasCompra.vue';
-import { ComplementosCompra } from './datos-reserva.js';
+import DatosReserva, { ComplementosCompra } from './datos-reserva.js';
 import SelectorHoras from '../ui/SelectorHoras.vue';
 import TarjetasOpcion from '../ui/TarjetasOpcion.vue';
 import AvisoDestacado from '../ui/AvisoDestacado.vue';
@@ -40,6 +40,8 @@ defineProps({
     complementos: { type: Array, default: () => [] },
     // `#876`·7: «Los invitados y los detalles de la fiesta, después…», si el pack lleva la lista; si no, nada.
     despues: { type: String, default: '' },
+    // Lo que el pack pide al reservar además de la edad (el nombre de quien cumple): `{ titulo, campos }`, o `null`.
+    datos: { type: Object, default: null },
 });
 const emit = defineEmits(['cambiar']);
 </script>
@@ -153,6 +155,18 @@ const emit = defineEmits(['cambiar']);
             @cambiar="(id, n) => emit('cambiar', 'extra', { id, n })"
             @elegir="(grupo, valor) => emit('cambiar', 'eleccion', { grupo, valor })"
         />
+        <!-- Lo que el pack pide al reservar además de la edad, con las etiquetas del panel (el nombre de quien cumple): el
+             servidor no admite la línea sin ello. El mismo bloque que las entradas y las excursiones (`#839`). -->
+        <PreguntaCompra
+            v-if="datos"
+            id="pjc-q-datos"
+            :titulo="datos.titulo"
+        >
+            <DatosReserva
+                :datos="datos.campos"
+                @cambiar="emit('cambiar', 'evento', $event)"
+            />
+        </PreguntaCompra>
         <p
             v-if="despues"
             :style="PASO.pista"

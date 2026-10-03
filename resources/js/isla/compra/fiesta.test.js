@@ -173,4 +173,23 @@ describe('la pantalla 0 de una fiesta', () => {
 
         assert.deepEqual([falta({ edad: null }), falta({ dia: null, hora: null }), falta({ hora: null }), falta({})], ['pjc-q-edad', 'pjc-q-dia', 'pjc-q-hora', null]);
     });
+
+    /**
+     * Lo que el pack pide al reservar además de la edad: en PRODUCCIÓN, el nombre de quien cumple (`celebrant`, obligatorio;
+     * medido el 03-10 en staging con sus datos). Sin pintarlo, la compra desde la calculadora llegaba al servidor sin él y
+     * acababa en «Elige al menos una entrada para continuar».
+     */
+    test('los datos de la reserva del pack: se piden, sin contestar no se sigue y lo que falta es su CAMPO', () => {
+        const lista = { edad: 5, n: 10, dia: '2026-09-25', hora: '17:00:00', menu: null, fila: 105 };
+        const nombre = (valor) => [{ key: 'celebrant', label: 'Nombre del cumpleañero/a', numero: false, required: true, valor }];
+        const conTextos = { ...textos, compra: { ...textos.compra, cuando: { ...textos.compra.cuando, pregunta_datos: 'Datos de la reserva' } } };
+        const vacio = pantallaCuandoFiesta({ ...base, textos: conTextos, linea: { total_cents: 1 }, borrador: lista, datos: nombre('  ') });
+        const contestado = pantallaCuandoFiesta({ ...base, textos: conTextos, linea: { total_cents: 1 }, borrador: lista, datos: nombre('Lola') });
+
+        assert.deepEqual(vacio.props.datos, { titulo: 'Datos de la reserva', campos: nombre('  ') });
+        assert.deepEqual([vacio.listo, vacio.ck.action.disabled, vacio.falta], [false, true, 'pjc-dato-celebrant'], 'en blanco no cuenta');
+        assert.deepEqual([contestado.listo, contestado.falta], [true, null]);
+        assert.equal(pantallaCuandoFiesta({ ...base, borrador: lista }).props.datos, null, 'sin datos que pedir (local), no hay pregunta');
+        assert.equal(pantallaCuandoFiesta({ ...base, borrador: lista, datos: [{ ...nombre('')[0], required: false }] }).listo, true, 'uno opcional no para');
+    });
 });

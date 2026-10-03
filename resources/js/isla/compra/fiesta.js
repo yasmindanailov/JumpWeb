@@ -104,7 +104,8 @@ export function eleccionesDe(grupos, menu) {
  *
  * @param {object} e  `borrador` ({ edad, n, dia, hora, menu, fila }) · `packs` (fichas de fiesta de la zona) ·
  *   `precios` ({ [id]: días }) · `horas` · `cargandoHoras` · `maximo` (lo que cabe a esa hora) · `grupos` (del menú) ·
- *   `linea` (la que resolvió el servidor) · `corte` (horas de ajuste, `GET /config`) · `textos` · `locale` · `hoy`.
+ *   `linea` (la que resolvió el servidor) · `corte` (horas de ajuste, `GET /config`) · `datos` (lo que el pack pide al
+ *   reservar además de la edad, hecho por quien llama: `pantalla-cuando.js::datosDeReserva`) · `textos` · `locale` · `hoy`.
  */
 export function pantallaCuandoFiesta(e) {
     const { borrador: b, textos, locale } = e;
@@ -116,7 +117,12 @@ export function pantallaCuandoFiesta(e) {
     const minimo = base?.min_quantity ?? 1;
     const maximo = Math.max(minimo, Math.min(base?.max_quantity ?? 40, e.maximo ?? Infinity));
     const ninos = { uno: t('nino'), varios: t('ninos') };
-    const listo = Boolean(pack && b.dia && b.hora);
+    // Lo que el pack pide al reservar además de la edad (el NOMBRE de quien cumple en PlayJump, medido en producción el
+    // 03-10): el servidor no admite la línea sin ello, así que sin contestar no se sigue. Antes no se pintaba y la compra
+    // desde la calculadora acababa en «Elige al menos una entrada».
+    const datos = Array.isArray(e.datos) ? e.datos : [];
+    const sinContestar = datos.find((d) => d.required && String(d.valor ?? '').trim() === '');
+    const listo = Boolean(pack && b.dia && b.hora) && ! sinContestar;
     const pista = [tp('minimo', { n: minimo }), Number.isInteger(e.corte) ? tp('ajusta', { n: minimo, horas: e.corte }) : ''].filter(Boolean).join(' ');
 
     const props = {
@@ -139,6 +145,8 @@ export function pantallaCuandoFiesta(e) {
         complementos: e.complementos ?? [],
         // `#876`·7: lo que queda para después, solo si su reserva lleva la lista de invitados (`guest_form` de la ficha).
         despues: base?.guest_form ? t('fiesta_despues') : '',
+        // Los datos de la reserva del pack, con el título de los de las entradas; sin ninguno, no hay pregunta.
+        datos: datos.length ? { titulo: t('pregunta_datos'), campos: datos } : null,
     };
 
     const resumen = pack && b.dia
@@ -149,7 +157,8 @@ export function pantallaCuandoFiesta(e) {
         props,
         listo,
         // Lo PRIMERO que falta para continuar, por su `id`: a donde la capa lleva la vista (`ir-a.js`, el owner 28-09).
-        falta: listo ? null : (! pack ? 'pjc-q-edad' : ! b.dia ? 'pjc-q-dia' : 'pjc-q-hora'),
+        // De un dato, su CAMPO (`pjc-dato-<clave>`), como en las entradas.
+        falta: listo ? null : (! pack ? 'pjc-q-edad' : ! b.dia ? 'pjc-q-dia' : ! b.hora ? 'pjc-q-hora' : `pjc-dato-${sinContestar.key}`),
         ck: {
             key: 'cuando',
             stepStrong: '',

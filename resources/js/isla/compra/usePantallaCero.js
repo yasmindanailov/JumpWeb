@@ -362,6 +362,8 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
         if (campo === 'cal') { b.cal = valor; return enCola(resolverLinea); }
         if (campo === 'extra') { b.extras = conExtra(b.extras, valor.id, valor.n); return enCola(resolverLinea); }
         if (campo === 'eleccion') { b.elecciones = { ...(b.elecciones ?? {}), [valor.grupo]: valor.valor }; return enCola(resolverLinea); }
+        // Un dato de la reserva del pack (el nombre de quien cumple): al borrador, como en las entradas; no cambia la oferta.
+        if (campo === 'evento') { b.evento = { ...(b.evento ?? {}), [valor.key]: valor.valor }; return null; }
 
         return null;
     }
@@ -442,8 +444,10 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
             return { calcetin, evento: respuestasDe(datosDeReserva(catalogStore.product, b.evento)), elecciones: elecciones(), extras, otras: otrasDelPedido() };
         }
         const campo = campoDeEdad(compra.fichas[b.fila]);
+        // La edad y lo demás que el pack pide al reservar (el nombre de quien cumple), contestado.
+        const datos = respuestasDe(datosDeReserva(compra.fichas[b.fila], b.evento));
 
-        return { calcetin, evento: campo ? { [campo.key]: b.edad } : {}, elecciones: elecciones(), extras };
+        return { calcetin, evento: { ...datos, ...(campo ? { [campo.key]: b.edad } : {}) }, elecciones: elecciones(), extras };
     }
 
     const vista = computed(() => {
@@ -469,6 +473,7 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
             ? pantallaCuandoFiesta({
                 ...comun, packs: packs.value, grupos: compra.grupos, corte: flow.configuracion.value?.guest_count_cutoff_hours,
                 calcetines: preguntaCalcetines(calcetin, b.cal, { textos, locale: flow.locale }),
+                datos: datosDeReserva(deLaFila, b.evento),
             })
             : pantallaCuando({
                 ...comun, productos: catalogStore.products, minimo: catalogStore.minQuantity, umbral: timeStore.lowMax, calcetin, ficha: deLaFila,
