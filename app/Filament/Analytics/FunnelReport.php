@@ -304,8 +304,8 @@ final class FunnelReport
      */
     private function sources(Window $window): array
     {
-        $gclid = SqlJson::string('click_ids', '$.gclid');
-        $hasGclid = "CASE WHEN {$gclid} IS NULL THEN 0 ELSE 1 END";
+        // Sin `CASE`: el hosting (MariaDB) no lo casa con el del GROUP BY (`SqlJson`).
+        $hasGclid = SqlJson::present('click_ids', '$.gclid');
 
         $sessions = $this->cleanSessions($window)
             ->selectRaw("utm_source, utm_medium, utm_campaign, ref, referrer_host, {$hasGclid} AS gclid, COUNT(*) AS n")
