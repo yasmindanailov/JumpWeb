@@ -48,7 +48,9 @@ class RestrictMailRecipients
             return null;
         }
 
-        Log::info('mail.recipients_outside_only_to', ['removed' => $fuera, 'kept' => $quedan]);
+        // `warning` y no `info`: staging y producción registran desde `warning` (medido), y algo que intentó escribir fuera
+        // de la lista es justo lo que hay que poder ver.
+        Log::warning('mail.recipients_outside_only_to', ['removed' => $fuera, 'kept' => $quedan]);
 
         if ($quedan === 0) {
             return false;

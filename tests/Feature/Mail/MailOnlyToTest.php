@@ -8,6 +8,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Mail\Message;
 use Illuminate\Mail\Transport\ArrayTransport;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
@@ -38,11 +39,14 @@ class MailOnlyToTest extends TestCase
     public function test_with_a_list_only_the_listed_addresses_receive_it(): void
     {
         config(['mail.only_to' => ['owner@example.com']]);
+        Log::spy();
 
         $this->enviar(['otra@example.com']);
         $this->enviar(['OWNER@example.com']);
 
         $this->assertSame([['OWNER@example.com']], $this->destinatarios(), 'el de fuera no sale; el de la lista sí, sin mirar mayúsculas');
+        // En el registro, y a un nivel que staging y producción escriben (`LOG_LEVEL=warning`); sin la dirección.
+        Log::shouldHaveReceived('warning')->once()->with('mail.recipients_outside_only_to', ['removed' => 1, 'kept' => 0]);
     }
 
     public function test_a_mixed_message_keeps_only_the_listed_recipients(): void
