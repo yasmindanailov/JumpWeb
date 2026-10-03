@@ -69,12 +69,29 @@ final class MailSituations
         'emails.reserva.changes_open' => 'sin_plazo',
         'emails.reserva.changes_late' => 'fuera_de_plazo',
         'emails.reserva.replies_label' => 'responde',
-        // La víspera: lo que falta, quien cumple y el saldo.
+        // La víspera de una fiesta (el 4): quien cumple en el asunto, lo que falta, el saldo y el QR.
+        'emails.visit_eve.subject' => 'quien_cumple_sin_nombre',
+        'emails.visit_eve.subject_nombre' => 'quien_cumple_con_nombre',
         'emails.visit_eve.guests' => 'faltan_invitados',
+        'emails.visit_eve.guardians' => 'faltan_autorizaciones',
         'emails.visit_eve.honoree' => 'cumple_con_nombre',
         'emails.visit_eve.honoree_unnamed' => 'cumple_sin_nombre',
-        'emails.visit_eve.balance_title' => 'saldo_en_parque',
         'emails.visit_eve.balance' => 'saldo_en_parque',
+        'emails.visit_eve.qr_title' => 'con_carne',
+        'emails.visit_eve.qr_dictate_label' => 'con_carne',
+        'emails.visit_eve.action_qr' => 'con_carne',
+        // La víspera de unas entradas o un grupo (el 3): «Mañana» u «Hoy», el mapa, lo que queda y los menores a cargo.
+        'emails.manana.subject' => 'manana',
+        'emails.manana.headline' => 'manana',
+        'emails.manana.subject_hoy' => 'hoy',
+        'emails.manana.headline_hoy' => 'hoy',
+        'emails.manana.qr_title' => 'con_carne',
+        'emails.manana.qr_dictate_label' => 'con_carne',
+        'emails.manana.action_qr' => 'con_carne',
+        'emails.manana.address' => 'con_mapa',
+        'emails.manana.balance' => 'saldo_en_parque',
+        'emails.manana.guardians' => 'faltan_autorizaciones',
+        'emails.manana.minors' => 'firma_sin_menores',
         // El formulario de invitados: con o sin fecha, con o sin invitación digital, y los extras abiertos.
         'emails.guest_form.subject' => 'reserva_con_fecha',
         'emails.guest_form.subject_no_date' => 'reserva_sin_fecha',
@@ -139,6 +156,7 @@ final class MailSituations
      */
     public const SITUACIONES = [
         'order_confirmation' => [self::CASO, 'entradas', 'grupo', 'cumple_con_nombre', 'cumple_sin_nombre', 'sin_invitacion', 'con_extras', 'varias', 'fuera_de_plazo'],
+        'visit_reminder_notice' => [self::CASO, 'hoy', 'sin_menores'],
         'visit_eve_notice' => [self::CASO, 'cumple_con_nombre', 'cumple_sin_nombre'],
         'guest_form_request' => [self::CASO, 'con_invitacion', 'sin_invitacion', 'con_extras', 'reserva_sin_fecha'],
         'guardian_authorization_signed' => [self::CASO, 'firma_de_reserva'],

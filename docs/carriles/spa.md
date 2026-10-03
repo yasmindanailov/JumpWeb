@@ -2,13 +2,13 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **910–939** (del owner, 02-10; 790–819 agotada con `#819`) · Último usado: **`#916`** (el siguiente, `#917`) · La banda está dada de alta en la
+> Banda: **910–939** (del owner, 02-10; 790–819 agotada con `#819`) · Último usado: **`#917`** (el siguiente, `#918`) · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs:
 > **`acceso-con-codigo.md` §0** (la A4 del cajón ✅ en `main`) · `correos-rediseno.md` §0 ·
 > `fiesta-sistema-nuevo.md` §4.17–§4.21 · `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7
 > (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md` §4.11 · `celebracion-e-invitacion.md` §0 ·
-> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-03, 10:53
-> (la R2a y la R2b de los correos, construidas en `wip/correos-r2a`, esperan el ojo del owner en Mailpit).
+> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-03, 11:43
+> (la R2a y la R2b de los correos, en `main`; la R2d, en `wip/correos-r2d`, espera el ojo del owner en Mailpit).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
@@ -69,15 +69,14 @@ portada y no cuenta nada hasta la v2.0.0.
    ▶ **Lo siguiente: la R1c de los correos** («retomar» 2; su «al detalle», `correos-rediseno.md` §4.1.4).
 2. ▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4; `#789`, `#800`→`#804`)**: ✅ R1a, R1b y **R1·T** en `main` (la
    R1·T revisada: §4.2.2; su sonda y el medidor de bloques, `CARRIL-SPA` §8 (26)). ✅ **R1c EN `main`** (03-10, §4.1.4,
-   visto bueno del owner; arnés 12/12). ▶▶ **AHORA, LA R2** (§4.3, `#915`, `#916`): 🟦 **R2a y R2b CONSTRUIDAS en
-   `wip/correos-r2a`** (03-10; la R2b es el 1, el 1b y el 2 —la R2c entró en ella—; suite 6903 verde, arnés
-   `mutar-correo-r2b.sh` 12/12): ▶ **esperan el OJO del owner en Mailpit** (`SITUACION=<situación> php
-   scripts/banco-correos.php OrderConfirmation` y `… MuestraR2b`) y, con su visto bueno, a `main` (`RedsysReturnHandler` está
-   en el `CRITICAL_RE`: `redsys:verify-concurrency` y `VERIFY_CONC=1`). Después: R2d el 3 y el 4 → R2e el 5 y el 6 → R3 el
-   2b → C1 los comerciales (11, el 12 ampliado, 13a/b, 6b) → C2 las felicitaciones (su copy, con el owner) → C3 las
-   ocasiones; y la analítica (3). Cada tanda, «al detalle» medido → `wip/` → arnés → ojo en Mailpit. ▶ DATO de PlayJump tras
-   desplegar la R2b: «Antes de venir» de la excursión (panel → producto) y el aviso de los calcetines. El resto del punto
-   (el zip (6), el 7, los grupos 8–10, T2·9), mudado verbatim a `CARRIL-SPA.md` §9 (03-10).
+   visto bueno del owner; arnés 12/12). ▶▶ **AHORA, LA R2** (§4.3, `#915`→`#917`): ✅ **R2a y R2b EN `main`** (03-10,
+   `c415b1ea`, visto bueno; la R2b es el 1, el 1b y el 2). 🟦 **R2d CONSTRUIDA en `wip/correos-r2d`** (el 3 y el 4; arnés
+   `mutar-correo-r2d.sh` 10/10): ▶ **espera el ojo del owner** (`SITUACION=<hoy|sin_menores|cumple_sin_nombre> php
+   scripts/banco-correos.php VisitReminderNotice` / `VisitEveNotice`) y, con él, a `main` (sin `CRITICAL_RE`). Después: R2e
+   el 5 y el 6 → R3 el 2b → C1 los comerciales (11, el 12 ampliado, 13a/b, 6b) → C2 las felicitaciones (su copy, con el
+   owner) → C3 las ocasiones; y la analítica (3). Cada tanda, «al detalle» medido → `wip/` → arnés → ojo en Mailpit. ▶ DATO
+   de PlayJump tras desplegar: «Antes de venir» de la excursión (panel → producto) y el aviso de los calcetines. El resto del
+   punto (el zip (6), el 7, los grupos 8–10, T2·9), mudado verbatim a `CARRIL-SPA.md` §9 (03-10).
 3. ⏸ **LA ANALÍTICA PARA DECIDIR (`#755`, `specs/analitica-para-decidir.md`), EN PAUSA tras la T4**: ✅ el defecto de
    `OccupancyReport::missing()` que midió plataforma (29-09: contaba robots y personal), ARREGLADO en la TA·0 (`cleanEvents()`,
    `84524415`; comprobado el 03-10). Y de la A1 de plataforma (`#853`): el

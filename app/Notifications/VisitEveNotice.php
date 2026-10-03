@@ -4,28 +4,28 @@ namespace App\Notifications;
 
 use App\Domain\Booking\Contracts\PendingWork;
 use App\Domain\Booking\Models\OrderItem;
-use App\Domain\Booking\Services\EmailSlip;
 use App\Domain\Platform\Services\Money;
 use App\Notifications\Support\BrandedMailMessage;
+use App\Notifications\Support\MailReservation;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
- * **EL AVISO DE LA VÍSPERA** (T7·2b, `specs/celebracion-e-invitacion.md` §4.9 y §10.17).
+ * **«UN REPASO ANTES DE MAÑANA»** — el 4 del diseño, la víspera de una FIESTA (T7·2b de `specs/celebracion-e-invitacion.md`
+ * §4.9; desde la R2d, el diseño de `specs/correos-rediseno.md` §4.3). Al titular, la tarde de antes, y **solo si queda algo
+ * por hacer** ({@see PendingWork::any()}, `#714`): un correo que dice «no tienes que hacer nada» enseña a ignorar los correos.
+ * Las reservas que no son una fiesta reciben el 3 (`VisitReminderNotice`), siempre.
  *
- * Al titular, la tarde de antes, y **solo si queda algo por hacer** ({@see PendingWork::any()}): el
- * comando no lo construye siquiera cuando no hay nada. Un correo que dice «no tienes que hacer nada»
- * enseña a ignorar los correos, y éste llega justo cuando aún se puede arreglar.
+ * En el orden del diseño: «Lo que queda» —solo lo que falta: las fichas de los invitados, las respuestas por repasar, las
+ * autorizaciones, el descargo de quien cumple y lo que se paga en el parque—, la frase que quita el susto, «Repasar la
+ * fiesta» (la lista, con su enlace FIRMADO) y el QR en claro: el trabajo del correo es el botón.
  *
- * ⚠️⚠️ **Dice POR QUÉ no es grave**, y eso no es cortesía: la cifra sola («12 de 20») se lee como un
- * reproche a las nueve de la noche del día antes de la fiesta de tu hijo. Lo que falta se puede
- * resolver en el mostrador —un adulto que acompaña entra igual—, y decirlo es la diferencia entre un
- * recordatorio y un susto.
- *
- * ⚠️ **No pide dinero por web.** El saldo que trae es el del parque ({@see PendingWork}), y el lector
- * ya descarta `pay_online` por eso mismo.
+ * ⚠️⚠️ **Dice POR QUÉ no es grave**, y eso no es cortesía: la cifra sola («12 de 20») se lee como un reproche a las nueve de la
+ * noche del día antes de la fiesta de tu hijo. Lo que falta se resuelve en el mostrador.
+ * ⚠️ **No pide dinero por web.** El saldo que trae es el del parque ({@see PendingWork}). Y el QR lleva SUS textos
+ * (`emails.visit_eve.qr_*`): se editan en la página de este correo.
  *
  * `ShouldQueue` por `PAY-14`, como el resto: el envío no bloquea al comando.
  */
@@ -48,67 +48,65 @@ class VisitEveNotice extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $code = (string) $this->reservation->order->code;
+        $r = $this->reservation;
+        $hora = MailReservation::hora($r);
+        // Quien cumple: su ficha de la lista si ya la tiene y, si no, lo que se escribió al reservar (como la confirmación).
+        $quien = trim((string) ($r->honoreeName() ?? $r->celebrantName()));
 
         $message = (new BrandedMailMessage($this))
-            // ❗ El dato DELANTE (`#506`): en el corte de una lista de móvil tiene que entrar el
-            // código, no la instrucción.
-            ->subject(__('emails.visit_eve.subject', ['code' => $code]))
-            ->line(__('emails.visit_eve.intro'));
+            ->subject($quien !== ''
+                ? (string) __('emails.visit_eve.subject_nombre', ['time' => $hora, 'name' => $quien])
+                : (string) __('emails.visit_eve.subject', ['time' => $hora, 'product' => $r->displayProductName()]))
+            ->hero('emails.visit_eve', 'warn')
+            ->checklist((string) __('emails.visit_eve.list_title'), $this->loQueQueda($r), raya: false)
+            ->small((string) __('emails.visit_eve.not_serious'))
+            ->button((string) __('emails.visit_eve.action'), $r->guestFormSignedUrl());
 
-        // Cada cosa en su línea y solo si falta: el correo de una reserva a la que solo le falta
-        // pagar no habla de fichas, y el de una que las tiene todas no las nombra.
-        if ($this->pending->guestsMissing() > 0) {
-            $message->line(__('emails.visit_eve.guests', [
-                'done' => $this->pending->guestsDone,
-                'total' => $this->pending->guestsTotal,
-            ]));
+        $qr = (new MailReservation($r->order))->qr(
+            (string) __('emails.visit_eve.qr_title'),
+            (string) __('emails.visit_eve.qr_dictate_label'),
+            (string) __('emails.visit_eve.action_qr'),
+        );
+        if ($qr !== null) {
+            $message->qr(...$qr, secundario: true)->attachData($qr['png'], 'carne-qr.png', ['mime' => 'image/png']);
         }
 
-        if ($this->pending->repliesToReview > 0) {
-            $message->line(trans_choice('emails.visit_eve.replies', $this->pending->repliesToReview, [
-                'count' => $this->pending->repliesToReview,
-            ]));
+        return $message;
+    }
+
+    /**
+     * «Lo que queda», cada línea SOLO si falta: un «2 de 2» es ruido que enseña a no leer.
+     *
+     * @return list<array{texto: string, icono: string}>
+     */
+    private function loQueQueda(OrderItem $r): array
+    {
+        $p = $this->pending;
+        $lineas = [];
+
+        if ($p->guestsMissing() > 0) {
+            $lineas[] = ['texto' => (string) __('emails.visit_eve.guests', ['done' => $p->guestsDone, 'total' => $p->guestsTotal]), 'icono' => 'users'];
+        }
+        if ($p->repliesToReview > 0) {
+            $lineas[] = ['texto' => trans_choice('emails.visit_eve.replies', $p->repliesToReview, ['count' => $p->repliesToReview]), 'icono' => 'message-circle'];
+        }
+        if ($p->minorsUnresolved > 0) {
+            $total = max((int) $r->quantity, $p->minorsUnresolved);
+            $lineas[] = ['texto' => (string) __('emails.visit_eve.guardians', ['done' => $total - $p->minorsUnresolved, 'total' => $total]), 'icono' => 'pen-line'];
+        }
+        if ($p->honoreeWaiverMissing) {
+            $nombre = (string) $r->honoreeName();
+            $lineas[] = [
+                'texto' => $nombre !== '' ? (string) __('emails.visit_eve.honoree', ['name' => $nombre]) : (string) __('emails.visit_eve.honoree_unnamed'),
+                'icono' => 'pen-line',
+            ];
+        }
+        if ($p->balanceAtParkCents > 0) {
+            $lineas[] = ['texto' => (string) __('emails.visit_eve.balance', [
+                'amount' => Money::showcaseWithSymbol($p->balanceAtParkCents, (string) ($r->order?->currency ?: 'EUR')),
+            ]), 'icono' => 'banknote'];
         }
 
-        if ($this->pending->minorsUnresolved > 0) {
-            $message->line(trans_choice('emails.visit_eve.minors', $this->pending->minorsUnresolved, [
-                'count' => $this->pending->minorsUnresolved,
-            ]));
-        }
-
-        // QUIEN CUMPLE (F7, `#752`): por su nombre, que es como lo reconoce quien lo lee, y dicho dónde se firma — en su fila
-        // de la lista, a la que lleva el botón. ⚠️ El nombre solo lo NOMBRA: que falte lo dice la atadura.
-        if ($this->pending->honoreeWaiverMissing) {
-            $name = (string) $this->reservation->honoreeName();
-            $message->line($name !== ''
-                ? __('emails.visit_eve.honoree', ['name' => $name])
-                : __('emails.visit_eve.honoree_unnamed'));
-        }
-
-        $message->hero('emails.visit_eve', 'warn', EmailSlip::forItem($this->reservation));
-
-        // ⚠️ El saldo va en el AVISO y no como una línea más: es DINERO y dice dónde se paga, el
-        // mismo trato que los extras del post-form (`#503`). Y va **después** de las cifras aunque
-        // se escriba aquí: el molde pinta el aviso al final (su propio docblock lo dice).
-        if ($this->pending->balanceAtParkCents > 0) {
-            $message->notice(
-                __('emails.visit_eve.balance_title'),
-                __('emails.visit_eve.balance', [
-                    'amount' => Money::format($this->pending->balanceAtParkCents, (string) ($this->reservation->order->currency ?: 'EUR')),
-                ]),
-            );
-        }
-
-        return $message
-            // ❗❗ **La frase que quita el susto**, y va junto al botón, que es donde se decide si se
-            // hace algo esta noche o mañana por la mañana.
-            ->line(__('emails.visit_eve.not_serious'))
-            ->action(
-                __('emails.visit_eve.action'),
-                // Fuente ÚNICA del enlace firmado, la misma que el correo del post-form.
-                $this->reservation->guestFormSignedUrl(),
-            )
-            ->line(__('emails.visit_eve.outro'));
+        return $lineas;
     }
 }

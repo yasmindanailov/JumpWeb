@@ -42,6 +42,8 @@ final class MailTextCatalog
         // ── La reserva ──
         // La R2b (`#915`): sus tres caras —su cabecera en dos grupos— y el cuerpo de la reserva, que comparten.
         'order_confirmation' => [N\OrderConfirmation::class, 'reserva', ['emails.reservado', 'emails.fiesta_reservada', 'emails.reserva'], [MailReservation::class]],
+        // La víspera (la R2d): el 3 a unas entradas o un grupo, siempre; el 4 a una fiesta, si le queda algo.
+        'visit_reminder_notice' => [N\VisitReminderNotice::class, 'reserva', ['emails.manana']],
         'visit_eve_notice' => [N\VisitEveNotice::class, 'reserva', ['emails.visit_eve']],
         'order_payment_declined' => [N\OrderPaymentDeclined::class, 'reserva', ['emails.order_declined']],
         'order_expired_without_payment' => [N\OrderExpiredWithoutPayment::class, 'reserva', ['emails.order_expired_without_payment']],

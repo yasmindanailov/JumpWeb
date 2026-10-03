@@ -139,7 +139,16 @@ final class MailPreviews
             ->whereNull('parent_item_id')->whereNotNull('slot_id')
             ->whereHas('ticketType', static fn ($q) => $q->where('type', TicketType::TYPE_PACK))
             ->latest('id');
-        $fiesta = static fn (): ?OrderItem => $fiestas()->first();
+        // Una FIESTA es un pack con lista de invitados (la cara de la R2b): un grupo —una excursión— también es un pack, y sus
+        // correos de fiesta no le salen.
+        $fiesta = static fn (): ?OrderItem => $fiestas()->with('ticketType')->limit(self::RECIENTES)->get()
+            ->first(static fn (OrderItem $i): bool => $i->isGuestFormReservation());
+        // La última reserva PAGADA que no es una fiesta: la del 3, «Mañana os esperamos» (la R2d).
+        $noFiesta = static fn (): ?OrderItem => OrderItem::query()
+            ->whereNull('parent_item_id')->whereNotNull('slot_id')
+            ->whereHas('order', static fn ($q) => $q->where('status', Order::STATUS_PAID))
+            ->with(['ticketType', 'slot', 'order.user'])->latest('id')->limit(self::RECIENTES)->get()
+            ->first(static fn (OrderItem $i): bool => ! $i->isGuestFormReservation());
         $conPedido = static fn (Closure $hacer): Closure => static fn (): Notification|string => ($o = $pedido()) !== null ? $hacer($o) : 'pedido';
         $conReserva = static fn (Closure $hacer): Closure => static function (User $quienMira, string $locale, ?string $s) use ($pedido, $reserva, $hacer): Notification|string {
             $o = $pedido();
@@ -177,6 +186,19 @@ final class MailPreviews
                 self::situarConfirmacion($o, $s);
 
                 return new N\OrderConfirmation($o);
+            },
+            // El 3 (la R2d), con todo lo que puede quedar (lo del parque y tres autorizaciones, como la víspera de la fiesta, más
+            // abajo); «Hoy», la del mismo día; «sin menores», el titular aún sin menores a su cargo (el aviso de `#875`), en memoria.
+            'visit_reminder_notice' => static function (User $quienMira, string $locale, ?string $s) use ($noFiesta): Notification|string {
+                $r = $noFiesta();
+                if ($r === null) {
+                    return 'reserva';
+                }
+                if ($s === 'sin_menores' && $r->order?->user !== null) {
+                    $r->order->user->setRelation('dependents', $r->order->user->dependents()->getRelated()->newCollection());
+                }
+
+                return new N\VisitReminderNotice($r, new PendingWork(0, 0, 0, 3, 8000), $s === 'hoy');
             },
             // Quien cumple, con su nombre o sin él: su fila en memoria. ⚠️ `honoreeName()` lee la ficha 0 y, SIN nombre ahí, el
             // homenajeado de la reserva (`event_data`): «aún sin nombre» vacía los dos (medido: con solo la ficha, salía nombrado).

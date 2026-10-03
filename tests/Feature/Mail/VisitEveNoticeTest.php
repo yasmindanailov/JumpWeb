@@ -21,6 +21,7 @@ use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Notifications\VisitEveNotice;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
@@ -171,6 +172,25 @@ class VisitEveNoticeTest extends TestCase
         $this->assertNull($item->fresh()->eve_notice_at);
     }
 
+    /**
+     * La R2d (`correos-rediseno.md` §4.3): solo pedidos PAGADOS. Hasta entonces el comando no miraba el pedido, y un carrito
+     * abandonado con su franja mañana también recibía la víspera. CONTROL: la misma reserva, pagada, sí.
+     */
+    public function test_an_unpaid_order_is_not_warned(): void
+    {
+        $this->atParkHour(19);
+        Notification::fake();
+
+        $sinPagar = $this->reservation(quantity: 4, guests: [], day: $this->parkTomorrow(), paid: false);
+        $pagada = $this->reservation(quantity: 4, guests: [], day: $this->parkTomorrow());
+
+        $this->artisan('reservations:eve-notice')->assertSuccessful();
+
+        Notification::assertNotSentTo($sinPagar->order->user, VisitEveNotice::class);
+        $this->assertNull($sinPagar->fresh()->eve_notice_at);
+        Notification::assertSentTo($pagada->order->user, VisitEveNotice::class);
+    }
+
     public function test_a_cancelled_reservation_is_not_warned(): void
     {
         $this->atParkHour(19);
@@ -236,13 +256,13 @@ class VisitEveNoticeTest extends TestCase
         ], day: $this->parkTomorrow(), paid: true, atParkCents: 2000);
 
         $work = app(PendingBeforeVisit::class)->forReservation($item);
-        $html = (new VisitEveNotice($item, $work))->toMail($item->order->user)->render();
+        $mail = (new VisitEveNotice($item, $work))->toMail($item->order->user);
+        $html = $mail->render();
 
-        $this->assertStringContainsString(__('emails.visit_eve.balance_title'), $html);
-        $this->assertStringContainsString('20,00', $html, 'la cifra del parque, en euros');
-        // ⚠️ No nombra lo que NO falta: un correo que dice «2 de 2 completas» es ruido que enseña a
-        // no leerlo.
-        $this->assertStringNotContainsString(__('emails.visit_eve.guests', ['done' => 2, 'total' => 2]), $html);
+        // «Lo que queda» (la R2d): SOLO lo del parque, con su cifra en euros.
+        $this->assertSame([__('emails.visit_eve.balance', ['amount' => "20\u{00A0}€"])], $this->loQueQueda($mail));
+        // ⚠️ No nombra lo que NO falta: un correo que dice «2 de 2» es ruido que enseña a no leerlo.
+        $this->assertStringNotContainsString('2 de 2', $html);
         // ❗ Y la frase que quita el susto va siempre.
         $this->assertStringContainsString(e(__('emails.visit_eve.not_serious')), $html);
         $this->assertSame(0, preg_match('/[\x{1F300}-\x{1FAFF}]/u', $html), 'un correo no lleva emojis');
@@ -255,10 +275,32 @@ class VisitEveNoticeTest extends TestCase
         $item = $this->reservation(quantity: 4, guests: [['name' => 'Ana', 'age' => '7']], day: $this->parkTomorrow(), paid: true);
 
         $work = app(PendingBeforeVisit::class)->forReservation($item);
-        $html = (new VisitEveNotice($item, $work))->toMail($item->order->user)->render();
+        $mail = (new VisitEveNotice($item, $work))->toMail($item->order->user);
 
-        $this->assertStringContainsString(e(__('emails.visit_eve.guests', ['done' => 1, 'total' => 4])), $html);
-        $this->assertStringNotContainsString(__('emails.visit_eve.balance_title'), $html);
+        $this->assertSame([__('emails.visit_eve.guests', ['done' => 1, 'total' => 4])], $this->loQueQueda($mail), 'las fichas, y nada del parque');
+    }
+
+    /**
+     * EL 4 DEL DISEÑO (la R2d): el asunto con la hora y quien cumple, sin chapa, «Lo que queda», el botón a la lista FIRMADA
+     * y, después, el QR en claro —el trabajo del correo es el botón—.
+     */
+    public function test_the_eve_of_a_party_is_its_design(): void
+    {
+        $this->atParkHour(19);
+        $item = $this->reservation(quantity: 4, guests: [['name' => 'Ana', 'age' => '7']], day: $this->parkTomorrow(), hour: 17);
+        $mail = (new VisitEveNotice($item, app(PendingBeforeVisit::class)->forReservation($item)))->toMail($item->order->user);
+
+        $this->assertSame('Mañana a las 17:00 · el cumple de Lucía', $mail->subject);
+        $this->assertSame('', $mail->viewData['hero']['chapa']);
+        $this->assertSame(['lista', 'linea', 'boton', 'qr'], array_column($mail->viewData['cuerpo'], 'tipo'));
+        $this->assertTrue(collect($mail->viewData['cuerpo'])->firstWhere('tipo', 'qr')['secundario']);
+        $this->get(collect($mail->viewData['cuerpo'])->firstWhere('tipo', 'boton')['url'])->assertOk();
+    }
+
+    /** @return list<string> las líneas de «Lo que queda» */
+    private function loQueQueda(MailMessage $mail): array
+    {
+        return array_column(collect($mail->viewData['cuerpo'])->firstWhere('tipo', 'lista')['lineas'] ?? [], 'texto');
     }
 
     // ─── Quien cumple (F7, `specs/fiesta-sistema-nuevo.md` §4.13, `#752`) ─────────────
@@ -373,7 +415,8 @@ class VisitEveNoticeTest extends TestCase
         int $quantity,
         array $guests,
         Carbon $day,
-        bool $paid = false,
+        // PAGADA por defecto desde la R2d: la víspera solo avisa a pedidos pagados (un carrito abandonado no es una reserva).
+        bool $paid = true,
         int $atParkCents = 0,
         ?int $hour = null,
     ): OrderItem {

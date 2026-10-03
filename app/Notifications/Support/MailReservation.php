@@ -178,7 +178,7 @@ final class MailReservation
     }
 
     /** El enlace del mapa del panel («Cómo llegar», el de la web), o `null` si no hay uno que se pueda abrir. */
-    private static function mapa(): ?string
+    public static function mapa(): ?string
     {
         $url = trim((string) Setting::value('address.maps_url', ''));
 
@@ -189,10 +189,12 @@ final class MailReservation
      * EL QR del titular, como lo pide `BrandedMailMessage::qr()` (sin `secundario`, que es de cada correo): la imagen —los
      * MISMOS bytes que el adjunto y que Mi cuenta—, el token en grupos para dictarlo y «Abrir Mi QR». El carné nace aquí si
      * el titular no tiene; si su clave rotó y no se puede pintar (§8.1 de `identidad-qr-puerta.md`), `null`: sin QR.
+     * ▶ Sus tres textos, los de la confirmación salvo que el correo dé los SUYOS (la víspera, la R2d): cada correo se edita en
+     * su página, y un texto compartido cambiaría otro correo sin que el parque lo viera.
      *
      * @return array{png: string, codigo: string, texto: string, dicta: string, boton: string, url: string}|null
      */
-    public function qr(): ?array
+    public function qr(?string $texto = null, ?string $dicta = null, ?string $boton = null): ?array
     {
         $titular = $this->pedido->user;
         $token = $titular !== null ? app(CustomerCards::class)->ensureFor($titular)->plainToken() : null;
@@ -204,11 +206,49 @@ final class MailReservation
         return [
             'png' => QrCode::png($token),
             'codigo' => CardToken::grouped($token),
-            'texto' => (string) __('emails.reserva.qr_title'),
-            'dicta' => (string) __('emails.reserva.qr_dictate_label'),
-            'boton' => (string) __('emails.reserva.action_qr'),
+            'texto' => $texto ?? (string) __('emails.reserva.qr_title'),
+            'dicta' => $dicta ?? (string) __('emails.reserva.qr_dictate_label'),
+            'boton' => $boton ?? (string) __('emails.reserva.action_qr'),
             'url' => route('account'),
         ];
+    }
+
+    /**
+     * ¿Le falta al titular AÑADIR a sus menores? (`#875`): si la instalación firma el descargo dentro y aún no tiene ninguno
+     * ACTIVO (uno desvinculado no cuenta). Lo que dicen la tarea de la confirmación y el aviso de la víspera.
+     */
+    public function faltanMenores(): bool
+    {
+        $titular = $this->pedido->user;
+
+        // La relación ENTERA y filtrada aquí, no `->active()->exists()`: la vista previa la pone en memoria (R1·T2).
+        return WaiverSettings::isInternal() && $titular !== null
+            && $titular->dependents->every(static fn (Dependent $d): bool => $d->removed_at !== null);
+    }
+
+    /**
+     * Lo COMPRADO con una reserva, como lo dice Mi cuenta: el aviso de cada complemento (`reservationNote()`) o su nombre y
+     * cantidad, con su icono (los calcetines, sus huellas).
+     *
+     * @return list<array{texto: string, icono: string}>
+     */
+    public function loComprado(OrderItem $r): array
+    {
+        return $this->complementos($r)->map(static fn (OrderItem $c): array => [
+            'texto' => $c->ticketType?->reservationNote((int) $c->quantity)
+                ?? (string) __('isla.mi_cuenta.proxima.complemento', ['nombre' => $c->displayProductName(), 'cantidad' => $c->displayQuantityLabel()]),
+            'icono' => self::ICONO_DE_COMPLEMENTO[$c->ticketType?->iconKey() ?? ''] ?? 'package',
+        ])->values()->all();
+    }
+
+    /**
+     * Lo de un PRODUCTO en «Antes de venir» (`beforeVisitLines()`, lo escribe el panel: «Todos los profesores entran gratis»).
+     *
+     * @return list<array{texto: string, icono: string}>
+     */
+    public static function delProducto(?TicketType $producto): array
+    {
+        return array_map(static fn (string $linea): array => ['texto' => $linea, 'icono' => 'info'], $producto?->beforeVisitLines() ?? []);
     }
 
     /**
@@ -229,30 +269,20 @@ final class MailReservation
         }
 
         $lineas = [];
-        $titular = $this->pedido->user;
         if ($cara === self::ENTRADAS && WaiverSettings::isInternal()) {
-            // La relación ENTERA y filtrada aquí, no `->active()->exists()`: la vista previa la pone en memoria (R1·T2).
-            if ($titular !== null && $titular->dependents->every(static fn (Dependent $d): bool => $d->removed_at !== null)) {
+            if ($this->faltanMenores()) {
                 $lineas[] = ['texto' => (string) __('emails.reserva.minors'), 'icono' => 'user-round-plus', 'tarea' => true];
             }
             $lineas[] = ['texto' => (string) __('emails.reserva.adults'), 'icono' => 'users'];
         }
 
         foreach ($this->reservas as $r) {
-            foreach ($this->complementos($r) as $c) {
-                $lineas[] = [
-                    'texto' => $c->ticketType?->reservationNote((int) $c->quantity)
-                        ?? (string) __('isla.mi_cuenta.proxima.complemento', ['nombre' => $c->displayProductName(), 'cantidad' => $c->displayQuantityLabel()]),
-                    'icono' => self::ICONO_DE_COMPLEMENTO[$c->ticketType?->iconKey() ?? ''] ?? 'package',
-                ];
-            }
+            array_push($lineas, ...$this->loComprado($r));
         }
 
         $productos = $this->reservas->map(static fn (OrderItem $r): ?TicketType => $r->ticketType)->filter()->unique('id');
         foreach ($productos as $producto) {
-            foreach ($producto->beforeVisitLines() as $linea) {
-                $lineas[] = ['texto' => $linea, 'icono' => 'info'];
-            }
+            array_push($lineas, ...self::delProducto($producto));
         }
 
         if (($r = $this->unica()) !== null) {

@@ -59,9 +59,13 @@ class MailPreviewsTest extends TestCase
             'varias' => ['emails.reservado.subject_varias', 'emails.reservado.headline_varias', 'emails.reserva.changes_open'],
             'fuera_de_plazo' => ['emails.reserva.changes_late', 'emails.reserva.step_form_open'],
         ],
+        'visit_reminder_notice' => [
+            'hoy' => ['emails.manana.subject_hoy', 'emails.manana.headline_hoy'],
+            'sin_menores' => ['emails.manana.minors'],
+        ],
         'visit_eve_notice' => [
-            'cumple_con_nombre' => ['emails.visit_eve.honoree'],
-            'cumple_sin_nombre' => ['emails.visit_eve.honoree_unnamed'],
+            'cumple_con_nombre' => ['emails.visit_eve.honoree', 'emails.visit_eve.subject_nombre'],
+            'cumple_sin_nombre' => ['emails.visit_eve.honoree_unnamed', 'emails.visit_eve.subject'],
         ],
         'guest_form_request' => [
             'con_invitacion' => ['emails.guest_form.intro_invite', 'emails.guest_form.body_invite', 'emails.guest_form.action_invite', 'emails.guest_form.outro_invite'],
@@ -140,8 +144,9 @@ class MailPreviewsTest extends TestCase
             $this->assertStringContainsString('<html', $r['html'], $correo);
         }
 
-        // Sin firma ni encuesta en esta fiesta: solo esos dos dicen su motivo; ninguno revienta.
-        $this->assertSame(['guardian_authorization_signed' => 'firma', 'survey_invitation' => 'encuesta'], $sinCaso);
+        // Sin firma ni encuesta en esta fiesta —ni otra reserva que no sea una fiesta, la del 3 (la R2d)—: solo esos tres dicen
+        // su motivo; ninguno revienta.
+        $this->assertSame(['visit_reminder_notice' => 'reserva', 'guardian_authorization_signed' => 'firma', 'survey_invitation' => 'encuesta'], $sinCaso);
         $this->assertSame($antes, $this->filas(), 'la vista previa deshace lo que un toMail() escribe');
     }
 
@@ -388,7 +393,7 @@ class MailPreviewsTest extends TestCase
     /** Lo que el panel tiene del parque: el teléfono, el WhatsApp, el correo y el mapa (los enlaces y el pie de la R2). */
     private function ajustesDelParque(): void
     {
-        foreach (['contact.phone' => '600 123 456', 'contact.whatsapp' => '+34 600 123 456', 'contact.email' => 'hola@parque.test', 'address.maps_url' => 'https://maps.example.test/parque'] as $clave => $valor) {
+        foreach (['contact.phone' => '600 123 456', 'contact.whatsapp' => '+34 600 123 456', 'contact.email' => 'hola@parque.test', 'address.maps_url' => 'https://maps.example.test/parque', 'address.line1' => 'Calle del Salto, 1'] as $clave => $valor) {
             Setting::query()->updateOrCreate(['key' => $clave], ['value' => $valor]);
         }
         Setting::flushMemo();

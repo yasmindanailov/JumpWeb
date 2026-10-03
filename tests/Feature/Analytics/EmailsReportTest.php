@@ -47,12 +47,14 @@ class EmailsReportTest extends TestCase
 
         // 28 desde el código para entrar (`#853`, `LoginCode`, provocado); 29 con el de confirmar (`#855`, `ConfirmationCode`);
         // 28 otra vez sin el de restablecer la contraseña del cliente (A5, `#869`, `PasswordReset`); 29 con «Falta elegir…»
-        // (P4, `#914`, recibido). El de la contraseña del panel (`#870`) va al personal y no cuenta aquí.
-        $this->assertCount(29, $customer);
+        // (P4, `#914`, recibido); 30 con «Mañana os esperamos» (la R2d de los correos, recibido). El de la contraseña del panel
+        // (`#870`) va al personal y no cuenta aquí.
+        $this->assertCount(30, $customer);
         $this->assertEqualsCanonicalizing($customer, [...EmailTiming::PROVOKED, ...EmailTiming::RECEIVED]);
         $this->assertSame([], array_values(array_intersect(EmailTiming::PROVOKED, EmailTiming::RECEIVED)));
         $this->assertFalse(EmailTiming::isReceived('order_confirmation'), 'la confirmación la provoca él al pagar');
         $this->assertTrue(EmailTiming::isReceived('visit_eve_notice'), 'la víspera le llega');
+        $this->assertTrue(EmailTiming::isReceived('visit_reminder_notice'), 'y el 3, también');
         $this->assertTrue(EmailTiming::isReceived('choice_reminder_notice'), '«falta elegir» le llega, a una hora');
     }
 

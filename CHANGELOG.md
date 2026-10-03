@@ -16,6 +16,10 @@
   producto, «Antes de venir» (una línea por cosa: «Todos los profesores entran gratis»), y en sus complementos su aviso
   («Tenéis :n pares de calcetines…»). ⚠️ Lo editado en «Textos de los correos» para la confirmación VIEJA no pasa: sus
   textos son otros (`emails.reservado`, `emails.fiesta_reservada`, `emails.reserva`).
+- **MENOR: la víspera, como su diseño** (la R2d, `#917`): unas entradas o un grupo reciben SIEMPRE «Mañana os esperamos»
+  (con su QR, la hora y cómo llegar; «Hoy», dos horas antes, si se reservó para el mismo día); una fiesta, «Un repaso antes de
+  mañana» solo si le queda algo. Solo a pedidos pagados. ⚠️ Lo editado del aviso de la víspera viejo no pasa (`emails.visit_eve`
+  cambia; el 3 es `emails.manana`).
 
 ### Interno
 

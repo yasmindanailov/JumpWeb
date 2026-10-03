@@ -356,6 +356,18 @@ class BrandedMailMessage extends MailMessage
         ]);
     }
 
+    /**
+     * UN AVISO en su tono (el `aviso()` del diseño, InfoCallout en correo): lo que falta, sin alarma —«Aún no has añadido a
+     * los menores a tu cargo…»—, con su negrita y sus enlaces por nombre. ⚠️ Sin el icono del diseño: una imagen no cambia en
+     * oscuro y la letra del tono no llega a 3:1 sobre su fondo oscuro; el tinte y el enlace ya dicen lo que falta (la R2d).
+     *
+     * @param  'aviso'|'info'|'ok'|'error'|'neutro'  $tono
+     */
+    public function callout(string $texto, string $tono = 'aviso', string $titulo = ''): static
+    {
+        return $this->bloque(['tipo' => 'aviso', 'titulo' => $titulo, 'texto' => $texto, 'tono' => $tono]);
+    }
+
     /** EL MOTIVO (el que da el banco), en mono y aparte: se dicta igual al llamar. */
     public function reason(string $etiqueta, string $texto): static
     {

@@ -5060,6 +5060,7 @@ return [
             'verify_email_for_purchase' => 'Verificar el correo (compra)',
             'verify_pending_email' => 'Confirmar el correo nuevo',
             'visit_eve_notice' => 'Aviso de la víspera',
+            'visit_reminder_notice' => 'Mañana os esperamos',
             'choice_reminder_notice' => 'Falta elegir (la lista se cierra mañana)',
             // Los dos del acceso con código (A1/A2a de plataforma, `#853`/`#855`): sin nombre aquí salían con su clave cruda.
             'login_code' => 'Código para entrar',
@@ -5103,6 +5104,8 @@ return [
             'grupo' => 'Un grupo (un pack sin lista de invitados, como una excursión)',
             'varias' => 'Un pedido con varias reservas',
             'fuera_de_plazo' => 'Una reserva para dentro de un rato (fuera de plazo)',
+            'hoy' => 'Una reserva del mismo día («Hoy», dos horas antes)',
+            'sin_menores' => 'Quien reserva, aún sin menores a su cargo',
             'cumple_con_nombre' => 'Quien cumple, con su nombre',
             'cumple_sin_nombre' => 'Quien cumple, aún sin nombre',
             'con_invitacion' => 'Con invitación digital',
@@ -5167,6 +5170,12 @@ return [
             'sin_plazo' => 'Solo sale si el producto no publica plazo de cambio, o el pedido tiene varias reservas.',
             'fuera_de_plazo' => 'Solo sale si el plazo para cambiar o cancelar ya ha pasado (una reserva para muy pronto).',
             'responde' => 'Solo sale si el pedido no es de una fiesta y el panel tiene el correo del parque.',
+            // La víspera (la R2d): el 3 y el 4.
+            'manana' => 'Solo sale la víspera, por la tarde.',
+            'hoy' => 'Solo sale si la reserva es del mismo día: dos horas antes de su hora.',
+            'quien_cumple_con_nombre' => 'Solo sale si ya se sabe quién cumple.',
+            'quien_cumple_sin_nombre' => 'Solo sale si aún no se sabe quién cumple.',
+            'faltan_autorizaciones' => 'Solo sale si quedan autorizaciones de menores por firmar.',
             'faltan_invitados' => 'Solo sale si faltan datos de invitados.',
             'cumple_con_nombre' => 'Solo sale si falta el descargo de quien cumple y la lista ya tiene su nombre.',
             'cumple_sin_nombre' => 'Solo sale si falta el descargo de quien cumple y la lista aún no tiene su nombre.',
@@ -5251,6 +5260,7 @@ return [
         'descripciones' => [
             'order_confirmation' => 'Al pagar: la reserva hecha, con su resguardo.',
             'visit_eve_notice' => 'La víspera de la fiesta, con lo que falta por hacer.',
+            'visit_reminder_notice' => 'La víspera de unas entradas o un grupo (o dos horas antes, si es del mismo día): el QR, la hora y cómo llegar.',
             'choice_reminder_notice' => 'El día antes de que se cierre la lista, si falta contestar un grupo con «Hay que elegir» (la merienda).',
             'order_payment_declined' => 'Cuando el banco rechaza el pago.',
             'order_expired_without_payment' => 'Cuando una reserva caduca sin pagarse.',
@@ -5301,6 +5311,9 @@ return [
             'step_form_open' => 'Paso: la lista de invitados (sin plazo)', 'action_form' => 'Botón de la lista', 'step_invite' => 'Paso: la invitación',
             'changes_title' => 'Cambios: título', 'changes' => 'Cambios: hasta cuándo', 'changes_refund' => 'Cambios: hasta cuándo (devuelve la señal)',
             'changes_open' => 'Cambios: sin plazo', 'changes_late' => 'Cambios: fuera de plazo', 'replies_label' => 'Responder al correo',
+            // La víspera (la R2d).
+            'subject_hoy' => 'Asunto (del mismo día)', 'headline_hoy' => 'Titular (del mismo día)', 'list_title' => 'Lista: título',
+            'guardians' => 'Autorizaciones', 'address' => 'Dirección y cómo llegar',
             'intro' => 'Primer párrafo', 'intro_by_park' => 'Primer párrafo (si lo hace el parque)', 'intro_invite' => 'Primer párrafo (con invitación)',
             'body' => 'Párrafo', 'body_invite' => 'Párrafo (con invitación)', 'line1' => 'Párrafo 1', 'line2' => 'Párrafo 2', 'line3' => 'Párrafo 3',
             'linea' => 'Párrafo', 'outro' => 'Cierre', 'outro_invite' => 'Cierre (con invitación)', 'salutation' => 'Despedida',
@@ -5333,6 +5346,7 @@ return [
             'old' => '(lo de antes)', 'park' => '(el nombre del parque)', 'precio' => '(el precio)', 'product' => '(el producto)',
             'provider' => '(Google)', 'qty' => '(la cantidad)', 'total' => '(el total)', 'when' => '(cuándo)',
             'time' => '(la hora)', 'phone' => '(el teléfono del parque)', 'extras' => '(los extras que se pueden pedir)',
+            'address' => '(la dirección del parque)',
         ],
     ],
 ];

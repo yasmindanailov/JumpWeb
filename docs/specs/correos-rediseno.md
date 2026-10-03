@@ -584,7 +584,28 @@ queda algo); (b) el 2, UN correo (hoy dos); (c) en el 5, Bizum solo si el parque
   pruebas de la confirmación vieja re-apuntadas a lo que vigilaban; suite entera verde (6903). Arnés
   `scripts/mutar-correo-r2b.sh` **12/12** con su control (99 s; su primer superviviente apretó «en revisión»). Muestras en
   Mailpit: `SITUACION=<situación> php scripts/banco-correos.php OrderConfirmation` y `… MuestraR2b` (un grupo con señal y
-  varias reservas, montados en una transacción que se deshace).
+  varias reservas, montados en una transacción que se deshace). ✅ **En `main`** (03-10, `c415b1ea`, visto bueno del owner).
+
+**🟦 La R2d, construida (03-10, en `wip/`; al ojo en Mailpit) — `#917`, del agente y vetable**:
+- **El 3, «Mañana os esperamos»** (`VisitReminderNotice`, nuevo): a TODA reserva que no es una fiesta —unas entradas o un
+  grupo— y SIEMPRE (`#915`, a), la víspera desde las 18:00; la del MISMO día (o la que la víspera no pudo), con «Hoy», DOS
+  HORAS antes. El QR el primero (y adjunto); una lista sin filete: la hora, lo comprado, lo del producto (`before_visit`), la
+  dirección con «Cómo llegar» (solo con mapa en el panel) y lo que queda de verdad —lo que se paga en el parque y las
+  autorizaciones sin firmar, con el enlace para las familias si el producto las pide—; y el AVISO ámbar si el titular de unas
+  entradas aún no tiene menores a su cargo (`#875`). Sin chapa, como el diseño.
+- **El 4, «Un repaso antes de mañana»** (`VisitEveNotice`, rediseñado): solo FIESTAS y solo si les queda algo (`#714`, sin
+  cambios). El asunto con la hora y quien cumple; «Lo que queda» (fichas, respuestas, autorizaciones «:done de :total», el
+  descargo de quien cumple, el saldo), la frase que quita el susto, «Repasar la fiesta» (la lista firmada) y el QR en claro.
+  Sin resguardo ni chapa: el diseño no los lleva.
+- **El comando** (`reservations:eve-notice`, cada hora): solo pedidos PAGADOS —hasta ahora no miraba el pedido, y un carrito
+  abandonado con su franja mañana también recibía la víspera—; la fiesta no recibe el «Hoy» (su repaso es de la víspera).
+- **Cada correo, sus textos del QR** (`emails.manana.qr_*`, `emails.visit_eve.qr_*`): uno compartido con la confirmación se
+  editaría en una página y cambiaría tres correos. **El aviso, sin el icono del diseño**: una imagen no cambia en oscuro, y la
+  letra del tono no llega a 3:1 sobre su fondo oscuro; el tinte y el enlace ya dicen lo que falta.
+- Verificación: `VisitReminderNoticeTest` (6, con controles: cuándo sale, el «Hoy», lo ya empezado, lo sin pagar, lo que dice
+  y el aviso), `VisitEveNoticeTest` (con el pedido sin pagar y el diseño del 4), el censo con las situaciones `hoy` y
+  `sin_menores`. Arnés `scripts/mutar-correo-r2d.sh` **10/10** con su control (77 s; su primer superviviente, una fiesta de
+  control fuera de la ventana: el instrumento). El de la R2b, re-pasado tras mover la regla de los menores: 12/12.
 
 ## 7. Revisión y decisión
 

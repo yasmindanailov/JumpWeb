@@ -53,8 +53,9 @@ class EmailUtmTest extends TestCase
         // `BirthdayComingNotice`, el correo semanas antes del cumple); 29 desde el acceso con código (`#853`, `LoginCode`);
         // 30 con el código de confirmar (`#855`, `ConfirmationCode`); 31 con la contraseña del panel (A5a, `#870`,
         // `PanelPasswordLink`, al personal); y 30 otra vez sin el de restablecer la del cliente (A5b, `#869`, `PasswordReset`);
-        // 31 con «Falta elegir…» (P4, `#914`, `ChoiceReminderNotice`, el día antes de que se cierre la lista).
-        $this->assertCount(31, EmailUtm::keys());
+        // 31 con «Falta elegir…» (P4, `#914`, `ChoiceReminderNotice`, el día antes de que se cierre la lista); 32 con «Mañana os
+        // esperamos» (la R2d de los correos, `VisitReminderNotice`, el 3 del diseño).
+        $this->assertCount(32, EmailUtm::keys());
     }
 
     public function test_the_tag_only_touches_our_own_links_and_keeps_the_fragment(): void

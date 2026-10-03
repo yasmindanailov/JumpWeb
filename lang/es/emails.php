@@ -252,27 +252,47 @@ return [
         'what_to_do' => 'Si no ha sido a propósito, entra en Ajustes → Contenido web → Ficha de Google y vuelve a elegir la correcta. Hasta entonces la portada enseñará las opiniones de la ficha nueva.',
     ],
 
+    // EL 4, «Mañana es la fiesta» (la R2d, `correos-rediseno.md` §4.3; el aviso de T7·2b): sin chapa, como el diseño.
     'visit_eve' => [
-        'subject' => 'Mañana es tu fiesta · :code',
+        'subject' => 'Mañana a las :time · :product',
+        'subject_nombre' => 'Mañana a las :time · el cumple de :name',
         // ⚠️ Sin datos variables y sin repetir el asunto (`#506`): lo que se lee en la lista.
-        'preheader' => 'Quedan un par de cosas por dejar listas, y ninguna es grave.',
-        'badge' => 'Mañana es el día',
+        'preheader' => 'Lo que queda, y lo que se paga en el parque.',
         'headline' => 'Un repaso antes de mañana',
-        'intro' => 'Mañana os esperamos. Antes de que llegue el día, esto es lo que nos queda por cerrar:',
+        'list_title' => 'Lo que queda',
         // Las cifras, cada una en su línea y solo si falta.
-        'guests' => 'Fichas de invitados: :done de :total completas.',
+        'guests' => '**Invitados:** :done de :total con ficha.',
         'replies' => '{1} Una familia te ha contestado y está por repasar.|[2,*] :count familias te han contestado y están por repasar.',
-        'minors' => '{1} Queda un niño sin justificante firmado.|[2,*] Quedan :count niños sin justificante firmado.',
+        'guardians' => '**Autorizaciones:** :done de :total firmadas; las que falten se firman en la puerta.',
         // Quien cumple (F7, `#752`): su descargo, por su nombre y con dónde se firma.
         'honoree' => 'Falta el descargo de :name: puedes firmarlo en su fila de la lista.',
         'honoree_unnamed' => 'Falta el descargo de quien cumple: puedes firmarlo en su fila de la lista.',
-        'balance_title' => 'Lo que se paga en el parque',
-        'balance' => 'Mañana quedan :amount por abonar en recepción.',
+        'balance' => 'En el parque se pagan **:amount**.',
         // ❗❗ La frase que quita el susto, y no es cortesía: la cifra sola se lee como un reproche a
         // las nueve de la noche del día antes de la fiesta de tu hijo.
         'not_serious' => 'Nada de esto impide la fiesta: lo que falte lo resolvemos en el mostrador, y un niño que venga con un adulto entra igual. Si puedes, déjalo hecho esta tarde y mañana solo tenéis que llegar.',
-        'action' => 'Repasar mi reserva',
-        'outro' => '¡Nos vemos mañana!',
+        'action' => 'Repasar la fiesta',
+        'qr_title' => 'Enséñalo en la puerta: ahí está todo.',
+        'qr_dictate_label' => 'Si la cámara falla, dicta este código:',
+        'action_qr' => 'Abrir Mi QR',
+    ],
+
+    // EL 3, «Mañana os esperamos» (la R2d): a toda reserva que no es una fiesta, siempre (`#915`, a); «Hoy», si es del mismo
+    // día. Sin chapa, como el diseño.
+    'manana' => [
+        'subject' => 'Mañana a las :time · :product',
+        'subject_hoy' => 'Hoy a las :time · :product',
+        'preheader' => 'Tu QR, la hora y cómo llegar.',
+        'headline' => 'Mañana os esperamos',
+        'headline_hoy' => 'Hoy os esperamos',
+        'qr_title' => 'Enséñalo en la puerta: ahí está todo.',
+        'qr_dictate_label' => 'Si la cámara falla, dicta este código:',
+        'action_qr' => 'Abrir Mi QR',
+        'arrival' => 'Llegad unos minutos antes de las :time.',
+        'address' => ':address: [Cómo llegar](mapa).',
+        'balance' => 'En el parque se pagan **:amount**.',
+        'guardians' => '**Autorizaciones:** :done de :total firmadas; [pasa el enlace a las familias](autorizacion) o se firman en la puerta.',
+        'minors' => '[Aún no has añadido a los menores a tu cargo](menores): un minuto, y en la puerta solo enseñas el QR. Si no, lo hacéis allí.',
     ],
 
     // P4 de `fiesta-sistema-nuevo.md` §4.20 (`#913`, `#914`): «Falta elegir…», el día antes de que se cierre la lista. Las
