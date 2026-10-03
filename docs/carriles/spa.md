@@ -103,8 +103,9 @@ portada y no cuenta nada hasta la v2.0.0.
 5. ✅ **Los tres rojos de `audit-clock.sh` (27-09), ARREGLADOS el 03-10** (`TESTING.md` §2.septies): `InvitationSharingTest`
    era una BOMBA (la fiesta del fixture, el 04-10 a las 17:00, con el reloj real: el gate, rojo desde el domingo a las 19:00),
    `ScheduleFactsTest` caía en el último minuto del día del parque y `GoogleReviewImagesTest` comparaba el reloj del disco con
-   el de prueba; con su filtro, 10/10 fronteras (49 casos). ▶ Falta el barrido ENTERO (10 fronteras y los dos cruces de
-   medianoche: 12 pasadas de ~2 min 50 s, ~34 min), con permiso del owner: desde el 27-09 los dos carriles han sembrado fechas.
+   el de prueba; con su filtro, 10/10 fronteras (49 casos). ✅ Y el barrido ENTERO (03-10, con permiso del owner, 35 min):
+   las 10 fronteras verdes y, en el cruce de la medianoche UTC, dos casos MÍOS de P1 (`#912`) que ponían `main` rojo cada
+   mañana hasta las 10 h: los ancló plataforma a la vez (`7891a2b1`); yo, el parámetro muerto de sus ayudantes (`TESTING.md` §2.septies).
 6. **La invitación, lo que su ✅ NO cubre** (el `.ics` en un teléfono, el Turnstile real, `§7.2·R12`, `og:image` con bandas) y
    **los diez puntos de `§10.4.7·B`** (empieza por la RAÍZ: `matches()` y `takeSlotFor()` no son la misma regla).
 7. De la Fase 4: el **ojo del owner en un teléfono de verdad** · el cuaderno de entrega del cajón · el botón del sistema.
@@ -292,6 +293,9 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   pendiente del feed social en `/cookies` (`#592`) y `MIN_REVIEWS = 1` contra el «umbral de 10» de `google-reviews.md`.
 
 ### Atendido
+- **Plataforma 03-10** (`7891a2b1`, mis dos casos de `#912` que dependían de la hora, anclados; y el contrato **1.63.0**,
+  `stay_minutes`/`stay_per_unit`): leídos. Los casos querían decir «el plazo de la LISTA venció»: su ancla se queda y quité
+  el `cutoff: 48` de sus ayudantes, que escribía la columna sin lectores. Mi próxima versión del contrato parte de 1.63.0.
 - **Plataforma 02-10 noche** (la L2, K1·K2 `#878`: la isla compone pedidos de VARIAS líneas, sin el `addToCart` del motor; la
   prop de origen de `line_added` es de mi contrato de eventos): leído; a la analítica («retomar» 3): medir antes si la isla
   emite `line_added` en sus líneas y, si hace falta, la prop (`otra_zona` | `otra_entrada`). Sus grupos al reservar (`#881`), con mi 1.62.0 al lado.

@@ -83,8 +83,8 @@ class PostFormDemandSurfacesTest extends TestCase
 
     /**
      * ⚠️ **Y tampoco cuando el plazo ya venció**: el correo sale al pagar, y un pack comprado la
-     * víspera con un corte de 48 h no tiene extras que ofrecer. «Hay extras en el catálogo» y «este
-     * cliente puede añadir algo» son dos preguntas distintas.
+     * víspera, con el plazo de la lista vencido (`#912`), no tiene extras que ofrecer. «Hay extras en el
+     * catálogo» y «este cliente puede añadir algo» son dos preguntas distintas.
      */
     public function test_an_expired_cutoff_keeps_the_email_quiet(): void
     {
@@ -94,7 +94,7 @@ class PostFormDemandSurfacesTest extends TestCase
         // parque: ya venció.
         $this->travelTo(now(DisplayTime::timezone())->setTime(12, 0));
         $item = $this->party(daysAhead: 1);
-        $this->attachPostFormAddon($item->ticketType, cutoff: 48);
+        $this->attachPostFormAddon($item->ticketType);
 
         $html = $this->cuerpoDelCorreo($item->fresh(['ticketType.addons', 'order', 'slot']));
 
@@ -243,7 +243,8 @@ class PostFormDemandSurfacesTest extends TestCase
         ]);
     }
 
-    private function attachPostFormAddon(TicketType $pack, int $cutoff = 48): void
+    /** Un complemento de venta posterior sano. Su plazo es el de la lista (`#912`): el enganche ya no lo decide. */
+    private function attachPostFormAddon(TicketType $pack): void
     {
         $addon = TicketType::create([
             'name' => ['es' => 'Cubo de refrescos'], 'type' => TicketType::TYPE_ADDON,
@@ -256,8 +257,7 @@ class PostFormDemandSurfacesTest extends TestCase
         ]);
         $pack->configurableAddons()->attach($addon->id, [
             'position' => 1, 'quantity_mode' => ProductAddon::MODE_FIXED,
-            'stage' => ProductAddon::STAGE_POSTFORM,
-            'postform_cutoff_hours' => $cutoff, 'max_qty' => 10,
+            'stage' => ProductAddon::STAGE_POSTFORM, 'max_qty' => 10,
         ]);
         $pack->refresh();
     }

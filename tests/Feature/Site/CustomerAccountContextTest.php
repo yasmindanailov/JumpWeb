@@ -549,16 +549,16 @@ class CustomerAccountContextTest extends TestCase
         $user = User::factory()->create();
         $pack = $this->pack();
         $item = $this->reservation($user, $pack, now()->addDay()->format('Y-m-d'));
-        $this->attachPostFormAddon($pack, cutoff: 48);
+        $this->attachPostFormAddon($pack);
 
         $this->assertNull(
             $this->ctx($user)['extrasInvite'],
-            'la fiesta es mañana y el corte era de 48 h: ya no se puede añadir'
+            'la fiesta es mañana y el plazo de la lista (24 h) ya venció: no se puede añadir'
         );
     }
 
-    /** Un complemento de venta posterior sano enganchado al pack. */
-    private function attachPostFormAddon(TicketType $pack, int $cutoff = 48): void
+    /** Un complemento de venta posterior sano enganchado al pack. Su plazo es el de la lista (`#912`). */
+    private function attachPostFormAddon(TicketType $pack): void
     {
         $addon = TicketType::create([
             'name' => ['es' => 'Cubo de refrescos'], 'type' => TicketType::TYPE_ADDON,
@@ -574,8 +574,7 @@ class CustomerAccountContextTest extends TestCase
         ]);
         $pack->configurableAddons()->attach($addon->id, [
             'position' => 1, 'quantity_mode' => ProductAddon::MODE_FIXED,
-            'stage' => ProductAddon::STAGE_POSTFORM,
-            'postform_cutoff_hours' => $cutoff, 'max_qty' => 10,
+            'stage' => ProductAddon::STAGE_POSTFORM, 'max_qty' => 10,
         ]);
     }
 }

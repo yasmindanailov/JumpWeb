@@ -284,7 +284,12 @@ tests nuevos:
   del día del parque → ancla a media tarde. Y `GoogleReviewImagesTest` **no era del calendario**: el barrido compara el
   `mtime` del DISCO (reloj real) con `now()` (reloj de prueba), y con `TEST_CLOCK` en otra fecha lo recién escrito parecía
   viejo → su reloj se ancla al REAL (`travelTo(new DateTimeImmutable('@'.time()))`): su sujeto es la distancia entre los
-  dos relojes. Con su filtro, 10/10 fronteras.
+  dos relojes. Con su filtro, 10/10 fronteras. ▶ Y el barrido ENTERO (35 min, las 10 fronteras verdes) cazó en el cruce de
+  la medianoche UTC dos más, nacidos con `#912`: «el corte ya venció» con la fiesta MAÑANA y el plazo de 24 h de la lista
+  (antes, 48 h del complemento) dependía de la hora: **la suite de `main` estaba roja cada mañana** hasta la hora de la
+  fiesta del fixture (medido a las 07:51). Plataforma, a quien le tumbó el gate, los ancló a mediodía del parque a la vez
+  (`7891a2b1`). ⚠️ Un cambio de REGLA de plazo vuelve dependientes de la hora casos que no lo eran, y un barrido con
+  `--filter` solo ve las clases que nombra: tras uno, el barrido ENTERO.
 
 ▶ **La lección de método, después de tres**: un test con fechas **sale verde el día que se escribe y
 eso no dice nada**. El barrido no es ceremonia de cierre — es el único momento en que este defecto es

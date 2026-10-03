@@ -23,7 +23,7 @@
   editable (R1·T): un bloque nuevo sale en el panel, la negrita solo en párrafos y avisos, y `MailPreviewsTest` lo pinta.
 - **Estado**: 🟦 ✅ **R1a la plantilla y R1b los iconos** (29-09, §4.1.2 y §4.1.3; `#803`, `#804`) y ✅ **R1·T los textos
   editables** (30-09, §4.2, `#802`; revisada antes de `main`, §4.2.2) y ✅ **R1·T2** («Solo sale si…» y la «Situación»,
-  02-10, `#809`, §4.2.3–§4.2.4), en `main` y aprobadas → R1c → la R2.
+  02-10, `#809`, §4.2.3–§4.2.4), en `main` y aprobadas → R1c (su «al detalle», §4.1.4, 03-10) → la R2.
 - **Invariantes**: `RGPD-01` (lo enviado), `RGPD-07`, el consentimiento de marketing; `PAY-14` (se encolan).
 
 ## 1. Contexto — medido el 29-09
@@ -236,6 +236,42 @@ una sonda por tanda; los comerciales con su prueba de consentimiento y de «una 
   cada color sale de ella», ampliada al color de la URL de cada icono. Arnés `scripts/mutar-correo-r1b.sh` **12/12**, el
   árbol byte a byte; suite 6562 / 45044; Larastan limpio; sonda 28/28 con sus iconos CARGADOS (0 rotos) en claro y oscuro
   (la sonda reescribe `localhost:8081` al `:80` del contenedor, que es donde la alcanza su Chromium).
+
+#### 4.1.4 La R1c al detalle — medida el 03-10, antes de codificar (del agente contra el objetivo; vetable al ojo)
+
+- **Medido, lo que ya está**: los 33 correos que componen un `BrandedMailMessage` pintan la plantilla desde la R1a (sus
+  verbos llegan a los bloques sin tocarlos); el 8 ya es «482-913 es tu código para entrar», sin botón (Z6g·1 de plataforma,
+  `#871`). La R1c, tal como la nombraba §4.1 («los 27 a la plantilla»), queda en tres cosas.
+- **1 · Los dos avisos al EQUIPO, a la plantilla**: `ContactMessageMail` y `PaymentIncidentMail` son HTML suelto, con colores a
+  mano (`#626A72`, `#C83912`), sin oscuro ni versión de texto. **Cómo**: se envían IGUAL —el `Mailable`, su `replyTo` y sus
+  llamadas en `ContactController` y `RedsysReturnHandler` (`CRITICAL_RE`) no se tocan—; cambia su `content()`, que compone un
+  `BrandedMailMessage` SIN notificación (sin UTM, sin marca de envío ni píxel: el equipo no es audiencia) y pinta las vistas de
+  la plantilla con su `data()`. El de contacto: cabecera («Mensaje de contacto»), resguardo de filas (nombre, correo,
+  teléfono y tema, los que haya), el mensaje como texto y el idioma y la hora en una línea; la incidencia: cabecera en tono
+  de error, el porqué como aviso (cobro duplicado o llegado tras caducar) y el resguardo (pedido, estado, operación…). Sus
+  textos, al diccionario (es, en, fr) y en el idioma del PARQUE, como hoy su asunto; NO son editables desde el panel (la R1·T
+  es de los correos al cliente). Sus dos vistas sueltas se retiran.
+- **2 · El molde viejo, fuera** (muerto desde la R1a, medido): `resources/views/vendor/mail/**` (con `themes/brand.css`), la
+  vista publicada `vendor/notifications/email` y el bloque `markdown` de `config/mail.php`. Ningún correo pasa ya por ahí:
+  `BrandedMailMessage` anula el Markdown, del framework no sale ninguno (la verificación es `VerifyEmailAddress` y la
+  contraseña del panel, `PanelPasswordLink`) y los avisos al equipo pasan por la plantilla (el 1). `MailMoldTest` pierde sus
+  dos excepciones: TODO correo, por la plantilla.
+- **3 · El CÓDIGO, en su bloque** (el 8 del zip (6)): la cabecera dice «Tu código para entrar» y el código va en el bloque
+  `codigo` del diseño —su etiqueta («Código de 6 cifras»), las seis cifras en dos grupos con guion en la familia mono y la
+  nota de la caducidad—, en vez de ser el titular. Igual en los otros dos correos de código (`ConfirmationCode`,
+  `VerifyPendingEmail`), que el diseño aún no dibuja: el mismo gesto, la misma forma. La etiqueta y la nota, editables (R1·T).
+- **Y una corrección de texto, decidida contra el objetivo (vetable)**: el 12 (`fiesta.cumple_mail`) promete «Dos horas
+  saltando»; desde `#873` las dos horas se reparten (90 saltando y 30 de merienda) y los 30 son un dato de la instancia, no
+  del producto. El texto del PRODUCTO dice lo que vale en cualquier parque, sin cifra («primero saltan… y luego, la
+  merienda»); los «90 minutos» de PlayJump, en el panel (el 12 es editable, R1·T).
+- **Fuera de la R1c**: «Quién firma» en el 1 y el 3 (`#875`) va con la R2: en el diseño vive en «Antes de venir», la lista con
+  iconos que nace con ella. Medido: ningún correo dice hoy «tus hijos» (el 1 habla del descargo en general; el 3, de los
+  niños sin justificante).
+- **Guardas**: los avisos al equipo, por la plantilla (`MailMoldTest`, sin colores a mano) y con su versión de texto;
+  `ContactPageTest` (su `replyTo`) y `RedsysReturnHandlerTest`, sin tocar y en verde; el bloque `codigo`, con su gemela de
+  texto y AA en claro y en oscuro (`MailThemeTest`); el censo del panel (`MailTextCatalog`) con la etiqueta y la nota. Arnés
+  `scripts/mutar-correo-r1c.sh`, por mutante y con su filtro (minutos). En `wip/correos-r1c`; al ojo del owner en Mailpit
+  (`php scripts/banco-correos.php`): los dos avisos y los tres de código, en claro y en oscuro.
 
 ### 4.2 Los textos, editables desde el panel — pregunta del owner (29-09), análisis sin código
 
