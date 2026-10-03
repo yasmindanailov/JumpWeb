@@ -18,7 +18,7 @@ use Illuminate\Support\Str;
  *  - los DATOS y los FRAGMENTOS que otra frase inserta (`providers.*`, `actions.*`, y los sueltos: el nombre de reserva
  *    de un producto borrado, `product_fallback`, que va también al ASUNTO, y los importes rotulados del suplemento,
  *    `amount_discount`/`amount_surcharge`): no son un bloque del correo, y su formato lo pone la frase que los recibe;
- *  - lo que no usa nadie (`reason_prefix`) y los PLURALES (`{1} …|[2,*] …`), que un editor de texto no sabe guardar.
+ *  - los PLURALES (`{1} …|[2,*] …`), que un editor de texto no sabe guardar.
  * Una guarda comprueba que cada clave editable la pinta SU correo y ningún otro sitio (la web no cambia desde aquí).
  * Fuera del catálogo, los del EQUIPO (la ficha de Google, la incidencia de un cobro, el mensaje de contacto).
  */
@@ -81,7 +81,7 @@ final class MailTextCatalog
     ];
 
     /** @var list<string> El último tramo de lo que nunca se edita (ver la cabecera), con los fragmentos sueltos al final. */
-    private const NUNCA = ['greeting', 'porque', 'baja', 'optout', 'reason_prefix', 'product_fallback', 'amount_discount', 'amount_surcharge'];
+    private const NUNCA = ['greeting', 'porque', 'baja', 'optout', 'product_fallback', 'amount_discount', 'amount_surcharge'];
 
     /** @var list<string> Un tramo intermedio de lo que nunca se edita: datos y fragmentos. */
     private const NUNCA_TRAMOS = ['providers', 'actions'];

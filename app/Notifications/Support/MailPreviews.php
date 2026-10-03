@@ -222,8 +222,28 @@ final class MailPreviews
                 $f,
                 $f->ticketType?->choiceGroups()->pluck('key')->all() ?? [],
             )),
-            'order_payment_declined' => $conPedido(static fn (Order $o) => new N\OrderPaymentDeclined($o, '0190')),
-            'order_expired_without_payment' => $conPedido(static fn (Order $o) => new N\OrderExpiredWithoutPayment($o)),
+            // La R2e: con o sin Bizum (el dato del correo, no el ajuste del parque), la reserva aún guardada (su hora, en memoria)
+            // y varias reservas (un caso real de su clase).
+            'order_payment_declined' => static function (User $quienMira, string $locale, ?string $s) use ($pedido, $pedidoDe): Notification|string {
+                $o = $s === 'varias' ? $pedidoDe(static fn (MailReservation $r): bool => $r->reservas()->count() > 1) : $pedido();
+                if ($o === null) {
+                    return $s === 'varias' ? 'pedido_varias' : 'pedido';
+                }
+                if ($s === 'con_hora') {
+                    $o->setAttribute('expires_at', now()->addMinutes(12));
+                }
+
+                return new N\OrderPaymentDeclined($o, '0190', match ($s) {
+                    'con_bizum' => true,
+                    'sin_bizum' => false,
+                    default => null,
+                });
+            },
+            'order_expired_without_payment' => static function (User $quienMira, string $locale, ?string $s) use ($pedido, $pedidoDe): Notification|string {
+                $o = $s === 'varias' ? $pedidoDe(static fn (MailReservation $r): bool => $r->reservas()->count() > 1) : $pedido();
+
+                return $o !== null ? new N\OrderExpiredWithoutPayment($o) : ($s === 'varias' ? 'pedido_varias' : 'pedido');
+            },
             'order_processed_after_expiration' => $conPedido(static fn (Order $o) => new N\OrderProcessedAfterExpiration($o)),
             // La invitación digital y la fecha, en memoria (un atributo del producto y la franja); los extras abiertos los
             // decide el catálogo: la última fiesta que los tenga.

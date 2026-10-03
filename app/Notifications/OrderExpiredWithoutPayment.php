@@ -3,34 +3,26 @@
 namespace App\Notifications;
 
 use App\Domain\Booking\Models\Order;
-use App\Domain\Booking\Services\EmailSlip;
+use App\Domain\Platform\Services\DisplayTime;
 use App\Notifications\Support\BrandedMailMessage;
+use App\Notifications\Support\MailPie;
+use App\Notifications\Support\MailReservation;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
- * Audit #114 (2026-05-28, G2) — Email cuando una Order caduca SIN haber completado el pago.
+ * **«TU HORA SE HA LIBERADO»** — el 6 del diseño (la R2e de `specs/correos-rediseno.md` §4.3; Audit #114, G2): cuando una
+ * reserva CADUCA sin completar el pago (`orders:expire`) y el cliente había llegado a la pasarela (un `Payment` pendiente).
+ * Sin él no sabe que su hora ya no es suya; y si pagó de verdad, necesita por dónde reclamar.
  *
- * Trigger: el comando `orders:expire` detecta Order `pending` con `expires_at` cruzado
- * AND con un Payment `pending` asociado (= el cliente había intentado pagar pero la
- * notificación de Redsys nunca llegó). Caso típico:
- *  - Cliente paga, el banco captura, Redsys envía notificación pero la URL pública estaba
- *    caída → notificación perdida → orders:expire la caduca silenciosamente.
- *  - Cliente entra a Redsys pero cierra antes de pulsar pagar → Payment pending huérfano.
+ * NO se envía si la reserva no llegó a la pasarela (un abandono limpio no merece correo) ni si el pago se DENEGÓ (ya recibió el 5:
+ * dos correos serían ruido). Lo decide `ExpireOrders`.
  *
- * Sin este email, el cliente NO sabe que su reserva ya no es válida. Si pagó realmente,
- * además necesita un canal para reclamar.
- *
- * NO se envía si:
- *  - La Order no tenía Payment (abandono limpio antes de la pasarela): no merece email.
- *  - La Order tenía Payment `failed` (ya recibió `OrderPaymentDeclined`): doble email es ruido.
- *
- * No bloqueante: el envío va en try/catch en `ExpireOrders` (un fallo SMTP no debe bloquear
- * el resto del comando).
- *
- * Texto en el idioma del usuario (User implementa HasLocalePreference).
+ * En el orden del diseño: lo que pasó, «Volver a reservar» y, si pagó y no ve la confirmación, por dónde escribir con su
+ * número. ⚠️ El botón lleva a la PORTADA, no a la hora de antes: la compra solo se abre situada desde la calculadora de cada
+ * página de la instancia, y el producto no sabe en qué página está cada producto. Por eso dice «reservar», no «reservarla».
  */
 class OrderExpiredWithoutPayment extends Notification implements ShouldQueue
 {
@@ -48,13 +40,34 @@ class OrderExpiredWithoutPayment extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new BrandedMailMessage($this))
-            ->subject(__('emails.order_expired_without_payment.subject', ['code' => $this->order->code]))
-            ->hero('emails.order_expired_without_payment', 'warn', EmailSlip::forOrder($this->order))
-            ->line(__('emails.order_expired_without_payment.intro', ['code' => $this->order->code]))
-            ->line(__('emails.order_expired_without_payment.no_charge'))
-            ->line(__('emails.order_expired_without_payment.retry'))
-            ->action(__('emails.order_expired_without_payment.action'), route('home'))
-            ->line(__('emails.order_expired_without_payment.contact'));
+        $una = (new MailReservation($this->order))->unica();
+
+        $message = (new BrandedMailMessage($this))
+            ->subject($una !== null
+                ? (string) __('emails.order_expired_without_payment.subject', ['day' => DisplayTime::dayAndMonth($una->slot->date), 'time' => MailReservation::hora($una)])
+                : (string) __('emails.order_expired_without_payment.subject_varias', ['code' => (string) $this->order->code]))
+            ->hero('emails.order_expired_without_payment', 'warn', [], [], $una !== null ? 'headline' : 'headline_varias')
+            ->links(['contacto' => self::contacto()])
+            ->paragraphs((string) __('emails.order_expired_without_payment.body'))
+            ->button((string) __('emails.order_expired_without_payment.action'), route('home'));
+
+        if (self::contacto() !== null) {
+            $message->small((string) __('emails.order_expired_without_payment.contact', ['code' => (string) $this->order->code]));
+        }
+
+        return $message;
+    }
+
+    /** Por dónde ESCRIBIR al parque: su WhatsApp; si no tiene, su correo; si tampoco, su teléfono. `null` sin ninguno. */
+    private static function contacto(): ?string
+    {
+        $pie = MailPie::current();
+
+        return match (true) {
+            $pie->whatsapp !== null => 'https://wa.me/'.$pie->whatsapp,
+            $pie->correo !== null => 'mailto:'.$pie->correo,
+            $pie->tel !== null => 'tel:'.$pie->tel,
+            default => null,
+        };
     }
 }

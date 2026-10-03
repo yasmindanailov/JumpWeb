@@ -82,7 +82,7 @@ class MailTextCatalogTest extends TestCase
             // Fragmentos sueltos: el nombre de reserva de un producto borrado (va también al ASUNTO) y los importes rotulados
             'emails.order_item_cancelled.product_fallback', 'emails.mixed_party_surcharge.amount_discount',
             'emails.mixed_party_surcharge.amount_surcharge',
-            'emails.order_declined.greeting', 'emails.order_declined.reason_prefix', // lo que no se pinta
+            'emails.order_cancelled.greeting', // lo que no se pinta
             'emails.verify_pending_email.action', // el botón del correo nuevo, que se fue con su enlace (A5, `#869`)
         ] as $clave) {
             $this->assertFalse(MailTextCatalog::esEditable($clave), $clave);

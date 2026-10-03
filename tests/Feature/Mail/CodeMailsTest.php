@@ -76,7 +76,8 @@ class CodeMailsTest extends TestCase
     /** CONTROL: un correo SIN código no pinta el bloque (el bloque nace solo de `code()`). */
     public function test_a_mail_without_a_code_paints_no_code_block(): void
     {
-        $html = (string) (new BrandedMailMessage)->hero('emails.order_declined', 'err')->line('Uno.')->render();
+        // Un correo CON chapa (la cancelación; el 5 la perdió con la R2e, como su diseño).
+        $html = (string) (new BrandedMailMessage)->hero('emails.order_cancelled', 'err')->line('Uno.')->render();
 
         $this->assertStringNotContainsString('data-bloque="codigo"', $html);
         $this->assertStringContainsString('class="pjm-tono-error-t"', $html, 'y los que llevan chapa la siguen llevando');

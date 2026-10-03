@@ -59,6 +59,15 @@ class MailPreviewsTest extends TestCase
             'varias' => ['emails.reservado.subject_varias', 'emails.reservado.headline_varias', 'emails.reserva.changes_open'],
             'fuera_de_plazo' => ['emails.reserva.changes_late', 'emails.reserva.step_form_open'],
         ],
+        'order_payment_declined' => [
+            'con_bizum' => ['emails.order_declined.action_bizum', 'emails.order_declined.action_card', 'emails.order_declined.help_bizum'],
+            'sin_bizum' => ['emails.order_declined.action', 'emails.order_declined.help'],
+            'con_hora' => ['emails.order_declined.body'],
+            'varias' => ['emails.order_declined.subject_varias'],
+        ],
+        'order_expired_without_payment' => [
+            'varias' => ['emails.order_expired_without_payment.subject_varias', 'emails.order_expired_without_payment.headline_varias'],
+        ],
         'visit_reminder_notice' => [
             'hoy' => ['emails.manana.subject_hoy', 'emails.manana.headline_hoy'],
             'sin_menores' => ['emails.manana.minors'],

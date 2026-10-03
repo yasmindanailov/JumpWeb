@@ -30,11 +30,11 @@ class EmailTextsPageTest extends TestCase
     use RefreshDatabase;
 
     /** El correo de ejemplo: uno con un PÁRRAFO que lleva el número del pedido y un asunto que también (`{code}`). */
-    private const CORREO = 'order_payment_declined';
+    private const CORREO = 'order_cancelled';
 
-    private const INTRO = 'emails.order_declined.intro';
+    private const INTRO = 'emails.order_cancelled.intro';
 
-    private const ASUNTO = 'emails.order_declined.subject';
+    private const ASUNTO = 'emails.order_cancelled.subject';
 
     protected function setUp(): void
     {

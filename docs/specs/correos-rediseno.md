@@ -607,6 +607,21 @@ queda algo); (b) el 2, UN correo (hoy dos); (c) en el 5, Bizum solo si el parque
   `sin_menores`. Arnés `scripts/mutar-correo-r2d.sh` **10/10** con su control (77 s; su primer superviviente, una fiesta de
   control fuera de la ventana: el instrumento). El de la R2b, re-pasado tras mover la regla de los menores: 12/12.
 
+**🟦 La R2e, construida (03-10, en `wip/correos-r2d`; al ojo en Mailpit) — `#918`, del agente y vetable**:
+- **El 5, «El pago no ha salido»** (`OrderPaymentDeclined`): el asunto con el día y la hora (con varias reservas, el número);
+  lo que pasó y hasta qué hora sigue GUARDADA (en la zona del parque; pasada la retención, sin hora); «Pagar con Bizum» y
+  «Volver a intentar con tarjeta» SOLO si el parque cobra con Bizum (`payment.marks`, `#915`, c) —los dos al MISMO reintento:
+  el producto no elige el método, la página del banco ofrece los del TPV—, si no «Volver a intentar el pago»; el MOTIVO del
+  banco, en mono y aparte; y la ayuda por WhatsApp solo si el panel lo tiene. ⚠️ El adelanto no lleva la hora (`#506`: sin
+  datos variables); va en el cuerpo.
+- **El 6, «Tu hora se ha liberado»** (`OrderExpiredWithoutPayment`): el asunto con el día y la hora, lo que pasó, «Volver a
+  reservar» —a la PORTADA: la compra solo se abre situada desde la calculadora de cada página de la instancia, y el producto
+  no sabe en qué página está cada producto; por eso «reservar» y no «reservarla»— y, si pagó y no ve la confirmación, por
+  dónde escribir con su número: el WhatsApp, si no el correo, si no el teléfono.
+- Los dos, sin chapa ni resguardo (el diseño); sus textos viejos se van. Verificación: `PaymentMailsTest` (4),
+  `OrderNotificationsTest` (Bizum solo con la marca), el censo con `con_bizum`, `sin_bizum`, `con_hora` y `varias`. Arnés
+  `scripts/mutar-correo-r2e.sh` **7/7** con su control (51 s).
+
 ## 7. Revisión y decisión
 
 - ✅ **`[DECIDIDO owner]` 29-09 (`#801`)**: (1) **el 7**: el correo sigue siendo la encuesta anónima y, al terminarla, la

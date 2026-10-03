@@ -20,6 +20,9 @@
   (con su QR, la hora y cómo llegar; «Hoy», dos horas antes, si se reservó para el mismo día); una fiesta, «Un repaso antes de
   mañana» solo si le queda algo. Solo a pedidos pagados. ⚠️ Lo editado del aviso de la víspera viejo no pasa (`emails.visit_eve`
   cambia; el 3 es `emails.manana`).
+- **MENOR: «El pago no ha salido» y «Tu hora se ha liberado», como su diseño** (la R2e, `#918`): la hora y el motivo del
+  banco; «Pagar con Bizum» solo si el parque lo tiene en sus marcas de pago (Ajustes → Pagos). ⚠️ Lo editado de los dos
+  correos viejos no pasa (sus textos son otros).
 
 ### Interno
 
