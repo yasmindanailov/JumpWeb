@@ -6,6 +6,49 @@
 > **interno**. Producción despliega solo etiquetas (guarda 8 de `scripts/deploy.sh`); staging despliega
 > `main`. Una versión se corta con la skill `/release`.
 
+## v2.0.0 · 2026-10-03
+
+La versión GRANDE del programa «producto e instancias» (`#670`: no se despliega en piezas): la landing deja el producto
+y pasa a la INSTANCIA, con la web nueva (Saltia) y la compra de la ISLA; el panel, en su dirección secreta y con
+authenticator; se entra con un código al correo y sin contraseña; la fiesta del sistema nuevo, la analítica, las
+encuestas, los correos rediseñados, la puerta y el SEO. 475 commits desde v1.2.0; el contrato de la API, de 1.2.0 a 1.63.0.
+
+### Para las instancias
+
+- **MAYOR: una instalación TIENE QUE ACTUAR** (`ENTORNOS.md` §6, las notas de la v2.0.0, en este orden):
+  - **`.env`**: `PANEL_PATH` OBLIGATORIA (8–64 caracteres `[a-z0-9-]`, nunca `admin`; la guarda 10 para el despliegue sin
+    ella, `#850`): `/admin` da 404 desde esta versión. Cambian con ella el favorito de las tablets de la puerta
+    (`/<PANEL_PATH>/puerta/validar`) y la URI de retorno de la ficha de Google (`/<PANEL_PATH>/ficha-google/callback`).
+  - **`.env`**: `INSTANCIA_RUTA`, la ruta ABSOLUTA al paquete de la instancia, FUERA del árbol del producto (`SEC-12`,
+    `#647`); su `publico/` se copia a `public/` (`instancia/`, `images/attractions/`, `videos/`), que el despliegue no
+    borra. Sin paquete, el producto sirve su anfitrión mínimo: no es la web de la instalación.
+  - **`.env`**: fuera `GOOGLE_PLACES_API_KEY` (Places retirado, `#771`/`#772`; las reseñas se importan con
+    `reviews:import`). Nuevas y opcionales, vacías = apagado: `POSTHOG_*`, `MATOMO_TOKEN_AUTH`, `META_CAPI_*`,
+    `TIKTOK_EVENTS_ACCESS_TOKEN`.
+  - **El kit de ilustración**: tras el despliegue, `kit:build --podar` (la guarda 7 sale en rojo hasta entonces, `#845`).
+  - **Tras el `migrate`**: las contraseñas de los CLIENTES se borran (A5d, `#869`; sin vuelta: medir antes y después); y,
+    si la instalación editó a mano su texto legal o su política de cookies, su guion por huella (los de PlayJump, en su
+    `storage/app/`).
+  - **Los administradores** configuran el authenticator en su primer inicio de sesión (`#851`); el panel recuerda UN día
+    a todos (`#877`).
+- **El contrato de la API sube de 1.2.0 a 1.63.0** y solo AÑADE (rutas y campos): la web y la app siguen siendo
+  clientes iguales. La sesión de la web entra con un código de un solo uso (`#853`→`#857`).
+- **El paquete de tema** (`client.css`): declarar los tokens en `:root, .sidecart` deja de ser una recomendación —el cajón
+  vive dentro de la página de la instancia— (`INSTALACION-CLIENTE.md` §4).
+
+### Interno
+
+- **La landing fuera** (F5, `#677`, `#681`) y **la isla** (`#682`): la web nueva en la instancia con la compra en Vue
+  contra `/api/v1`; su primera pantalla, la conversión y las páginas (`#820`→`#846`), Mi cuenta (T5, `#774`→`#779`), el
+  zip tercero y el sexto (`#780`→`#787`, `#866`→`#875`), la otra zona en un mismo pedido (L2, `#878`, `#881`, `#882`) y la
+  lista del owner del 02-10 (`#876`→`#880`).
+- **Promociones** (`#770`), **las reseñas copiadas** (`#771`, `#774`) y **el SEO** (`#862`).
+- **El panel a salvo** (`#850`, `#851`, `#877`) y **el acceso con código** sin contraseña (`#853`→`#857`, `#869`, `#870`).
+- **Lo legal**: `/cookies` (`#858`→`#860`), los textos (`#863`→`#865`) y los datos de los invitados a los 14 días (`#863`).
+- **Del carril del SPA**: la fiesta del sistema nuevo y la invitación, la analítica (`#678`, `#735`) y sus encuestas
+  anónimas (`#754`), «Avísame de fechas» (`#750`), los correos rediseñados y su registro (`#794`→`#797`), la puerta nueva,
+  el cumpleaños mixto y la hora extra.
+
 ## v1.2.0 · 2026-09-19
 
 La versión del **cajón empaquetable** (F4 del programa, `#630`→`#638`): el cajón deja de necesitar la landing
