@@ -20,9 +20,14 @@ FICHEROS=(
     app/Mail/PaymentIncidentMail.php
     lang/es/fiesta.php
 )
-restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
+# ⚠️⚠️ La copia, por la RUTA ENTERA y no por el nombre: las dos vistas del bloque se llaman igual (`html/codigo.blade.php` y
+# `texto/codigo.blade.php`), y con `basename` la segunda pisaba la copia de la primera —la primera pasada restauró la gemela
+# de TEXTO encima de la vista HTML (03-10; se rescató del commit)—.
+copia() { printf '%s/%s' "$TMP" "${1//\//__}"; }
+restaurar() { for f in "${FICHEROS[@]}"; do cp "$(copia "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"; docker compose exec -u sail -T laravel.test php artisan view:clear >/dev/null 2>&1' EXIT
-for f in "${FICHEROS[@]}"; do cp "$f" "$TMP/$(basename "$f")"; done
+for f in "${FICHEROS[@]}"; do cp "$f" "$(copia "$f")"; done
+[[ $(find "$TMP" -type f | wc -l) -eq ${#FICHEROS[@]} ]] || { echo '✗ hay copias que se pisan: el árbol no se podría restaurar' >&2; exit 1; }
 if ! correr "$TODOS"; then
     echo '✗ la base NO está verde antes de mutar: el veredicto de abajo no valdría nada.' >&2
     exit 1
@@ -40,7 +45,7 @@ mutar() {
     local nombre="$1" fichero="$2" buscar="$3" poner="$4" filtro="$5"
     total=$((total + 1))
     aplicar "$fichero" "$buscar" "$poner"; local unico=$?
-    if cmp -s "$fichero" "$TMP/$(basename "$fichero")"; then
+    if cmp -s "$fichero" "$(copia "$fichero")"; then
         echo "  ⚠ «$nombre» NO SE APLICÓ (el patrón no casa): el veredicto no vale"
         return
     fi
@@ -54,13 +59,13 @@ mutar() {
         echo "  ✓ muerde:    $nombre"
         muerden=$((muerden + 1))
     fi
-    cp "$TMP/$(basename "$fichero")" "$fichero"; touch "$fichero"
+    cp "$(copia "$fichero")" "$fichero"; touch "$fichero"
 }
 
 control() {
     local nombre="$1" fichero="$2" buscar="$3" poner="$4" filtro="$5"
     aplicar "$fichero" "$buscar" "$poner"
-    if cmp -s "$fichero" "$TMP/$(basename "$fichero")"; then
+    if cmp -s "$fichero" "$(copia "$fichero")"; then
         echo "  ⚠ CONTROL «$nombre» NO SE APLICÓ"; control_ok=0; return
     fi
     touch "$fichero"
@@ -69,7 +74,7 @@ control() {
     else
         echo "  ✗ CONTROL ROJO: $nombre — se pone rojo por algo que no es la regla"; control_ok=0
     fi
-    cp "$TMP/$(basename "$fichero")" "$fichero"; touch "$fichero"
+    cp "$(copia "$fichero")" "$fichero"; touch "$fichero"
 }
 
 MD=app/Notifications/Support/MailDocument.php

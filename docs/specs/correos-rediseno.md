@@ -282,7 +282,10 @@ una sonda por tanda; los comerciales con su prueba de consentimiento y de «una 
   se pinta en la cola, en el del negocio (`StaffMailsTest` lo fija). El molde viejo, fuera; `MailMoldTest` sin excepciones;
   el 12 sin horas. **Y de paso**: `scripts/banco-correos.php` saltaba 15 de sus correos desde la R1·T2 (los constructores
   de la vista previa piden la «Situación»): arreglado, 32/32 a Mailpit. Verificación: `CodeMailsTest` 4, `StaffMailsTest` 3
-  y el 12 (todos con su control); suite 6882; Larastan y Pint limpios. Arnés escrito (13 y su control), sin correr.
+  y el 12 (todos con su control); suite 6882; Larastan y Pint limpios. ✅ **Visto bueno del owner (03-10)**. Arnés
+  `scripts/mutar-correo-r1c.sh` **12/12** con su control (83 s), las vistas byte a byte. ⚠️ Su primera pasada destapó un
+  defecto DEL ARNÉS: guardaba las copias por el NOMBRE y las dos vistas del bloque se llaman igual, así que restauró la gemela
+  de texto encima de la HTML (rescatada del commit); ahora la copia va por la ruta entera y se comprueba que ninguna se pisa.
 
 ### 4.2 Los textos, editables desde el panel — pregunta del owner (29-09), análisis sin código
 
