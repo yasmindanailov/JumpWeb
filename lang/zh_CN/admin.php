@@ -2293,6 +2293,7 @@ return [
         'section_data' => '账户信息',
         'section_roles' => '角色',
         'section_consents' => '同意记录',
+        'section_dependents' => '监护的未成年人',
         'section_orders' => '订单',
         'section_insights' => '客户360',
         'insights' => [
@@ -2328,6 +2329,26 @@ return [
             'empty' => '该客户还没有订单。',
         ],
 
+        // 客户卡片的「监护的未成年人」（与 es 同步：缺了它，中文面板会显示原始键名）。
+        'dependents' => [
+            'empty' => '该客户没有申报监护的未成年人。客户可在自己的账户「监护的未成年人」中自行申报。',
+            'anonymized' => '账户已匿名化：保留已签免责声明的未成年人处于受限状态，只能在「免责声明记录」中查询。',
+            'col_name' => '姓名',
+            'col_relationship' => '关系',
+            'relationship_father' => '父亲',
+            'relationship_mother' => '母亲',
+            'relationship_legal_guardian' => '法定监护人',
+            'relationship_grandparent' => '祖父母',
+            'relationship_other' => '其他',
+            'col_age' => '年龄',
+            'col_waiver' => '免责声明',
+            'col_since' => '申报日期',
+            'col_removed' => '已移除',
+            'age_today' => ':age 岁（今天）',
+            'adult' => '已满 18 岁',
+            'removed_on' => ':date 已移除',
+        ],
+
         'consents' => [
             'empty' => '该账户没有同意记录。',
             'types' => [
@@ -2357,6 +2378,15 @@ return [
                 'success' => '已向 :email 发送链接。',
                 'throttled' => '刚刚已发送过链接。请稍候一分钟再重试。',
                 'blocked' => '无法向该账户发送链接。',
+            ],
+            'rotate_card' => [
+                'label' => '更新客户二维码',
+                'modal_heading' => '更新客户的二维码',
+                'modal_description_active' => '当前二维码(签发于 :date)将立即失效:包括邮件中的和任何打印的副本。将签发一个新的,客户可在「我的二维码」和下一封订单确认邮件中看到。',
+                'modal_description_none' => '该客户还没有二维码。将签发一个新的,客户可在「我的二维码」和下一封订单确认邮件中看到。',
+                'submit' => '更新二维码',
+                'success' => '二维码已更新:旧的已失效,客户已有新的二维码。',
+                'blocked' => '无法更新该账户的二维码。',
             ],
             'anonymize' => [
                 'label' => '匿名化',

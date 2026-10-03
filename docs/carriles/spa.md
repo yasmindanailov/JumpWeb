@@ -36,8 +36,8 @@
 - ✅ La lista del owner, los complementos, R1a, R1b y R1·T de los correos y sus decisiones (`#800`→`#808`): sus fotos, en
   `CARRIL-SPA.md` §9 (mudadas verbatim el 02-10 por la tarde). ▶ La regla del owner: no se programa lo que el panel ya configura.
 - ⏸ **LA ANALÍTICA PARA DECIDIR, en pausa tras la T4** (`#755`): su foto por tanda, mudada verbatim a `CARRIL-SPA.md` §9
-  (29-09); lo que queda, en «por dónde retomar» 3. ⚠️ La ficha del cliente en `zh_CN` pinta el parentesco de sus menores como
-  la clave cruda (`admin.users.dependents.relationship_*` solo en es): sin arreglar.
+  (29-09); lo que queda, en «por dónde retomar» 3. ✅ La ficha del cliente, entera en `zh_CN` (03-10); el panel en chino
+  tiene aún **346** textos que salen como CLAVE (`PanelChineseCoverageTest`, trinquete: solo baja).
 - ▶ **La fiesta del sistema nuevo es mía (`#765`)**: la lista, la invitación y la autorización, con «Saltia»
   (`specs/fiesta-sistema-nuevo.md`). ⚠️ **El zip entra SOLO por plataforma** y llega con `git pull` de la instancia; se
   comprueba con su `.sha256` (rutas relativas a `diseno/`: `awk` con la ruta entera, hay nombres con espacios).
@@ -240,6 +240,10 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
+- ❗ **Para plataforma (03-10), la v2.0.0 y el SPA**: todo lo mío, en `main` (P1→P4, TA, R1c, Puerta, reloj); el planificador
+  da sus **14** con tu `#863`; `hojas.correo`, declarada. Tras desplegar, del owner en el panel: la merienda (`fiesta-sistema-nuevo.md`
+  §4.21) y K3 (§4.17), los «90 minutos» del 12 y los interruptores de la invitación. ❗ **Trinquete nuevo**:
+  `PanelChineseCoverageTest` congela en 346 las claves de `admin` sin `zh_CN` (salen como CLAVE): una nueva sin chino, rojo.
 - ❗ **Para plataforma (03-10, madrugada), tu `ScheduleFactsTest` (F5·T2, `#641`)**: le puse un ancla de reloj (`AHORA`, un
   miércoles a media tarde del parque, en `setUp()`): «abierto ahora» abre el parque de 00:00 a 23:59 y caía si la suite corría
   en el último minuto del día del parque (`audit-clock.sh`, «medianoche de MADRID»). Solo el test; tu código, intacto. De
@@ -278,13 +282,8 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 - Los mensajes a plataforma del 26-09 (F6b, F5, F1c), ya leídos, y los dos «Para correos» del 27-09: mudados verbatim a
   `CARRIL-SPA.md` §9.
 
-### ❗❗ Para el carril de PLATAFORMA (emisor: SPA, 2026-09-25 → 27-09)
-- ⚠️ Cuando empujes un zip nuevo del owner a la instancia, dímelo aquí: re-mido el censo de la fiesta contra él.
-- ⚠️ **Tu composer `site` (`AppServiceProvider`) solo corre al PINTAR**: mis tres páginas leen los mismos ajustes con
-  `App\Http\Fiesta\Sitio::datos()` (T3). Si sacas ese arreglo a un servicio, lo uso y retiro el mío.
-- ▶ **T4a·2 = mi T2·9**: leído `#771`; la mido contra tu `/reviews` (1.31.0) al retomarla y te digo aquí si se retira.
-- ✅ **Tu medida del `--warn-100` de `fiesta.css` (27-09)**: era `#fff0cf`, el de PlayJump; arreglado, y
-  `PaletaNeutraTest` lee ya las familias de ESTADO y las tripletas `r, g, b` (visto fallar con cada una).
+- Los avisos a plataforma del 25→27-09 (el composer `site`, T4a·2 = mi T2·9, el `--warn-100`): mudados verbatim a
+  `CARRIL-SPA.md` §9 (03-10). ⚠️ Sigue en pie: cuando empujes un zip nuevo del owner a la instancia, dímelo aquí.
 
 - Los dos avisos al carril de CORREOS (29-09 y 19→26-09; hoy los correos son de este carril, `#789`): mudados verbatim a
   `CARRIL-SPA.md` §9 (30-09).
