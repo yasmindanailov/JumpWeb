@@ -18,7 +18,11 @@
    `.env`; aquí solo se dice cuáles se USAN.
    ═══════════════════════════════════════════════════════════════════════════════════════════ */
 
-:root {
+/* ⚠️ **`.sidecart` va con `:root` y no es un adorno** (`docs/INSTALACION-CLIENTE.md` §4, `#635`): el cajón
+   empaquetable declara sus valores por defecto sobre su propia raíz para que la landing de otro —que puede
+   tener su `--bg` y su `--fg`— no se lo repinte. Un token de tema que solo se declare en `:root` llega a la
+   landing pero NO al cajón. Los dos selectores, y el tema sigue mandando en los dos sitios. */
+:root, .sidecart {
     /* ── SUPERFICIE ──────────────────────────────────────────────────────────────────────────
        Los cuatro neutros de papel del sistema. La superficie de TINTA se deriva sola de `--fg`
        y `--bg`, así que no se teclea entera: solo se afinan abajo los tres tonos que el cliente
