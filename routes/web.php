@@ -30,6 +30,7 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\PaqueteDelCajonController;
 use App\Http\Controllers\Payments\RedsysReturnController;
 use App\Http\Controllers\PricingController;
+use App\Http\Controllers\ReservationCalendarController;
 use App\Http\Controllers\ReviewPhotoController;
 use App\Http\Controllers\RobotsController;
 use App\Http\Controllers\ServicesController;
@@ -278,6 +279,24 @@ Route::get('/correo/i/{v}/{color}/{nombre}.png', EmailIconController::class)
         RecordEmailClick::class,
     ])
     ->name('correo.icono');
+
+// ═══ «AÑADIR AL CALENDARIO» DE UNA RESERVA (`specs/correos-rediseno.md` §4.3, la R2) ═══════════════════════════════════
+// El `.ics` del resguardo de los correos de la reserva. FIRMADA y sin caducidad (el correo se abre cuando se abre); aislada
+// como los iconos —sin sesión, cookies ni visitante—: es una descarga, no una visita (`ReservationCalendarController`).
+Route::get('/reserva/{reserva}/calendario.ics', ReservationCalendarController::class)
+    ->whereNumber('reserva')
+    ->middleware('signed')
+    ->withoutMiddleware([
+        EncryptCookies::class,
+        AddQueuedCookiesToResponse::class,
+        StartSession::class,
+        ShareErrorsFromSession::class,
+        PreventRequestForgery::class,
+        SetLocale::class,
+        ResolveVisitor::class.':'.ResolveVisitor::MINT,
+        RecordEmailClick::class,
+    ])
+    ->name('reserva.calendario');
 
 // ═══ LAS PÁGINAS ENFOCADAS DE LA FIESTA: EL INVITADO NO ES UN VISITANTE ═══════════════════════════
 // (`specs/analitica-fiesta.md` §4.1, `DECISIONES #739`). El post-form, el justificante y la invitación

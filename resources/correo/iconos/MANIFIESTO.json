@@ -2,11 +2,27 @@
   "origen": "lucide-static@0.544.0",
   "licencia": "ISC",
   "lado": 72,
-  "version": "252b67bc74ae",
+  "version": "d2b05e0183f7",
   "iconos": {
+    "banknote": {
+      "bytes": 1505,
+      "sha256": "241011ac49c34efc2f70038db50e904c6199df8af3f6f3f298ebc6ef1167ee10"
+    },
+    "calendar-plus": {
+      "bytes": 1454,
+      "sha256": "8cc159734934394763225f5ae369835fc8aa9f52136a9367d92fae3ea54171ad"
+    },
     "clock": {
       "bytes": 2105,
       "sha256": "cd970e0845ec815c2909d08aaab01d4f83e1ee062e84aae943364c8e9b05f3f9"
+    },
+    "footprints": {
+      "bytes": 2043,
+      "sha256": "6a5d9f809c437b93e918068a406f2dd3bf14644f4a04cb98f6df2ae0508c7eb7"
+    },
+    "graduation-cap": {
+      "bytes": 1885,
+      "sha256": "851c9b3f4223db0fd02299e27fbf6e052a8c135126e13a43da7d581c6cf2d476"
     },
     "mail": {
       "bytes": 1689,
@@ -20,9 +36,29 @@
       "bytes": 2043,
       "sha256": "ba3c039a4bd02399623defe9b42240601c414f88764917b44f92524d35688b9a"
     },
+    "pen-line": {
+      "bytes": 1671,
+      "sha256": "2084f1b758b5afb938d6fa5b1440a397107d46c6243a9ba2ed60b29dc8b11ce2"
+    },
     "phone": {
       "bytes": 1977,
       "sha256": "e92a34f456e5f5b0881186f970410082e1cfa731aa05861debb9bf0f7eb590f9"
+    },
+    "reply": {
+      "bytes": 1385,
+      "sha256": "a16e96a0a8e3184b07fee7fe36c2099e87bf0d9876ba48033f6164c226b5f5c2"
+    },
+    "ruler": {
+      "bytes": 1725,
+      "sha256": "1b2d560df2dbd857712d8894b8a371ac2b871c3a4e444750490c4ef4a878c9a5"
+    },
+    "user-round-plus": {
+      "bytes": 1846,
+      "sha256": "0acf4c69a9b11e095b01f3a654597a00e9c6530d9f87ca1d97035b2e0603f993"
+    },
+    "users": {
+      "bytes": 1889,
+      "sha256": "6a97642a549664172e08d13201d5b7c9426a3e52d00c4c05f53cb2d9d4d5851e"
     }
   }
 }

@@ -437,6 +437,34 @@ class OrderItem extends Model
     }
 
     /**
+     * EL PRINCIPIO Y EL FIN de la visita como instantes, en la hora del PARQUE (las franjas son hora de pared, `§7.2·R13`),
+     * o `null` si falta la franja, su hora o la duración. Lo leen los dos «Añadir al calendario» —el de la invitación y el
+     * de la reserva (la R2 de los correos)—: una sola derivación, y no pueden discrepar.
+     *
+     * ⚠️⚠️ La duración es la EFECTIVA (`occupiedMinutes()`: base + hora extra), no la del producto —la trampa de `#426`—, y
+     * el fin de la FRANJA no vale: en una fiesta de dos horas diría una hora menos.
+     *
+     * @return array{0: CarbonImmutable, 1: CarbonImmutable}|null
+     */
+    public function visitWindow(): ?array
+    {
+        $date = $this->slot?->date;
+        // ⚠️ Sin `?->` a la izquierda de un `??`: el propio `??` ya tapa la relación ausente, y encadenarlos hace que
+        // Larastan cuente una rama que no existe.
+        $hora = (string) ($this->slot->start_time ?? '');
+        $minutos = $this->occupiedMinutes();
+
+        if ($date === null || $hora === '' || $minutos === null || $minutos <= 0) {
+            return null;
+        }
+
+        $inicio = CarbonImmutable::createFromFormat('Y-m-d H:i:s', $date->toDateString().' '.substr($hora, 0, 8), DisplayTime::timezone());
+
+        // Una fecha que no case con el formato devuelve `null`, y entonces no hay ventana: «sin dato, sin bloque».
+        return $inicio === null ? null : [$inicio, $inicio->addMinutes($minutos)];
+    }
+
+    /**
      * ¿Este item ya TERMINÓ de verdad? Lectura pura — no toca BD.
      *
      * ❗❗❗ **Tenía DOS defectos, y en direcciones OPUESTAS** (`DECISIONES #423` · A1,

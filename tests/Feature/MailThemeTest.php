@@ -42,6 +42,7 @@ class MailThemeTest extends TestCase
         $ficheros = array_merge(
             glob(resource_path('views/correo/*.blade.php')) ?: [],
             glob(resource_path('views/correo/html/*.blade.php')) ?: [],
+            glob(resource_path('views/correo/piezas/*.blade.php')) ?: [],
             [resource_path('views/emails/partials/book.blade.php'), resource_path('views/emails/partials/product-card.blade.php')],
         );
         $this->assertGreaterThan(10, count($ficheros), 'el escaneo ve muy pocas plantillas: ¿han cambiado de sitio?');
@@ -148,6 +149,28 @@ class MailThemeTest extends TestCase
             ->code('Código de 6 cifras', '482-913', 'Vale **10** minutos.')
             ->action('Ver', 'https://example.test/x')
             ->line('Cierre.')
+            ->render();
+    }
+
+    /** Un correo con CUERPO EN ORDEN y todos los bloques de la R2 (§4.3), para las mismas guardas que el de arriba. */
+    private function renderCuerpo(string $tono): string
+    {
+        Setting::updateOrCreate(['key' => 'contact.email'], ['value' => 'hola@demo.test', 'group' => 'contact']);
+        Setting::flushMemo();
+
+        return (string) (new BrandedMailMessage)
+            ->hero('emails.order_declined', $tono)
+            ->links(['whatsapp' => 'https://wa.me/34600000000'])
+            ->slip(['dow' => 'sáb', 'n' => '26', 'month' => 'sep'], 'Sábado 26', '17:00', 'Kids · 2 niños', '24 €', 'Nº R-1',
+                [['Señal', '50 €'], ['El día', '119,50 €', true]], [['Cómo llegar', 'https://maps.example.test', 'map-pin']])
+            ->qr('png', 'ABCD EFGH', 'Tu QR', 'Dicta:', 'Abrir Mi QR', 'https://example.test/qr', secundario: true)
+            ->checklist('Antes de venir', [['texto' => '**Tarea:** [añádelos](whatsapp).', 'icono' => 'users', 'tarea' => true], ['texto' => 'Con icono.', 'icono' => 'clock'], ['texto' => 'Sin icono.']])
+            ->section('Si cambian los planes', 'Puedes [escribirnos](whatsapp).', 'Ver', 'https://example.test/v')
+            ->steps('Ahora', [['texto' => 'Uno.', 'boton' => 'Uno', 'url' => 'https://example.test/1'], ['texto' => 'Dos.', 'boton' => 'Dos', 'url' => 'https://example.test/2']])
+            ->buttons('Principal', 'https://example.test/p', 'Secundario', 'https://example.test/s')
+            ->reason('Motivo', 'Denegada')
+            ->small('Cierre.')
+            ->replies('Responde a este correo.')
             ->render();
     }
 
@@ -427,7 +450,8 @@ class MailThemeTest extends TestCase
         // bloqueadas y en oscuro tiene que leerse (el arnés lo vio sobrevivir: sin logotipo, este recorrido no lo pinta).
         foreach ([['ok', false], ['warn', false], ['err', false], ['info', false], ['neutro', false], ['ok', true]] as [$tono, $logo]) {
             $this->publicDir(withClientLogo: $logo);
-            foreach ($this->pares($this->renderCompleto($tono)) as [$donde, $fc, $bc, $fo, $bo]) {
+            // El de la R1 y el del cuerpo en orden (la R2): los mismos tonos, todos los bloques.
+            foreach ([...$this->pares($this->renderCompleto($tono)), ...$this->pares($this->renderCuerpo($tono))] as [$donde, $fc, $bc, $fo, $bo]) {
                 $vistos++;
                 $alt = $alt || str_starts_with($donde, 'img');
                 foreach ([['claro', $fc, $bc], ['oscuro', $fo, $bo]] as [$modo, $f, $b]) {
@@ -456,12 +480,12 @@ class MailThemeTest extends TestCase
             return array_values(array_unique(array_map('intval', $m[1])));
         };
 
-        $neutro = $radios($this->renderCompleto('ok'));
+        $neutro = $radios($this->renderCompleto('ok').$this->renderCuerpo('ok'));
         $this->assertNotEmpty($neutro, 'el escáner no ve ningún radio');
         $this->assertSame([], array_values(array_diff($neutro, [0, 10, 16, 999])), 'radios fuera de la escala: '.implode(', ', $neutro));
 
         $this->conHoja(':root{--correo-radio-md:14px;--correo-radio-lg:20px;}');
-        $conHoja = $radios($this->renderCompleto('ok'));
+        $conHoja = $radios($this->renderCompleto('ok').$this->renderCuerpo('ok'));
         $this->assertSame([], array_values(array_diff($conHoja, [14, 20, 999])), 'radios que no son de la hoja: '.implode(', ', $conHoja));
         $this->assertContains(14, $conHoja);
         $this->assertContains(20, $conHoja);
@@ -469,10 +493,25 @@ class MailThemeTest extends TestCase
 
     // ── Lo demás de septiembre, sobre el motor nuevo ─────────────────────────────────────────────
 
+    /**
+     * Lo que NO es texto también se ve (WCAG 1.4.11, ≥ 3:1): el icono dentro de su círculo, el punto de una lista y el aro de
+     * una tarea sobre el lienzo, en los dos modos (la R2). El texto ya lo mide el recorrido de arriba.
+     */
+    public function test_the_non_text_marks_of_a_list_read_at_three_to_one(): void
+    {
+        $tema = MailTheme::desdeHojas([], '#101418');
+        foreach (['claro', 'oscuro'] as $modo) {
+            $c = fn (string $rol): string => $tema->{$modo}($rol);
+            $this->assertGreaterThanOrEqual(3.0, $this->contrast($c('icono-circulo'), $c('circulo')), "el icono en su círculo, en {$modo}");
+            $this->assertGreaterThanOrEqual(3.0, $this->contrast($c('punto'), $c('fondo')), "el punto sobre el fondo, en {$modo}");
+        }
+        $this->assertGreaterThanOrEqual(3.0, $this->contrast($tema->claro('punto'), $tema->claro('lienzo-qr')), 'el aro de una tarea sobre el lienzo');
+    }
+
     public function test_no_webfont_travels_in_a_mail(): void
     {
         $this->publicDir(withClientLogo: false);
-        $html = $this->renderCompleto('ok');
+        $html = $this->renderCompleto('ok').$this->renderCuerpo('ok');
 
         foreach (self::WEBFONTS as $fuente) {
             $this->assertStringNotContainsString($fuente, $html, "«{$fuente}» no carga en un correo: nombrarla es fingir que se ve");

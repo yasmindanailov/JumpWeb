@@ -19,9 +19,11 @@
  */
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Platform\Services\QrCode;
 use App\Mail\ContactMessageMail;
 use App\Mail\PaymentIncidentMail;
 use App\Notifications as N;
+use App\Notifications\Support\BrandedMailMessage;
 use App\Notifications\Support\MailPreviews;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Mail\Mailable;
@@ -59,6 +61,40 @@ $correos['PaymentIncidentMail'] = static fn () => new PaymentIncidentMail([
     'kind' => 'duplicate', 'action' => 'refund', 'order_id' => 0, 'order_code' => 'R-7K2P4', 'order_status' => 'paid',
     'payment_id' => 0, 'gateway_order' => '0000600031', 'source' => 'notification',
 ]);
+// LA MUESTRA DE BLOQUES de la R2a (§4.3): el cuerpo en orden con todos los bloques nuevos, para el ojo ANTES de que los use un
+// correo de verdad (la R2b). Datos de EJEMPLO; el QR, uno de prueba.
+$correos['MuestraDeBloquesR2a'] = static fn () => new class extends Correo
+{
+    /** @return list<string> */
+    public function via(object $notifiable): array
+    {
+        return ['mail'];
+    }
+
+    public function toMail(object $notifiable): BrandedMailMessage
+    {
+        return (new BrandedMailMessage)->subject('Muestra de bloques · R2a')->hero('emails.order_confirmation', 'ok', [], ['day' => 'sábado 26'])
+            ->links(['whatsapp' => 'https://wa.me/34600000000', 'menores' => url('/#mi-cuenta/hijos')])
+            ->slip(['dow' => 'sáb', 'n' => '26', 'month' => 'sep'], 'Sábado 26 de septiembre', '17:00', 'Kids 1 hora · 2 niños', '24 € pagados', 'Nº R-7K2P4',
+                [], [['Cómo llegar', 'https://www.google.com/maps', 'map-pin'], ['Añadir al calendario', url('/'), 'calendar-plus']])
+            ->qr(QrCode::png('MUESTRA-R2A-0000'), 'MUES TRA2 A000', 'Enséñalo en la puerta: tu QR es tu entrada.', 'Si la cámara falla, dicta este código:', 'Abrir Mi QR', url('/#mi-cuenta'))
+            ->checklist('Antes de venir', [
+                ['texto' => '**Menores a tu cargo:** [añádelos y firma por ellos](menores), si aún no están en tu cuenta. Un minuto.', 'icono' => 'user-round-plus', 'tarea' => true],
+                ['texto' => '**Otros adultos:** cada uno firma el suyo, desde casa o en el mostrador.', 'icono' => 'users'],
+                ['texto' => 'Calcetines antideslizantes para todos: tenéis 2 pares comprados.', 'icono' => 'footprints'],
+                ['texto' => 'Tu tiempo empieza a las 17:00: llegad unos minutos antes.', 'icono' => 'clock'],
+            ])
+            ->section('Si cambian los planes', 'Puedes cambiar o cancelar hasta el viernes 25 a las 17:00: [escríbenos por WhatsApp](whatsapp).')
+            ->steps('Ahora, dos cosas', [
+                ['texto' => 'Rellena el formulario de invitados, hasta el jueves 24.', 'boton' => 'Rellenar el formulario', 'url' => url('/')],
+                ['texto' => 'Comparte la invitación por WhatsApp.', 'boton' => 'Compartir la invitación', 'url' => 'https://wa.me/'],
+            ])
+            ->buttons('Pagar con Bizum', url('/'), 'Pagar con tarjeta', url('/'))
+            ->reason('Motivo', 'Operación denegada por tu banco')
+            ->small('Una línea menor, después de todo.')
+            ->replies('Responde a este correo si tienes cualquier duda.');
+    }
+};
 
 $enviados = $fallos = 0;
 foreach ($correos as $nombre => $crear) {

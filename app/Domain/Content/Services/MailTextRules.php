@@ -30,7 +30,27 @@ final class MailTextRules
     public const TOPE = 1000;
 
     /** Los motivos de rechazo, en el orden en que se comprueban (y sus textos, `admin.mail_texts.errores.*`). */
-    public const MOTIVOS = ['vacio', 'largo', 'html', 'llaves', 'desconocida', 'falta', 'sin_negrita', 'negrita'];
+    public const MOTIVOS = ['vacio', 'largo', 'html', 'llaves', 'desconocida', 'falta', 'enlaces', 'sin_negrita', 'negrita'];
+
+    /**
+     * Un enlace por NOMBRE (la R2 de los correos, `MailDocument::ENLACE`): `[lo que se lee](nombre)`. La URL la pone el
+     * correo; el texto solo dice dónde va el enlace y cómo se lee.
+     */
+    private const ENLACE = '/\[[^\[\]]+\]\(([a-z][a-z0-9_]*)\)/u';
+
+    /**
+     * Los nombres de enlace de un texto, ordenados y sin repetir. Como las variables, los del texto de FÁBRICA son
+     * obligatorios y no se admiten otros: un «escríbenos por WhatsApp» que pierde su enlace deja al cliente sin camino, y uno
+     * inventado no llevaría a ningún sitio.
+     *
+     * @return list<string>
+     */
+    public static function enlaces(string $texto): array
+    {
+        preg_match_all(self::ENLACE, $texto, $m);
+
+        return self::limpias($m[1]);
+    }
 
     /**
      * Las variables de un texto de FÁBRICA (`:code`), ordenadas y sin repetir.
@@ -144,6 +164,9 @@ final class MailTextRules
         $faltan = array_values(array_diff($deFabrica, $delParque));
         if ($faltan !== []) {
             return ['motivo' => 'falta', 'variables' => $faltan];
+        }
+        if (self::enlaces($texto) !== self::enlaces($fabrica)) {
+            return ['motivo' => 'enlaces', 'variables' => self::enlaces($fabrica)];
         }
         if (str_contains($texto, '**') && ! self::admiteNegrita($clave)) {
             return ['motivo' => 'sin_negrita'];

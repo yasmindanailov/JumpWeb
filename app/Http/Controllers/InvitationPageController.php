@@ -22,7 +22,6 @@ use App\Http\Fiesta\ImagenInvitacion;
 use App\Http\Fiesta\InvitacionPagina;
 use App\Http\Fiesta\Sitio;
 use App\Http\Instancia\InstanceViews;
-use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -212,7 +211,7 @@ class InvitationPageController extends Controller
             'reservation' => $reservation,
             'hostPhone' => $invitation->show_host_phone ? ($reservation->order?->user?->phone ?: null) : null,
             'timeWindow' => $reservation->displayTimeWindow(),
-            'calendarUrl' => $this->calendarEventOf($reservation) === null
+            'calendarUrl' => $reservation->visitWindow() === null
                 ? null
                 : route('invitation.calendar', ['token' => $invitation->token]),
             'receipt' => [
@@ -365,7 +364,7 @@ class InvitationPageController extends Controller
             'preview' => $this->previewOf($invitation, $reservation, $date),
             // «Añadir al calendario»: `null` cuando falta la hora o la duración —sin dato, sin
             // bloque—, y así el botón no existe en vez de ofrecer un fichero vacío.
-            'calendarUrl' => $this->calendarEventOf($reservation) === null
+            'calendarUrl' => $reservation->visitWindow() === null
                 ? null
                 : route('invitation.calendar', ['token' => $invitation->token]),
         ], Sitio::datos());
@@ -389,7 +388,7 @@ class InvitationPageController extends Controller
         abort_if($invitation === null, 404);
 
         $reservation = $invitation->reservation;
-        $evento = $reservation === null ? null : $this->calendarEventOf($reservation);
+        $evento = $reservation?->visitWindow();
 
         // Sin hora o sin duración no hay evento que dar. Es el mismo criterio que el bloque de la
         // página: «sin dato, sin bloque».
@@ -460,37 +459,6 @@ class InvitationPageController extends Controller
             'X-Robots-Tag' => 'noindex',
             'Referrer-Policy' => 'no-referrer',
         ]);
-    }
-
-    /**
-     * El PRINCIPIO y el FIN de la fiesta como instantes, o `null` si falta alguno.
-     *
-     * ⚠️⚠️ La duración es la EFECTIVA (`occupiedMinutes()`: base + hora extra), no la del producto —la
-     * trampa de `#426`—, y el fin de la FRANJA no vale: en una fiesta de dos horas diría una hora menos.
-     *
-     * @return array{0: CarbonImmutable, 1: CarbonImmutable}|null
-     */
-    private function calendarEventOf(OrderItem $reservation): ?array
-    {
-        $date = $reservation->slot?->date;
-        // ⚠️ Sin `?->` a la izquierda de un `??`: el propio `??` ya tapa la relación ausente, y
-        // encadenarlos hace que Larastan cuente una rama que no existe.
-        $hora = (string) ($reservation->slot->start_time ?? '');
-        $minutos = $reservation->occupiedMinutes();
-
-        if ($date === null || $hora === '' || $minutos === null || $minutos <= 0) {
-            return null;
-        }
-
-        $inicio = CarbonImmutable::createFromFormat(
-            'Y-m-d H:i:s',
-            $date->toDateString().' '.substr($hora, 0, 8),
-            DisplayTime::timezone(),
-        );
-
-        // Una fecha que no case con el formato devuelve `null`, y entonces no hay evento: es el mismo
-        // criterio que arriba, «sin dato, sin bloque».
-        return $inicio === null ? null : [$inicio, $inicio->addMinutes($minutos)];
     }
 
     /** Un nombre de fichero que una persona reconozca en su carpeta de descargas, sin acentos ni token. */

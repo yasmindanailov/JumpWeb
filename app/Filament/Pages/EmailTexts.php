@@ -420,7 +420,11 @@ class EmailTexts extends Page
     {
         return __('admin.mail_texts.errores.'.$problema['motivo'], [
             'tope' => $problema['tope'] ?? 0,
-            'variables' => implode(', ', array_map(static fn (string $v): string => '{'.$v.'}', $problema['variables'] ?? [])),
+            // Los nombres de ENLACE (la R2) se escriben tal cual, sin llaves: van entre paréntesis, `[escríbenos](whatsapp)`.
+            'variables' => implode(', ', array_map(
+                static fn (string $v): string => $problema['motivo'] === 'enlaces' ? $v : '{'.$v.'}',
+                $problema['variables'] ?? [],
+            )),
         ]);
     }
 

@@ -535,6 +535,28 @@ del brief, TAL CUAL (§0), sobre la plantilla de la R1. Fuente: `paginas/correos
 **`[DECIDIDO owner]` 03-10 (`#915`)**, las tres recomendadas: (a) el 3, SIEMPRE con su QR, como el diseño (hoy solo si
 queda algo); (b) el 2, UN correo (hoy dos); (c) en el 5, Bizum solo si el parque lo tiene en `payment.marks`.
 
+**🟦 La R2a, construida (03-10, en `wip/correos-r2a`; ningún correo cambia aún)**:
+- **El cuerpo EN ORDEN**: los verbos nuevos de `BrandedMailMessage` (`slip`, `qr`, `checklist`, `section`, `steps`,
+  `buttons`, `reason`, `paragraphs`, `small`, `button`, `links`, `replies`) apilan su bloque en el orden en que se llaman, entre
+  la cabecera y el pie; los 33 correos de la R1 siguen con su orden fijo, y MEZCLAR los dos modos lanza (`MailDocument`). El
+  aire sube a 32 hasta un bloque con filete (`CON_RAYA`, salvo `raya: false`).
+- **Los bloques**, cada uno con su gemela de texto: el resguardo en sus dos formas (de campos, con `dia`; de filas, la R1), el
+  QR, la lista, la sección, los pasos, los dos botones y el motivo; y las PIEZAS compartidas (`correo/piezas/`: el botón —el
+  de siempre ya es ella—, el filete, la hoja del calendario y el enlace claro), que la guarda de colores también recorre.
+- **Los roles nuevos** de `MailTheme` (la hoja y su letra, lo callado y su borde, el punto, el círculo y su icono, y el lienzo
+  del QR, blanco en los dos modos) con su oscuro; y los de PlayJump, en su hoja (`correo.css` de la instancia).
+- **Los enlaces POR NOMBRE** (`[escríbenos](whatsapp)`): `rico()` los pinta con la URL que ofrece el correo, escapada; un
+  nombre que no ofrece deja su texto. En R1·T, como las variables (`MailTextRules::enlaces()`, el motivo `enlaces`).
+- **El QR, INCRUSTADO** (`cid:`; medido en Mailpit: `qr.png` en línea) y, en la vista previa, en `data:` —el panel lo ve—.
+- **«Responde a este correo…»** en el pie, con el `replyTo` del parque (`contact.email`); sin correo en el panel, ni la frase.
+- **El `.ics` de una reserva**: `reserva.calendario`, FIRMADA y aislada como los iconos (`ReservationCalendarController`), con
+  `OrderItem::visitWindow()` —la ventana que ya usaba la invitación, ahora del dominio: las dos no pueden discrepar—.
+- **Nueve iconos** nuevos (las máscaras, deterministas: las cinco de antes, idénticas).
+- Verificación: `MailBodyTest` (7), `ReservationCalendarTest` (2), la regla de los enlaces (`MailTextsTest`) y el contraste
+  de lo que no es texto (`MailThemeTest`), con sus controles; las guardas de color, oscuro, radios y fuentes recorren ya un
+  correo con todos los bloques (y cazaron tres radios a mano: los círculos, a píldora). Arnés `scripts/mutar-correo-r2a.sh`
+  **12/12** con su control (82 s). La muestra, en Mailpit: `php scripts/banco-correos.php Muestra`.
+
 ## 7. Revisión y decisión
 
 - ✅ **`[DECIDIDO owner]` 29-09 (`#801`)**: (1) **el 7**: el correo sigue siendo la encuesta anónima y, al terminarla, la

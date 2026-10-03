@@ -32,13 +32,26 @@ final class MailDocument
         'cabecera' => 'cabecera',
         'resguardo' => 'hecho',
         'texto' => 'hecho',
+        'qr' => 'accion',
         'codigo' => 'accion',
         'boton' => 'accion',
+        'botones' => 'accion',
+        'pasos' => 'accion',
+        'lista' => 'detalle',
+        'seccion' => 'detalle',
         'aviso' => 'detalle',
+        'motivo' => 'detalle',
         'linea' => 'detalle',
         'marcado' => 'detalle',
         'pie' => 'pie',
     ];
+
+    /**
+     * Los bloques que abren con su FILETE (el `RAYA` del diseño): una lista, una sección o unos pasos se separan de lo de
+     * arriba con una línea, salvo que digan `raya: false`, y el aire hasta ellos sube a 32. Si el bloque se va, su filete
+     * también: lo pinta el bloque, no el de arriba.
+     */
+    public const CON_RAYA = ['lista', 'seccion', 'pasos'];
 
     /** Los tonos del molde (`hero()`, `notice()`) en los del diseño. `neutro` es el de las devoluciones (`#503`). */
     private const TONOS = ['ok' => 'ok', 'warn' => 'aviso', 'err' => 'error', 'info' => 'info', 'neutro' => 'neutro'];
@@ -57,6 +70,10 @@ final class MailDocument
         public readonly ?string $pixel,
         /** @var list<array{0: string, 1: string}> rótulo y URL ya etiquetada: la última línea del pie */
         public readonly array $legales,
+        /** @var array<string, string> los ENLACES por nombre que el texto puede nombrar (`[escríbenos](whatsapp)`, la R2) */
+        public readonly array $enlaces = [],
+        /** La ayuda del pie, «Responde a este correo…», si el correo la lleva (la R2; con el `replyTo` del parque). */
+        public readonly ?string $responde = null,
     ) {}
 
     /**
@@ -81,6 +98,12 @@ final class MailDocument
             logoImagen: is_file($logo) ? asset('img/client-logo@4x.png').'?v='.(int) filemtime($logo) : null,
             pixel: $pixel !== null ? route('emails.open', ['send' => $pixel]) : null,
             legales: self::legales($utm, $marca),
+            enlaces: array_filter(
+                is_array($data['enlaces'] ?? null) ? $data['enlaces'] : [],
+                static fn (mixed $url, mixed $nombre): bool => is_string($nombre) && is_string($url) && $url !== '',
+                ARRAY_FILTER_USE_BOTH,
+            ),
+            responde: is_string($data['responde'] ?? null) && $data['responde'] !== '' ? $data['responde'] : null,
         );
     }
 
@@ -122,6 +145,28 @@ final class MailDocument
             'chapa' => isset($hero['chapa']) && $hero['chapa'] !== '' ? (string) $hero['chapa'] : null,
             'tono' => self::TONOS[$hero['tono'] ?? 'info'] ?? 'info',
         ];
+
+        // ▶ EL CUERPO EN ORDEN (la R2, §4.3): un correo del diseño pone sus bloques donde los quiere —en el 4 el botón va
+        // antes que el QR; en el 5, los dos botones antes del motivo—, y el orden fijo de la R1 no sabe decirlo. Con cuerpo,
+        // los bloques van en el orden en que se declararon, entre la cabecera y el pie.
+        $cuerpo = is_array($data['cuerpo'] ?? null) ? array_values($data['cuerpo']) : [];
+        if ($cuerpo !== []) {
+            $mezcla = array_keys(array_filter([
+                'line' => ($data['introLines'] ?? []) !== [],
+                'outro' => ($data['outroLines'] ?? []) !== [],
+                'notice' => isset($data['notice']),
+                'action' => isset($data['actionText']),
+                'code' => isset($data['code']),
+                'hero (resguardo de filas)' => $hero !== null && ($hero['datos'] ?? []) !== [],
+            ]));
+            // ⚠️ Mezclar los dos modos es un error de quien compone, no algo que se arregle en silencio: el orden de un
+            // correo así no lo sabría nadie leyendo la notificación (la lección de `outro()`, `#507`).
+            if ($mezcla !== []) {
+                throw new \LogicException('Un correo con cuerpo en orden no usa los verbos de la R1: '.implode(', ', $mezcla).'.');
+            }
+
+            return [...$bloques, ...$cuerpo, ['tipo' => 'pie']];
+        }
         if ($hero !== null && is_array($hero['datos'] ?? null) && $hero['datos'] !== []) {
             $bloques[] = ['tipo' => 'resguardo', 'filas' => array_map('strval', $hero['datos'])];
         }
@@ -212,12 +257,23 @@ final class MailDocument
             $bloques[$i]['aire'] = match (true) {
                 $siguiente === null => 0,
                 $b['tipo'] === 'cabecera' => 24,
+                self::conRaya($siguiente) => 32,
                 self::ZONAS[$b['tipo']] !== self::ZONAS[$siguiente['tipo']] => 28,
                 default => 16,
             };
         }
 
         return $bloques;
+    }
+
+    /**
+     * ¿Este bloque abre con su filete? (`CON_RAYA`, salvo `raya: false`.)
+     *
+     * @param  array<string, mixed>  $b
+     */
+    public static function conRaya(array $b): bool
+    {
+        return in_array($b['tipo'], self::CON_RAYA, true) && ($b['raya'] ?? true) !== false;
     }
 
     /**
@@ -233,8 +289,33 @@ final class MailDocument
             '<strong class="pjm-strong" style="font-weight:700;color:'.$fuerte.';">$1</strong>',
             e($linea),
         );
+        // Los ENLACES POR NOMBRE (la R2): `[escríbenos](whatsapp)`. El texto ya va escapado; la URL la pone el correo
+        // (`$enlaces`) y se escapa aquí. Un nombre que el correo no ofrece deja solo su texto: nunca un enlace a ningún sitio.
+        $estilo = 'color:'.$this->tema->claro('enlace').';font-weight:700;text-decoration:underline;';
+        $h = (string) preg_replace_callback(self::ENLACE, function (array $m) use ($estilo): string {
+            $url = $this->enlaces[$m[2]] ?? null;
 
-        return ['h' => $h, 't' => (string) preg_replace('/\*\*(.+?)\*\*/u', '$1', $linea)];
+            return $url === null ? $m[1] : '<a class="pjm-link" href="'.e($url).'" target="_blank" style="'.$estilo.'">'.$m[1].'</a>';
+        }, $h);
+
+        $t = (string) preg_replace('/\*\*(.+?)\*\*/u', '$1', $linea);
+        // En texto, el enlace con su dirección detrás —salvo `tel:` y `mailto:`, que ya se leen—, como `textoDe()`.
+        $t = (string) preg_replace_callback(self::ENLACE, function (array $m): string {
+            $url = $this->enlaces[$m[2]] ?? null;
+
+            return $url === null || preg_match('#^(tel|mailto):#i', $url) === 1 ? $m[1] : $m[1].' ('.$url.')';
+        }, $t);
+
+        return ['h' => $h, 't' => $t];
+    }
+
+    /** Un enlace por nombre dentro de un texto: `[lo que se lee](nombre)`. El nombre, en minúsculas y `_`. */
+    public const ENLACE = '/\[([^\[\]]+)\]\(([a-z][a-z0-9_]*)\)/u';
+
+    /** La URL de un enlace por nombre, o `null` si este correo no la ofrece. */
+    public function enlace(string $nombre): ?string
+    {
+        return $this->enlaces[$nombre] ?? null;
     }
 
     /**
@@ -263,9 +344,10 @@ final class MailDocument
      * Un icono de Lucide como imagen del color del rol `icono` (el `icono()` y el `enLinea()` del diseño; la R1b): decorativo,
      * con `alt` vacío porque el dato va en el texto. Sin máscara para ese nombre, NADA: la plantilla deja su hueco.
      */
-    public function icono(string $nombre, int $px, bool $enLinea = false): string
+    public function icono(string $nombre, int $px, bool $enLinea = false, string $rol = 'icono'): string
     {
-        $src = MailIcons::url($nombre, $this->tema->claro('icono'));
+        // `$rol`: el suelto (`icono`) o el de dentro del círculo de una lista (`icono-circulo`, la R2).
+        $src = MailIcons::url($nombre, $this->tema->claro($rol));
         if ($src === null) {
             return '';
         }
@@ -321,6 +403,12 @@ final class MailDocument
             ['.pjm-subtle', 'border-color', $o('filete')],
             ['.pjm-btn', 'background-color', $o('accion')],
             ['.pjm-btn-t', 'color', $o('accion-letra')],
+            // Los de la R2: la hoja del calendario, lo callado y el punto.
+            ['.pjm-tile', 'background-color', $o('hoja')],
+            ['.pjm-tile-t', 'color', $o('hoja-letra')],
+            ['.pjm-quiet', 'background-color', $o('callado')],
+            ['.pjm-quiet', 'border-color', $o('callado-borde')],
+            ['.pjm-dot', 'background-color', $o('punto')],
         ];
         foreach (['ok', 'error', 'aviso', 'info', 'neutro'] as $tono) {
             [$fondo, $letra] = $this->tono($tono, oscuro: true);

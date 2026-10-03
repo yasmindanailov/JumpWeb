@@ -5191,6 +5191,7 @@ return [
             'llaves' => 'Hay una llave suelta: las variables van así, {code}.',
             'desconocida' => 'Este correo no conoce :variables: usa solo las de la lista de abajo.',
             'falta' => 'Falta :variables: es un dato del cliente y tiene que seguir en el texto.',
+            'enlaces' => 'Los enlaces de este texto se quedan como están: [lo que se lee](:variables). Puedes cambiar lo que va entre corchetes, no el nombre entre paréntesis.',
             'sin_negrita' => 'Aquí no hay negrita: este bloque sale tal cual y se verían los asteriscos. Quítalos.',
             'negrita' => 'La negrita va entre dos pares de asteriscos: **así**.',
         ],

@@ -403,4 +403,7 @@ return [
         ],
         'footer' => 'Alerte automatique du système · enregistrée dans le panneau (Système → Incidents) · :when',
     ],
+    'calendar' => [
+        'summary' => ':product · :park',
+    ],
 ];

@@ -65,6 +65,23 @@ final class MailTheme
         // (WCAG 1.4.11) contra el fondo y el sutil en claro y en oscuro. Medido: el apagado da 2,84 sobre el sutil oscuro;
         // éste, ≥ 3,63 en los cuatro. Su pareja oscura no se usa.
         'icono' => ['#737B83', '#737B83'],
+        // Los de la R2 (§4.3), del `tema()` del diseño con sus mezclas resueltas sobre el neutro (`sobre()`):
+        // la HOJA del calendario del resguardo y los pasos numerados, en tinta, y su letra;
+        'hoja' => ['#101418', '#FFFFFF'],
+        'hoja-letra' => ['#FFFFFF', '#101418'],
+        // lo CALLADO —el botón claro y los enlaces claros del resguardo— y su borde (la tinta al 14 % sobre blanco; en
+        // oscuro, el blanco al 10 % y al 38 % sobre tinta);
+        'callado' => ['#ECEDEA', '#282C2F'],
+        'callado-borde' => ['#DEDEDF', '#6B6D70'],
+        // el PUNTO de una lista sin icono;
+        'punto' => ['#626A72', '#BCBDBE'],
+        // y el CÍRCULO de los iconos de una lista y su icono: uno para los dos modos, como el diseño («el círculo no cambia
+        // en oscuro»), y el icono a ≥ 3:1 sobre él (9,4).
+        'circulo' => ['#ECEFF2', '#ECEFF2'],
+        'icono-circulo' => ['#3B434B', '#3B434B'],
+        // El LIENZO del QR: blanco en los dos modos y sin clase de oscuro —«siempre sobre blanco»: una cámara lee un QR
+        // oscuro sobre claro, no al revés—.
+        'lienzo-qr' => ['#FFFFFF', '#FFFFFF'],
     ];
 
     /** Los radios, en px: los de la escala del producto (`0 · 10 · 16 · 999`). La píldora no es un rol. */

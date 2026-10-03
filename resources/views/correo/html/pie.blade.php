@@ -16,6 +16,10 @@
 @endphp
 <tr data-bloque="pie"><td class="pjm-pad" style="padding:0 24px 36px;">
 <table {!! $correo::TABLA !!} width="100%" class="pjm-subtle" bgcolor="{{ $t->claro('sutil') }}" style="background:{{ $t->claro('sutil') }};border:1px solid {{ $t->claro('filete') }};border-radius:{{ $t->radio('lg') }}px;border-collapse:separate;"><tr><td style="padding:18px 20px 12px;">
+@if ($correo->responde !== null)
+<table {!! $correo::TABLA !!} width="100%"><tr><td width="28" valign="top" style="width:28px;padding-top:2px;">{!! $correo->icono('reply', 18) !!}</td><td valign="top"><p class="pjm-strong" style="margin:0;{{ $correo->ty('texto', 15, 22, 700, $t->claro('fuerte')) }}">{{ $correo->responde }}</p></td></tr></table>
+{!! $correo->hueco(14) !!}@include('correo.piezas.filete'){!! $correo->hueco(14) !!}
+@endif
 <table {!! $correo::TABLA !!} width="100%">
 <tr><td width="28" valign="top" style="width:28px;padding-top:2px;">{!! $correo->icono('map-pin', 18) !!}</td><td valign="top">
 <p class="pjm-strong" style="margin:0;{{ $correo->ty('texto', 14, 21, 700, $t->claro('fuerte')) }}">{{ $p->nombre }}</p>

@@ -401,4 +401,7 @@ return [
         ],
         'footer' => 'Automatic system alert · logged in the panel (System → Incidents) · :when',
     ],
+    'calendar' => [
+        'summary' => ':product · :park',
+    ],
 ];

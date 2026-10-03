@@ -3,6 +3,10 @@
     $p = $correo->pie;
     $hablar = array_filter([$p->telefono, $p->whatsapp !== null ? 'WhatsApp: https://wa.me/'.$p->whatsapp : null, $p->correo]);
 @endphp
+@if ($correo->responde !== null)
+{!! $correo->responde !!}
+
+@endif
 {!! implode("\n", array_filter(['—', $p->nombre, $p->direccion, $p->hoy, $hablar !== [] ? implode(' · ', $hablar) : null])) !!}
 
 {!! implode("\n", array_map(static fn (array $l) => $l[0].': '.$l[1], $correo->legales)) !!}

@@ -481,4 +481,8 @@ return [
         ],
         'footer' => 'Aviso automático del sistema · queda registrado en el panel (Sistema → Incidencias) · :when',
     ],
+    // «Añadir al calendario» de una reserva (la R2, `ReservationCalendarController`): el título del evento en el calendario.
+    'calendar' => [
+        'summary' => ':product · :park',
+    ],
 ];

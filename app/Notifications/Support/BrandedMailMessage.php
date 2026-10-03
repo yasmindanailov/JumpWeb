@@ -3,6 +3,7 @@
 namespace App\Notifications\Support;
 
 use App\Domain\Platform\Models\EmailSend;
+use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Analytics\EmailClickMarks;
 use App\Domain\Platform\Services\Analytics\EmailOpenMarks;
 use App\Domain\Platform\Services\Analytics\EmailUtm;
@@ -244,5 +245,165 @@ class BrandedMailMessage extends MailMessage
         ];
 
         return $this;
+    }
+
+    // ══ EL CUERPO EN ORDEN (la R2, `specs/correos-rediseno.md` §4.3) ═══════════════════════════════════════════════════
+    //
+    // Los correos de la reserva ponen sus bloques donde los pone su diseño. Cada verbo de aquí abajo AÑADE un bloque al
+    // cuerpo, en el orden en que se llama, entre la cabecera (`hero()`) y el pie. ⚠️ No se mezclan con los verbos de la R1
+    // (`line`, `notice`, `action`, `outro`, `code`, el resguardo de filas): `MailDocument::bloques()` lo rechaza. Toda URL de
+    // esta casa sale con su UTM y su marca de envío, como la del botón de siempre.
+
+    /**
+     * Los ENLACES por nombre que los textos de este correo pueden nombrar (`[escríbenos](whatsapp)`): la URL la pone el
+     * correo, nunca el texto, que es editable desde el panel.
+     *
+     * @param  array<string, string|null>  $enlaces  nombre → URL; uno sin URL no se ofrece (su texto sale sin enlace)
+     */
+    public function links(array $enlaces): static
+    {
+        foreach ($enlaces as $nombre => $url) {
+            if (is_string($url) && $url !== '') {
+                $this->viewData['enlaces'][$nombre] = $this->etiquetada($url);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * EL RESGUARDO (el `resguardo()` del diseño, BookingCard en correo): la hoja del calendario, la hora grande, qué y
+     * cuántos, el precio, el número; debajo, sus filas de dinero (la que queda, en negrita) y dos enlaces claros.
+     *
+     * @param  array{dow: string, n: string, month: string}  $dia  la hoja: «sáb», «26», «sep»
+     * @param  list<array{0: string, 1: string, 2?: bool}>  $filas  rótulo, valor y si va en negrita
+     * @param  list<array{0: string, 1: string, 2: string}>  $enlaces  texto, URL e icono de los enlaces claros
+     */
+    public function slip(array $dia, string $fecha, string $hora, string $que, ?string $precio, string $codigo, array $filas = [], array $enlaces = []): static
+    {
+        return $this->bloque([
+            // `dia` lo distingue del resguardo DE FILAS de la R1 (el de `hero()`), que sigue con sus `filas` rótulo → valor.
+            'tipo' => 'resguardo', 'dia' => $dia, 'fecha' => $fecha, 'hora' => $hora, 'que' => $que, 'precio' => $precio,
+            'codigo' => $codigo,
+            'dinero' => array_map(static fn (array $f): array => [(string) $f[0], (string) $f[1], (bool) ($f[2] ?? false)], $filas),
+            'enlaces' => array_map(fn (array $l): array => [(string) $l[0], $this->etiquetada((string) $l[1]), (string) $l[2]], $enlaces),
+        ]);
+    }
+
+    /**
+     * EL QR (QrPass en correo): la imagen INCRUSTADA (`cid:`, viaja en el correo y se ve sin «cargar imágenes»), el código
+     * para dictar y su botón —el principal, salvo que el correo tenga otro trabajo (`$secundario`)—.
+     *
+     * @param  string  $png  la imagen del QR, en bytes
+     */
+    public function qr(string $png, string $codigo, string $texto, string $dicta, string $boton, string $url, bool $secundario = false): static
+    {
+        return $this->bloque([
+            'tipo' => 'qr', 'png' => $png, 'codigo' => $codigo, 'texto' => $texto, 'dicta' => $dicta,
+            'boton' => $boton, 'url' => $this->etiquetada($url), 'secundario' => $secundario,
+        ]);
+    }
+
+    /**
+     * UNA LISTA con su icono en el círculo (ProofList en correo); la TAREA, en su aro y en negrita: lo que falta se ve sin
+     * leer. Sin icono, el punto. Abre con su filete salvo `$raya = false`.
+     *
+     * @param  list<array{texto: string, icono?: string|null, tarea?: bool}>  $lineas
+     */
+    public function checklist(?string $titulo, array $lineas, bool $raya = true): static
+    {
+        return $this->bloque([
+            'tipo' => 'lista', 'titulo' => $titulo, 'raya' => $raya,
+            'lineas' => array_map(static fn (array $l): array => [
+                'texto' => (string) $l['texto'], 'icono' => $l['icono'] ?? null, 'tarea' => (bool) ($l['tarea'] ?? false),
+            ], $lineas),
+        ]);
+    }
+
+    /** UNA SECCIÓN: su titular y una frase (con sus enlaces por nombre); con botón, uno claro debajo. */
+    public function section(string $titulo, string $texto, ?string $boton = null, ?string $url = null): static
+    {
+        return $this->bloque([
+            'tipo' => 'seccion', 'titulo' => $titulo, 'texto' => $texto,
+            'boton' => $boton !== null && $url !== null ? ['texto' => $boton, 'url' => $this->etiquetada($url)] : null,
+        ]);
+    }
+
+    /**
+     * LOS PASOS numerados, cada uno con su botón: el del primero, el principal; los demás, claros.
+     *
+     * @param  list<array{texto: string, boton: string, url: string}>  $pasos
+     */
+    public function steps(?string $titulo, array $pasos): static
+    {
+        return $this->bloque([
+            'tipo' => 'pasos', 'titulo' => $titulo,
+            'pasos' => array_map(fn (array $p): array => [
+                'texto' => (string) $p['texto'], 'boton' => (string) $p['boton'], 'url' => $this->etiquetada((string) $p['url']),
+            ], $pasos),
+        ]);
+    }
+
+    /** DOS BOTONES: el principal y, debajo, uno claro que no compite. */
+    public function buttons(string $principal, string $principalUrl, string $secundario, string $secundarioUrl): static
+    {
+        return $this->bloque([
+            'tipo' => 'botones',
+            'principal' => ['texto' => $principal, 'url' => $this->etiquetada($principalUrl)],
+            'secundario' => ['texto' => $secundario, 'url' => $this->etiquetada($secundarioUrl)],
+        ]);
+    }
+
+    /** EL MOTIVO (el que da el banco), en mono y aparte: se dicta igual al llamar. */
+    public function reason(string $etiqueta, string $texto): static
+    {
+        return $this->bloque(['tipo' => 'motivo', 'etiqueta' => $etiqueta, 'texto' => $texto]);
+    }
+
+    /** Párrafos del cuerpo (el `texto` del diseño), con su negrita y sus enlaces por nombre. */
+    public function paragraphs(string ...$lineas): static
+    {
+        return $this->bloque(['tipo' => 'texto', 'lineas' => array_values($lineas)]);
+    }
+
+    /** Una línea menor (la `linea` del diseño): lo que se lee después, más pequeño. */
+    public function small(string $texto): static
+    {
+        return $this->bloque(['tipo' => 'linea', 'lineas' => [$texto]]);
+    }
+
+    /** El botón principal, en su sitio del cuerpo (uno por correo, `#803`). */
+    public function button(string $texto, string $url): static
+    {
+        return $this->bloque(['tipo' => 'boton', 'texto' => $texto, 'url' => $this->etiquetada($url)]);
+    }
+
+    /**
+     * «Responde a este correo…» en el pie, y que responder LLEGUE al parque: su correo del panel (`contact.email`) como
+     * `replyTo`. Sin correo en el panel, ni la frase: no se promete lo que no llega.
+     */
+    public function replies(string $texto): static
+    {
+        $correo = trim((string) Setting::value('contact.email', ''));
+        if ($correo === '' || filter_var($correo, FILTER_VALIDATE_EMAIL) === false) {
+            return $this;
+        }
+        $this->replyTo($correo, Setting::businessName());
+        $this->viewData['responde'] = $texto;
+
+        return $this;
+    }
+
+    /** @param  array<string, mixed>  $b */
+    private function bloque(array $b): static
+    {
+        $this->viewData['cuerpo'][] = $b;
+
+        return $this;
+    }
+
+    private function etiquetada(string $url): string
+    {
+        return EmailUtm::tag($url, $this->campaign, $this->clickMark);
     }
 }

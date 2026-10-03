@@ -137,6 +137,22 @@ class MailTextsTest extends TestCase
         $this->assertSame('Nuevo R-7', trans(self::CLAVE, ['code' => 'R-7'], 'es'));
     }
 
+    /**
+     * Los ENLACES POR NOMBRE (la R2, `[escríbenos](whatsapp)`), como las variables: los del texto de fábrica se quedan y no
+     * se inventan otros. Lo que se lee entre corchetes, sí se puede cambiar.
+     */
+    public function test_a_link_by_name_stays_and_none_is_invented(): void
+    {
+        $fabrica = 'Puedes [escríbenos por WhatsApp](whatsapp) o [llamarnos](tel).';
+        $motivo = fn (string $texto): ?string => MailTextRules::problema($texto, $fabrica, 'emails.reserva.cambios')['motivo'] ?? null;
+
+        $this->assertNull($motivo('Si cambian los planes, [mándanos un WhatsApp](whatsapp) o [llámanos](tel).'), 'CONTROL: otro texto, los mismos enlaces');
+        $this->assertSame('enlaces', $motivo('Puedes escribirnos o [llamarnos](tel).'), 'falta el de WhatsApp');
+        $this->assertSame('enlaces', $motivo('Puedes [escríbenos](whatsapp), [llamarnos](tel) o [mirar](web).'), 'uno inventado');
+        $this->assertSame('enlaces', $motivo('Puedes [escríbenos](correo) o [llamarnos](tel).'), 'uno cambiado de nombre');
+        $this->assertSame(['tel', 'whatsapp'], MailTextRules::enlaces($fabrica));
+    }
+
     public function test_a_row_that_would_not_pass_the_rules_today_is_not_painted(): void
     {
         // Lo que pidió plataforma (30-09): un correo de código no sale sin su código, ni aunque la fila llegue a la base por
