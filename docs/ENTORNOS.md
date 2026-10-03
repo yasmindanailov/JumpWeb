@@ -551,8 +551,14 @@ instalación de un cliente. Si se configura a mano deja de ser una prueba del pr
 > (arriba); (5) los GUIONES gitignorados, cada uno en seco (`ENSAYO=1`) y luego de verdad, en este orden: cookies →
 > legales → `aplicar-produccion-v2-datos.php` (zonas, entradas, cumpleaños, normas con icono, ajustes) →
 > `aplicar-produccion-atracciones.php` (apaga las 23 y crea las 26 reales) → `aplicar-produccion-normas.php` (va DESPUÉS
-> del v2: espera «de 4 a 7») → `aplicar-produccion-bar.php`; todos con valor esperado por fila, en transacción y con la
-> segunda pasada que aborta; (6) `reviews:import`; (7) `cache:clear` y `social-proof:refresh`; (8) a ojo: las siete páginas
+> del v2: espera «de 4 a 7») → `aplicar-produccion-bar.php` → `aplicar-produccion-puerta.php` (lo del PANEL que la v2 necesita
+> y producción no tiene: las PULSERAS —8 colores, la rueda desde las 11:00 cada 30 min, gris la ilimitada, rojos los packs
+> en la fila de su zona, los calcetines «se entrega en la puerta»—, las palabras de la RESEÑA DEL DÍA —sin ellas la Puerta no
+> enseña ninguna; solo cuentan las de los últimos 30 días—, el VÍDEO de la invitación —sin él tampoco sale la nota de
+> Google— y el WHATSAPP —sin él la web nueva perdía el botón y sus respuestas—); todos con valor esperado por fila, en
+> transacción y con la segunda pasada que aborta; (6) `reviews:import`; (7) `cache:clear` —y NADA más: `social-proof:refresh`
+> se fue con Places (`#772`; en la v2 «There are no commands defined», medido en staging) y las reseñas viven en la BD—;
+> (8) a ojo: las siete páginas
 > en es/en/fr sin marcadores crudos, una compra de Kids hasta la pasarela, el panel por su dirección con authenticator.
 > ❗❗❗ **El tercero se paró en la GUARDA 1 y dejó el sitio 3 minutos en 503** (`#594`): el owner había
 > pasado Redsys a `live` a las 17:29. Se levantó con `artisan up` y se completaron a mano las franjas,
